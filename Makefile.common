@@ -1,0 +1,21 @@
+#!/usr/bin/make
+# @file: libvos::Makefile.common
+# @desc: common Makefile variable and function
+
+MAKEFLAGS	+= --no-builtin-rules
+MAKEFLAGS	+= --no-builtin-variables
+MAKEFLAGS	+= --no-print-directory
+MAKEFLAGS	+= --warn-undefined-variables
+
+SYS		= $(shell uname)
+
+CPP		= g++
+ifndef CPPFLAGS
+CPPFLAGS	= -Wall -Weffc++ -Werror -fno-rtti -g -O0 -pipe
+endif
+LDFLAGS		= -lpthread
+
+do_compile	= echo "[C] $@"; \
+			${CPP} ${CPPFLAGS} -c $< -o $@
+do_build	= echo "[B] $@"; \
+			${CPP} ${CPPFLAGS} ${LDFLAGS} $^ -o $@
