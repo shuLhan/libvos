@@ -13,13 +13,14 @@ static char __digits[17] = "0123456789ABCDEF";
 
 /* default buffer size */
 int Buffer::DFLT_SIZE = 15;
+int Buffer::CHAR_SIZE = 1;
 
 Buffer::Buffer() :
 	_i(0),
-	_l(Buffer::DFLT_SIZE),
+	_l(DFLT_SIZE),
 	_v(NULL)
 {
-	_v = (char *) calloc(_l + 1, sizeof(_v));
+	_v = (char *) calloc(_l + CHAR_SIZE, CHAR_SIZE);
 	if (! _v)
 		throw Error(E_MEM);
 }
@@ -46,7 +47,7 @@ Buffer::Buffer(const int size) :
 	_v(NULL)
 {
 	if (size) {
-		_v = (char *) calloc(size + 1, sizeof(_v));
+		_v = (char *) calloc(size + CHAR_SIZE, CHAR_SIZE);
 		if (! _v)
 			throw Error(E_MEM);
 	}
@@ -58,13 +59,13 @@ Buffer::Buffer(const char *bfr) :
 	_v(NULL)
 {
 	if (! bfr) {
-		_v = (char *) calloc(Buffer::DFLT_SIZE + 1, sizeof(_v));
+		_v = (char *) calloc(DFLT_SIZE + CHAR_SIZE, CHAR_SIZE);
 		if (! _v)
 			throw Error(E_MEM);
 	} else {
 		_l = strlen(bfr);
 
-		_v = (char *) calloc(_l + 1, sizeof(_v));
+		_v = (char *) calloc(_l + CHAR_SIZE, CHAR_SIZE);
 		if (! _v)
 			throw Error(E_MEM);
 
@@ -79,13 +80,13 @@ Buffer::Buffer(const Buffer *bfr) :
 	_v(NULL)
 {
 	if (! bfr) {
-		_v = (char *) calloc(Buffer::DFLT_SIZE + 1, sizeof(_v));
+		_v = (char *) calloc(DFLT_SIZE + CHAR_SIZE, CHAR_SIZE);
 		if (! _v)
 			throw Error(E_MEM);
-	} else {
+	} else if (bfr->_i) {
 		_l = bfr->_i;
 
-		_v = (char *) calloc(_l + 1, sizeof(_v));
+		_v = (char *) calloc(_l + CHAR_SIZE, CHAR_SIZE);
 		if (! _v)
 			throw Error(E_MEM);
 
@@ -116,7 +117,7 @@ void Buffer::resize(const int len)
 {
 	if (_l < (_i + len)) {
 		_l += len;
-		_v = (char *) realloc(_v, (_l + 1) * sizeof(_v));
+		_v = (char *) realloc(_v, (_l + CHAR_SIZE));
 		if (! _v)
 			throw Error(E_MEM);
 	}
@@ -128,14 +129,48 @@ void Buffer::dump()
 }
 
 /**
+ * @desc: dump buffer in two column, hexadecimal in left and printable
+ *	characters in the right.
+ */
+void Buffer::dump_hex()
+{
+	int i = 0;
+	int j = 0;
+
+	for (; i < _i; ++i) {
+		if (! (i % 8)) {
+			putchar('\t');
+			for (; j < i; ++j) {
+				printf(" %-2c", isprint(_v[j]) ? _v[j] : '.' );
+			}
+			j = i;
+			putchar('\n');
+		}
+		printf(" %02X", _v[i] < 0 ? 0x80 & _v[i] : _v[i]);
+	}
+
+	for (int k = i % 8; k < 8; ++k) {
+		printf("   ");
+	}
+
+	putchar('\t');
+	for (; j < i; ++j) {
+		printf(" %-2c", isprint(_v[j]) ? _v[j] : '.' );
+	}
+	printf("\n\n");
+}
+
+/**
  * @desc:
  *	reset Buffer object, keep an already allocated buffer and start index
  *	from zero again.
  */
 void Buffer::reset()
 {
-	_i = 0;
-	memset(_v, '\0', _l);
+	if (_i) {
+		_i = 0;
+		memset(_v, '\0', _l);
+	}
 }
 
 /**
@@ -155,7 +190,7 @@ void Buffer::trim()
 	}
 
 	if (x > 0 && x <= _i) {
-		_i = _i - x + 1;
+		_i = _i - x + CHAR_SIZE;
 		memmove(_v, &_v[x], _i);
 	} else {
 		++_i;
@@ -176,9 +211,9 @@ void Buffer::trim()
  */
 void Buffer::appendc(const char c)
 {
-	if (_i + 1 > _l) {
-		_l += Buffer::DFLT_SIZE;
-		_v = (char *) realloc(_v, (_l + 1) * sizeof(_v));
+	if (_i + CHAR_SIZE > _l) {
+		_l += DFLT_SIZE;
+		_v = (char *) realloc(_v, (_l + CHAR_SIZE));
 		if (! _v)
 			throw Error(E_MEM);
 	}
@@ -372,6 +407,23 @@ int Buffer::vprint(const char *fmt, va_list args)
 }
 
 /**
+ * @desc: move contents of buffer n bytes to the right.
+ */
+void Buffer::shiftr(const int nbyte)
+{
+	if (_i + nbyte > _l) {
+		_l += nbyte;
+		_v = (char *) realloc(_v, (_l + CHAR_SIZE));
+		if (! _v)
+			throw Error(E_MEM);
+	}
+
+	memmove(&_v[nbyte], _v, _i);
+	memset(_v, '\0', nbyte);
+	_i += nbyte;
+}
+
+/**
  * @desc: copy the content of raw buffer.
  *
  * @param:
@@ -411,7 +463,7 @@ int Buffer::copy(const char *bfr, int len)
 
 	if (_l < len) {
 		_l = len;
-		_v = (char *) realloc(_v, (_l + 1) * sizeof(_v));
+		_v = (char *) realloc(_v, (_l + CHAR_SIZE));
 		if (! _v)
 			return E_MEM;
 	}
@@ -434,8 +486,29 @@ void Buffer::set(const char *bfr, const char *dflt)
 {
 	if (bfr)
 		copy(bfr, 0);
-	else
+	else if (dflt)
 		copy(dflt, 0);
+}
+
+/**
+ * @desc: move buffer to bfr, leave current object to nil.
+ *
+ * @param:
+ *	> bfr	: a pointer to another buffer.
+ */
+void Buffer::move_to(Buffer **bfr)
+{
+	if ((*bfr)) {
+		delete (*bfr);
+	}
+
+	(*bfr)		= new Buffer(0);
+	(*bfr)->_l	= _l;
+	(*bfr)->_i	= _i;
+	(*bfr)->_v	= _v;
+	_i		= 0;
+	_l		= 0;
+	_v		= NULL;
 }
 
 /**
@@ -633,7 +706,7 @@ int Buffer::TRIM(char *bfr, int len)
 		++x;
 
 	if (x > 0 && x <= len) {
-		len = len - x + 1;
+		len = len - x + CHAR_SIZE;
 		memmove(bfr, &bfr[x], len);
 	} else {
 		++len;

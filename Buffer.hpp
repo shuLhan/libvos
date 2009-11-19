@@ -25,6 +25,7 @@ public:
 
 	void resize(const int len);
 	void dump();
+	void dump_hex();
 	void reset();
 	void trim();
 
@@ -32,14 +33,17 @@ public:
 	void appendi(int i, const int base = DFLT_BASE);
 	void appendd(double d);
 	void append(const Buffer *bfr);
-	void append(const char *bfr, int len);
+	void append(const char *bfr, int len = 0);
 	void concat(const char *bfr, ...);
 	void aprint(const char *fmt, ...);
 	int vprint(const char *fmt, va_list args);
 
+	void shiftr(const int nbyte);
+
 	int copy(const Buffer *bfr);
 	int copy(const char *bfr, int len = 0);
-	void set(const char *bfr, const char *dflt);
+	void set(const char *bfr, const char *dflt = NULL);
+	void move_to(Buffer **bfr);
 
 	int cmp(const Buffer *bfr);
 	int cmp(const char *bfr);
@@ -55,7 +59,9 @@ public:
 	int		_i;
 	int		_l;
 	char		*_v;
+
 	static int	DFLT_SIZE;
+	static int	CHAR_SIZE;
 private:
 	DISALLOW_COPY_AND_ASSIGN(Buffer);
 };
