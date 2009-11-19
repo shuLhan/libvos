@@ -29,17 +29,22 @@ const char *_ftp_cmd[N_FTP_CMD] = {
 	"QUIT"	/* QUIT				*/
 };
 
+/**
+ * @desc: create an FTP connection that connect to 'host' at port 'port'.
+ *
+ * @param:
+ *	> host : FTP server name or address.
+ *	> port : FTP server port (default to 21).
+ */
 FTP::FTP(const char *host, int port) :
-	_port(port),
 	_reply(0),
 	_mode(FTP_MODE_NORMAL),
 	_tout()
 {
-	_status		= FTP_STT_DISCONNECT;
 	_tout.tv_sec	= FTP_TIMEOUT;
 	_tout.tv_usec	= FTP_UTIMEOUT_INC;
 	if (host)
-		connect(host, port);
+		FTP::connect(host, port);
 }
 
 FTP::~FTP()
@@ -52,43 +57,12 @@ FTP::~FTP()
 
 void FTP::connect(const char *host, const int port, const int mode)
 {
-	int			s;
-	int			reuseaddr = 1;
-	struct sockaddr_in	sin;
-	struct hostent		*he;
+	int s;
 
-	memset(&sin, 0, sizeof(struct sockaddr_in));
+	create();
+	connect_to(host, port);
 
-	s = inet_aton(host, &sin.sin_addr);
-	if (s == 0) {
-		he = gethostbyname(host);
-		if (!he)
-			throw Error(E_HOST_UNKNOWN, host);
-
-		memcpy(&sin.sin_addr, he->h_addr, he->h_length);
-	}
-
-	sin.sin_family	= AF_INET;
-	sin.sin_port	= htons(port);
-	_port		= port;
-
-	_d = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (_d < 0)
-		throw Error(E_SOCK_CREATE);
-
-	/* socket reuse address */
-	s = setsockopt(_d, SOL_SOCKET, SO_REUSEADDR, (void *) &reuseaddr,
-			sizeof(reuseaddr));
-	if (s)
-		throw Error(E_SOCK_SET, host);
-
-	s = ::connect(_d, (struct sockaddr *) &sin, sizeof(sin));
-	if (s)
-		throw Error(E_SOCK_CONNECT, host);
-
-	_status	= FTP_STT_CONNECTED;
-	_mode	= mode;
-	_name.copy(host);
+	_mode = mode;
 
 	if (mode == FTP_MODE_NORMAL) {
 		/* get server header.
@@ -332,7 +306,7 @@ int FTP::parsing_pasv_reply(Buffer *addr, int *port)
 		printf("[FTP] ftp pasv reply code : %d\n", s);
 
 	/* get address */
-	for (s = 1; s <= 4; s++) {
+	for (s = 1; s <= 4; ++s) {
 		while (*p && ! isdigit(*p))
 			++p;
 		if (! *p)

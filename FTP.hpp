@@ -11,7 +11,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include "File.hpp"
+#include "Socket.hpp"
 
 namespace vos {
 
@@ -46,7 +46,7 @@ enum __ftp_cmd_idx {
 
 enum _ftp_stat {
 	FTP_STT_DISCONNECT	= FILE_OPEN_NO,
-	FTP_STT_CONNECTED	= FILE_OPEN_R | FILE_OPEN_W,
+	FTP_STT_CONNECTED	= FILE_OPEN_RW,
 	FTP_STT_LOGGED_IN	= FILE_OPEN_W << 1,
 	FTP_STT_LOGGED_OUT	= FILE_OPEN_W << 2
 };
@@ -56,7 +56,7 @@ enum _ftp_mode {
 	FTP_MODE_PASV		= 1
 };
 
-class FTP : public File {
+class FTP : public Socket {
 public:
 	FTP(const char *host = 0, const int port = FTP_DFLT_PORT);
 	~FTP();
@@ -112,7 +112,6 @@ public:
 	int do_put(const char *path);
 	int do_rename(const char *from, const char *to);
 private:
-	int		_port;
 	int		_reply;
 	int		_mode;
 	struct timeval	_tout;
