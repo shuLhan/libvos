@@ -29,14 +29,18 @@ const char *_errmsg[N_ERRCODE] = {
 	"\0",
 	"\0",
 	"[LIBVOS] Socket error: create!%s\n",			/* 16 */
-	"[LIBVOS] Socket error: cannot reuse address '%s'!\n",
-	"[LIBVOS] Socket error: cannot connect to host '%s'!\n",
+	"[LIBVOS] Socket error: invalid address '%s'!\n",
+	"[LIBVOS] Socket error: cannot resolve address '%s'!\n",
+	"[LIBVOS] Socket error: cannot reuse address '%s' at port '%d'!\n",
+	"[LIBVOS] Socket error: cannot bind to address '%s' at port '%d'!\n",
+	"[LIBVOS] Socket error: cannot connect to host '%s' at port '%d'!\n",
 	"[LIBVOS] Socket error: read operation failed!\n",
-	"[LIBVOS] Socket error: write operation failed!\n",	/* 20 */
-	"[LIBVOS] Socket error: select operation failed!\n",
+	"[LIBVOS] Socket error: write operation failed!\n",
+	"[LIBVOS] Socket error: select operation failed!\n",	/* 24 */
+	"[LIBVOS] Socket error: failed to accept new connection!\n",
 	"\0",
 	"\0",
-	"[LIBVOS] OCI Error: %d - %s\n"				/* 24 */
+	"[LIBVOS] OCI Error: %d - %s\n"				/* 28 */
 };
 
 const char *_stat_msg[N_STAT] = {
