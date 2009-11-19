@@ -21,6 +21,7 @@ Writer::~Writer()
 void Writer::write(Record *cols, RecordMD *rmd)
 {
 	int len;
+	char *p = NULL;
 
 	while (rmd && cols) {
 		if (rmd->_start_p) {
@@ -31,7 +32,20 @@ void Writer::write(Record *cols, RecordMD *rmd)
 			_line.appendc(rmd->_left_q);
 		}
 
-		_line.append(cols->_v, cols->_i);
+		switch (rmd->_type) {
+		case RMD_T_STRING:
+		case RMD_T_NUMBER:
+		case RMD_T_DATE:
+			_line.append(cols->_v, cols->_i);
+			break;
+		case RMD_T_BLOB:
+			len = sizeof(cols->_i);
+			cols->shiftr(len);
+			p = cols->_v;
+			memcpy(p, &cols->_i, len);
+			_line.append(cols->_v, cols->_i);
+			break;
+		}
 
 		if (rmd->_end_p) {
 			if (rmd->_end_p < _line._i) {

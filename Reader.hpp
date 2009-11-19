@@ -18,6 +18,7 @@ public:
 	Reader();
 	~Reader();
 
+	int refill_buffer(const int len);
 	int read(Record *r, RecordMD *rmd);
 private:
 	DISALLOW_COPY_AND_ASSIGN(Reader);

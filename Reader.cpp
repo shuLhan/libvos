@@ -14,6 +14,34 @@ Reader::Reader()
 Reader::~Reader()
 {}
 
+int Reader::refill_buffer(const int len)
+{
+	int l;
+
+	l = _i - _p;
+	if (l > 0) {
+		memmove(_v, &_v[_p], l);
+
+		if (len > _l) {
+			resize(len);
+			_p += len - _l;
+		}
+
+		_i = ::read(_d, &_v[l], _p);
+		if (_i < 0) {
+			throw Error(E_FILE_READ, _name._v);
+		}
+
+		_i += l;
+	} else {
+		_i = 0;
+	}
+	_p	= 0;
+	_v[_i]	= '\0';
+
+	return _i;
+}
+
 /**
  * @desc: read one row from file, using 'r' as record buffer, and 'md' as
  * record meta data.
@@ -29,79 +57,239 @@ Reader::~Reader()
  */
 int Reader::read(Record *r, RecordMD *rmd)
 {
-	int	startp	= 0;
-	Buffer	*line	= File::get_line();
+	int startp	= _p;
+	int len		= 0;
+	int s		= 0;
 
-	if (! line)
-		return 0;
+	if (_i == 0) {
+		s = File::read();
+		if (s == 0)
+			return 0;
+	}
 
 	while (rmd && r) {
-		/* set start position */
 		if (rmd->_start_p) {
-			if (startp < rmd->_start_p) {
-				startp += (rmd->_start_p - startp);
-				if (startp > line->_i)
-					goto reject;
+			if (_p + rmd->_start_p >= _i) {
+				s = refill_buffer(rmd->_start_p);
+				if (0 == s)
+					return 1;
 			}
-			if (rmd->_left_q) {
-				if (line->_v[startp + 1] == rmd->_left_q)
-					++startp;
-			}
-		} else if (rmd->_left_q) {
-			if (line->_v[startp] != rmd->_left_q)
-				goto reject;
-			++startp;
+
+			startp = _p + rmd->_start_p;
 		}
 
-		if (rmd->_end_p) {
-			while (startp < rmd->_end_p) {
-				r->appendc(line->_v[startp]);
-				++startp;
-				if (startp > line->_i)
-					goto try_next_col;
-			}
-		} else if (rmd->_right_q) {
-			while (line->_v[startp] != rmd->_right_q) {
-				r->appendc(line->_v[startp]);
-				++startp;
-				if (startp > line->_i)
-					goto try_next_col;
+		if (rmd->_left_q) {
+			if (_v[startp] != rmd->_left_q) {
+				goto reject;
 			}
 
 			++startp;
-			if (startp > line->_i)
-				goto try_next_col;
+			if (startp >= _i) {
+				startp = _i - _p;
+				s = refill_buffer(0);
+				if (0 == s)
+					return 1;
+			}
+		}
 
-			if (rmd->_sep) {
-				while (line->_v[startp] != rmd->_sep) {
-					++startp;
-					if (startp > line->_i)
-						goto try_next_col;
+		if (rmd->_type == RMD_T_BLOB) {
+			len = sizeof(r->_i);
+			if (startp + len >= _i) {
+				startp = startp - _p;
+				s = refill_buffer(0);
+				if (0 == s)
+					return 1;
+			}
+			memcpy(&r->_i, &_v[startp], len);
+			startp += len;
+
+			r->_i = r->_i - len;
+
+			if (r->_i > r->_l) {
+				r->resize(r->_i + 1);
+			}
+
+			if (r->_i > _l) {
+				startp = startp - _p;
+				s = refill_buffer(_l + r->_i);
+				if (0 == s)
+					return 1;
+			}
+
+			if ((startp + r->_i) >= _i) {
+				startp = startp - _p;
+				s = refill_buffer(r->_i);
+				if (0 == s)
+					return 1;
+			}
+
+			memcpy(r->_v, &_v[startp], r->_i);
+			r->_v[r->_i] = '\0';
+			startp += r->_i;
+			if (startp >= _i) {
+				startp = _i - _p;
+				s = refill_buffer(0);
+				if (0 == s)
+					return 1;
+			}
+
+			if (rmd->_right_q) {
+				if (_v[startp] != rmd->_right_q) {
+					goto reject;
 				}
 				++startp;
-				if (startp > line->_i)
-					goto try_next_col;
+				if (startp >= _i) {
+					startp = _i - _p;
+					s = refill_buffer(0);
+					if (0 == s)
+						return 1;
+				}
 			}
-		} else if (rmd->_sep) {
-			while (line->_v[startp] != rmd->_sep) {
-				r->appendc(line->_v[startp]);
+
+			if (rmd->_sep) {
+				while (_v[startp] != rmd->_sep) {
+					++startp;
+					if (startp >= _i) {
+						startp = _i - _p;
+						s = refill_buffer(0);
+						if (0 == s)
+							return 1;
+					}
+				}
+
 				++startp;
-				if (startp > line->_i)
-					goto try_next_col;
+				if (startp >= _i) {
+					startp = _i - _p;
+					s = refill_buffer(0);
+					if (0 == s)
+						return 1;
+				}
 			}
-			++startp;
-		} else {
-			r->append(&line->_v[startp], line->_i - startp);
-			startp += r->_i;
+		} else { /* not BLOB */
+			if (rmd->_end_p) {
+				len = (startp - _p) + rmd->_end_p;
+
+				if (len > r->_l) {
+					r->resize(len);
+				}
+
+				if (startp + len >= _i) {
+					startp = startp - _p;
+					s = refill_buffer(0);
+					if (0 == s)
+						return 1;
+				}
+
+				memcpy(r->_v, &_v[startp], len);
+				startp += len;
+			} else if (rmd->_right_q) {
+				while (_v[startp] != rmd->_right_q) {
+					r->appendc(_v[startp]);
+					++startp;
+					if (startp >= _i) {
+						startp = _i - _p;
+						s = refill_buffer(0);
+						if (0 == s)
+							return 1;
+					}
+				}
+
+				++startp;
+				if (startp >= _i) {
+					startp = _i - _p;
+					s = refill_buffer(0);
+					if (0 == s)
+						return 1;
+				}
+
+				if (rmd->_sep) {
+					while (_v[startp] != rmd->_sep) {
+						++startp;
+						if (startp >= _i) {
+							startp = _i - _p;
+							s = refill_buffer(0);
+							if (0 == s)
+								return 1;
+						}
+					}
+
+					++startp;
+					if (startp >= _i) {
+						startp = _i - _p;
+						s = refill_buffer(0);
+						if (0 == s)
+							return 1;
+					}
+				}
+			} else if (rmd->_sep) {
+				while (_v[startp] != rmd->_sep) {
+					r->appendc(_v[startp]);
+					++startp;
+					if (startp >= _i) {
+						startp = _i - _p;
+						s = refill_buffer(0);
+						if (0 == s)
+							return 1;
+					}
+				}
+
+				++startp;
+				if (startp >= _i) {
+					startp = _i - _p;
+					s = refill_buffer(0);
+					if (0 == s)
+						return 1;
+				}
+			} else {
+				while (_v[startp] != __eol[0]) {
+					r->appendc(_v[startp]);
+					++startp;
+					if (startp >= _i) {
+						startp = _i - _p;
+						s = refill_buffer(0);
+						if (0 == s)
+							return 1;
+					}
+				}
+
+				++startp;
+				if (startp >= _i) {
+					startp = _i - _p;
+					s = refill_buffer(0);
+					if (0 == s)
+						return 1;
+				}
+			}
 		}
 
-try_next_col:
 		r	= r->_next_col;
 		rmd	= rmd->_next;
 	}
 
+	while (_v[startp] != __eol[0]) {
+		++startp;
+		if (startp >= _i) {
+			startp = _i - _p;
+			s = refill_buffer(0);
+			if (0 == s)
+				return 1;
+		}
+	}
+	_p = startp + 1;
+
 	return 1;
 reject:
+	while (_v[startp] != __eol[0]) {
+		++startp;
+		if (startp >= _i) {
+			startp = _i - _p;
+			s = refill_buffer(0);
+			if (0 == s)
+				return 0;
+		}
+	}
+	_p = startp + 1;
+
 	return -1;
 }
 
