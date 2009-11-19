@@ -7,9 +7,16 @@
 #ifndef _LIBVOS_RECORD_METADATA_HPP
 #define	_LIBVOS_RECORD_METADATA_HPP	1
 
-#include "Buffer.hpp"
+#include "File.hpp"
 
 namespace vos {
+
+enum _rmd_type {
+	RMD_T_STRING	= 0,
+	RMD_T_NUMBER,
+	RMD_T_DATE,
+	RMD_T_BLOB
+};
 
 class RecordMD {
 public:
@@ -19,7 +26,9 @@ public:
 	void dump();
 	static void ADD(RecordMD **rmd, RecordMD *md);
 	static RecordMD *INIT(const char *meta);
+	static RecordMD *INIT_FROM_FILE(const char *fmeta);
 
+	int		_n_md;
 	int		_idx;
 	int		_flag;
 	int		_type;

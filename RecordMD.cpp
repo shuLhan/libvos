@@ -16,10 +16,12 @@ enum _rmd_parser {
 	MD_NAME,
 	MD_RIGHT_Q,
 	MD_START_P,
-	MD_END_P
+	MD_END_P,
+	MD_TYPE
 };
 
 RecordMD::RecordMD() :
+	_n_md(0),
 	_idx(0),
 	_flag(0),
 	_type(0),
@@ -54,9 +56,34 @@ void RecordMD::dump()
 	RecordMD *p = this;
 
 	while (p) {
-		printf("'%c' : %s : '%c' : %d : %d | '%c'\n",
+		printf("'%c' : %s : '%c' : %3d : %3d | ", 
 			p->_left_q, p->_name->_v, p->_right_q, p->_start_p,
-			p->_end_p, p->_sep);
+			p->_end_p);
+
+		switch (p->_sep) {
+		case '\t':
+			printf("'\\t'");
+			break;
+		case '\n':
+			printf("'\\n'");
+			break;
+		case '\v':
+			printf("'\\v'");
+			break;
+		case '\r':
+			printf("'\\r'");
+			break;
+		case '\f':
+			printf("'\\f'");
+			break;
+		case '\b':
+			printf("'\\b'");
+			break;
+		default:
+			printf("'%c'", p->_sep);
+		}
+
+		printf(" : %2d\n", p->_type);
 
 		p = p->_next;
 	}
@@ -65,13 +92,15 @@ void RecordMD::dump()
 void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
 {
 	if (! (*rmd)) {
-		(*rmd) = md;
+		(*rmd)		= md;
+		(*rmd)->_n_md	= 1;
 	} else {
 		RecordMD *p = (*rmd);
 		while (p->_next)
 			p = p->_next;
 
 		p->_next = md;
+		(*rmd)->_n_md++;
 	}
 }
 
@@ -80,7 +109,7 @@ void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
  *
  * field format:
  *
- *	'<char>':name:'<char>':[start-pos]:[end-pos | '<char>']
+ *	'<char>':name:'<char>':[start-pos]:[end-pos | '<char>']:[type]
  *
  *	[]	: optional.
  *	<char>	: any single character, in c-style for escape char.
@@ -101,7 +130,7 @@ RecordMD *RecordMD::INIT(const char *meta)
 	int		todo		= MD_START;
 	int		todo_next	= 0;
 	int		len		= strlen(meta);
-	Buffer		pos;
+	Buffer		v;
 	RecordMD	*rmd		= NULL;
 	RecordMD	*md		= NULL;
 
@@ -110,7 +139,8 @@ RecordMD *RecordMD::INIT(const char *meta)
 			++i;
 		}
 		if (i >= len) {
-			if (todo_next == MD_START || todo_next == MD_END_P)
+			if (todo_next == MD_START || todo_next == MD_END_P
+			||  todo_next == MD_TYPE)
 				break;
 			else
 				goto err;
@@ -132,7 +162,10 @@ RecordMD *RecordMD::INIT(const char *meta)
 				todo = MD_START;
 				break;
 			default:
-				goto err;
+				if (todo_next == MD_TYPE)
+					todo = MD_START;
+				else
+					goto err;
 			}
 
 			++i;
@@ -282,14 +315,14 @@ RecordMD *RecordMD::INIT(const char *meta)
 
 		case MD_START_P:
 			while (isdigit(meta[i])) {
-				pos.appendc(meta[i]);
+				v.appendc(meta[i]);
 				++i;
 				if (i >= len)
 					goto err;
 			}
 
-			md->_start_p = strtol(pos._v, 0, 0);
-			pos.reset();
+			md->_start_p = strtol(v._v, 0, 0);
+			v.reset();
 
 			todo		= MD_META_SEP;
 			todo_next	= MD_END_P;
@@ -298,14 +331,14 @@ RecordMD *RecordMD::INIT(const char *meta)
 		case MD_END_P:
 			if (isdigit(meta[i])) {
 				while (isdigit(meta[i])) {
-					pos.appendc(meta[i]);
+					v.appendc(meta[i]);
 					++i;
 					if (i >= len)
 						goto err;
 				}
 
-				md->_end_p = strtol(pos._v, 0, 0);
-				pos.reset();
+				md->_end_p = strtol(v._v, 0, 0);
+				v.reset();
 			} else if (meta[i] == '\'') {
 				++i;
 				if (i >= len)
@@ -362,13 +395,41 @@ RecordMD *RecordMD::INIT(const char *meta)
 				++i;
 			}
 			todo		= MD_META_SEP;
+			todo_next	= MD_TYPE;
+			break;
+
+		case MD_TYPE:
+			while (meta[i] != ',' && !isspace(meta[i])) {
+				v.appendc(meta[i]);
+				++i;
+				if (i >= len)
+					goto err;
+			}
+
+			if (v._i) {
+				if (v.like("STRING") == 0) {
+					md->_type = RMD_T_STRING;
+				} else if (v.like("NUMBER") == 0) {
+					md->_type = RMD_T_NUMBER;
+				} else if (v.like("DATE") == 0) {
+					md->_type = RMD_T_DATE;
+				} else if (v.like("BLOB") == 0) {
+					md->_type = RMD_T_BLOB;
+				} else {
+					md->_type = RMD_T_STRING;
+				}
+			} else {
+				md->_type = RMD_T_STRING;
+			}
+
+			v.reset();
+			todo		= MD_META_SEP;
 			todo_next	= MD_START;
 			break;
 		}
 	}
 
 	return rmd;
-
 err:
 	fprintf(stderr, "invalid field meta data : %s\n", &meta[i]);
 	fprintf(stderr, "  at position %d,\n", i);
@@ -377,4 +438,14 @@ err:
 	return NULL;
 }
 
+RecordMD *RecordMD::INIT_FROM_FILE(const char *fmeta)
+{
+	File f;
+
+	f.open_ro(fmeta);
+	f.resize(f.get_size());
+	f.read();
+	return RecordMD::INIT(f._v);
 }
+
+} /* namespace::vos */
