@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2009 kilabit.org
+ * Author:
+ *	- m.shulhan (ms@kilabit.org)
+ */
+
 #include "Writer.hpp"
 
 namespace vos {

@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2009 kilabit.org
+ * Author:
+ *	- m.shulhan (ms@kilabit.org)
+ */
+
 #ifndef _LIBVOS_RESOLVER_DNSQUERY_HPP
 #define	_LIBVOS_RESOLVER_DNSQUERY_HPP	1
 

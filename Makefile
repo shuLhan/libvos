@@ -1,5 +1,9 @@
 #!/usr/bin/make
-# @file: libvos::Makefile
+##
+# Copyright (C) 2009 kilabit.org
+# Author:
+#	- m.shulhan (ms@kilabit.org)
+##
 
 #
 # LIBVOS_D variable is defined by user who want to use this library.
@@ -52,7 +56,10 @@ endif
 
 .PHONY: all clean
 
-all:: ${LIBVOS_OBJS}
+all:: ${LIBVOS_BLD_D} ${LIBVOS_OBJS}
+
+${LIBVOS_BLD_D}:
+	@mkdir -p $@
 
 ${LIBVOS_BLD_D}/Buffer.oo	: ${LIBVOS_BLD_D}/Error.oo
 
@@ -73,4 +80,4 @@ ${LIBVOS_BLD_D}/%.oo: ${LIBVOS_SRC_D}/%.cpp ${LIBVOS_SRC_D}/%.hpp
 	@${do_compile}
 
 clean::
-	@rm -f ${LIBVOS_OBJS}
+	@rm -rf ${LIBVOS_BLD_D}
