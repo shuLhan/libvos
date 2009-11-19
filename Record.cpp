@@ -8,7 +8,7 @@
 
 namespace vos {
 
-Record::Record() :
+Record::Record(int bfr_size) : Buffer(bfr_size),
 	_next_col(NULL),
 	_last_col(this),
 	_next_row(NULL),
@@ -60,22 +60,78 @@ void Record::ADD_ROW(Record **rows, Record *row)
 	}
 }
 
-Record *Record::INIT_ROW(const int col_size)
+Record *Record::INIT_ROW(int col_size, const int bfr_size)
 {
 
-	int	i	= 0;
 	Record 	*row	= NULL;
 	Record	*col	= NULL;
 
 	if (! col_size)
 		return NULL;
 
-	for (; i < col_size; ++i) {
-		col = new Record();
+	for (; col_size > 0; --col_size) {
+		col = new Record(bfr_size);
 		ADD_COL(&row, col);
 	}
 
 	return row;
+}
+
+Record *Record::get_column(int n)
+{
+	Record *p = this;
+
+	for (; n > 0 && p; --n)
+		p = p->_next_col;
+
+	return p;
+}
+
+int Record::set_column(int n, Buffer *bfr)
+{
+	Record *p = this;
+
+	if (! bfr)
+		return 0;
+
+	for (; n > 0 && p; --n)
+		p = p->_next_col;
+
+	if (n < 0 || ! p)
+		return 1;
+
+	if (bfr->_v) {
+		p->copy(bfr->_v, bfr->_i);
+	}
+
+	return 0;
+}
+
+int Record::set_column(int n, const int number)
+{
+	Record *p = this;
+
+	for (; n > 0 && p; --n)
+		p = p->_next_col;
+
+	if (n < 0 || ! p)
+		return 1;
+
+	p->appendi(number);
+
+	printf(" p : %d to %s\n", number, p->_v);
+
+	return 0;
+}
+
+void Record::columns_reset()
+{
+	Record *p = this;
+
+	while (p) {
+		p->reset();
+		p = p->_next_col;
+	}
 }
 
 } /* namespace::vos */
