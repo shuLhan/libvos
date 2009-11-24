@@ -8,17 +8,13 @@
 
 namespace vos {
 
-Dlogger::Dlogger(const char *logfile) :
+Dlogger::Dlogger() :
 	_lock()
 {
 	pthread_mutex_init(&_lock, 0);
 
-	if (logfile) {
-		open_wa(logfile);
-	} else {
-		_d = STDOUT_FILENO;
-		_status = FILE_OPEN_W;
-	}
+	_d = STDOUT_FILENO;
+	_status = FILE_OPEN_W;
 }
 
 Dlogger::~Dlogger()
@@ -27,6 +23,41 @@ Dlogger::~Dlogger()
 
 	if (_d == STDOUT_FILENO)
 		_d = 0;
+}
+
+/**
+ * @desc: start the log daemon on the file 'logfile'.
+ *
+ * @param:
+ *	> logfile	: a log file name, with or without leading path.
+ * @return:
+ *	< 0	: success.
+ *	< !0	: fail.
+ */
+int Dlogger::open(const char *logfile)
+{
+	if (_d && _d != STDOUT_FILENO) {
+		File::close();
+	}
+	if (!logfile) {
+		_d = STDOUT_FILENO;
+		_status = FILE_OPEN_W;
+	} else {
+		return open_wa(logfile);
+	}
+	return 0;
+}
+
+/**
+ * @desc: close log file, and revert the log output back to standard output.
+ */
+void Dlogger::close()
+{
+	if (_d && _d != STDOUT_FILENO) {
+		File::close();
+		_d = STDOUT_FILENO;
+		_status = FILE_OPEN_W;
+	}
 }
 
 /**

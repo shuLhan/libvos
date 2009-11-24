@@ -191,8 +191,6 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 	
 			if (FD_ISSET(_udp._d, &_udp._readfds)) {
 				s = _udp.read();
-				printf(">> read %d bytes\n", s);
-				printf(">> got answer ...\n");
 
 				if (! answer) {
 					answer = new DNSQuery();
@@ -248,8 +246,6 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery **answer)
 	
 			if (FD_ISSET(_tcp._d, &_tcp._readfds)) {
 				s = _tcp.read();
-				printf(">> read %d bytes\n", s);
-				printf(">> got answer ...\n");
 
 				if (! (*answer)) {
 					(*answer) = new DNSQuery();

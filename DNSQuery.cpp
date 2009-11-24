@@ -137,6 +137,21 @@ int DNSQuery::extract_buffer(unsigned char *bfr, unsigned int bfr_len,
 	return ret;
 }
 
+/**
+ * @desc: extract Resource-Record (RR) from buffer 'bfr'.
+ *
+ * @param:
+ *	> rr		: return value, RR object after extracted.
+ *	> bfr_org	: the original buffer, pointer to the original buffer
+ *			received from network.
+ *	> bfr		: pointer to the part of original buffer.
+ *	> bfr_ret	: pointer to position of buffer after RR has been
+ *			extracted.
+ *
+ * @return:
+ *	< 0	: success.
+ *	< 1	: fail.
+ */
 int DNSQuery::extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 				unsigned char *bfr,
 				unsigned char **bfr_ret)
@@ -146,6 +161,8 @@ int DNSQuery::extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 
 	if (! (*rr)) {
 		(*rr) = new DNS_rr();
+		if (! (*rr))
+			return 1;
 	} else {
 		(*rr)->reset();
 	}
@@ -177,10 +194,14 @@ int DNSQuery::extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 		bfr += prr->_len;
 		break;
 
+	case QUERY_T_CNAME:
 	case QUERY_T_NAMESERVER:
 		l	= read_label(&prr->_data, bfr_org, bfr, 0);
 		bfr	+= prr->_len;
 		break;
+	default:
+		fprintf(stderr, "[DNSQUERY] query type '%d' is not handle yet!\n", prr->_type);
+		prr->reset();
 	}
 
 	(*bfr_ret) = bfr;

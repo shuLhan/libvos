@@ -119,8 +119,6 @@ int Record::set_column(int n, const int number)
 
 	p->appendi(number);
 
-	printf(" p : %d to %s\n", number, p->_v);
-
 	return 0;
 }
 

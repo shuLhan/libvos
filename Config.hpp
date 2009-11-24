@@ -27,13 +27,13 @@ enum _cfg_save_mode {
 
 class Config : public File {
 public:
-	explicit Config(const char *ini);
+	Config(const char *ini = NULL);
 	~Config();
 
 	void dump();
-	void load(const char *ini);
+	int load(const char *ini);
 	void save();
-	void save_as(const char *ini, const int save_mode);
+	int save_as(const char *ini, const int save_mode);
 
 	const char *get(const char *head, const char *key, const char *dflt);
 	int get_number(const char *head, const char *key, const int dflt);

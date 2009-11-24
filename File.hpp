@@ -36,10 +36,10 @@ public:
 	File(const char *path, const int bfr_size);
 	~File();
 
-	void open(const char *path);
-	void open_ro(const char *path);
-	void open_wo(const char *path);
-	void open_wa(const char *path);
+	int open(const char *path);
+	int open_ro(const char *path);
+	int open_wo(const char *path);
+	int open_wa(const char *path);
 	int read();
 	void write(const Buffer *bfr);
 	void write(const char *bfr, int len = 0);

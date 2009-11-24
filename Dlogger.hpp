@@ -14,8 +14,11 @@ namespace vos {
 
 class Dlogger : public File {
 public:
-	explicit Dlogger(const char *logfile);
+	Dlogger();
 	~Dlogger();
+
+	int open(const char *logfile);
+	void close();
 
 	void dloger(const char *fmt, ...);
 	void dlogit(const char *fmt, ...);

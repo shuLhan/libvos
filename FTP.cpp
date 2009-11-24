@@ -359,14 +359,16 @@ int FTP::do_pasv(const int cmd, const char *parm, const char *out)
 	if (s)
 		return s;
 
-	if (out)
-		fout.open_wo(out);
-	else if (cmd == FTP_CMD_RETR) {
-		fout.open_wo(parm);
+	if (out) {
+		s = fout.open_wo(out);
+	} else if (cmd == FTP_CMD_RETR) {
+		s = fout.open_wo(parm);
 	} else {
 		fout._d		= STDOUT_FILENO;
 		fout._status	= FILE_OPEN_W;
 	}
+	if (s)
+		return s;
 
 	pasv.recv();
 	while (pasv._i > 0) {
@@ -392,7 +394,9 @@ int FTP::do_put(const char *path)
 	if (! path)
 		return 0;
 
-	fput.open_ro(path);
+	s = fput.open_ro(path);
+	if (s)
+		return s;
 
 	s = send_cmd(FTP_CMD_PASV);
 	if (s)

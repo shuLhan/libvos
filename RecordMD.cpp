@@ -438,11 +438,26 @@ err:
 	return NULL;
 }
 
+/**
+ * @desc: load meta-data from file 'fmeta'.
+ *
+ * @param:
+ *	> fmeta	: a name of file contains meta-data, with or without leading
+ *		path.
+ *
+ * @return:
+ *	< RecordMD *	: success, return meta-data objects.
+ *	< NULL		: fail.
+ */
 RecordMD *RecordMD::INIT_FROM_FILE(const char *fmeta)
 {
-	File f;
+	int	s;
+	File	f;
 
-	f.open_ro(fmeta);
+	s = f.open_ro(fmeta);
+	if (s)
+		return NULL;
+
 	f.resize(f.get_size());
 	f.read();
 	return RecordMD::INIT(f._v);

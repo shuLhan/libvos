@@ -68,20 +68,23 @@ File::~File()
  * @param:
  *	> path : path to a file.
  *
- * @exception:
- *	< E_FILE_OPEN : error at opening file.
+ * @return:
+ *	< 0		: success.
+ *	< E_FILE_OPEN	: fail, error at opening file.
  */
-void File::open(const char *path)
+int File::open(const char *path)
 {
 	if (! path)
-		return;
+		return 0;
 
 	_d = ::open(path, O_RDWR | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
 	if (_d < 0)
-		throw Error(E_FILE_OPEN, path);
+		return E_FILE_OPEN;
 
 	_name.copy(path, 0);
 	_status = FILE_OPEN_RW;
+
+	return 0;
 }
 
 /**
@@ -90,20 +93,23 @@ void File::open(const char *path)
  * @param:
  *	> path : path to a file.
  *
- * @exception:
- *	< E_FILE_OPEN : error at opening file.
+ * @return:
+ *	< 0		: success.
+ *	< E_FILE_OPEN	: fail, error at opening file.
  */
-void File::open_ro(const char *path)
+int File::open_ro(const char *path)
 {
 	if (! path)
-		return;
+		return 0;
 
 	_d = ::open(path, O_RDONLY);
 	if (_d < 0)
-		throw Error(E_FILE_OPEN, path);
+		return E_FILE_OPEN;
 
 	_name.copy(path, 0);
 	_status = FILE_OPEN_R;
+
+	return 0;
 }
 
 /**
@@ -112,22 +118,25 @@ void File::open_ro(const char *path)
  * @param:
  *	> path : path to a file.
  *
- * @exception:
- *	< E_FILE_OPEN : error at opening file.
+ * @return:
+ *	< 0		: success.
+ *	< E_FILE_OPEN	: fail, error at opening file.
  */
-void File::open_wo(const char *path)
+int File::open_wo(const char *path)
 {
 	if (! path)
-		return;
+		return 0;
 
 	_d = ::open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (_d < 0)
-		throw Error(E_FILE_OPEN, path);
+		return E_FILE_OPEN;
 
 	_line.resize(Buffer::DFLT_SIZE);
 
 	_name.copy(path, 0);
 	_status = FILE_OPEN_W;
+
+	return 0;
 }
 
 /**
@@ -136,20 +145,23 @@ void File::open_wo(const char *path)
  * @param:
  *	> path : path to a file.
  *
- * @exception:
- *	< E_FILE_OPEN : error at opening file.
+ * @return:
+ *	< 0		: success.
+ *	< E_FILE_OPEN	: fail, error at opening file.
  */
-void File::open_wa(const char *path)
+int File::open_wa(const char *path)
 {
 	if (! path)
-		return;
+		return 0;
 
 	_d = ::open(path, O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
 	if (_d < 0)
-		throw Error(E_FILE_OPEN, path);
+		return E_FILE_OPEN;
 
 	_name.copy(path, 0);
 	_status = FILE_OPEN_W;
+
+	return 0;
 }
 
 /**

@@ -99,12 +99,12 @@ void Socket::create_addr(struct sockaddr_in *sin, const char *address,
 void Socket::create_addr6(struct sockaddr_in6 *sin6, const char *address,
 			const int port)
 {
-	int			s;
-	int			buf_len	= 512;
-	int			err	= 0;
-	struct hostent		he;
-	struct hostent		*hep	= NULL;
-	char			*buf	= NULL;
+	int		s;
+	int		buf_len	= 512;
+	int		err	= 0;
+	struct hostent	he;
+	struct hostent	*hep	= NULL;
+	char		*buf	= NULL;
 
 	memset(sin6, 0, sizeof(*sin6));
 
@@ -112,7 +112,7 @@ void Socket::create_addr6(struct sockaddr_in6 *sin6, const char *address,
 	sin6->sin6_port		= htons(port);
 	_port			= port;
 
-	buf = strchr(address, ':');
+	buf = (char *) strchr(address, ':');
 	if (buf) {
 		s = inet_pton(_family, address, &sin6->sin6_addr);
 		if (! s)
@@ -138,23 +138,35 @@ void Socket::create_addr6(struct sockaddr_in6 *sin6, const char *address,
 	}
 }
 
-void Socket::bind(const char *address, const int port)
+/**
+ * @desc: bind socket to 'address' and 'port'.
+ *
+ * @param:
+ *	> address	: hostname or IP address to bind to.
+ *	> port		: port number.
+ *
+ * @return:
+ *	< 0			: success.
+ *	< E_SOCK_ADD_REUSE	: fail, address and port is already used.
+ *	< E_SOCK_BIND		: fail, cannot bind to address:port.
+ *
+ */
+int Socket::bind(const char *address, const int port)
 {
 	int s = 1;
 
 	s = setsockopt(_d, SOL_SOCKET, SO_REUSEADDR, &s, sizeof(s));
 	if (s) {
-		throw Error(E_SOCK_ADDR_REUSE, address, port);
+		return E_SOCK_ADDR_REUSE;
 	}
 
 	if (_family == AF_INET6) {
 		struct sockaddr_in6 sin6;
 
 		create_addr6(&sin6, address, port);
-		s = ::bind(_d, (struct sockaddr *) &sin6,
-			sizeof(sin6));
+		s = ::bind(_d, (struct sockaddr *) &sin6, sizeof(sin6));
 		if (s) {
-			throw Error(E_SOCK_BIND, address, port);
+			return E_SOCK_BIND;
 		}
 	} else {
 		struct sockaddr_in sin;
@@ -162,12 +174,84 @@ void Socket::bind(const char *address, const int port)
 		create_addr(&sin, address, port);
 		s = ::bind(_d, (struct sockaddr *) &sin, sizeof(sin));
 		if (s) {
-			throw Error(E_SOCK_BIND, address, port);
+			return E_SOCK_BIND;
 		}
 	}
 
 	_status = FILE_OPEN_RW;
 	_name.copy(address);
+
+	return 0;
+}
+
+/**
+ * @desc: bind socket to one or more address in 'list_address'.
+ *	format of first parameter:
+ *
+ *		<address><:port> , <address2>,<:port> , ...
+ *
+ *	if port is is not defined in list of address, default port
+ *	'port_default' will be used.
+ *
+ * @param:
+ *	> list_address	: list of address to bind.
+ *	> port_default	: default port that will be used if not defined in
+ *			address
+ *
+ * @return:
+ *	< 0	: success.
+ *	< !0	: fail.
+ */
+int Socket::binds(const char *list_address, const int port_default)
+{
+	int		n	= 0;
+	int		s	= 0;
+	int		port	= 0;
+	Buffer		v_addr;
+	Buffer		v_port;
+	const char	*p	= list_address;
+
+	while (*p) {
+		if (! isspace(*p))
+			v_addr.appendc(*p);
+		*p++;
+
+		if (*p && *p == ':') {
+			*p++;
+			while (*p) {
+				if (*p == ',') {
+					break;
+				}
+				v_port.appendc(*p);
+				*p++;
+			}
+			if (! *p)
+				break;
+		}
+
+		if (!*p || *p == ',') {
+			if (v_port._i) {
+				port = strtol(v_port._v, 0, 10);
+				v_port.reset();
+			} else {
+				port = port_default;
+			}
+
+			printf("[VOS.SOCKET] bind: %s:%d\n", v_addr._v, port);
+
+			s = bind(v_addr._v, port);
+			if (! s) {
+				++n;
+			}
+			v_addr.reset();
+			if (*p)
+				*p++;
+		}
+	}
+
+	if (! n)
+		return s;
+	return 0;
 }
 
 void Socket::listen(const unsigned int queue_len)
@@ -175,10 +259,28 @@ void Socket::listen(const unsigned int queue_len)
 	::listen(_d, queue_len);
 }
 
-void Socket::bind_listen(const char *address, const int port)
+int Socket::bind_listen(const char *address, const int port)
 {
-	Socket::bind(address, port);
-	::listen(_d, DFLT_LISTEN_QUEUE);
+	int s;
+
+	s = Socket::bind(address, port);
+	if (! s) {
+		::listen(_d, DFLT_LISTEN_QUEUE);
+	}
+
+	return s;
+}
+
+int Socket::binds_listen(const char *list_address, const int port_default)
+{
+	int s;
+
+	s = Socket::binds(list_address, port_default);
+	if (! s) {
+		::listen(_d, DFLT_LISTEN_QUEUE);
+	}
+
+	return s;
 }
 
 void Socket::connect_to(const char *address, const int port)
@@ -301,7 +403,7 @@ Socket * Socket::accept_conn()
 		client = accept6();
 	}
 	
-	printf(" accepting connection from '%s'\n", client->_name._v);
+	printf("[VOS.SOCKET] accepting connection from '%s'\n", client->_name._v);
 
 	add_client(client);
 
@@ -332,8 +434,6 @@ int Socket::recv_udp(struct sockaddr *addr)
 	socklen_t addr_len = sizeof(struct sockaddr);
 
 	_i = ::recvfrom(_d, _v, _l, 0, addr, &addr_len);
-
-	printf(">> UDP receive : %d bytes\n", _i);
 
 	return _i;
 }

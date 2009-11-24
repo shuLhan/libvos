@@ -31,9 +31,15 @@ public:
 				const int port);
 	void create_addr6(struct sockaddr_in6 *sin6, const char *address,
 				const int port);
-	void bind(const char *address, const int port);
+
+	int bind(const char *address, const int port);
+	int binds(const char *list_address, const int port_default);
+
 	void listen(const unsigned int queue_len = DFLT_LISTEN_QUEUE);
-	void bind_listen(const char *address, const int port);
+
+	int bind_listen(const char *address, const int port);
+	int binds_listen(const char *list_address, const int port_default);
+
 	void connect_to(const char *address, const int port);
 
 	void add_client(Socket *client);

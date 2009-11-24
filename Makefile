@@ -56,7 +56,9 @@ endif
 
 .PHONY: all clean
 
-all:: ${LIBVOS_BLD_D} ${LIBVOS_OBJS}
+all:: ${LIBVOS_OBJS}
+
+${LIBVOS_OBJS}: ${LIBVOS_BLD_D}
 
 ${LIBVOS_BLD_D}:
 	@mkdir -p $@

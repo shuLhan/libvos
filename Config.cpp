@@ -18,7 +18,8 @@ enum _cfg_parsing_stt {
 Config::Config(const char *ini) :
 	_data(new ConfigData(CONFIG_T_HEAD, CFG_HDR))
 {
-	load(ini);
+	if (ini)
+		load(ini);
 }
 
 Config::~Config()
@@ -32,13 +33,18 @@ void Config::dump()
 	_data->dump();
 }
 
-void Config::load(const char *ini)
+int Config::load(const char *ini)
 {
-	if (! ini)
-		return;
+	int s;
 
-	open_ro(ini);
-	parsing();
+	if (!ini)
+		return 0;
+
+	s = open_ro(ini);
+	if (!s)
+		parsing();
+
+	return s;
 }
 
 void Config::save()
@@ -48,16 +54,24 @@ void Config::save()
 	save_as(ini._v, CONFIG_SAVE_WITH_COMMENT);
 }
 
-void Config::save_as(const char *ini, const int save_mode)
+/**
+ * @return:
+ *	< 0	: success.
+ *	< !0	: fail.
+ */
+int Config::save_as(const char *ini, const int save_mode)
 {
-	if (! ini)
-		return;
-
+	int		s;
 	File		fini;
 	ConfigData	*phead	= _data;
 	ConfigData	*pkey	= NULL;
 
-	fini.open_wo(ini);
+	if (!ini)
+		return 0;
+
+	s = fini.open_wo(ini);
+	if (s)
+		return s;
 
 	while (phead) {
 		if (phead->like(CFG_HDR) != 0)
@@ -81,8 +95,25 @@ void Config::save_as(const char *ini, const int save_mode)
 	}
 
 	fini.close();
+
+	return 0;
 }
 
+/**
+ * @desc: get config value, based on 'head' and 'key'. If 'head' or 'key' is
+ *	not found then return 'dflt' value;
+ *
+ * @param:
+ *	> head	: header of configuration, where key will reside.
+ *	> key	: key of value that will be searched.
+ *	> dflt	: default return value if head or key is not found in config
+ *		file.
+ *
+ * @return:
+ *	< const char *	: success, pointer to config value.
+ *	< NULL		: fail, no head or key found in config file, and dflt
+ *			parameter is NULL too.
+ */
 const char * Config::get(const char *head, const char *key, const char *dflt)
 {
 	ConfigData *h = _data;
