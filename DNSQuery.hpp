@@ -49,20 +49,24 @@ enum _DNS_BFR_TYPE {
 
 class DNSQuery {
 public:
-	DNSQuery(Buffer *bfr = NULL);
+	DNSQuery();
 	~DNSQuery();
 
-	int extract(Buffer *bfr = NULL, int type = BUFFER_IS_UDP);
+	int init(const Buffer *bfr);
+
+	int extract(Buffer *bfr, int type);
 	int extract_buffer(unsigned char *bfr, unsigned int len,
 				const int type);
 	int extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 			unsigned char *bfr, unsigned char **bfr_ret);
-	int read_label(Buffer *lable, unsigned char *bfr_org,
+	int read_label(Buffer *label, unsigned char *bfr_org,
 			unsigned char *bfr, int bfr_off);
 	void set_id(int id);
 	void reset();
 	void ntohs();
 	void dump();
+
+	static int INIT(DNSQuery **o, const Buffer *bfr);
 
 	/* DNS HEADER Section */
 	uint16_t	_id;

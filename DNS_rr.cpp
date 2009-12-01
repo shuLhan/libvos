@@ -8,26 +8,13 @@
 
 namespace vos {
 
-void DNS_rr::ADD(DNS_rr **root, DNS_rr *rr)
-{
-	if (! (*root)) {
-		(*root) = rr;
-	} else {
-		DNS_rr *p = (*root);
-		while (p->_next)
-			p = p->_next;
-
-		p->_next = rr;
-	}
-}
-
 DNS_rr::DNS_rr() :
 	_type(0),
 	_class(0),
 	_ttl(0),
 	_len(0),
 	_name(),
-	_data(DNS_RDATA_MAX_SIZE),
+	_data(),
 	_next(NULL)
 {}
 
@@ -35,6 +22,24 @@ DNS_rr::~DNS_rr()
 {
 	if (_next)
 		delete _next;
+}
+
+/**
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ */
+int DNS_rr::init()
+{
+	int s;
+
+	s = _name.init(NULL);
+	if (s < 0)
+		return s;
+
+	s = _data.init_size(DNS_RDATA_MAX_SIZE);
+
+	return s;
 }
 
 void DNS_rr::reset()
@@ -62,6 +67,19 @@ void DNS_rr::dump()
 		printf(" RR data   : %s\n\n", p->_data._v);
 
 		p = p->_next;
+	}
+}
+
+void DNS_rr::ADD(DNS_rr **root, DNS_rr *rr)
+{
+	if (! (*root)) {
+		(*root) = rr;
+	} else {
+		DNS_rr *p = (*root);
+		while (p->_next)
+			p = p->_next;
+
+		p->_next = rr;
 	}
 }
 

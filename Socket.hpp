@@ -15,32 +15,34 @@
 
 namespace vos {
 
+#define	SOCK_ADDR_WILCARD	"0.0.0.0"
+
 class Socket : public File {
 public:
-	static int		DFLT_BUFFER_SIZE;
-	static unsigned int	DFLT_LISTEN_QUEUE;
+	static int DFLT_BUFFER_SIZE;
+	static int DFLT_LISTEN_SIZE;
+	static int DFLT_NAME_SIZE;
 
-	Socket(int buffer_size = DFLT_BUFFER_SIZE);
+	Socket();
 	~Socket();
 
-	void create(const int family = AF_INET, const int type = SOCK_STREAM);
-	void create_tcp();
-	void create_udp();
+	int init(const int bfr_size);
 
-	void create_addr(struct sockaddr_in *sin, const char *address,
+	int create(const int family, const int type);
+	int create_tcp();
+	int create_udp();
+
+	int create_addr(struct sockaddr_in *sin, const char *address,
 				const int port);
-	void create_addr6(struct sockaddr_in6 *sin6, const char *address,
+	int create_addr6(struct sockaddr_in6 *sin6, const char *address,
 				const int port);
 
 	int bind(const char *address, const int port);
-	int binds(const char *list_address, const int port_default);
-
-	void listen(const unsigned int queue_len = DFLT_LISTEN_QUEUE);
+	int listen(const unsigned int queue_len);
 
 	int bind_listen(const char *address, const int port);
-	int binds_listen(const char *list_address, const int port_default);
 
-	void connect_to(const char *address, const int port);
+	int connect_to(const char *address, const int port);
 
 	void add_client(Socket *client);
 	void remove_client(Socket *client);
@@ -49,9 +51,12 @@ public:
 	Socket * accept6();
 	Socket * accept_conn();
 
-	void send(Buffer *bfr);
+	int send(Buffer *bfr);
+	int send_raw(const char *bfr, const int len);
 
 	int send_udp(struct sockaddr *addr, Buffer *bfr);
+	int send_udp_raw(struct sockaddr *addr, const char *bfr,
+				const int len);
 	int recv_udp(struct sockaddr *addr);
 
 	int		_family;

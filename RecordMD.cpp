@@ -114,14 +114,14 @@ void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
  *	[]	: optional.
  *	<char>	: any single character, in c-style for escape char.
  *
- * @param:
+ * @param	:
  *	> meta	: formatted string of field declaration.
  *
- * @return:
- *	< !NULL	: success.
- *	< NULL	: fail.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
  */
-RecordMD *RecordMD::INIT(const char *meta)
+int RecordMD::INIT(RecordMD **o, const char *meta)
 {
 	if (! meta)
 		return 0;
@@ -131,8 +131,9 @@ RecordMD *RecordMD::INIT(const char *meta)
 	int		todo_next	= 0;
 	int		len		= strlen(meta);
 	Buffer		v;
-	RecordMD	*rmd		= NULL;
 	RecordMD	*md		= NULL;
+
+	v.init(NULL);
 
 	while (todo != MD_DONE) {
 		while (i < len && isspace(meta[i])) {
@@ -150,7 +151,7 @@ RecordMD *RecordMD::INIT(const char *meta)
 		case MD_START:
 			md	= new RecordMD();
 			todo	= MD_LEFT_Q;
-			RecordMD::ADD(&rmd, md);
+			RecordMD::ADD(o, md);
 			break;
 
 		case MD_META_SEP:
@@ -407,13 +408,13 @@ RecordMD *RecordMD::INIT(const char *meta)
 			}
 
 			if (v._i) {
-				if (v.like("STRING") == 0) {
+				if (v.like_raw("STRING") == 0) {
 					md->_type = RMD_T_STRING;
-				} else if (v.like("NUMBER") == 0) {
+				} else if (v.like_raw("NUMBER") == 0) {
 					md->_type = RMD_T_NUMBER;
-				} else if (v.like("DATE") == 0) {
+				} else if (v.like_raw("DATE") == 0) {
 					md->_type = RMD_T_DATE;
-				} else if (v.like("BLOB") == 0) {
+				} else if (v.like_raw("BLOB") == 0) {
 					md->_type = RMD_T_BLOB;
 				} else {
 					md->_type = RMD_T_STRING;
@@ -429,38 +430,51 @@ RecordMD *RecordMD::INIT(const char *meta)
 		}
 	}
 
-	return rmd;
+	return 0;
 err:
 	fprintf(stderr, "invalid field meta data : %s\n", &meta[i]);
 	fprintf(stderr, "  at position %d,\n", i);
 	fprintf(stderr, "  at character '%c'.\n", meta[i]);
-	delete rmd;
-	return NULL;
+
+	if ((*o)) {
+		delete (*o);
+		(*o) = NULL;
+	}
+
+	return -E_CFG_BAD;
 }
 
 /**
- * @desc: load meta-data from file 'fmeta'.
+ * @desc	: load meta-data from file 'fmeta'.
  *
- * @param:
+ * @param	:
  *	> fmeta	: a name of file contains meta-data, with or without leading
  *		path.
  *
- * @return:
- *	< RecordMD *	: success, return meta-data objects.
- *	< NULL		: fail.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
  */
-RecordMD *RecordMD::INIT_FROM_FILE(const char *fmeta)
+int RecordMD::INIT_FROM_FILE(RecordMD **o, const char *fmeta)
 {
 	int	s;
 	File	f;
 
 	s = f.open_ro(fmeta);
-	if (s)
+	if (s < 0)
 		return NULL;
 
-	f.resize(f.get_size());
-	f.read();
-	return RecordMD::INIT(f._v);
+	s = f.resize(f.get_size());
+	if (s < 0) {
+		return NULL;
+	}
+
+	s = f.read();
+	if (s < 0) {
+		return NULL;
+	}
+
+	return RecordMD::INIT(o, f._v);
 }
 
 } /* namespace::vos */

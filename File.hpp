@@ -31,43 +31,42 @@ enum _file_open_type {
 
 class File : public Buffer {
 public:
+
 	File();
-	explicit File(const int bfr_size);
-	File(const char *path, const int bfr_size);
 	~File();
+
+	int init(const int bfr_size);
 
 	int open(const char *path);
 	int open_ro(const char *path);
 	int open_wo(const char *path);
 	int open_wa(const char *path);
 	int read();
-	void write(const Buffer *bfr);
-	void write(const char *bfr, int len = 0);
-	void write(const char *fmt, va_list args);
-	void writes(const char *fmt ...);
-	void write(const char c);
-	void flush();
+	int write(const Buffer *bfr);
+	int write_raw(const char *bfr, int len);
+	int writef(const char *fmt, va_list args);
+	int writes(const char *fmt ...);
+	int writec(const char c);
+	int flush();
 	void close();
 	void dump();
 
 	int get_size();
-	Buffer *get_line();
+	int get_line(Buffer **line);
 
-	void set_eol(const int mode);
+	void set_eol_mode(const int mode);
 	void set_eol(const char *eol);
 
 	static int GET_SIZE(const char *path);
-	static int IS_EXIST(const char *path, int acc_mode = FILE_OPEN_RW);
-	static Buffer *BASENAME(const char *path);
+	static int IS_EXIST(const char *path, int acc_mode);
+	static Buffer* BASENAME(const char *path);
 
 	static int	DFLT_BUFFER_SIZE;
-
 	int		_d;		/* file descriptor */
 	int		_p;		/* file iterator */
 	int		_status;	/* file status */
 	char		_eol;		/* file end of line character */
 	Buffer		_name;		/* file name */
-	Buffer		_line;
 	const char	*__eol;		/* file end of line string */
 private:
 	DISALLOW_COPY_AND_ASSIGN(File);

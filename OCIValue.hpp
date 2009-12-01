@@ -33,48 +33,53 @@ enum _oci_type {
 
 class OCIValue : public Buffer {
 public:
+	OCIValue();
+
+	int init(const int pos, const int type = OCI_T_VARCHAR,
+			const int len = OCI_T_DFLT_SIZE);
+
+	static OCIValue* INIT(const int pos, const int type = OCI_T_VARCHAR,
+				const int len = OCI_T_DFLT_SIZE);
+
 	static OCIValue * NUMBER(const int pos) {
-			return new OCIValue(pos, OCI_T_NUMBER, 22);
+			return OCIValue::INIT(pos, OCI_T_NUMBER, 22);
 	}
 	static OCIValue * DATE(const int pos) {
-			return new OCIValue(pos, OCI_T_DATE, 8);
+			return OCIValue::INIT(pos, OCI_T_DATE, 8);
 	}
 	static OCIValue * RAW(const int pos) {
-			return new OCIValue(pos, OCI_T_RAW, 2001);
+			return OCIValue::INIT(pos, OCI_T_RAW, 2002);
 	}
 	static OCIValue * ROWID(const int pos) {
-			return new OCIValue(pos, OCI_T_ROWID, 11);
+			return OCIValue::INIT(pos, OCI_T_ROWID, 11);
 	}
 	static OCIValue * CHAR(const int pos) {
-			return new OCIValue(pos, OCI_T_CHAR, 2001);
+			return OCIValue::INIT(pos, OCI_T_CHAR, 2001);
 	}
 	static OCIValue * BINARY_FLOAT(const int pos) {
-			return new OCIValue(pos, OCI_T_BINARY_FLOAT, 5);
+			return OCIValue::INIT(pos, OCI_T_BINARY_FLOAT, 5);
 	}
 	static OCIValue * BINARY_DOUBLE(const int pos) {
-			return new OCIValue(pos, OCI_T_BINARY_DOUBLE, 9);
+			return OCIValue::INIT(pos, OCI_T_BINARY_DOUBLE, 9);
 	}
 	static OCIValue * TIMESTAMP(const int pos) {
-			return new OCIValue(pos, OCI_T_TIMESTAMP, 12);
+			return OCIValue::INIT(pos, OCI_T_TIMESTAMP, 12);
 	}
 	static OCIValue * TIMESTAMP_WITH_TZ(const int pos) {
-			return new OCIValue(pos, OCI_T_TIMESTAMP_WITH_TZ, 14);
+			return OCIValue::INIT(pos, OCI_T_TIMESTAMP_WITH_TZ, 14);
 	}
 	static OCIValue * TIMESTAMP_WITH_LTZ(const int pos) {
-			return new OCIValue(pos, OCI_T_TIMESTAMP_WITH_LTZ, 12);
+			return OCIValue::INIT(pos, OCI_T_TIMESTAMP_WITH_LTZ, 12);
 	}
 	static OCIValue * INTERVAL_Y_TO_M(const int pos) {
-			return new OCIValue(pos, OCI_T_INTERVAL_Y_TO_M, 6);
+			return OCIValue::INIT(pos, OCI_T_INTERVAL_Y_TO_M, 6);
 	}
 	static OCIValue * INTERVAL_D_TO_S(const int pos) {
-			return new OCIValue(pos, OCI_T_INTERVAL_D_TO_S, 12);
+			return OCIValue::INIT(pos, OCI_T_INTERVAL_D_TO_S, 12);
 	}
 	static OCIValue * UROWID(const int pos) {
-			return new OCIValue(pos, OCI_T_UROWID, 3951);
+			return OCIValue::INIT(pos, OCI_T_UROWID, 3951);
 	}
-
-	OCIValue(const int pos, const int type = OCI_T_VARCHAR,
-			const int len = OCI_T_DFLT_SIZE);
 
 	int		_t;
 	int		_p;

@@ -8,7 +8,7 @@
 
 namespace vos {
 
-Record::Record(int bfr_size) : Buffer(bfr_size),
+Record::Record() : Buffer(),
 	_next_col(NULL),
 	_last_col(this),
 	_next_row(NULL),
@@ -21,6 +21,11 @@ Record::~Record()
 		delete _next_col;
 	if (_next_row)
 		delete _next_row;
+}
+
+int Record::init(const int bfr_size)
+{
+	return init_size(bfr_size);
 }
 
 void Record::dump()
@@ -60,21 +65,29 @@ void Record::ADD_ROW(Record **rows, Record *row)
 	}
 }
 
-Record *Record::INIT_ROW(int col_size, const int bfr_size)
+/**
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ */
+int Record::INIT_ROW(Record **row, int col_size, const int bfr_size)
 {
+	int	s;
+	Record	*col = NULL;
 
-	Record 	*row	= NULL;
-	Record	*col	= NULL;
-
-	if (! col_size)
-		return NULL;
+	if (0 == col_size)
+		return 0;
 
 	for (; col_size > 0; --col_size) {
-		col = new Record(bfr_size);
-		ADD_COL(&row, col);
+		s = Record::INIT(&col, bfr_size);
+		if (s != 0) {
+			delete row;
+			return s;
+		}
+		ADD_COL(row, col);
 	}
 
-	return row;
+	return 0;
 }
 
 Record *Record::get_column(int n)
@@ -87,39 +100,57 @@ Record *Record::get_column(int n)
 	return p;
 }
 
+/**
+ * @desc	: set column 'n' value to 'bfr'.
+ *
+ * @param	:
+ *	> n	: column number.
+ *	> bfr	: content for new column value.
+ *
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ */
 int Record::set_column(int n, Buffer *bfr)
 {
-	Record *p = this;
+	int	s	= 0;
+	Record	*p	= this;
 
-	if (! bfr)
+	if (!bfr)
 		return 0;
 
 	for (; n > 0 && p; --n)
 		p = p->_next_col;
 
 	if (n < 0 || ! p)
-		return 1;
+		return -E_RECORD_INV_COLUMN;
 
 	if (bfr->_v) {
-		p->copy(bfr->_v, bfr->_i);
+		s = p->copy_raw(bfr->_v, bfr->_i);
 	}
 
-	return 0;
+	return s;
 }
 
-int Record::set_column(int n, const int number)
+/**
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ */
+int Record::set_column_number(int n, const int number)
 {
-	Record *p = this;
+	int	s	= 0;
+	Record	*p	= this;
 
 	for (; n > 0 && p; --n)
 		p = p->_next_col;
 
 	if (n < 0 || ! p)
-		return 1;
+		return -E_RECORD_INV_COLUMN;
 
-	p->appendi(number);
+	s = p->appendi(number, DFLT_BASE);
 
-	return 0;
+	return s;
 }
 
 void Record::columns_reset()
@@ -130,6 +161,22 @@ void Record::columns_reset()
 		p->reset();
 		p = p->_next_col;
 	}
+}
+
+int Record::INIT(Record **o, const int bfr_size)
+{
+	int s = -E_MEM;
+	
+	(*o) = new Record();
+
+	if ((*o)) {
+		s = (*o)->init(bfr_size);
+		if (s != 0) {
+			delete (*o);
+			(*o) = NULL;
+		}
+	}
+	return s;
 }
 
 } /* namespace::vos */

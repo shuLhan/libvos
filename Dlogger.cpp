@@ -13,8 +13,8 @@ Dlogger::Dlogger() :
 {
 	pthread_mutex_init(&_lock, 0);
 
-	_d = STDOUT_FILENO;
-	_status = FILE_OPEN_W;
+	_d	= STDOUT_FILENO;
+	_status	= FILE_OPEN_W;
 }
 
 Dlogger::~Dlogger()
@@ -26,13 +26,14 @@ Dlogger::~Dlogger()
 }
 
 /**
- * @desc: start the log daemon on the file 'logfile'.
+ * @desc		: start the log daemon on the file 'logfile'.
  *
- * @param:
+ * @param		:
  *	> logfile	: a log file name, with or without leading path.
- * @return:
- *	< 0	: success.
- *	< !0	: fail.
+ *
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
  */
 int Dlogger::open(const char *logfile)
 {
@@ -40,9 +41,11 @@ int Dlogger::open(const char *logfile)
 		File::close();
 	}
 	if (!logfile) {
-		_d = STDOUT_FILENO;
-		_status = FILE_OPEN_W;
+		File::init(File::DFLT_BUFFER_SIZE);
+		_d	= STDOUT_FILENO;
+		_status	= FILE_OPEN_W;
 	} else {
+		File::init(File::DFLT_BUFFER_SIZE);
 		return open_wa(logfile);
 	}
 	return 0;
@@ -55,15 +58,15 @@ void Dlogger::close()
 {
 	if (_d && _d != STDOUT_FILENO) {
 		File::close();
-		_d = STDOUT_FILENO;
-		_status = FILE_OPEN_W;
+		_d	= STDOUT_FILENO;
+		_status	= FILE_OPEN_W;
 	}
 }
 
 /**
  * @desc: write message to stdout and log file.
  */
-void Dlogger::dloger(const char *fmt, ...)
+int Dlogger::er(const char *fmt, ...)
 {
 	register int	s;
 	va_list		args;
@@ -75,17 +78,19 @@ void Dlogger::dloger(const char *fmt, ...)
 
 	__va_copy(args2, args);
 	vfprintf(stdout, fmt, args2);
-	write(fmt, args);
+	s = writef(fmt, args);
 	va_end(args2);
 	va_end(args);
 
 	pthread_mutex_unlock(&_lock);
+
+	return s;
 }
 
 /**
  * @desc: write message to log file only.
  */
-void Dlogger::dlogit(const char *fmt, ...)
+int Dlogger::it(const char *fmt, ...)
 {
 	register int	s;
 	va_list		args;
@@ -93,10 +98,12 @@ void Dlogger::dlogit(const char *fmt, ...)
 	do { s = pthread_mutex_lock(&_lock); } while (s);
 
 	va_start(args, fmt);
-	write(fmt, args);
+	s = writef(fmt, args);
 	va_end(args);
 
 	pthread_mutex_unlock(&_lock);
+
+	return s;
 }
 
 } /* namespace::vos */

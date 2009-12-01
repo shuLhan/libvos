@@ -29,23 +29,10 @@ const char *_ftp_cmd[N_FTP_CMD] = {
 	"QUIT"	/* QUIT				*/
 };
 
-/**
- * @desc: create an FTP connection that connect to 'host' at port 'port'.
- *
- * @param:
- *	> host : FTP server name or address.
- *	> port : FTP server port (default to 21).
- */
-FTP::FTP(const char *host, int port) :
+FTP::FTP() : Socket(),
 	_reply(0),
-	_mode(FTP_MODE_NORMAL),
-	_tout()
-{
-	_tout.tv_sec	= FTP_TIMEOUT;
-	_tout.tv_usec	= FTP_UTIMEOUT_INC;
-	if (host)
-		FTP::connect(host, port);
-}
+	_mode(FTP_STT_DISCONNECT)
+{}
 
 FTP::~FTP()
 {
@@ -55,31 +42,50 @@ FTP::~FTP()
 		disconnect();
 }
 
-void FTP::connect(const char *host, const int port, const int mode)
+/**
+ * @desc	: create FTP connection to 'host:port'.
+ *
+ * @param	:
+ *	> host	: hostname or IP address destination.
+ *	> port	: port number for FTP service on destination.
+ *	> mode	: mode of connection (NORMAL | PASV).
+ *
+ * @return	:
+ *	< 0	: success.
+ *	< !0	: fail.
+ */
+int FTP::connect(const char *host, const int port, const int mode)
 {
 	int s;
 
-	create();
-	connect_to(host, port);
+	s = create_tcp();
+	if (s < 0)
+		return s;
+
+	s = connect_to(host, port);
+	if (s < 0)
+		return s;
 
 	_mode = mode;
 
 	if (mode == FTP_MODE_NORMAL) {
 		/* get server header.
 		 * why we loop here ? because some server send header more
-		 * than once.
+		 * than once. so we read all the f*ing banner here before
+		 * sending another commands.
 		 */
 		do {
-			s = get_reply(0);
-			if (s) {
-				return;
-			}
+			s = get_reply(FTP_TIMEOUT);
+			if (_i == 0)
+				break;
 			/* get & set server EOL */
 			if (_v[_i - 2] == _file_eol[FILE_EOL_DOS][0]) {
 				_eol = _file_eol[FILE_EOL_DOS][0];
 			}
-		} while (s == 0);
+		} while (s);
 	}
+
+	return 0;
 }
 
 int FTP::login(const char *username, const char *password)
@@ -106,7 +112,7 @@ void FTP::logout()
 	if (!(_status & FTP_STT_LOGGED_IN))
 		return;
 
-	send_cmd(FTP_CMD_QUIT);
+	send_cmd(FTP_CMD_QUIT, NULL);
 }
 
 void FTP::disconnect()
@@ -124,75 +130,50 @@ void FTP::disconnect()
 }
 
 /**
- * @desc: send all buffer contents.
- */
-void FTP::send()
-{
-	if (LIBVOS_DEBUG)
-		dump_send();
-	flush();
-}
-
-/**
  * @return:
- *	< 0 : success.
- *	< 1 : fail, socket timeout.
+ *	< 0	: success.
+ *	< <0	: fail.
  */
-int FTP::recv(const int timeout)
+int FTP::recv(const int to_sec, const int to_usec)
 {
 	int		s;
-	struct timeval	to;
-	fd_set		read_set;
-
-	do {
-		FD_ZERO(&read_set);
-		FD_SET(_d, &read_set);
-
-		to.tv_sec	= _tout.tv_sec;
-		to.tv_usec	= _tout.tv_usec;
-
-		s = select(_d + 1, &read_set, 0, 0, &to);
-		if (s < 0)
-			throw Error(E_SOCK_SELECT);
-
-		/* time out */
-		if (s == 0 || !(FD_ISSET(_d, &read_set))) {
-			_tout.tv_usec += FTP_UTIMEOUT_INC;
-			_tout.tv_sec += (_tout.tv_usec / FTP_UTIMEOUT_MAX);
-			_tout.tv_usec %=  FTP_UTIMEOUT_MAX;
-
-			printf(" -- tout.tv_sec >= timeout: %ld >= %d\n",
-				_tout.tv_sec, timeout);
-			if (_tout.tv_sec >= timeout) {
-				_tout.tv_sec	= 0;
-				_tout.tv_usec	= FTP_UTIMEOUT_INC;
-				return 1;
-			}
-		}
-	} while (s <= 0);
+	fd_set		allfds;
 
 	reset();
-	read();
-	if (LIBVOS_DEBUG && _mode == FTP_MODE_NORMAL)
-		dump_receive();
+	FD_ZERO(&allfds);
+	FD_SET(_d, &allfds);
 
-	return 0;
-}
+	_readfds		= allfds;
+	_timeout.tv_sec		= to_sec;
+	_timeout.tv_usec	= to_usec;
 
-void FTP::dump_send()
-{
-	printf("\n >> %s", _v);
-}
+	s = select(_d + 1, &_readfds, 0, 0, &_timeout);
+	if (s < 0)
+		return -E_SOCK_SELECT;
 
-void FTP::dump_receive()
-{
-	printf(" << %s\n", _v);
+	if (FD_ISSET(_d, &_readfds)) {
+		s = read();
+		if (s >= 0) {
+			if (LIBVOS_DEBUG && _mode == FTP_MODE_NORMAL) {
+				dump();
+			}
+			return 0;
+		}
+	} else {
+		if (LIBVOS_DEBUG) {
+			printf("[FTP] timeout after %d.%d seconds.\n", to_sec,
+				to_usec);
+		}
+		s = -E_SOCK_TIMEOUT;
+	}
+
+	return s;
 }
 
 /**
- * @return:
- *	< 0  : success.
- *	< 1  : fail.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
  */
 int FTP::send_cmd(const int cmd, const char *parm)
 {
@@ -202,27 +183,39 @@ int FTP::send_cmd(const int cmd, const char *parm)
 		return 1;
 
 	reset();
-	if (parm)
-		concat(_ftp_cmd[cmd], " ", parm, __eol, NULL);
-	else
-		concat(_ftp_cmd[cmd], __eol, NULL);
 
-	send();
-	s = get_reply();
+	if (parm)
+		s = concat(_ftp_cmd[cmd], " ", parm, __eol, NULL);
+	else
+		s = concat(_ftp_cmd[cmd], __eol, NULL);
+	if (s < 0)
+		return s;
+
+	s = send(NULL);
+	if (s < 0)
+		return s;
+
+	s = get_reply(FTP_TIMEOUT);
 
 	return s;
 }
 
 /**
  * @return:
- *	< 0  : success.
- *	< 1  : fail.
+ *	< 0	: success.
+ *	< <0	: fail.
  */
 int FTP::get_reply(const int timeout)
 {
-	int s = recv(timeout);
-	if (s)
+	int s;
+
+	s = recv(timeout, 0);
+	if (s < 0) {
 		return s;
+	}
+	if (!_i) {
+		return 0;
+	}
 
 	_reply = atoi(_v);
 
@@ -345,18 +338,28 @@ int FTP::do_pasv(const int cmd, const char *parm, const char *out)
 	File	fout;
 	FTP	pasv;
 
-	s = send_cmd(FTP_CMD_PASV);
-	if (s)
+	s = addr.init(NULL);
+	if (s < 0)
+		return s;
+
+	s = fout.init(File::DFLT_BUFFER_SIZE);
+	if (s < 0)
+		return s;
+
+	s = send_cmd(FTP_CMD_PASV, NULL);
+	if (s < 0)
 		return s;
 
 	s = parsing_pasv_reply(&addr, &port);
-	if (s)
+	if (s < 0)
 		return s;
 
-	pasv.connect(addr._v, port, FTP_MODE_PASV);
+	s = pasv.connect(addr._v, port, FTP_MODE_PASV);
+	if (s < 0)
+		return s;
 
 	s = send_cmd(cmd, parm);
-	if (s)
+	if (s < 0)
 		return s;
 
 	if (out) {
@@ -367,18 +370,18 @@ int FTP::do_pasv(const int cmd, const char *parm, const char *out)
 		fout._d		= STDOUT_FILENO;
 		fout._status	= FILE_OPEN_W;
 	}
-	if (s)
+	if (s < 0)
 		return s;
 
-	pasv.recv();
+	pasv.recv(FTP_TIMEOUT, 0);
 	while (pasv._i > 0) {
 		fout.write(&pasv);
-		pasv.recv();
+		pasv.recv(FTP_TIMEOUT, 0);
 	}
 	fout.flush();
 	pasv.disconnect();
 
-	s = get_reply();
+	s = get_reply(FTP_TIMEOUT);
 
 	return s;
 }
@@ -391,25 +394,31 @@ int FTP::do_put(const char *path)
 	File	fput;
 	FTP	pasv;
 
-	if (! path)
+	if (!path)
 		return 0;
 
-	s = fput.open_ro(path);
-	if (s)
+	s = addr.init(NULL);
+	if (s < 0)
 		return s;
 
-	s = send_cmd(FTP_CMD_PASV);
-	if (s)
+	s = fput.open_ro(path);
+	if (s < 0)
+		return s;
+
+	s = send_cmd(FTP_CMD_PASV, NULL);
+	if (s < 0)
 		return s;
 
 	s = parsing_pasv_reply(&addr, &port);
-	if (s)
+	if (s < 0)
 		return s;
 
-	pasv.connect(addr._v, port, FTP_MODE_PASV);
+	s = pasv.connect(addr._v, port, FTP_MODE_PASV);
+	if (s < 0)
+		return s;
 
 	s = send_cmd(FTP_CMD_STOR, path);
-	if (s)
+	if (s < 0)
 		return s;
 
 	fput.read();
@@ -420,7 +429,7 @@ int FTP::do_put(const char *path)
 	pasv.flush();
 
 	pasv.disconnect();
-	s = get_reply();
+	s = get_reply(FTP_TIMEOUT);
 
 	return s;
 }
@@ -429,11 +438,11 @@ int FTP::do_rename(const char *from, const char *to)
 {
 	int s;
 
-	if (! from || ! to)
+	if (!from || !to)
 		return 0;
 
 	s = send_cmd(FTP_CMD_RNFR, from);
-	if (s)
+	if (s < 0)
 		return s;
 
 	s = send_cmd(FTP_CMD_RNTO, to);

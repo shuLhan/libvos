@@ -20,8 +20,8 @@ public:
 	int open(const char *logfile);
 	void close();
 
-	void dloger(const char *fmt, ...);
-	void dlogit(const char *fmt, ...);
+	int er(const char *fmt, ...);
+	int it(const char *fmt, ...);
 private:
 	pthread_mutex_t	_lock;
 	DISALLOW_COPY_AND_ASSIGN(Dlogger);

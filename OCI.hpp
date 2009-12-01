@@ -40,6 +40,8 @@ public:
 	OCI();
 	~OCI();
 
+	int init();
+
 	void create_env();
 	void create_err();
 	void connect(const char *hostname, const char *service_name,

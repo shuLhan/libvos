@@ -8,7 +8,7 @@
 
 namespace vos {
 
-DNSQuery::DNSQuery(Buffer *bfr) :
+DNSQuery::DNSQuery() :
 	_id(0),
 	_flag(0),
 	_n_qry(0),
@@ -23,10 +23,7 @@ DNSQuery::DNSQuery(Buffer *bfr) :
 	_rr_ans(NULL),
 	_rr_aut(NULL),
 	_rr_add(NULL)
-{
-	if (bfr)
-		_bfr = new Buffer(bfr);
-}
+{}
 
 DNSQuery::~DNSQuery()
 {
@@ -44,21 +41,56 @@ DNSQuery::~DNSQuery()
 	}
 }
 
+/**
+ * @desc	: initialize DNSQuery object.
+ *
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ */
+int DNSQuery::init(const Buffer *bfr)
+{
+	int s = 0;
+
+	s = _name.init(NULL);
+	if (0 == s) {
+		s = Buffer::INIT(&_bfr, bfr);
+	}
+
+	return s;
+}
+
+/**
+ * @desc	: extract contents of buffer.
+ *
+ * @parm	:
+ *	> bfr	: pointer to Buffer object.
+ *	> type	: type of buffer come from, is it TCP or UDP ?
+ *
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ */
 int DNSQuery::extract(Buffer *bfr, int type)
 {
+	int		s	= 0;
 	int		i	= 0;
 	int		len	= 0;
 	unsigned char	*p	= NULL;
 	unsigned char	*ret	= NULL;
 	DNS_rr		*rr	= NULL;
 
-	if (! bfr) {
+	if (!bfr) {
 		bfr = _bfr;
 	} else {
-		if (! _bfr) {
-			_bfr = new Buffer(bfr);
+		if (!_bfr) {
+			s = Buffer::INIT(&_bfr, NULL);
+			if (s < 0)
+				return s;
 		} else {
-			_bfr->copy(bfr);
+			s = _bfr->copy(bfr);
+			if (s < 0)
+				return s;
 		}
 	}
 
@@ -97,13 +129,25 @@ int DNSQuery::extract(Buffer *bfr, int type)
 	return 0;
 }
 
+/**
+ * @desc		: extract header of DNS packet.
+ *
+ * @param		:
+ *	> bfr		: DNS packet.
+ *	> bfr_len	: length of 'bfr'.
+ *	> type		: type of DNS packet come from, TCP or UDP.
+ *
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ */
 int DNSQuery::extract_buffer(unsigned char *bfr, unsigned int bfr_len,
 				const int type)
 {
 	int ret	= 0;
 	int len	= 0;
 
-	if (! bfr)
+	if (!bfr)
 		return 0;
 
 	if (type == BUFFER_IS_TCP) {
@@ -120,6 +164,7 @@ int DNSQuery::extract_buffer(unsigned char *bfr, unsigned int bfr_len,
 	_n_aut	= ::ntohs(_n_aut);
 	_n_add	= ::ntohs(_n_add);
 
+	_name.reset();
 	len	= read_label(&_name, bfr, bfr + DNS_HEADER_SIZE, 0);
 	ret	+= DNS_HEADER_SIZE + len;
 	bfr	+= DNS_HEADER_SIZE + len;
@@ -138,7 +183,7 @@ int DNSQuery::extract_buffer(unsigned char *bfr, unsigned int bfr_len,
 }
 
 /**
- * @desc: extract Resource-Record (RR) from buffer 'bfr'.
+ * @desc		: extract Resource-Record (RR) from buffer 'bfr'.
  *
  * @param:
  *	> rr		: return value, RR object after extracted.
@@ -149,20 +194,25 @@ int DNSQuery::extract_buffer(unsigned char *bfr, unsigned int bfr_len,
  *			extracted.
  *
  * @return:
- *	< 0	: success.
- *	< 1	: fail.
+ *	< 0		: success.
+ *	< <0		: fail.
  */
 int DNSQuery::extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 				unsigned char *bfr,
 				unsigned char **bfr_ret)
 {
+	int	s	= 0;
 	int	l	= 0;
 	DNS_rr	*prr	= NULL;
 
 	if (! (*rr)) {
 		(*rr) = new DNS_rr();
 		if (! (*rr))
-			return 1;
+			return -E_MEM;
+
+		s = (*rr)->init();
+		if (s < 0)
+			return s;
 	} else {
 		(*rr)->reset();
 	}
@@ -229,7 +279,7 @@ int DNSQuery::read_label(Buffer *label, unsigned char *bfr_org,
 				ret = 2;
 		} else if (len == 0) {
 			len = *p;
-			++p;
+			*p++;
 
 			if (ret) {
 				label->appendc('.');
@@ -239,7 +289,7 @@ int DNSQuery::read_label(Buffer *label, unsigned char *bfr_org,
 		} else {
 			label->appendc(*p);
 			--len;
-			++p;
+			*p++;
 		}
 	}
 
@@ -326,6 +376,26 @@ void DNSQuery::dump()
 	_rr_aut->dump();
 	printf("; ADDITIONAL section\n");
 	_rr_add->dump();
+}
+
+/**
+ * @return	:
+ *	> 0	: success.
+ *	> <0	: fail.
+ */
+int DNSQuery::INIT(DNSQuery **o, const Buffer *bfr)
+{
+	int s = -E_MEM;
+
+	(*o) = new DNSQuery();
+	if ((*o)) {
+		s = (*o)->init(bfr);
+		if (s != 0) {
+			delete (*o);
+			(*o) = NULL;
+		}
+	}
+	return s;
 }
 
 } /* namespace::vos */

@@ -8,8 +8,14 @@
 #define	_LIBVOS_BUFFER_HPP	1
 
 #include <ctype.h>
+#include <errno.h>
 #include <limits.h>
-#include "Error.hpp"
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "libvos.hpp"
 
 namespace vos {
 
@@ -18,43 +24,48 @@ namespace vos {
 class Buffer {
 public:
 	Buffer();
-	explicit Buffer(const int size);
-	explicit Buffer(const char *bfr);
-	explicit Buffer(const Buffer *bfr);
 	virtual ~Buffer();
 
-	void resize(const int len);
-	void dump();
-	void dump_hex();
+	int init(const Buffer *bfr);
+	int init_raw(const char *bfr, const int len);
+	int init_size(const int size);
+
+	int resize(const int len);
 	void reset();
 	void trim();
 
-	void appendc(const char c);
-	void appendi(int i, const int base = DFLT_BASE);
-	void appendd(double d);
-	void append(const Buffer *bfr);
-	void append(const char *bfr, int len = 0);
-	void concat(const char *bfr, ...);
-	void aprint(const char *fmt, ...);
+	int appendc(const char c);
+	int appendi(int i, const int base);
+	int appendd(double d);
+	int append(const Buffer *bfr);
+	int append_raw(const char *bfr, int len);
+	int concat(const char *bfr, ...);
+	int aprint(const char *fmt, ...);
 	int vprint(const char *fmt, va_list args);
 
-	void shiftr(const int nbyte);
+	int shiftr(const int nbyte);
 
 	int copy(const Buffer *bfr);
-	int copy(const char *bfr, int len = 0);
-	void set(const char *bfr, const char *dflt = NULL);
-	void move_to(Buffer **bfr);
+	int copy_raw(const char *bfr, int len);
+	int set(const Buffer *bfr, const Buffer *dflt);
+	int set_raw(const char *bfr, const char *dflt);
+	int move_to(Buffer **bfr);
 
 	int cmp(const Buffer *bfr);
-	int cmp(const char *bfr);
+	int cmp_raw(const char *bfr);
 	int like(const Buffer *bfr);
-	int like(const char *bfr);
+	int like_raw(const char *bfr);
 
 	int is_empty();
+	void dump();
+	void dump_hex();
 
+	static int INIT(Buffer **o, const Buffer *bfr);
+	static int INIT_RAW(Buffer **o, const char *bfr);
+	static int INIT_SIZE(Buffer **o, const int size);
 	static int VSNPRINTF(char *bfr, int len, const char *fmt,
 				va_list args);
-	static int TRIM(char *bfr, int len = 0);
+	static int TRIM(char *bfr, int len);
 
 	int		_i;
 	int		_l;

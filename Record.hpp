@@ -13,20 +13,21 @@ namespace vos {
 
 class Record : public Buffer {
 public:
-	Record(int bfr_size = Buffer::DFLT_SIZE);
+	Record();
 	~Record();
 
+	int init(const int bfr_size);
 	void dump();
-
-	static void ADD_COL(Record **row, Record *col);
-	static void ADD_ROW(Record **rows, Record *row);
-	static Record *INIT_ROW(int col_size,
-				const int bfr_size = Buffer::DFLT_SIZE);
 
 	Record *get_column(int n);
 	int set_column(int n, Buffer *bfr);
-	int set_column(int n, const int number);
+	int set_column_number(int n, const int number);
 	void columns_reset();
+
+	static void ADD_COL(Record **row, Record *col);
+	static void ADD_ROW(Record **rows, Record *row);
+	static int INIT(Record **o, const int bfr_size);
+	static int INIT_ROW(Record **o, int col_size, const int bfr_size);
 
 	Record *_next_col;
 	Record *_last_col;

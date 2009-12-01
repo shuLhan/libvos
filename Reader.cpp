@@ -14,6 +14,18 @@ Reader::Reader()
 Reader::~Reader()
 {}
 
+/**
+ * @desc: move buffer from index _p to the first position, and read 'len' of
+ *	bytes from buffer to fill the buffer.
+ *
+ * @param:
+ *	< len	: size to be read from descriptor and fill the buffer.
+ *
+ * @return:
+ *	> >0	: success, bytes filled in buffer.
+ *	> 0	: EOF.
+ *	> <0	: fail, error at reading descriptor.
+ */
 int Reader::refill_buffer(const int len)
 {
 	int l;
@@ -29,7 +41,7 @@ int Reader::refill_buffer(const int len)
 
 		_i = ::read(_d, &_v[l], _p);
 		if (_i < 0) {
-			throw Error(E_FILE_READ, _name._v);
+			return -E_FILE_READ;
 		}
 
 		_i += l;
@@ -44,7 +56,7 @@ int Reader::refill_buffer(const int len)
 
 /**
  * @desc: read one row from file, using 'r' as record buffer, and 'md' as
- * record meta data.
+ *	record meta data.
  *
  * @param:
  *	> r	: record buffer, already allocated by user.
@@ -73,6 +85,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 				s = refill_buffer(rmd->_start_p);
 				if (0 == s)
 					return 1;
+				if (s < 0)
+					goto reject;
 			}
 
 			startp = _p + rmd->_start_p;
@@ -89,6 +103,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 				s = refill_buffer(0);
 				if (0 == s)
 					return 1;
+				if (s < 0)
+					goto reject;
 			}
 		}
 
@@ -99,6 +115,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 				s = refill_buffer(0);
 				if (0 == s)
 					return 1;
+				if (s < 0)
+					goto reject;
 			}
 			memcpy(&r->_i, &_v[startp], len);
 			startp += len;
@@ -114,6 +132,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 				s = refill_buffer(_l + r->_i);
 				if (0 == s)
 					return 1;
+				if (s < 0)
+					goto reject;
 			}
 
 			if ((startp + r->_i) >= _i) {
@@ -121,6 +141,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 				s = refill_buffer(r->_i);
 				if (0 == s)
 					return 1;
+				if (s < 0)
+					goto reject;
 			}
 
 			memcpy(r->_v, &_v[startp], r->_i);
@@ -131,6 +153,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 				s = refill_buffer(0);
 				if (0 == s)
 					return 1;
+				if (s < 0)
+					goto reject;
 			}
 
 			if (rmd->_right_q) {
@@ -143,6 +167,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 					s = refill_buffer(0);
 					if (0 == s)
 						return 1;
+					if (s < 0)
+						goto reject;
 				}
 			}
 
@@ -154,6 +180,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 						s = refill_buffer(0);
 						if (0 == s)
 							return 1;
+						if (s < 0)
+							goto reject;
 					}
 				}
 
@@ -163,6 +191,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 					s = refill_buffer(0);
 					if (0 == s)
 						return 1;
+					if (s < 0)
+						goto reject;
 				}
 			}
 		} else { /* not BLOB */
@@ -178,6 +208,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 					s = refill_buffer(0);
 					if (0 == s)
 						return 1;
+					if (s < 0)
+						goto reject;
 				}
 
 				memcpy(r->_v, &_v[startp], len);
@@ -191,6 +223,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 						s = refill_buffer(0);
 						if (0 == s)
 							return 1;
+						if (s < 0)
+							goto reject;
 					}
 				}
 
@@ -200,6 +234,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 					s = refill_buffer(0);
 					if (0 == s)
 						return 1;
+					if (s < 0)
+						goto reject;
 				}
 
 				if (rmd->_sep) {
@@ -210,6 +246,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 							s = refill_buffer(0);
 							if (0 == s)
 								return 1;
+							if (s < 0)
+								goto reject;
 						}
 					}
 
@@ -219,6 +257,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 						s = refill_buffer(0);
 						if (0 == s)
 							return 1;
+						if (s < 0)
+							goto reject;
 					}
 				}
 			} else if (rmd->_sep) {
@@ -230,6 +270,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 						s = refill_buffer(0);
 						if (0 == s)
 							return 1;
+						if (s < 0)
+							goto reject;
 					}
 				}
 
@@ -239,6 +281,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 					s = refill_buffer(0);
 					if (0 == s)
 						return 1;
+					if (s < 0)
+						goto reject;
 				}
 			} else {
 				while (_v[startp] != __eol[0]) {
@@ -249,6 +293,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 						s = refill_buffer(0);
 						if (0 == s)
 							return 1;
+						if (s < 0)
+							goto reject;
 					}
 				}
 
@@ -258,6 +304,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 					s = refill_buffer(0);
 					if (0 == s)
 						return 1;
+					if (s < 0)
+						goto reject;
 				}
 			}
 		}
@@ -273,6 +321,8 @@ int Reader::read(Record *r, RecordMD *rmd)
 			s = refill_buffer(0);
 			if (0 == s)
 				return 1;
+			if (s < 0)
+				goto reject;
 		}
 	}
 	_p = startp + 1;
@@ -286,6 +336,8 @@ reject:
 			s = refill_buffer(0);
 			if (0 == s)
 				return 0;
+			if (s < 0)
+				break;
 		}
 	}
 	_p = startp + 1;

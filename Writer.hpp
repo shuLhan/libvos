@@ -18,8 +18,11 @@ public:
 	Writer();
 	~Writer();
 
-	void write(Record *cols, RecordMD *rmd);
-	void writes(Record *rows, RecordMD *rmd);
+	int init();
+	int write(Record *cols, RecordMD *rmd);
+	int writes(Record *rows, RecordMD *rmd);
+
+	Buffer _line;
 private:
 	DISALLOW_COPY_AND_ASSIGN(Writer);
 };

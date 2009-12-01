@@ -47,13 +47,15 @@ enum _RR_CLASS {
 
 class DNS_rr {
 public:
-	static void ADD(DNS_rr **root, DNS_rr *rr);
-
 	DNS_rr();
 	~DNS_rr();
 
+	int init();
+
 	void reset();
 	void dump();
+
+	static void ADD(DNS_rr **root, DNS_rr *rr);
 
 	uint16_t	_type;
 	uint16_t	_class;

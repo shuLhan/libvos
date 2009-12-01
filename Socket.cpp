@@ -8,10 +8,11 @@
 
 namespace vos {
 
-int		Socket::DFLT_BUFFER_SIZE	= 65495;
-unsigned int	Socket::DFLT_LISTEN_QUEUE	= 8;
+int Socket::DFLT_BUFFER_SIZE	= 65495;
+int Socket::DFLT_LISTEN_SIZE	= 4;
+int Socket::DFLT_NAME_SIZE	= 255;
 
-Socket::Socket(int buffer_size) : File(buffer_size),
+Socket::Socket() : File(),
 	_family(0),
 	_port(0),
 	_readfds(),
@@ -21,12 +22,7 @@ Socket::Socket(int buffer_size) : File(buffer_size),
 	_clients(NULL),
 	_next(NULL),
 	_prev(NULL)
-{
-	_name.resize(255);
-	FD_ZERO(&_readfds);
-	FD_ZERO(&_writefds);
-	FD_ZERO(&_errorfds);
-}
+{}
 
 Socket::~Socket()
 {
@@ -34,46 +30,98 @@ Socket::~Socket()
 	_prev	= NULL;
 }
 
-void Socket::create(const int family, const int type)
+int Socket::init(const int bfr_size)
 {
-	_d = socket(family, type, 0);
+	int s;
+
+	s = File::init(bfr_size);
+	if (s < 0)
+		return s;
+
+	s = _name.resize(DFLT_NAME_SIZE);
+	if (s < 0)
+		return s;
+
+	FD_ZERO(&_readfds);
+	FD_ZERO(&_writefds);
+	FD_ZERO(&_errorfds);
+
+	return 0;
+}
+
+/**
+ * @desc		: create a new socket descriptor.
+ *
+ * @param		:
+ *	> family	: address family (AF_LOCAL, AF_UNIX, AF_INET, etc).
+ *	> type		: socket type (SOCK_STREAM, SOCK_DGRAM, SOCK_RAW).
+ *
+ * @return:
+ *	< 0		: success.
+ *	< <0		: fail.
+ */
+int Socket::create(const int family, const int type)
+{
+	int s = 0;
+
+	if (!_v) {
+		s = Socket::init(DFLT_BUFFER_SIZE);
+		if (s < 0)
+			return s;
+	}
+
+	_d = ::socket(family, type, 0);
 	if (_d < 0)
-		throw Error(E_SOCK_CREATE);
+		return -E_SOCK_CREATE;
 
 	_family	= family;
 	_status = FILE_OPEN_NO;
+
+	return 0;
 }
 
-void Socket::create_tcp()
+int Socket::create_tcp()
 {
-	Socket::create();
+	return Socket::create(PF_INET, SOCK_STREAM);
 }
 
-void Socket::create_udp()
+int Socket::create_udp()
 {
-	Socket::create(AF_INET, SOCK_DGRAM);
+	return Socket::create(PF_INET, SOCK_DGRAM);
 }
 
-void Socket::create_addr(struct sockaddr_in *sin, const char *address,
+/**
+ * @desc	: create socket address from 'address' and 'port'.
+ *
+ * @param		:
+ *	< sin		: return value, socket address object.
+ *	< address	: hostname or IP address.
+ *	< port		: port number.
+ *
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ */
+int Socket::create_addr(struct sockaddr_in *sin, const char *address,
 			const int port)
 {
-	int			s;
-	int			buf_len	= 512;
-	int			err	= 0;
-	struct hostent		he;
-	struct hostent		*hep	= NULL;
-	char			*buf	= NULL;
+	int		s;
+	int		buf_len	= 512;
+	int		err	= 0;
+	struct hostent	he;
+	struct hostent	*hep	= NULL;
+	char		*buf	= NULL;
 
-	memset(sin, 0, sizeof(*sin));
+	memset(sin, 0, sizeof(struct sockaddr_in));
 
-	sin->sin_family	= _family;
-	sin->sin_port	= htons(port);
-	_port		= port;
+	sin->sin_family		= _family;
+	sin->sin_port		= htons(port);
+	_port			= port;
 
 	if (isdigit(address[0])) {
 		s = inet_pton(_family, address, &sin->sin_addr);
-		if (! s) {
-			throw Error(E_SOCK_ADDR_INV, address);
+		if (s <= 0) {
+			return -E_SOCK_ADDR_INV;
 		}
 	} else {
 		do {
@@ -88,16 +136,29 @@ void Socket::create_addr(struct sockaddr_in *sin, const char *address,
 
 		if (err) {
 			free(buf);
-			throw Error(E_SOCK_ADDR_RESOLV, address);
+			return -E_SOCK_ADDR_RESOLV;
 		}
 
 		memcpy(&sin->sin_addr, hep->h_addr, hep->h_length);
 		free(buf);
 	}
+	return 0;
 }
 
-void Socket::create_addr6(struct sockaddr_in6 *sin6, const char *address,
-			const int port)
+/**
+ * @desc		: create socket address from 'address' and 'port'.
+ *
+ * @param		:
+ *	< sin6		: return value, socket address object.
+ *	< address	: hostname or IP address.
+ *	< port		: port number.
+ *
+ * @return		:
+ *	< 0		: success.
+ *	< !0		: fail.
+ */
+int Socket::create_addr6(struct sockaddr_in6 *sin6, const char *address,
+				const int port)
 {
 	int		s;
 	int		buf_len	= 512;
@@ -115,8 +176,9 @@ void Socket::create_addr6(struct sockaddr_in6 *sin6, const char *address,
 	buf = (char *) strchr(address, ':');
 	if (buf) {
 		s = inet_pton(_family, address, &sin6->sin6_addr);
-		if (! s)
-			throw Error(E_SOCK_ADDR_INV, address);
+		if (!s) {
+			return -E_SOCK_ADDR_INV;
+		}
 	} else {
 		do {
 			buf = (char *) calloc(buf_len, sizeof(char));
@@ -130,181 +192,155 @@ void Socket::create_addr6(struct sockaddr_in6 *sin6, const char *address,
 
 		if (err) {
 			free(buf);
-			throw Error(E_SOCK_ADDR_RESOLV, address);
+			return -E_SOCK_ADDR_RESOLV;
 		}
 
 		memcpy(&sin6->sin6_addr, hep->h_addr, hep->h_length);
 		free(buf);
 	}
+	return 0;
 }
 
 /**
- * @desc: bind socket to 'address' and 'port'.
+ * @desc		: bind socket to 'address' and 'port'.
  *
- * @param:
+ * @param		:
  *	> address	: hostname or IP address to bind to.
  *	> port		: port number.
  *
- * @return:
+ * @return			:
  *	< 0			: success.
- *	< E_SOCK_ADD_REUSE	: fail, address and port is already used.
- *	< E_SOCK_BIND		: fail, cannot bind to address:port.
- *
+ *	< -E_SOCK_ADDR_INV	: fail, address invalid.
+ *	< -E_SOCK_ADDR_REUSE	: fail, address and port is already used.
+ *	< -E_SOCK_BIND		: fail, cannot bind to address:port.
+ *	< <0			: fail.
  */
 int Socket::bind(const char *address, const int port)
 {
-	int s = 1;
+	int	s	= 0;
+	int	optval	= 1;
 
-	s = setsockopt(_d, SOL_SOCKET, SO_REUSEADDR, &s, sizeof(s));
-	if (s) {
-		return E_SOCK_ADDR_REUSE;
+	if (LIBVOS_DEBUG) {
+		printf("[VOS.SOCKET] bind: %s:%d\n", address, port);
+	}
+
+	if (!address) {
+		address = SOCK_ADDR_WILCARD;
+	} else {
+		s = strlen(address);
+		if (0 == s) {
+			address = SOCK_ADDR_WILCARD;
+		}
+	}
+
+	s = setsockopt(_d, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int));
+	if (s != 0) {
+		return -E_SOCK_ADDR_REUSE;
 	}
 
 	if (_family == AF_INET6) {
 		struct sockaddr_in6 sin6;
 
-		create_addr6(&sin6, address, port);
+		s = create_addr6(&sin6, address, port);
+		if (s < 0)
+			return s;
+
 		s = ::bind(_d, (struct sockaddr *) &sin6, sizeof(sin6));
-		if (s) {
-			return E_SOCK_BIND;
-		}
 	} else {
 		struct sockaddr_in sin;
 
-		create_addr(&sin, address, port);
+		s = create_addr(&sin, address, port);
+		if (s < 0)
+			return s;
+
 		s = ::bind(_d, (struct sockaddr *) &sin, sizeof(sin));
-		if (s) {
-			return E_SOCK_BIND;
-		}
+	}
+	if (s < 0) {
+		return -E_SOCK_BIND;
 	}
 
 	_status = FILE_OPEN_RW;
-	_name.copy(address);
+
+	s = _name.copy_raw(address, 0);
+
+	return s;
+}
+
+/**
+ * @return			:
+ *	< 0			: success.
+ *	< -E_SOCK_LISTEN	: fail.
+ */
+int Socket::listen(const unsigned int queue_len)
+{
+	int s;
+
+	s = ::listen(_d, queue_len);
+	if (s < 0)
+		return -E_SOCK_LISTEN;
 
 	return 0;
 }
 
 /**
- * @desc: bind socket to one or more address in 'list_address'.
- *	format of first parameter:
- *
- *		<address><:port> , <address2>,<:port> , ...
- *
- *	if port is is not defined in list of address, default port
- *	'port_default' will be used.
- *
- * @param:
- *	> list_address	: list of address to bind.
- *	> port_default	: default port that will be used if not defined in
- *			address
- *
- * @return:
- *	< 0	: success.
- *	< !0	: fail.
+ * @return			:
+ *	< 0			: success.
+ *	< -E_SOCK_LISTEN	: fail.
  */
-int Socket::binds(const char *list_address, const int port_default)
-{
-	int		n	= 0;
-	int		s	= 0;
-	int		port	= 0;
-	Buffer		v_addr;
-	Buffer		v_port;
-	const char	*p	= list_address;
-
-	while (*p) {
-		if (! isspace(*p))
-			v_addr.appendc(*p);
-		*p++;
-
-		if (*p && *p == ':') {
-			*p++;
-			while (*p) {
-				if (*p == ',') {
-					break;
-				}
-				v_port.appendc(*p);
-				*p++;
-			}
-			if (! *p)
-				break;
-		}
-
-		if (!*p || *p == ',') {
-			if (v_port._i) {
-				port = strtol(v_port._v, 0, 10);
-				v_port.reset();
-			} else {
-				port = port_default;
-			}
-
-			printf("[VOS.SOCKET] bind: %s:%d\n", v_addr._v, port);
-
-			s = bind(v_addr._v, port);
-			if (! s) {
-				++n;
-			}
-			v_addr.reset();
-			if (*p)
-				*p++;
-		}
-	}
-
-	if (! n)
-		return s;
-	return 0;
-}
-
-void Socket::listen(const unsigned int queue_len)
-{
-	::listen(_d, queue_len);
-}
-
 int Socket::bind_listen(const char *address, const int port)
 {
 	int s;
 
 	s = Socket::bind(address, port);
-	if (! s) {
-		::listen(_d, DFLT_LISTEN_QUEUE);
+	if (0 == s) {
+		s = ::listen(_d, 0);
+		if (s != 0) {
+			s = -E_SOCK_LISTEN;
+		}
 	}
-
 	return s;
 }
 
-int Socket::binds_listen(const char *list_address, const int port_default)
+/**
+ * @desc		: connect socket to 'address' with 'port'.
+ *
+ * @param		:
+ *	> address	: destination hostname or IP address to connect to.
+ *	> port		: destination port number.
+ *
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ */
+int Socket::connect_to(const char *address, const int port)
 {
 	int s;
-
-	s = Socket::binds(list_address, port_default);
-	if (! s) {
-		::listen(_d, DFLT_LISTEN_QUEUE);
-	}
-
-	return s;
-}
-
-void Socket::connect_to(const char *address, const int port)
-{
-	int s = 0;
 
 	if (_family == AF_INET6) {
 		struct sockaddr_in6 sin6;
 
-		create_addr6(&sin6, address, port);
+		s = create_addr6(&sin6, address, port);
+		if (s < 0)
+			return s;
+
 		s = ::connect(_d, (struct sockaddr *) &sin6, sizeof(sin6));
 	} else {
 		struct sockaddr_in sin;
 
-		create_addr(&sin, address, port);
+		s = create_addr(&sin, address, port);
+		if (s < 0)
+			return s;
+
 		s = ::connect(_d, (struct sockaddr *) &sin, sizeof(sin));
 	}
-
-	if (s) {
-		throw Error(E_SOCK_CONNECT, address, port);
+	if (s < 0) {
+		return -E_SOCK_CONNECT;
 	}
 
-	_status = FILE_OPEN_RW;
-	_name.copy(address);
+	_status	= FILE_OPEN_RW;
+	s	= _name.copy_raw(address, 0);
+
+	return s;
 }
 
 void Socket::add_client(Socket *client)
@@ -339,18 +375,35 @@ void Socket::remove_client(Socket *client)
 	delete client;
 }
 
+/**
+ * @return		:
+ *	< Socket*	: success, new client accepted.
+ *	< NULL		: fail.
+ */
 Socket * Socket::accept()
 {
+	int			s;
 	socklen_t		client_addrlen;
 	struct sockaddr_in	client_addr	= {0};
 	const char		*p		= NULL;
-	Socket			*client		= new Socket();
+	Socket			*client		= NULL;
+
+	client = new Socket();
+	if (!client)
+		return NULL;
+
+	s = client->init(Socket::DFLT_BUFFER_SIZE);
+	if (s != 0) {
+		delete client;
+		return NULL;
+	}
 
 	client_addrlen = sizeof(client_addr);
 	client->_d = ::accept(_d, (struct sockaddr *) &client_addr,
 				&client_addrlen);
 	if (client->_d < 0) {
-		throw Error(E_SOCK_ACCEPT);
+		delete client;
+		return NULL;
 	}
 
 	do {
@@ -368,16 +421,28 @@ Socket * Socket::accept()
 
 Socket * Socket::accept6()
 {
+	int			s;
 	socklen_t		client_addrlen;
 	struct sockaddr_in6	client_addr;
 	const char		*p	= NULL;
-	Socket			*client = new Socket();
+	Socket			*client = NULL;
+
+	client = new Socket();
+	if (!client)
+		return NULL;
+
+	s = client->init(Socket::DFLT_BUFFER_SIZE);
+	if (s != 0) {
+		delete client;
+		return NULL;
+	}
 
 	client_addrlen = sizeof(client_addr);
 	client->_d = ::accept(_d, (struct sockaddr *) &client_addr,
 				&client_addrlen);
 	if (client->_d < 0) {
-		throw Error(E_SOCK_ACCEPT);
+		delete client;
+		return NULL;
 	}
 
 	do {
@@ -398,25 +463,57 @@ Socket * Socket::accept_conn()
 	Socket *client = NULL;
 
 	if (_family == AF_INET6) {
-		client = accept();
-	} else {
 		client = accept6();
+	} else {
+		client = accept();
 	}
-	
-	printf("[VOS.SOCKET] accepting connection from '%s'\n", client->_name._v);
+	if (!client)
+		return NULL;
+
+	if (LIBVOS_DEBUG) {
+		printf("[VOS.SOCKET] accepting connection from '%s'\n",
+			client->_name._v);
+	}
 
 	add_client(client);
 
 	return client;
 }
 
-void Socket::send(Buffer *bfr)
+int Socket::send(Buffer *bfr)
 {
-	if (! bfr)
-		return;
+	int s;
 
-	File::write(bfr->_v, bfr->_i);
-	File::flush();
+	if (!bfr) {
+		if (LIBVOS_DEBUG) {
+			dump_hex();
+		}
+	} else {
+		if (LIBVOS_DEBUG) {
+			bfr->dump_hex();
+		}
+
+		s = write_raw(bfr->_v, bfr->_i);
+		if (s < 0)
+			return s;
+	}
+
+	s = flush();
+
+	return s;
+}
+
+int Socket::send_raw(const char *bfr, const int len)
+{
+	int s;
+
+	if (bfr) {
+		s = write_raw(bfr, len);
+		if (s < 0)
+			return s;
+	}
+	s = flush();
+	return s;
 }
 
 int Socket::send_udp(struct sockaddr *addr, Buffer *bfr)
@@ -425,6 +522,23 @@ int Socket::send_udp(struct sockaddr *addr, Buffer *bfr)
 
 	n_send = ::sendto(_d, bfr->_v, bfr->_i, 0, addr,
 				sizeof(struct sockaddr));
+
+	return n_send;
+}
+
+int Socket::send_udp_raw(struct sockaddr *addr, const char *bfr,
+				const int len)
+{
+	int n_send;
+
+	if (!addr)
+		return 0;
+	if (!bfr)
+		return 0;
+	if (!len)
+		return 0;
+
+	n_send = ::sendto(_d, bfr, len, 0, addr, sizeof(struct sockaddr));
 
 	return n_send;
 }

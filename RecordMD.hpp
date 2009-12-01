@@ -24,9 +24,10 @@ public:
 	~RecordMD();
 
 	void dump();
-	static void ADD(RecordMD **rmd, RecordMD *md);
-	static RecordMD *INIT(const char *meta);
-	static RecordMD *INIT_FROM_FILE(const char *fmeta);
+
+	static void ADD(RecordMD **o, RecordMD *md);
+	static int INIT(RecordMD **o, const char *meta);
+	static int INIT_FROM_FILE(RecordMD **o, const char *fmeta);
 
 	int		_n_md;
 	int		_idx;

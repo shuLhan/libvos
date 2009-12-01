@@ -19,8 +19,7 @@ namespace vos {
 #define	FTP_DFLT_EOL		_file_eol[FILE_EOL_NIX]
 #define	FTP_DFLT_PORT		21
 #define	FTP_TIMEOUT		2
-#define	FTP_UTIMEOUT_INC	200000
-#define	FTP_UTIMEOUT_MAX	1000000
+#define	FTP_UTIMEOUT		500000
 
 enum __ftp_cmd_idx {
 	FTP_CMD_USER	= 0,
@@ -58,28 +57,24 @@ enum _ftp_mode {
 
 class FTP : public Socket {
 public:
-	FTP(const char *host = 0, const int port = FTP_DFLT_PORT);
+	FTP();
 	~FTP();
 
-	void connect(const char *host, const int port = FTP_DFLT_PORT,
-			const int mode = FTP_MODE_NORMAL);
+	int connect(const char *host, const int port, const int mode);
 	int login(const char *username, const char *password);
 	void logout();
 	void disconnect();
 
-	void send();
-	int recv(const int timeout = FTP_TIMEOUT);
-	void dump_send();
-	void dump_receive();
+	int recv(const int to_sec, const int to_usec);
 
-	int send_cmd(const int cmd, const char *parm = 0);
-	int get_reply(const int timeout = FTP_TIMEOUT);
+	int send_cmd(const int cmd, const char *parm);
+	int get_reply(const int timeout);
 
 	int parsing_pasv_reply(Buffer *addr, int *port);
-	int do_pasv(const int cmd, const char *in, const char *out = 0);
+	int do_pasv(const int cmd, const char *in, const char *out);
 
 	int do_cdup() {
-		return send_cmd(FTP_CMD_CDUP);
+		return send_cmd(FTP_CMD_CDUP, NULL);
 	};
 	int do_cd(const char *path = "/") {
 		return send_cmd(FTP_CMD_CWD, path);
@@ -91,21 +86,21 @@ public:
 		return send_cmd(FTP_CMD_MKD, path);
 	};
 	int do_pwd() {
-		return send_cmd(FTP_CMD_PWD);
+		return send_cmd(FTP_CMD_PWD, NULL);
 	};
 	int do_rmdir(const char *path) {
 		return send_cmd(FTP_CMD_RMD, path);
 	};
 	int do_type() {
-		return send_cmd(FTP_CMD_TYPE);
+		return send_cmd(FTP_CMD_TYPE, NULL);
 	};
-	int do_get(const char *in, const char *out = 0) {
+	int do_get(const char *in, const char *out) {
 		return do_pasv(FTP_CMD_RETR, in, out);
 	}
-	int do_list(const char *path = ".", const char *out = 0) {
+	int do_list(const char *path, const char *out) {
 		return do_pasv(FTP_CMD_LIST, path, out);
 	}
-	int do_list_simple(const char *path, const char *out = 0) {
+	int do_list_simple(const char *path, const char *out) {
 		return do_pasv(FTP_CMD_NLST, path, out);
 	}
 
@@ -114,7 +109,6 @@ public:
 private:
 	int		_reply;
 	int		_mode;
-	struct timeval	_tout;
 
 	DISALLOW_COPY_AND_ASSIGN(FTP);
 };

@@ -39,14 +39,7 @@ OCI::OCI() :
 	_spool_name(NULL),
 	_auth(NULL),
 	_stmt(NULL)
-{
-	_v = reinterpret_cast<OCIValue **> (calloc(_value_sz, sizeof(_v)));
-	if (! _v)
-		throw Error(E_MEM);
-
-	create_env();
-	create_err();
-}
+{}
 
 OCI::~OCI()
 {
@@ -58,6 +51,24 @@ OCI::~OCI()
 */
 }
 
+int OCI::init()
+{
+	_v = reinterpret_cast<OCIValue **> (calloc(_value_sz, sizeof(_v)));
+	if (!_v) {
+		return -E_MEM;
+	}
+
+	create_env();
+	create_err();
+
+	return 0;
+}
+
+/**
+ * @return:
+ *	< 0	: success.
+ *	< !0	: fail.
+ */
 int OCI::check(void *handle, int type)
 {
 	char	*errmsg = 0;
@@ -103,7 +114,7 @@ int OCI::check(void *handle, int type)
 		break;
 	}
 
-	throw Error(E_OCI, _s, errmsg);
+	return E_OCI;
 }
 
 void OCI::create_env()
@@ -264,7 +275,7 @@ void OCI::stmt_execute(const char *stmt)
 
 	if (stmt_type != OCI_STMT_SELECT) {
 		for (i = 1; i <= _value_i; i++)
-			_v[i]->_i = Buffer::TRIM(_v[i]->_v);
+			_v[i]->_i = Buffer::TRIM(_v[i]->_v, 0);
 	}
 }
 
@@ -278,7 +289,7 @@ int OCI::stmt_fetch()
 
 	for (int idx = 1; idx <= _value_i; idx++) {
 		if (_v[idx])
-			_v[idx]->_i = Buffer::TRIM(_v[idx]->_v);
+			_v[idx]->_i = Buffer::TRIM(_v[idx]->_v, 0);
 	}
 
 	return 0;
@@ -324,7 +335,7 @@ void OCI::stmt_new_value(const int pos, const int type)
 
 	switch (type) {
 	case OCI_T_VARCHAR:
-		_v[pos] = new OCIValue(pos);
+		_v[pos] = OCIValue::INIT(pos);
 		break;
 	case OCI_T_NUMBER:
 		_v[pos] = OCIValue::NUMBER(pos);

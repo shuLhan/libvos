@@ -23,23 +23,26 @@ enum _config_type {
 
 class ConfigData : public Buffer {
 public:
-	explicit ConfigData(const int type);
-	explicit ConfigData(const int type, const char *str);
+	ConfigData();
 	~ConfigData();
 
+	int init(const int type, const char *data);
+
 	void add_head(const ConfigData *head);
-	void add_head(const char *head);
+	int add_head_raw(const char *head);
 
 	void add_key(const ConfigData *key);
-	void add_key(const char *key);
+	int add_key_raw(const char *key);
 
-	void add_value(const ConfigData *value);
-	void add_value(const char *value);
+	int add_value(const ConfigData *value);
+	int add_value_raw(const char *value);
 
 	void add_misc(const ConfigData *misc);
-	void add_misc(const char *misc);
+	int add_misc_raw(const char *misc);
 
 	void dump();
+
+	static int INIT(ConfigData **o, const int type, const char *data);
 
 	int		_t;
 	ConfigData	*_value;

@@ -26,11 +26,13 @@ public:
 	Resolver();
 	~Resolver();
 
+	int init();
+
 	void dump();
 	void set_server(const char *server_list);
 	void add_server(const char *server_list);
 
-	int create_question(DNSQuery **query, const char *qname);
+	int create_question_udp(DNSQuery **query, const char *qname);
 	int send_query_udp(DNSQuery *question, DNSQuery *answer);
 	int send_query_tcp(DNSQuery *question, DNSQuery **answer);
 

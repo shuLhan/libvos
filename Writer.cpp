@@ -8,11 +8,17 @@
 
 namespace vos {
 
-Writer::Writer()
+Writer::Writer() :
+	_line()
 {}
 
 Writer::~Writer()
 {}
+
+int Writer::init()
+{
+	return _line.init(NULL);
+}
 
 /**
  * @desc: write one row using 'rmd' as meta-data to file.
@@ -22,34 +28,49 @@ Writer::~Writer()
  *	> rmd	: record meta-data.
  *
  * @return:
- *	< 1	: one record writen.
+ *	< 1	: one record written.
+ *	< 0	: success.
+ *	< <0	: fail.
  */
-void Writer::write(Record *cols, RecordMD *rmd)
+int Writer::write(Record *cols, RecordMD *rmd)
 {
-	int len;
-	char *p = NULL;
+	int	s;
+	int	len;
+	char	*p = NULL;
 
 	while (rmd && cols) {
 		if (rmd->_start_p) {
-			_line.resize(rmd->_start_p);
+			s = _line.resize(rmd->_start_p);
+			if (s < 0)
+				return s;
 		}
 
 		if (rmd->_left_q) {
-			_line.appendc(rmd->_left_q);
+			s = _line.appendc(rmd->_left_q);
+			if (s < 0)
+				return s;
 		}
 
 		switch (rmd->_type) {
 		case RMD_T_STRING:
 		case RMD_T_NUMBER:
 		case RMD_T_DATE:
-			_line.append(cols->_v, cols->_i);
+			s = _line.append_raw(cols->_v, cols->_i);
+			if (s < 0)
+				return s;
 			break;
 		case RMD_T_BLOB:
 			len = sizeof(cols->_i);
-			cols->shiftr(len);
+			s = cols->shiftr(len);
+			if (s < 0)
+				return s;
+
 			p = cols->_v;
 			memcpy(p, &cols->_i, len);
-			_line.append(cols->_v, cols->_i);
+
+			s = _line.append_raw(cols->_v, cols->_i);
+			if (s < 0)
+				return s;
 			break;
 		}
 
@@ -70,10 +91,14 @@ void Writer::write(Record *cols, RecordMD *rmd)
 			}
 		}
 		if (rmd->_right_q) {
-			_line.appendc(rmd->_right_q);
+			s = _line.appendc(rmd->_right_q);
+			if (s < 0)
+				return s;
 		}
 		if (rmd->_sep) {
-			_line.appendc(rmd->_sep);
+			s = _line.appendc(rmd->_sep);
+			if (s < 0)
+				return s;
 		}
 		
 		cols	= cols->_next_col;
@@ -87,16 +112,27 @@ void Writer::write(Record *cols, RecordMD *rmd)
 		flush();
 	}
 
-	append(_line._v, _line._i);
+	s = append_raw(_line._v, _line._i);
+	if (s < 0)
+		return s;
+
 	_line.reset();
+
+	return 0;
 }
 
-void Writer::writes(Record *rows, RecordMD *rmd)
+int Writer::writes(Record *rows, RecordMD *rmd)
 {
+	int s;
+
 	while (rows) {
-		write(rows, rmd);
+		s = write(rows, rmd);
+		if (s < 0)
+			return s;
 		rows = rows->_next_row;
 	}
+
+	return 0;
 }
 
 } /* namespace::vos */
