@@ -18,7 +18,7 @@ int File::DFLT_BUFFER_SIZE = 8192;
 File::File() : Buffer(),
 	_d(0),
 	_p(0),
-	_status(FILE_OPEN_NO),
+	_status(vos::FILE_OPEN_NO),
 	_eol(_file_eol[FILE_EOL_NIX][0]),
 	_name(),
 	__eol(_file_eol[FILE_EOL_NIX])
@@ -84,7 +84,7 @@ int File::open(const char *path)
 	if (s < 0)
 		return s;
 
-	_status = FILE_OPEN_RW;
+	_status = vos::FILE_OPEN_RW;
 
 	return 0;
 }
@@ -120,7 +120,7 @@ int File::open_ro(const char *path)
 	if (s < 0)
 		return s;
 
-	_status = FILE_OPEN_R;
+	_status = vos::FILE_OPEN_R;
 
 	return 0;
 }
@@ -156,7 +156,7 @@ int File::open_wo(const char *path)
 	if (s < 0)
 		return s;
 
-	_status = FILE_OPEN_W;
+	_status = vos::FILE_OPEN_W;
 
 	return 0;
 }
@@ -192,7 +192,7 @@ int File::open_wa(const char *path)
 	if (s < 0)
 		return s;
 
-	_status = FILE_OPEN_W;
+	_status = vos::FILE_OPEN_W;
 
 	return 0;
 }
@@ -207,7 +207,7 @@ int File::open_wa(const char *path)
  */
 int File::read()
 {
-	if (! (_status & FILE_OPEN_R))
+	if (! (_status & vos::FILE_OPEN_R))
 		return 0;
 
 	_i = ::read(_d, _v, _l);
@@ -322,7 +322,7 @@ int File::write_raw(const char *bfr, int len)
 	int x = 0;
 	int s;
 
-	if (! (_status & FILE_OPEN_W) || ! bfr) {
+	if (! (_status & vos::FILE_OPEN_W) || ! bfr) {
 		return 0;
 	}
 	if (!bfr) {
@@ -380,7 +380,7 @@ int File::writef(const char *fmt, va_list args)
 	int	s;
 	Buffer	b;
 
-	if (! (_status & FILE_OPEN_W) || ! fmt)
+	if (! (_status & vos::FILE_OPEN_W) || ! fmt)
 		return 0;
 
 	s = b.vprint(fmt, args);
@@ -456,7 +456,7 @@ int File::flush()
 	int x = 0;
 	int s;
 
-	if (! (_status & FILE_OPEN_W))
+	if (! (_status & vos::FILE_OPEN_W))
 		return 0;
 
 	while (_i > 0) {
@@ -480,7 +480,7 @@ void File::close()
 {
 	flush();
 	_name.reset();
-	_status = FILE_OPEN_NO;
+	_status = vos::FILE_OPEN_NO;
 	if (_d && _d != STDOUT_FILENO && _d != STDERR_FILENO)
 		::close(_d);
 	_d = 0;
@@ -607,13 +607,13 @@ int File::IS_EXIST(const char *path, int acc_mode)
 		return 0;
 
 	switch (acc_mode) {
-	case FILE_OPEN_R:
+	case vos::FILE_OPEN_R:
 		acc_mode = O_RDONLY;
 		break;
-	case FILE_OPEN_W:
+	case vos::FILE_OPEN_W:
 		acc_mode = O_WRONLY;
 		break;
-	case FILE_OPEN_RW:
+	case vos::FILE_OPEN_RW:
 		acc_mode = O_RDWR;
 		break;
 	default:

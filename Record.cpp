@@ -45,51 +45,6 @@ void Record::dump()
 	}
 }
 
-void Record::ADD_COL(Record **row, Record *col)
-{
-	if (! (*row)) {
-		(*row) = col;
-	} else {
-		(*row)->_last_col->_next_col	= col;
-		(*row)->_last_col		= col;
-	}
-}
-
-void Record::ADD_ROW(Record **rows, Record *row)
-{
-	if (! (*rows)) {
-		(*rows) = row;
-	} else {
-		(*rows)->_last_row->_next_row	= row;
-		(*rows)->_last_row		= row;
-	}
-}
-
-/**
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
- */
-int Record::INIT_ROW(Record **row, int col_size, const int bfr_size)
-{
-	int	s;
-	Record	*col = NULL;
-
-	if (0 == col_size)
-		return 0;
-
-	for (; col_size > 0; --col_size) {
-		s = Record::INIT(&col, bfr_size);
-		if (s != 0) {
-			delete row;
-			return s;
-		}
-		ADD_COL(row, col);
-	}
-
-	return 0;
-}
-
 Record *Record::get_column(int n)
 {
 	Record *p = this;
@@ -163,6 +118,26 @@ void Record::columns_reset()
 	}
 }
 
+void Record::ADD_COL(Record **row, Record *col)
+{
+	if (! (*row)) {
+		(*row) = col;
+	} else {
+		(*row)->_last_col->_next_col	= col;
+		(*row)->_last_col		= col;
+	}
+}
+
+void Record::ADD_ROW(Record **rows, Record *row)
+{
+	if (! (*rows)) {
+		(*rows) = row;
+	} else {
+		(*rows)->_last_row->_next_row	= row;
+		(*rows)->_last_row		= row;
+	}
+}
+
 int Record::INIT(Record **o, const int bfr_size)
 {
 	int s = -E_MEM;
@@ -177,6 +152,31 @@ int Record::INIT(Record **o, const int bfr_size)
 		}
 	}
 	return s;
+}
+
+/**
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ */
+int Record::INIT_ROW(Record **row, int col_size, const int bfr_size)
+{
+	int	s;
+	Record	*col = NULL;
+
+	if (0 == col_size)
+		return 0;
+
+	for (; col_size > 0; --col_size) {
+		s = Record::INIT(&col, bfr_size);
+		if (s != 0) {
+			delete row;
+			return s;
+		}
+		ADD_COL(row, col);
+	}
+
+	return 0;
 }
 
 } /* namespace::vos */

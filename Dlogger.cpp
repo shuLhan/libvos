@@ -14,7 +14,7 @@ Dlogger::Dlogger() :
 	pthread_mutex_init(&_lock, 0);
 
 	_d	= STDOUT_FILENO;
-	_status	= FILE_OPEN_W;
+	_status	= vos::FILE_OPEN_W;
 }
 
 Dlogger::~Dlogger()
@@ -43,7 +43,7 @@ int Dlogger::open(const char *logfile)
 	if (!logfile) {
 		File::init(File::DFLT_BUFFER_SIZE);
 		_d	= STDOUT_FILENO;
-		_status	= FILE_OPEN_W;
+		_status	= vos::FILE_OPEN_W;
 	} else {
 		File::init(File::DFLT_BUFFER_SIZE);
 		return open_wa(logfile);
@@ -59,7 +59,7 @@ void Dlogger::close()
 	if (_d && _d != STDOUT_FILENO) {
 		File::close();
 		_d	= STDOUT_FILENO;
-		_status	= FILE_OPEN_W;
+		_status	= vos::FILE_OPEN_W;
 	}
 }
 

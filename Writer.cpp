@@ -28,7 +28,6 @@ int Writer::init()
  *	> rmd	: record meta-data.
  *
  * @return:
- *	< 1	: one record written.
  *	< 0	: success.
  *	< <0	: fail.
  */

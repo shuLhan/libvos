@@ -368,7 +368,7 @@ int FTP::do_pasv(const int cmd, const char *parm, const char *out)
 		s = fout.open_wo(parm);
 	} else {
 		fout._d		= STDOUT_FILENO;
-		fout._status	= FILE_OPEN_W;
+		fout._status	= vos::FILE_OPEN_W;
 	}
 	if (s < 0)
 		return s;

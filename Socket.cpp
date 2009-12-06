@@ -75,7 +75,7 @@ int Socket::create(const int family, const int type)
 		return -E_SOCK_CREATE;
 
 	_family	= family;
-	_status = FILE_OPEN_NO;
+	_status = vos::FILE_OPEN_NO;
 
 	return 0;
 }
@@ -259,7 +259,7 @@ int Socket::bind(const char *address, const int port)
 		return -E_SOCK_BIND;
 	}
 
-	_status = FILE_OPEN_RW;
+	_status = vos::FILE_OPEN_RW;
 
 	s = _name.copy_raw(address, 0);
 
@@ -337,7 +337,7 @@ int Socket::connect_to(const char *address, const int port)
 		return -E_SOCK_CONNECT;
 	}
 
-	_status	= FILE_OPEN_RW;
+	_status	= vos::FILE_OPEN_RW;
 	s	= _name.copy_raw(address, 0);
 
 	return s;
@@ -414,7 +414,7 @@ Socket * Socket::accept()
 	} while (NULL == p);
 
 	client->_port	= ntohs(client_addr.sin_port);
-	client->_status	= FILE_OPEN_RW;
+	client->_status	= vos::FILE_OPEN_RW;
 
 	return client;
 }
@@ -453,7 +453,7 @@ Socket * Socket::accept6()
 	} while (NULL == p);
 
 	client->_port	= ntohs(client_addr.sin6_port);
-	client->_status	= FILE_OPEN_RW;
+	client->_status	= vos::FILE_OPEN_RW;
 
 	return client;
 }
