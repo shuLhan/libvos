@@ -462,16 +462,16 @@ int RecordMD::INIT_FROM_FILE(RecordMD **o, const char *fmeta)
 
 	s = f.open_ro(fmeta);
 	if (s < 0)
-		return NULL;
+		return s;
 
 	s = f.resize(f.get_size());
 	if (s < 0) {
-		return NULL;
+		return s;
 	}
 
 	s = f.read();
 	if (s < 0) {
-		return NULL;
+		return s;
 	}
 
 	return RecordMD::INIT(o, f._v);
