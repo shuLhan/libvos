@@ -246,6 +246,15 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 				answer->reset();
 				answer->extract(&_udp, BUFFER_IS_UDP);
 
+				if (question->_id != answer->_id) {
+					break;
+				}
+
+				s = question->_name.like(&answer->_name);
+				if (s != 0) {
+					break;
+				}
+
 				if (LIBVOS_DEBUG) {
 					printf(" OK\n");
 				}

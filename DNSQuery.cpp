@@ -141,7 +141,7 @@ int DNSQuery::extract(Buffer *bfr, int type)
  *	< 0		: success.
  *	< <0		: fail.
  */
-int DNSQuery::extract_buffer(unsigned char *bfr, unsigned int bfr_len,
+int DNSQuery::extract_buffer(unsigned char *bfr, const int bfr_len,
 				const int type)
 {
 	int ret	= 0;
@@ -153,6 +153,8 @@ int DNSQuery::extract_buffer(unsigned char *bfr, unsigned int bfr_len,
 	if (type == BUFFER_IS_TCP) {
 		bfr	= bfr + 2;
 		ret	+= 2;
+		if (ret > bfr_len)
+			return ret;
 	}
 
 	memcpy(this, bfr, DNS_HEADER_SIZE);

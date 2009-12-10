@@ -17,7 +17,7 @@ namespace vos {
 
 #define	DNS_DEF_PORT		53
 #define	DNS_UDP_PACKET_SIZE	512
-#define	RESOLVER_DEF_TIMEOUT	10
+#define	RESOLVER_DEF_TIMEOUT	3
 #define	RESOLVER_DEF_TO_TRY	0
 
 /* DNS QUERY Section */

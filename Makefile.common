@@ -11,7 +11,7 @@ SYS		= $(shell uname)
 
 CPP		= g++
 ifndef CPPFLAGS
-CPPFLAGS	= -Wall -Weffc++ -Werror -fno-rtti -g -O0 -pipe
+CPPFLAGS	= -Wall -Wextra -Weffc++ -Werror -fno-rtti -g -O0 -pipe
 endif
 LDFLAGS		= -lpthread
 

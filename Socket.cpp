@@ -384,7 +384,7 @@ Socket * Socket::accept()
 {
 	int			s;
 	socklen_t		client_addrlen;
-	struct sockaddr_in	client_addr	= {0};
+	struct sockaddr_in	client_addr;
 	const char		*p		= NULL;
 	Socket			*client		= NULL;
 

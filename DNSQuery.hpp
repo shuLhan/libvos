@@ -55,7 +55,7 @@ public:
 	int init(const Buffer *bfr);
 
 	int extract(Buffer *bfr, int type);
-	int extract_buffer(unsigned char *bfr, unsigned int len,
+	int extract_buffer(unsigned char *bfr, const int len,
 				const int type);
 	int extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 			unsigned char *bfr, unsigned char **bfr_ret);
