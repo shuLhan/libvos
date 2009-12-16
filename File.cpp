@@ -77,8 +77,10 @@ int File::open(const char *path)
 	}
 
 	_d = ::open(path, O_RDWR | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
-	if (_d < 0)
+	if (_d < 0) {
+		_d = 0;
 		return -E_FILE_OPEN;
+	}
 
 	s = _name.copy_raw(path, 0);
 	if (s < 0)
@@ -113,8 +115,10 @@ int File::open_ro(const char *path)
 	}
 
 	_d = ::open(path, O_RDONLY);
-	if (_d < 0)
+	if (_d < 0) {
+		_d = 0;
 		return -E_FILE_OPEN;
+	}
 
 	s = _name.copy_raw(path, 0);
 	if (s < 0)
@@ -149,8 +153,10 @@ int File::open_wo(const char *path)
 	}
 
 	_d = ::open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-	if (_d < 0)
+	if (_d < 0) {
+		_d = 0;
 		return -E_FILE_OPEN;
+	}
 
 	s = _name.copy_raw(path, 0);
 	if (s < 0)
@@ -185,8 +191,10 @@ int File::open_wa(const char *path)
 	}
 
 	_d = ::open(path, O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
-	if (_d < 0)
+	if (_d < 0) {
+		_d = 0;
 		return -E_FILE_OPEN;
+	}
 
 	s = _name.copy_raw(path, 0);
 	if (s < 0)

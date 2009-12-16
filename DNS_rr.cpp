@@ -58,13 +58,10 @@ void DNS_rr::dump()
 {
 	DNS_rr *p = this;
 
+	printf(" name|type|class|TTL|length|data\n");
 	while (p) {
-		printf(" RR name   : %s\n", p->_name._v);
-		printf(" RR type   : %d\n", p->_type);
-		printf(" RR class  : %d\n", p->_class);
-		printf(" RR TTL    : %d\n", p->_ttl);
-		printf(" RR length : %d\n", p->_len);
-		printf(" RR data   : %s\n\n", p->_data._v);
+		printf(" %s|%d|%d|%d|%d|%s\n", p->_name._v, p->_type,
+			p->_class, p->_ttl, p->_len, p->_data._v);
 
 		p = p->_next;
 	}

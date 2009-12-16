@@ -115,7 +115,7 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 			return s;
 		}
 	} else {
-		(*query)->reset();
+		(*query)->reset(vos::DNSQ_DO_ALL);
 	}
 
 	(*query)->_id		= htons(rand() % 65536);
@@ -243,22 +243,22 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 					return s;
 				}
 
-				answer->reset();
+				answer->reset(DNSQ_DO_ALL);
 				answer->extract(&_udp, BUFFER_IS_UDP);
 
+				if (answer->_n_ans <= 0) {
+					break;
+				}
 				if (question->_id != answer->_id) {
 					break;
 				}
-
 				s = question->_name.like(&answer->_name);
 				if (s != 0) {
 					break;
 				}
-
 				if (LIBVOS_DEBUG) {
 					printf(" OK\n");
 				}
-
 				return 0;
 			} else {
 				++n_try;
@@ -310,7 +310,7 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery **answer)
 				if (! (*answer)) {
 					(*answer) = new DNSQuery();
 				} else {
-					(*answer)->reset();
+					(*answer)->reset(DNSQ_DO_ALL);
 				}
 
 				(*answer)->extract(&_tcp, BUFFER_IS_UDP);

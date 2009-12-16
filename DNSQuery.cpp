@@ -22,7 +22,10 @@ DNSQuery::DNSQuery() :
 	_bfr(NULL),
 	_rr_ans(NULL),
 	_rr_aut(NULL),
-	_rr_add(NULL)
+	_rr_add(NULL),
+	_rr_ans_p(NULL),
+	_rr_aut_p(NULL),
+	_rr_add_p(NULL)
 {}
 
 DNSQuery::~DNSQuery()
@@ -80,11 +83,13 @@ int DNSQuery::extract(Buffer *bfr, int type)
 	unsigned char	*ret	= NULL;
 	DNS_rr		*rr	= NULL;
 
+	reset(DNSQ_DO_EXCEPT_BUFFER);
+
 	if (!bfr) {
 		bfr = _bfr;
 	} else {
 		if (!_bfr) {
-			s = Buffer::INIT(&_bfr, NULL);
+			s = Buffer::INIT(&_bfr, bfr);
 			if (s < 0)
 				return s;
 		} else {
@@ -97,32 +102,41 @@ int DNSQuery::extract(Buffer *bfr, int type)
 	if (bfr->is_empty())
 		return 0;
 
-	len	= extract_buffer((unsigned char *) bfr->_v, _bfr->_i, type);
+	len	= extract_buffer((unsigned char *) bfr->_v, bfr->_i, type);
 	p	= (unsigned char *) &bfr->_v[len];
+	_rr_ans_p = (const char *) p;
 	for (i = 0; i < _n_ans; ++i) {
-		extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret);
-		p = ret;
-		if (rr) {
-			DNS_rr::ADD(&_rr_ans, rr);
-			rr = NULL;
+		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret);
+		if (0 == s) {
+			p = ret;
+			if (rr) {
+				DNS_rr::ADD(&_rr_ans, rr);
+				rr = NULL;
+			}
 		}
 	}
 
+	_rr_aut_p = (const char *) p;
 	for (i = 0; i < _n_aut; ++i) {
-		extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret);
-		p = ret;
-		if (rr) {
-			DNS_rr::ADD(&_rr_aut, rr);
-			rr = NULL;
+		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret);
+		if (0 == s) {
+			p = ret;
+			if (rr) {
+				DNS_rr::ADD(&_rr_aut, rr);
+				rr = NULL;
+			}
 		}
 	}
 
+	_rr_add_p = (const char *) p;
 	for (i = 0; i < _n_add; ++i) {
-		extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret);
-		p = ret;
-		if (rr) {
-			DNS_rr::ADD(&_rr_add, rr);
-			rr = NULL;
+		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret);
+		if (0 == s) {
+			p = ret;
+			if (rr) {
+				DNS_rr::ADD(&_rr_add, rr);
+				rr = NULL;
+			}
 		}
 	}
 
@@ -252,8 +266,11 @@ int DNSQuery::extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 		bfr	+= prr->_len;
 		break;
 	default:
-		fprintf(stderr, "[DNSQUERY] query type '%d' is not handle yet!\n", prr->_type);
-		prr->reset();
+		fprintf(stderr, "[DNSQUERY] %s: Record type '%d' is not handle yet!\n",
+			_name._v, prr->_type);
+		delete prr;
+		(*rr) = NULL;
+		return -1;
 	}
 
 	(*bfr_ret) = bfr;
@@ -301,6 +318,74 @@ int DNSQuery::read_label(Buffer *label, unsigned char *bfr_org,
 	return ret;
 }
 
+/**
+ * @desc : remove authority record from buffer.
+ *
+ *	buffer '_bfr' MUST be extracted before calling this function, using
+ *	extract() method.
+ */
+void DNSQuery::remove_rr_aut()
+{
+	if (!_bfr)
+		return;
+	if (!_rr_aut_p)
+		return;
+
+	_bfr->_i		= _rr_aut_p - _bfr->_v;
+	if (_bfr->_i < 0) {
+		_bfr->_i	= 0;
+	}
+	_bfr->_v[_bfr->_i]	= '\0';
+	_rr_aut_p		= NULL;
+	_n_aut			= 0;
+
+	if (_rr_aut) {
+		delete _rr_aut;
+		_rr_aut = NULL;
+	}
+
+	if (_bfr_type == BUFFER_IS_TCP) {
+		memset(&_bfr->_v[DNS_TCP_HDR_SIZE + DNS_AUT_CNT_POS], '\0',
+			DNS_CNT_SIZE);
+	} else {
+		memset(&_bfr->_v[DNS_AUT_CNT_POS], '\0', DNS_CNT_SIZE);
+	}
+}
+
+/**
+ * @desc : remove additional record from buffer.
+ *
+ *	buffer '_bfr' MUST be extracted before calling this function, using
+ *	extract() method.
+ */
+void DNSQuery::remove_rr_add()
+{
+	if (!_bfr)
+		return;
+	if (!_rr_add_p)
+		return;
+
+	_bfr->_i		= _rr_add_p - _bfr->_v;
+	if (_bfr->_i < 0) {
+		_bfr->_i	= 0;
+	}
+	_bfr->_v[_bfr->_i]	= '\0';
+	_rr_add_p		= NULL;
+	_n_add			= 0;
+
+	if (_rr_add) {
+		delete _rr_add;
+		_rr_add = NULL;
+	}
+
+	if (_bfr_type == BUFFER_IS_TCP) {
+		memset(&_bfr->_v[DNS_TCP_HDR_SIZE + DNS_ADD_CNT_POS], '\0',
+			DNS_CNT_SIZE);
+	} else {
+		memset(&_bfr->_v[DNS_ADD_CNT_POS], '\0', DNS_CNT_SIZE);
+	}
+}
+
 void DNSQuery::set_id(int id)
 {
 	_id = ::htons(id);
@@ -308,13 +393,16 @@ void DNSQuery::set_id(int id)
 	if (! _bfr)
 		return;
 
-	memset(_bfr->_v, '\0', 2);
-	memcpy(_bfr->_v, &_id, 2);
-
-	_id = id;
+	if (_bfr_type == BUFFER_IS_UDP) {
+		memset(_bfr->_v, '\0', DNS_HDR_ID_SIZE);
+		memcpy(_bfr->_v, &_id, DNS_HDR_ID_SIZE);
+	} else {
+		memset(&_bfr->_v[DNS_TCP_HDR_SIZE], '\0', DNS_HDR_ID_SIZE);
+		memcpy(&_bfr->_v[DNS_TCP_HDR_SIZE], &_id, DNS_HDR_ID_SIZE);
+	}
 }
 
-void DNSQuery::reset()
+void DNSQuery::reset(const int do_type)
 {
 	_id		= 0;
 	_flag		= 0;
@@ -326,7 +414,7 @@ void DNSQuery::reset()
 	_class		= 0;
 	_bfr_type	= BUFFER_IS_UDP;
 	_name.reset();
-	if (_bfr)
+	if (_bfr && !(do_type & DNSQ_DO_EXCEPT_BUFFER))
 		_bfr->reset();
 
 	if (_rr_ans) {
@@ -355,10 +443,10 @@ void DNSQuery::ntohs()
 	_class	= ::ntohs(_class);
 }
 
-void DNSQuery::dump()
+void DNSQuery::dump(int do_type)
 {
 	printf("\n; Buffer\n");
-	if (_bfr)
+	if (_bfr && !(do_type & DNSQ_DO_EXCEPT_BUFFER))
 		_bfr->dump_hex();
 
 	printf("; HEADER section\n");
@@ -372,12 +460,19 @@ void DNSQuery::dump()
 	printf(" type         : %d\n", _type);
 	printf(" class        : %d\n", _class);
 	printf(" name         : %s\n", _name._v);
-	printf("; ANSWER section\n");
-	_rr_ans->dump();
-	printf("; AUTHENTICATION section\n");
-	_rr_aut->dump();
-	printf("; ADDITIONAL section\n");
-	_rr_add->dump();
+
+	if (_rr_ans) {
+		printf("; ANSWER section\n");
+		_rr_ans->dump();
+	}
+	if (_rr_aut) {
+		printf("; AUTHENTICATION section\n");
+		_rr_aut->dump();
+	}
+	if (_rr_add) {
+		printf("; ADDITIONAL section\n");
+		_rr_add->dump();
+	}
 }
 
 /**

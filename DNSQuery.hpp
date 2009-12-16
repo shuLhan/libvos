@@ -13,6 +13,12 @@
 
 namespace vos {
 
+#define	DNS_TCP_HDR_SIZE	2
+#define	DNS_HDR_ID_SIZE		2
+#define	DNS_CNT_SIZE		2
+#define	DNS_ANS_CNT_POS		6
+#define	DNS_AUT_CNT_POS		8
+#define	DNS_ADD_CNT_POS		10
 #define	DNS_HEADER_SIZE		12
 
 enum _DNS_HDR_RCODE {
@@ -47,6 +53,11 @@ enum _DNS_BFR_TYPE {
 	BUFFER_IS_TCP	= 2
 };
 
+enum _dnsq_do_type {
+	DNSQ_DO_ALL		= 0,
+	DNSQ_DO_EXCEPT_BUFFER	= 1
+};
+
 class DNSQuery {
 public:
 	DNSQuery();
@@ -61,10 +72,14 @@ public:
 			unsigned char *bfr, unsigned char **bfr_ret);
 	int read_label(Buffer *label, unsigned char *bfr_org,
 			unsigned char *bfr, int bfr_off);
+
+	void remove_rr_aut();
+	void remove_rr_add();
+
 	void set_id(int id);
-	void reset();
+	void reset(const int do_type);
 	void ntohs();
-	void dump();
+	void dump(int do_type);
 
 	static int INIT(DNSQuery **o, const Buffer *bfr);
 
@@ -86,6 +101,9 @@ public:
 	DNS_rr		*_rr_ans;
 	DNS_rr		*_rr_aut;
 	DNS_rr		*_rr_add;
+	const char	*_rr_ans_p;
+	const char	*_rr_aut_p;
+	const char	*_rr_add_p;
 private:
 	DISALLOW_COPY_AND_ASSIGN(DNSQuery);
 };
