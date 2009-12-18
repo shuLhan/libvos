@@ -13,6 +13,7 @@ DNS_rr::DNS_rr() :
 	_class(0),
 	_ttl(0),
 	_len(0),
+	_mx_pref(0),
 	_name(),
 	_data(),
 	_next(NULL)
@@ -58,10 +59,10 @@ void DNS_rr::dump()
 {
 	DNS_rr *p = this;
 
-	printf(" name|type|class|TTL|length|data\n");
+	printf(" name|type|class|TTL|length|MX preference|data\n");
 	while (p) {
-		printf(" %s|%d|%d|%d|%d|%s\n", p->_name._v, p->_type,
-			p->_class, p->_ttl, p->_len, p->_data._v);
+		printf(" %s|%d|%d|%d|%d|%d|%s\n", p->_name._v, p->_type,
+			p->_class, p->_ttl, p->_len, p->_mx_pref, p->_data._v);
 
 		p = p->_next;
 	}

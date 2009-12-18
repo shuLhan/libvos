@@ -79,6 +79,7 @@ int DNSQuery::extract(Buffer *bfr, int type)
 	int		s	= 0;
 	int		i	= 0;
 	int		len	= 0;
+	int		rr_type	= 0;
 	unsigned char	*p	= NULL;
 	unsigned char	*ret	= NULL;
 	DNS_rr		*rr	= NULL;
@@ -106,10 +107,11 @@ int DNSQuery::extract(Buffer *bfr, int type)
 	p	= (unsigned char *) &bfr->_v[len];
 	_rr_ans_p = (const char *) p;
 	for (i = 0; i < _n_ans; ++i) {
-		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret);
+		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret, rr_type);
 		if (0 == s) {
 			p = ret;
 			if (rr) {
+				rr_type = rr->_type;
 				DNS_rr::ADD(&_rr_ans, rr);
 				rr = NULL;
 			}
@@ -118,7 +120,7 @@ int DNSQuery::extract(Buffer *bfr, int type)
 
 	_rr_aut_p = (const char *) p;
 	for (i = 0; i < _n_aut; ++i) {
-		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret);
+		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret, 0);
 		if (0 == s) {
 			p = ret;
 			if (rr) {
@@ -130,7 +132,7 @@ int DNSQuery::extract(Buffer *bfr, int type)
 
 	_rr_add_p = (const char *) p;
 	for (i = 0; i < _n_add; ++i) {
-		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret);
+		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret, 0);
 		if (0 == s) {
 			p = ret;
 			if (rr) {
@@ -208,6 +210,7 @@ int DNSQuery::extract_buffer(unsigned char *bfr, const int bfr_len,
  *	> bfr		: pointer to the part of original buffer.
  *	> bfr_ret	: pointer to position of buffer after RR has been
  *			extracted.
+ *	> type		: type of the last extracted rr.
  *
  * @return:
  *	< 0		: success.
@@ -215,7 +218,7 @@ int DNSQuery::extract_buffer(unsigned char *bfr, const int bfr_len,
  */
 int DNSQuery::extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 				unsigned char *bfr,
-				unsigned char **bfr_ret)
+				unsigned char **bfr_ret, int last_type)
 {
 	int	s	= 0;
 	int	l	= 0;
@@ -229,14 +232,16 @@ int DNSQuery::extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 		s = (*rr)->init();
 		if (s < 0)
 			return s;
-	} else {
+	} else if (0 == last_type) {
 		(*rr)->reset();
 	}
 
 	prr = (*rr);
 
-	l	= read_label(&prr->_name, bfr_org, bfr, 0);
-	bfr	+= l;
+	if (last_type != QUERY_T_MX) {
+		l	= read_label(&prr->_name, bfr_org, bfr, 0);
+		bfr	+= l;
+	}
 
 	memcpy(&prr->_type, bfr, 2);
 	prr->_type	= ::ntohs(prr->_type);
@@ -265,6 +270,16 @@ int DNSQuery::extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 		l	= read_label(&prr->_data, bfr_org, bfr, 0);
 		bfr	+= prr->_len;
 		break;
+
+	case QUERY_T_MX:
+		memcpy(&prr->_mx_pref, bfr, 2);
+		prr->_mx_pref	= ::ntohs(prr->_mx_pref);
+		bfr		+= 2;
+
+		l	= read_label(&prr->_data, bfr_org, bfr, 0);
+		bfr	+= prr->_len;
+		break;
+
 	default:
 		fprintf(stderr, "[DNSQUERY] %s: Record type '%d' is not handle yet!\n",
 			_name._v, prr->_type);

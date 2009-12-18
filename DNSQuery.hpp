@@ -31,10 +31,10 @@ enum _DNS_HDR_RCODE {
 };
 
 enum _DNS_HDR_RTYPE {
-	RTYPE_RA	= 0x0080,
-	RTYPE_RD	= 0x0100,
-	RTYPE_TC	= 0x0200,
-	RTYPE_AA	= 0x0400
+	RTYPE_RA	= 0x0080,	/* Recursion Available */
+	RTYPE_RD	= 0x0100,	/* Recursion Desired */
+	RTYPE_TC	= 0x0200,	/* TrunCation */
+	RTYPE_AA	= 0x0400	/* Authoritative Answer */
 };
 
 enum _DNS_HDR_OPCODE {
@@ -69,7 +69,8 @@ public:
 	int extract_buffer(unsigned char *bfr, const int len,
 				const int type);
 	int extract_rr(DNS_rr **rr, unsigned char *bfr_org,
-			unsigned char *bfr, unsigned char **bfr_ret);
+			unsigned char *bfr, unsigned char **bfr_ret,
+			int last_type);
 	int read_label(Buffer *label, unsigned char *bfr_org,
 			unsigned char *bfr, int bfr_off);
 
