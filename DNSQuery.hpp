@@ -15,11 +15,13 @@ namespace vos {
 
 #define	DNS_TCP_HDR_SIZE	2
 #define	DNS_HDR_ID_SIZE		2
+#define	DNS_QTYPE_SIZE		2
+#define	DNS_QCLASS_SIZE		2
 #define	DNS_CNT_SIZE		2
 #define	DNS_ANS_CNT_POS		6
 #define	DNS_AUT_CNT_POS		8
 #define	DNS_ADD_CNT_POS		10
-#define	DNS_HEADER_SIZE		12
+#define	DNS_HDR_SIZE		12
 
 enum _DNS_HDR_RCODE {
 	RCODE_OK	= 0x0000,
@@ -27,20 +29,23 @@ enum _DNS_HDR_RCODE {
 	RCODE_SERVER	= 0x0002,
 	RCODE_NAME	= 0x0003,
 	RCODE_NOT_IMPL	= 0x0004,
-	RCODE_REFUSED	= 0x0005
+	RCODE_REFUSED	= 0x0005,
+	RCODE_FLAG	= 0x000F
 };
 
 enum _DNS_HDR_RTYPE {
 	RTYPE_RA	= 0x0080,	/* Recursion Available */
 	RTYPE_RD	= 0x0100,	/* Recursion Desired */
 	RTYPE_TC	= 0x0200,	/* TrunCation */
-	RTYPE_AA	= 0x0400	/* Authoritative Answer */
+	RTYPE_AA	= 0x0400,	/* Authoritative Answer */
+	RTYPE_FLAG	= 0x0780
 };
 
 enum _DNS_HDR_OPCODE {
 	OPCODE_QUERY	= 0x0000,
 	OPCODE_IQUERY	= 0x0800,
-	OPCODE_STATUS	= 0x1000
+	OPCODE_STATUS	= 0x1000,
+	OPCODE_FLAG	= 0x1800
 };
 
 enum _DNS_HDR_TYPE {
@@ -64,10 +69,11 @@ public:
 	~DNSQuery();
 
 	int init(const Buffer *bfr);
+	int set_buffer(const Buffer *bfr, const int type);
 
-	int extract(Buffer *bfr, int type);
-	int extract_buffer(unsigned char *bfr, const int len,
-				const int type);
+	int extract();
+	int extract_header();
+	int extract_question();
 	int extract_rr(DNS_rr **rr, unsigned char *bfr_org,
 			unsigned char *bfr, unsigned char **bfr_ret,
 			int last_type);

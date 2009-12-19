@@ -64,6 +64,34 @@ int DNSQuery::init(const Buffer *bfr)
 }
 
 /**
+ * @desc	: set content of DNSQuery buffer to 'bfr'.
+ *
+ * @param	:
+ 	> bfr	: pointer to Buffer object.
+ *
+ * @return	:
+ *	< 0	: success, or 'bfr' is null.
+ *	< <0	: fail.
+ */
+int DNSQuery::set_buffer(const Buffer *bfr, int type)
+{
+	int s = 0;
+
+	if (!bfr)
+		return 0;
+
+	_bfr_type = type;
+
+	if (!_bfr) {
+		s = Buffer::INIT(&_bfr, bfr);
+	} else {
+		s = _bfr->copy(bfr);
+	}
+
+	return s;
+}
+
+/**
  * @desc	: extract contents of buffer.
  *
  * @parm	:
@@ -71,74 +99,72 @@ int DNSQuery::init(const Buffer *bfr)
  *	> type	: type of buffer come from, is it TCP or UDP ?
  *
  * @return	:
- *	< 0	: success.
+ *	< 0	: success, or buffer is empty.
  *	< <0	: fail.
  */
-int DNSQuery::extract(Buffer *bfr, int type)
+int DNSQuery::extract()
 {
-	int		s	= 0;
-	int		i	= 0;
-	int		len	= 0;
-	int		rr_type	= 0;
-	unsigned char	*p	= NULL;
-	unsigned char	*ret	= NULL;
-	DNS_rr		*rr	= NULL;
+	int		s		= 0;
+	int		i		= 0;
+	int		len		= 0;
+	int		rr_type		= 0;
+	unsigned char	*bfr_org	= NULL;
+	unsigned char	*p		= NULL;
+	unsigned char	*ret		= NULL;
+	DNS_rr		*rr		= NULL;
 
 	reset(DNSQ_DO_EXCEPT_BUFFER);
 
-	if (!bfr) {
-		bfr = _bfr;
-	} else {
-		if (!_bfr) {
-			s = Buffer::INIT(&_bfr, bfr);
-			if (s < 0)
-				return s;
-		} else {
-			s = _bfr->copy(bfr);
-			if (s < 0)
-				return s;
-		}
-	}
-
-	if (bfr->is_empty())
+	if (_bfr->is_empty())
 		return 0;
 
-	len	= extract_buffer((unsigned char *) bfr->_v, bfr->_i, type);
-	p	= (unsigned char *) &bfr->_v[len];
-	_rr_ans_p = (const char *) p;
+	bfr_org	= (unsigned char *) _bfr->_v;
+	s	= extract_header();
+	if (s <= 0)
+		return -1;
+
+	len = extract_question();
+	if (len <= 0)
+		return -1;
+
+	p		= bfr_org + len;
+	_rr_ans_p	= (const char *) p;
 	for (i = 0; i < _n_ans; ++i) {
-		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret, rr_type);
-		if (0 == s) {
-			p = ret;
-			if (rr) {
-				rr_type = rr->_type;
-				DNS_rr::ADD(&_rr_ans, rr);
-				rr = NULL;
-			}
+		s = extract_rr(&rr, bfr_org, p, &ret, rr_type);
+		if (s != 0) {
+			return s;
+		}
+		p = ret;
+		if (rr) {
+			rr_type = rr->_type;
+			DNS_rr::ADD(&_rr_ans, rr);
+			rr = NULL;
 		}
 	}
 
 	_rr_aut_p = (const char *) p;
 	for (i = 0; i < _n_aut; ++i) {
-		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret, 0);
-		if (0 == s) {
-			p = ret;
-			if (rr) {
-				DNS_rr::ADD(&_rr_aut, rr);
-				rr = NULL;
-			}
+		s = extract_rr(&rr, bfr_org, p, &ret, 0);
+		if (s != 0) {
+			return s;
+		}
+		p = ret;
+		if (rr) {
+			DNS_rr::ADD(&_rr_aut, rr);
+			rr = NULL;
 		}
 	}
 
 	_rr_add_p = (const char *) p;
 	for (i = 0; i < _n_add; ++i) {
-		s = extract_rr(&rr, (unsigned char *) bfr->_v, p, &ret, 0);
-		if (0 == s) {
-			p = ret;
-			if (rr) {
-				DNS_rr::ADD(&_rr_add, rr);
-				rr = NULL;
-			}
+		s = extract_rr(&rr, bfr_org, p, &ret, 0);
+		if (s != 0) {
+			return s;
+		}
+		p = ret;
+		if (rr) {
+			DNS_rr::ADD(&_rr_add, rr);
+			rr = NULL;
 		}
 	}
 
@@ -154,26 +180,26 @@ int DNSQuery::extract(Buffer *bfr, int type)
  *	> type		: type of DNS packet come from, TCP or UDP.
  *
  * @return		:
- *	< 0		: success.
+ *	< 0		: buffer is empty.
+ *	< >0		: success, length of header.
  *	< <0		: fail.
  */
-int DNSQuery::extract_buffer(unsigned char *bfr, const int bfr_len,
-				const int type)
+int DNSQuery::extract_header()
 {
-	int ret	= 0;
-	int len	= 0;
-
-	if (!bfr)
+	if (!_bfr)
 		return 0;
 
-	if (type == BUFFER_IS_TCP) {
-		bfr	= bfr + 2;
-		ret	+= 2;
-		if (ret > bfr_len)
-			return ret;
-	}
+	if (DNS_HDR_SIZE > _bfr->_i)
+		return -1;
 
-	memcpy(this, bfr, DNS_HEADER_SIZE);
+	if (_bfr_type == BUFFER_IS_TCP) {
+		if (DNS_HDR_SIZE + DNS_TCP_HDR_SIZE > _bfr->_i)
+			return -1;
+
+		memcpy(this, _bfr->_v + DNS_TCP_HDR_SIZE, DNS_HDR_SIZE);
+	} else {
+		memcpy(this, _bfr->_v, DNS_HDR_SIZE);
+	}
 
 	_id	= ::ntohs(_id);
 	_flag	= ::ntohs(_flag);
@@ -182,20 +208,60 @@ int DNSQuery::extract_buffer(unsigned char *bfr, const int bfr_len,
 	_n_aut	= ::ntohs(_n_aut);
 	_n_add	= ::ntohs(_n_add);
 
+	return DNS_HDR_SIZE;
+}
+
+/**
+ * @desc		: extract question data from buffer.
+ *
+ * @param		:
+ *	> bfr		: DNS packet.
+ *	> bfr_len	: length of 'bfr'.
+ *	> type		: type of DNS packet come from, TCP or UDP.
+ *
+ * @return		:
+ *	< 0		: buffer is empty.
+ *	< >0		: success, length of question, label + type + class,
+ *			data.
+ *	< <0		: fail.
+ */
+int DNSQuery::extract_question()
+{
+	int ret = 0;
+	int len = 0;
+	unsigned char *bfr = NULL;
+
+	if (!_bfr)
+		return 0;
+
+	ret = DNS_HDR_SIZE;
+	if (ret > _bfr->_i)
+		return -1;
+
+	bfr = (unsigned char *) _bfr->_v;
+
 	_name.reset();
-	len	= read_label(&_name, bfr, bfr + DNS_HEADER_SIZE, 0);
-	ret	+= DNS_HEADER_SIZE + len;
-	bfr	+= DNS_HEADER_SIZE + len;
+	if (_bfr_type == BUFFER_IS_TCP) {
+		ret += DNS_TCP_HDR_SIZE;
+		if (ret > _bfr->_i)
+			return -1;
 
-	memcpy(&_type, bfr, 2);
+		len = read_label(&_name, bfr, bfr + ret, 0);
+	} else {
+		len = read_label(&_name, bfr, bfr + ret, 0);
+	}
+	ret += len;
+
+	memcpy(&_type, bfr + ret, DNS_QTYPE_SIZE);
 	_type = ::ntohs(_type);
-	bfr += 2;
 
-	memcpy(&_class, bfr, 2);
+	ret += DNS_QTYPE_SIZE;
+	if (ret > _bfr->_i)
+		return -1;
+
+	memcpy(&_class, bfr + ret, DNS_QCLASS_SIZE);
 	_class = ::ntohs(_class);
-	bfr += 2;
-
-	ret += 4;
+	ret += DNS_QCLASS_SIZE;
 
 	return ret;
 }
@@ -465,16 +531,19 @@ void DNSQuery::dump(int do_type)
 		_bfr->dump_hex();
 
 	printf("; HEADER section\n");
-	printf(" id           : %d\n", _id);
-	printf(" flag         : %#4X\n", _flag);
-	printf(" n question   : %d\n", _n_qry);
-	printf(" n answer     : %d\n", _n_ans);
-	printf(" n auth       : %d\n", _n_aut);
-	printf(" n additional : %d\n", _n_add);
+	printf(" id              : %d\n", _id);
+	printf(" flag            : %#4X\n", _flag);
+	printf("   query type    : %d\n", _flag & OPCODE_FLAG);
+	printf("   response type : %#4X\n", _flag & RTYPE_FLAG);
+	printf("   response code : %d\n", _flag & RCODE_FLAG);
+	printf(" n question      : %d\n", _n_qry);
+	printf(" n answer        : %d\n", _n_ans);
+	printf(" n auth          : %d\n", _n_aut);
+	printf(" n additional    : %d\n", _n_add);
 	printf("; QUESTION section\n");
-	printf(" type         : %d\n", _type);
-	printf(" class        : %d\n", _class);
-	printf(" name         : %s\n", _name._v);
+	printf(" type            : %d\n", _type);
+	printf(" class           : %d\n", _class);
+	printf(" name            : %s\n", _name._v);
 
 	if (_rr_ans) {
 		printf("; ANSWER section\n");

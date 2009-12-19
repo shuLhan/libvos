@@ -139,8 +139,8 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 	if (len > q->_l)
 		q->resize(len);
 
-	memcpy(q->_v, (*query), DNS_HEADER_SIZE);
-	q->_i = DNS_HEADER_SIZE;
+	memcpy(q->_v, (*query), DNS_HDR_SIZE);
+	q->_i = DNS_HDR_SIZE;
 
 	while (*qname) {
 		if (*qname == '.') {
@@ -237,36 +237,41 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 			select(maxfd, &_udp._readfds, NULL, NULL,
 				&_udp._timeout);
 	
-			if (FD_ISSET(_udp._d, &_udp._readfds)) {
-				s = _udp.read();
-				if (s <= 0) {
-					return s;
-				}
-
-				answer->reset(DNSQ_DO_ALL);
-				answer->extract(&_udp, BUFFER_IS_UDP);
-
-				if (answer->_n_ans <= 0) {
-					break;
-				}
-				if (question->_id != answer->_id) {
-					break;
-				}
-				s = question->_name.like(&answer->_name);
-				if (s != 0) {
-					break;
-				}
-				if (LIBVOS_DEBUG) {
-					printf(" OK\n");
-				}
-				return 0;
-			} else {
+			if (!FD_ISSET(_udp._d, &_udp._readfds)) {
 				++n_try;
-
 				if (LIBVOS_DEBUG) {
-					printf(" timeout...(%d)\n", n_try);
+					printf(">> timeout...(%d)\n", n_try);
 				}
+				continue;
 			}
+
+			s = _udp.read();
+			if (s <= 0) {
+				return s;
+			}
+
+			answer->reset(DNSQ_DO_ALL);
+			answer->set_buffer(&_udp, BUFFER_IS_UDP);
+			answer->extract_header();
+			answer->extract_question();
+
+			if ((answer->_flag & RCODE_FLAG) != 0) {
+				break;
+			}
+			if (answer->_n_ans <= 0) {
+				break;
+			}
+			if (question->_id != answer->_id) {
+				break;
+			}
+			s = question->_name.like(&answer->_name);
+			if (s != 0) {
+				break;
+			}
+			if (LIBVOS_DEBUG) {
+				printf(" OK\n");
+			}
+			return 0;
 		} while (n_try < RESOLVER_DEF_TO_TRY);
 
 		server = server->_next_col;
@@ -304,22 +309,43 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery **answer)
 			select(_tcp._d + 1, &_tcp._readfds, NULL, NULL,
 				&_tcp._timeout);
 	
-			if (FD_ISSET(_tcp._d, &_tcp._readfds)) {
-				s = _tcp.read();
-
-				if (! (*answer)) {
-					(*answer) = new DNSQuery();
-				} else {
-					(*answer)->reset(DNSQ_DO_ALL);
-				}
-
-				(*answer)->extract(&_tcp, BUFFER_IS_UDP);
-
-				return 0;
-			} else {
+			if (!FD_ISSET(_tcp._d, &_tcp._readfds)) {
 				++n_try;
-				printf(">> timeout...(%d)\n", n_try);
+				if (LIBVOS_DEBUG) {
+					printf(">> timeout...(%d)\n", n_try);
+				}
+				continue;
 			}
+
+			s = _tcp.read();
+
+			if (! (*answer)) {
+				(*answer) = new DNSQuery();
+			} else {
+				(*answer)->reset(DNSQ_DO_ALL);
+			}
+
+			(*answer)->set_buffer(&_tcp, BUFFER_IS_TCP);
+			(*answer)->extract_header();
+			(*answer)->extract_question();
+
+			if (((*answer)->_flag & RCODE_FLAG) != 0) {
+				break;
+			}
+			if ((*answer)->_n_ans <= 0) {
+				break;
+			}
+			if (question->_id != (*answer)->_id) {
+				break;
+			}
+			s = question->_name.like(&(*answer)->_name);
+			if (s != 0) {
+				break;
+			}
+			if (LIBVOS_DEBUG) {
+				printf(" OK\n");
+			}
+			return 0;
 		} while (n_try < RESOLVER_DEF_TO_TRY);
 
 		server = server->_next_col;
