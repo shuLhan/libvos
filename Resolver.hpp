@@ -34,7 +34,7 @@ public:
 
 	int create_question_udp(DNSQuery **query, const char *qname);
 	int send_query_udp(DNSQuery *question, DNSQuery *answer);
-	int send_query_tcp(DNSQuery *question, DNSQuery **answer);
+	int send_query_tcp(DNSQuery *question, DNSQuery *answer);
 
 	Socket		_tcp;
 	Socket		_udp;

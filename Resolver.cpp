@@ -280,7 +280,7 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 	return -E_SOCK_TIMEOUT;
 }
 
-int Resolver::send_query_tcp(DNSQuery *question, DNSQuery **answer)
+int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 {
 	int	s	= 0;
 	int	n_try	= 0;
@@ -293,14 +293,21 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery **answer)
 		n_try = 0;
 		_tcp.reset();
 
-		printf(">> querying %s...\n", server->_v);
+		if (LIBVOS_DEBUG) {
+			printf(">> querying %s...\n", server->_v);
+		}
+
 		s = _tcp.connect_to(server->_v, DNS_DEF_PORT);
 		if (s < 0) {
 			server = server->_next_col;
 			continue;
 		}
 
-		_tcp.send(question->_bfr);
+		s = _tcp.send(question->_bfr);
+		if (s < 0) {
+			server = server->_next_col;
+			continue;
+		}
 
 		do {
 			_tcp._timeout.tv_sec	= RESOLVER_DEF_TIMEOUT;
@@ -318,27 +325,25 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery **answer)
 			}
 
 			s = _tcp.read();
-
-			if (! (*answer)) {
-				(*answer) = new DNSQuery();
-			} else {
-				(*answer)->reset(DNSQ_DO_ALL);
+			if (s <= 0) {
+				return s;
 			}
 
-			(*answer)->set_buffer(&_tcp, BUFFER_IS_TCP);
-			(*answer)->extract_header();
-			(*answer)->extract_question();
+			answer->reset(DNSQ_DO_ALL);
+			answer->set_buffer(&_tcp, BUFFER_IS_TCP);
+			answer->extract_header();
+			answer->extract_question();
 
-			if (((*answer)->_flag & RCODE_FLAG) != 0) {
+			if ((answer->_flag & RCODE_FLAG) != 0) {
 				break;
 			}
-			if ((*answer)->_n_ans <= 0) {
+			if (answer->_n_ans <= 0) {
 				break;
 			}
-			if (question->_id != (*answer)->_id) {
+			if (question->_id != answer->_id) {
 				break;
 			}
-			s = question->_name.like(&(*answer)->_name);
+			s = question->_name.like(&answer->_name);
 			if (s != 0) {
 				break;
 			}

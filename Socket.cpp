@@ -28,6 +28,10 @@ Socket::~Socket()
 {
 	_next	= NULL;
 	_prev	= NULL;
+	if (_clients) {
+		delete _clients;
+		_clients = NULL;
+	}
 }
 
 int Socket::init(const int bfr_size)
