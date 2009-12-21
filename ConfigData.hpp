@@ -11,8 +11,6 @@
 
 namespace vos {
 
-#define	CFGDATA_DFLT_KEY_FMT	"KEY-"
-
 enum _config_type {
 	CONFIG_T_NONE	= 0,
 	CONFIG_T_HEAD,
@@ -52,6 +50,8 @@ public:
 	ConfigData	*_last_key;
 private:
 	DISALLOW_COPY_AND_ASSIGN(ConfigData);
+
+	static const char * DFLT_KEY_FMT;
 };
 
 } /* namespace::vos */

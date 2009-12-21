@@ -8,6 +8,8 @@
 
 namespace vos {
 
+unsigned int DNS_rr::DNS_RDATA_MAX_SIZE = 255;
+
 DNS_rr::DNS_rr() :
 	_type(0),
 	_class(0),

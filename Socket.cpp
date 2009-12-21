@@ -8,16 +8,14 @@
 
 namespace vos {
 
-int Socket::DFLT_BUFFER_SIZE	= 65495;
-int Socket::DFLT_LISTEN_SIZE	= 4;
-int Socket::DFLT_NAME_SIZE	= 255;
+unsigned int	Socket::DFLT_BUFFER_SIZE	= 65495;
+unsigned int	Socket::DFLT_LISTEN_SIZE	= 4;
+unsigned int	Socket::DFLT_NAME_SIZE		= 255;
+const char*	Socket::ADDR_WILCARD		= "0.0.0.0";
 
 Socket::Socket() : File(),
 	_family(0),
 	_port(0),
-	_readfds(),
-	_writefds(),
-	_errorfds(),
 	_timeout(),
 	_clients(NULL),
 	_next(NULL),
@@ -45,10 +43,6 @@ int Socket::init(const int bfr_size)
 	s = _name.resize(DFLT_NAME_SIZE);
 	if (s < 0)
 		return s;
-
-	FD_ZERO(&_readfds);
-	FD_ZERO(&_writefds);
-	FD_ZERO(&_errorfds);
 
 	return 0;
 }
@@ -229,11 +223,11 @@ int Socket::bind(const char *address, const int port)
 	}
 
 	if (!address) {
-		address = SOCK_ADDR_WILCARD;
+		address = ADDR_WILCARD;
 	} else {
 		s = strlen(address);
 		if (0 == s) {
-			address = SOCK_ADDR_WILCARD;
+			address = ADDR_WILCARD;
 		}
 	}
 

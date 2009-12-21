@@ -61,7 +61,8 @@ public:
 	static int IS_EXIST(const char *path, int acc_mode);
 	static Buffer* BASENAME(const char *path);
 
-	static int	DFLT_BUFFER_SIZE;
+	static unsigned int DFLT_BUFFER_SIZE;
+
 	int		_d;		/* file descriptor */
 	int		_p;		/* file iterator */
 	int		_status;	/* file status */

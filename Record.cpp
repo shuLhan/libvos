@@ -103,7 +103,7 @@ int Record::set_column_number(int n, const int number)
 	if (n < 0 || ! p)
 		return -E_RECORD_INV_COLUMN;
 
-	s = p->appendi(number, DFLT_BASE);
+	s = p->appendi(number, NUM_BASE_10);
 
 	return s;
 }

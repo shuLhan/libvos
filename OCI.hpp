@@ -11,9 +11,6 @@
 
 namespace vos {
 
-#define	OCI_DFLT_PORT		1521
-#define	OCI_VALUE_DFLT_SIZE	8
-
 enum _oci_errcode {
 	E_OCI_OK			= 0,
 	E_OCI_SUCC_WITH_INFO,
@@ -45,7 +42,7 @@ public:
 	void create_env();
 	void create_err();
 	void connect(const char *hostname, const char *service_name,
-			int port = OCI_DFLT_PORT);
+			int port = PORT);
 	void login(const char *username, const char *password);
 	void stmt_describe(const char *stmt);
 	void stmt_prepare(const char *stmt);
@@ -140,6 +137,9 @@ public:
 	void stmt_define_urowid(const int pos) {
 		stmt_define(pos, OCI_T_UROWID);
 	}
+
+	static unsigned int PORT;
+	static unsigned int DFLT_SIZE;
 
 	char * get_value(const int pos);
 	int get_value_number(const int pos);

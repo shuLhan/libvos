@@ -19,7 +19,12 @@
 
 namespace vos {
 
-#define	DFLT_BASE	10
+enum _number_base {
+	NUM_BASE_8	= 8,
+	NUM_BASE_10	= 10,
+	NUM_BASE_16	= 16,
+	NUM_DFLT_BASE	= 10
+};
 
 class Buffer {
 public:

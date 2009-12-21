@@ -15,11 +15,6 @@ using vos::DNSQuery;
 
 namespace vos {
 
-#define	DNS_DEF_PORT		53
-#define	DNS_UDP_PACKET_SIZE	512
-#define	RESOLVER_DEF_TIMEOUT	3
-#define	RESOLVER_DEF_TO_TRY	0
-
 /* DNS QUERY Section */
 class Resolver {
 public:
@@ -35,6 +30,11 @@ public:
 	int create_question_udp(DNSQuery **query, const char *qname);
 	int send_query_udp(DNSQuery *question, DNSQuery *answer);
 	int send_query_tcp(DNSQuery *question, DNSQuery *answer);
+
+	static unsigned int PORT;
+	static unsigned int UDP_PACKET_SIZE;
+	static unsigned int TIMEOUT;
+	static unsigned int N_TRY;
 
 	Socket		_tcp;
 	Socket		_udp;

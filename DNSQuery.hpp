@@ -13,15 +13,17 @@
 
 namespace vos {
 
-#define	DNS_TCP_HDR_SIZE	2
-#define	DNS_HDR_ID_SIZE		2
-#define	DNS_QTYPE_SIZE		2
-#define	DNS_QCLASS_SIZE		2
-#define	DNS_CNT_SIZE		2
-#define	DNS_ANS_CNT_POS		6
-#define	DNS_AUT_CNT_POS		8
-#define	DNS_ADD_CNT_POS		10
-#define	DNS_HDR_SIZE		12
+enum _DNS_PACKET_SIZE_AND_POS {
+	DNS_TCP_HDR_SIZE	= 2,
+	DNS_HDR_ID_SIZE		= 2,
+	DNS_QTYPE_SIZE		= 2,
+	DNS_QCLASS_SIZE		= 2,
+	DNS_CNT_SIZE		= 2,
+	DNS_ANS_CNT_POS		= 6,
+	DNS_AUT_CNT_POS		= 8,
+	DNS_ADD_CNT_POS		= 10,
+	DNS_HDR_SIZE		= 12
+};
 
 enum _DNS_HDR_RCODE {
 	RCODE_OK	= 0x0000,
@@ -74,21 +76,24 @@ public:
 	int extract();
 	int extract_header();
 	int extract_question();
-	int extract_rr(DNS_rr **rr, unsigned char *bfr_org,
-			unsigned char *bfr, unsigned char **bfr_ret,
-			int last_type);
-	int read_label(Buffer *label, unsigned char *bfr_org,
-			unsigned char *bfr, int bfr_off);
+	int extract_rr(DNS_rr **rr, const unsigned char *bfr_org,
+			const unsigned char *bfr,
+			const unsigned char **bfr_ret,
+			const int last_type);
+	int read_label(Buffer *label, const unsigned char *bfr_org,
+			const unsigned char *bfr, const int bfr_off);
 
 	void remove_rr_aut();
 	void remove_rr_add();
 
-	void set_id(int id);
-	void reset(const int do_type);
-	void ntohs();
-	void dump(int do_type);
+	void set_id(const int id);
+	void set_tcp_size(int size);
 
-	static int INIT(DNSQuery **o, const Buffer *bfr);
+	void reset(const int do_type);
+	void net_to_host();
+	void dump(const int do_type);
+
+	static int INIT(DNSQuery **o, const Buffer *bfr, const int type);
 
 	/* DNS HEADER Section */
 	uint16_t	_id;

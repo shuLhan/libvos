@@ -13,7 +13,7 @@ const char *_file_eol[N_FILE_EOL_TYPE] = {
 	"\r\n"
 };
 
-int File::DFLT_BUFFER_SIZE = 8192;
+unsigned int File::DFLT_BUFFER_SIZE = 8192;
 
 File::File() : Buffer(),
 	_d(0),

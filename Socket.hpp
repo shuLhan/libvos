@@ -15,14 +15,8 @@
 
 namespace vos {
 
-#define	SOCK_ADDR_WILCARD	"0.0.0.0"
-
 class Socket : public File {
 public:
-	static int DFLT_BUFFER_SIZE;
-	static int DFLT_LISTEN_SIZE;
-	static int DFLT_NAME_SIZE;
-
 	Socket();
 	~Socket();
 
@@ -59,11 +53,13 @@ public:
 				const int len);
 	int recv_udp(struct sockaddr *addr);
 
+	static unsigned int	DFLT_BUFFER_SIZE;
+	static unsigned int	DFLT_LISTEN_SIZE;
+	static unsigned int	DFLT_NAME_SIZE;
+	static const char*	ADDR_WILCARD;
+
 	int		_family;
 	int		_port;
-	fd_set		_readfds;
-	fd_set		_writefds;
-	fd_set		_errorfds;
 	struct timeval	_timeout;
 	Socket		*_clients;
 	Socket		*_next;

@@ -8,6 +8,10 @@
 
 namespace vos {
 
+unsigned int FTP::PORT		= 21;
+unsigned int FTP::TIMEOUT	= 3;
+unsigned int FTP::UTIMEOUT	= 0;
+
 const char *_ftp_cmd[N_FTP_CMD] = {
 	"USER",	/* USER	username		*/
 	"PASS",	/* PASS	password		*/
@@ -75,7 +79,7 @@ int FTP::connect(const char *host, const int port, const int mode)
 		 * sending another commands.
 		 */
 		do {
-			s = get_reply(FTP_TIMEOUT);
+			s = get_reply(TIMEOUT);
 			if (_i == 0)
 				break;
 			/* get & set server EOL */
@@ -137,21 +141,23 @@ void FTP::disconnect()
 int FTP::recv(const int to_sec, const int to_usec)
 {
 	int		s;
-	fd_set		allfds;
+	fd_set		fd_all;
+	fd_set		fd_read;
 
 	reset();
-	FD_ZERO(&allfds);
-	FD_SET(_d, &allfds);
+	FD_ZERO(&fd_all);
+	FD_ZERO(&fd_read);
+	FD_SET(_d, &fd_all);
 
-	_readfds		= allfds;
+	fd_read			= fd_all;
 	_timeout.tv_sec		= to_sec;
 	_timeout.tv_usec	= to_usec;
 
-	s = select(_d + 1, &_readfds, 0, 0, &_timeout);
+	s = select(_d + 1, &fd_read, 0, 0, &_timeout);
 	if (s < 0)
 		return -E_SOCK_SELECT;
 
-	if (FD_ISSET(_d, &_readfds)) {
+	if (FD_ISSET(_d, &fd_read)) {
 		s = read();
 		if (s >= 0) {
 			if (LIBVOS_DEBUG && _mode == FTP_MODE_NORMAL) {
@@ -195,7 +201,7 @@ int FTP::send_cmd(const int cmd, const char *parm)
 	if (s < 0)
 		return s;
 
-	s = get_reply(FTP_TIMEOUT);
+	s = get_reply(TIMEOUT);
 
 	return s;
 }
@@ -373,15 +379,15 @@ int FTP::do_pasv(const int cmd, const char *parm, const char *out)
 	if (s < 0)
 		return s;
 
-	pasv.recv(FTP_TIMEOUT, 0);
+	pasv.recv(TIMEOUT, 0);
 	while (pasv._i > 0) {
 		fout.write(&pasv);
-		pasv.recv(FTP_TIMEOUT, 0);
+		pasv.recv(TIMEOUT, 0);
 	}
 	fout.flush();
 	pasv.disconnect();
 
-	s = get_reply(FTP_TIMEOUT);
+	s = get_reply(TIMEOUT);
 
 	return s;
 }
@@ -429,7 +435,7 @@ int FTP::do_put(const char *path)
 	pasv.flush();
 
 	pasv.disconnect();
-	s = get_reply(FTP_TIMEOUT);
+	s = get_reply(TIMEOUT);
 
 	return s;
 }

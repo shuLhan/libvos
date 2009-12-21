@@ -15,6 +15,8 @@ enum _cfg_parsing_stt {
 	P_CFG_VALUE
 };
 
+const char * Config::CFG_HDR = "__CONFIG__";
+
 Config::Config() :
 	_e_row(0),
 	_e_col(0),

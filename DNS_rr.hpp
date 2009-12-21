@@ -12,8 +12,6 @@
 
 namespace vos {
 
-#define	DNS_RDATA_MAX_SIZE	255
-
 enum _RR_TYPE {
 	QUERY_T_ADDRESS		= 1,
 	QUERY_T_NAMESERVER,
@@ -67,6 +65,8 @@ public:
 	DNS_rr		*_next;
 private:
 	DISALLOW_COPY_AND_ASSIGN(DNS_rr);
+
+	static unsigned int DNS_RDATA_MAX_SIZE;
 };
 
 } /* namespace::vos */

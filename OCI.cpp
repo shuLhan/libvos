@@ -20,10 +20,13 @@ const char *_oci_errmsg[] = {
 	"[OCI] Error: OCI continue\n"
 };
 
-int OCI::_spool_min = 0;
-int OCI::_spool_max = 8;
-int OCI::_spool_inc = 1;
-int OCI::_stmt_cache_size = 10;
+unsigned int OCI::PORT		= 1521;
+unsigned int OCI::DFLT_SIZE	= 8;
+
+int OCI::_spool_min		= 0;
+int OCI::_spool_max		= 8;
+int OCI::_spool_inc		= 1;
+int OCI::_stmt_cache_size	= 10;
 
 OCI::OCI() :
 	_s(0),
@@ -31,7 +34,7 @@ OCI::OCI() :
 	_v(NULL),
 	_spool_name_len(0),
 	_value_i(0),
-	_value_sz(OCI_VALUE_DFLT_SIZE),
+	_value_sz(DFLT_SIZE),
 	_env(NULL),
 	_err(NULL),
 	_spool(NULL),
@@ -329,7 +332,7 @@ void OCI::disconnect()
 void OCI::stmt_new_value(const int pos, const int type)
 {
 	if (pos >= _value_sz) {
-		_value_sz += OCI_VALUE_DFLT_SIZE;
+		_value_sz += DFLT_SIZE;
 		_v = (OCIValue **) realloc(_v, _value_sz * sizeof(_v));
 	}
 

@@ -12,8 +12,6 @@
 
 namespace vos {
 
-#define	OCI_T_DFLT_SIZE	4000
-
 enum _oci_type {
 	OCI_T_VARCHAR	= 1,
 	OCI_T_NUMBER,
@@ -33,13 +31,16 @@ enum _oci_type {
 
 class OCIValue : public Buffer {
 public:
+	static unsigned int DFLT_SIZE;
+
 	OCIValue();
 
 	int init(const int pos, const int type = OCI_T_VARCHAR,
-			const int len = OCI_T_DFLT_SIZE);
+			const int len = DFLT_SIZE);
+
 
 	static OCIValue* INIT(const int pos, const int type = OCI_T_VARCHAR,
-				const int len = OCI_T_DFLT_SIZE);
+				const int len = DFLT_SIZE);
 
 	static OCIValue * NUMBER(const int pos) {
 			return OCIValue::INIT(pos, OCI_T_NUMBER, 22);

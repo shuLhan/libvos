@@ -8,6 +8,11 @@
 
 namespace vos {
 
+unsigned int Resolver::PORT		= 53;
+unsigned int Resolver::UDP_PACKET_SIZE	= 512;
+unsigned int Resolver::TIMEOUT		= 3;
+unsigned int Resolver::N_TRY		= 0;
+
 Resolver::Resolver() :
 	_tcp(),
 	_udp(),
@@ -40,15 +45,12 @@ int Resolver::init()
 	if (s < 0)
 		return s;
 
-	s = _udp.init(DNS_UDP_PACKET_SIZE);
+	s = _udp.init(UDP_PACKET_SIZE);
 	if (s < 0)
 		return s;
 	
 	_tcp.create_tcp();
 	_udp.create_udp();
-
-	FD_SET(_udp._d, &_udp._readfds);
-	FD_SET(_tcp._d, &_tcp._readfds);
 
 	return 0;
 }
@@ -110,7 +112,7 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 		return s;
 
 	if (!(*query)) {
-		s = DNSQuery::INIT(query, NULL);
+		s = DNSQuery::INIT(query, NULL, BUFFER_IS_UDP);
 		if (s != 0) {
 			return s;
 		}
@@ -183,7 +185,7 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 	memcpy(&q->_v[q->_i], &(*query)->_class, 2);
 	q->_i += 2;
 
-	(*query)->ntohs();
+	(*query)->net_to_host();
 
 	return 0;
 }
@@ -195,18 +197,19 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
  */
 int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 {
-	int	s	= 0;
-	int	n_try	= 0;
-	int	maxfd	= 0;
-	fd_set	allfds;
-	Record	*server	= _servers;
+	int		s	= 0;
+	int		maxfd	= 0;
+	unsigned int	n_try	= 0;
+	fd_set		fd_all;
+	fd_set		fd_read;
+	Record		*server	= _servers;
 
 	if (!question)
 		return 0;
 
-	FD_ZERO(&allfds);
-	FD_ZERO(&_udp._readfds);
-	FD_SET(_udp._d, &allfds);
+	FD_ZERO(&fd_all);
+	FD_ZERO(&fd_read);
+	FD_SET(_udp._d, &fd_all);
 	maxfd = _udp._d + 1;
 
 	while (server) {
@@ -217,7 +220,7 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 			printf(">> querying %s... ", server->_v);
 		}
 
-		s = _udp.connect_to(server->_v, DNS_DEF_PORT);
+		s = _udp.connect_to(server->_v, PORT);
 		if (s < 0) {
 			server = server->_next_col;
 			continue;
@@ -230,14 +233,13 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 		}
 
 		do {
-			_udp._readfds		= allfds;
-			_udp._timeout.tv_sec	= RESOLVER_DEF_TIMEOUT;
+			fd_read			= fd_all;
+			_udp._timeout.tv_sec	= TIMEOUT;
 			_udp._timeout.tv_usec	= 0;
 
-			select(maxfd, &_udp._readfds, NULL, NULL,
-				&_udp._timeout);
+			select(maxfd, &fd_read, NULL, NULL, &_udp._timeout);
 	
-			if (!FD_ISSET(_udp._d, &_udp._readfds)) {
+			if (!FD_ISSET(_udp._d, &fd_read)) {
 				++n_try;
 				if (LIBVOS_DEBUG) {
 					printf(">> timeout...(%d)\n", n_try);
@@ -272,7 +274,7 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 				printf(" OK\n");
 			}
 			return 0;
-		} while (n_try < RESOLVER_DEF_TO_TRY);
+		} while (n_try < N_TRY);
 
 		server = server->_next_col;
 	}
@@ -282,12 +284,18 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 
 int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 {
-	int	s	= 0;
-	int	n_try	= 0;
-	Record	*server	= _servers;
+	int		s	= 0;
+	unsigned int	n_try	= 0;
+	fd_set		fd_all;
+	fd_set		fd_read;
+	Record		*server	= _servers;
 
 	if (!question)
 		return 0;
+
+	FD_ZERO(&fd_all);
+	FD_ZERO(&fd_read);
+	FD_SET(_tcp._d, &fd_all);
 
 	while (server) {
 		n_try = 0;
@@ -297,7 +305,7 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 			printf(">> querying %s...\n", server->_v);
 		}
 
-		s = _tcp.connect_to(server->_v, DNS_DEF_PORT);
+		s = _tcp.connect_to(server->_v, PORT);
 		if (s < 0) {
 			server = server->_next_col;
 			continue;
@@ -310,13 +318,14 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 		}
 
 		do {
-			_tcp._timeout.tv_sec	= RESOLVER_DEF_TIMEOUT;
+			fd_read			= fd_all;
+			_tcp._timeout.tv_sec	= TIMEOUT;
 			_tcp._timeout.tv_usec	= 0;
 
-			select(_tcp._d + 1, &_tcp._readfds, NULL, NULL,
+			select(_tcp._d + 1, &fd_read, NULL, NULL,
 				&_tcp._timeout);
 	
-			if (!FD_ISSET(_tcp._d, &_tcp._readfds)) {
+			if (!FD_ISSET(_tcp._d, &fd_read)) {
 				++n_try;
 				if (LIBVOS_DEBUG) {
 					printf(">> timeout...(%d)\n", n_try);
@@ -351,7 +360,7 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 				printf(" OK\n");
 			}
 			return 0;
-		} while (n_try < RESOLVER_DEF_TO_TRY);
+		} while (n_try < N_TRY);
 
 		server = server->_next_col;
 	}

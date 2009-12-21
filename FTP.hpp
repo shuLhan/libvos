@@ -15,12 +15,6 @@
 
 namespace vos {
 
-#define	FTP_DFLT_BUFFER_SIZE	8192
-#define	FTP_DFLT_EOL		_file_eol[FILE_EOL_NIX]
-#define	FTP_DFLT_PORT		21
-#define	FTP_TIMEOUT		2
-#define	FTP_UTIMEOUT		500000
-
 enum __ftp_cmd_idx {
 	FTP_CMD_USER	= 0,
 	FTP_CMD_PASS,
@@ -103,6 +97,10 @@ public:
 	int do_list_simple(const char *path, const char *out) {
 		return do_pasv(FTP_CMD_NLST, path, out);
 	}
+
+	static unsigned int PORT;
+	static unsigned int TIMEOUT;
+	static unsigned int UTIMEOUT;
 
 	int do_put(const char *path);
 	int do_rename(const char *from, const char *to);

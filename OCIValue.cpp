@@ -8,6 +8,8 @@
 
 namespace vos {
 
+unsigned int OCIValue::DFLT_SIZE = 4000;
+
 OCIValue::OCIValue() : Buffer(),
 	_t(0),
 	_p(0),

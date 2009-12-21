@@ -8,6 +8,8 @@
 
 namespace vos {
 
+const char * ConfigData::DFLT_KEY_FMT = "KEY-";
+
 ConfigData::ConfigData() :
 	_t(0),
 	_value(NULL),
@@ -114,7 +116,7 @@ int ConfigData::add_value(const ConfigData *value)
 		Buffer		key;
 		ConfigData	*k = _last_head->_next_key;
 
-		s = key.init_raw(CFGDATA_DFLT_KEY_FMT, 0);
+		s = key.init_raw(ConfigData::DFLT_KEY_FMT, 0);
 		if (s < 0)
 			return s;
 

@@ -12,13 +12,14 @@
 
 namespace vos {
 
-#define	CFG_HDR			"__CONFIG__"
-#define	CFG_CH_COMMENT		'#'
-#define	CFG_CH_COMMENT2		';'
-#define	CFH_CH_CONT		'\\'
-#define	CFG_CH_HEAD_OPEN	'['
-#define	CFG_CH_HEAD_CLOSE	']'
-#define	CFG_CH_KEY_SEP		'='
+enum _cfg_ch {
+	CFG_CH_COMMENT		= '#',
+	CFG_CH_COMMENT2		= ';',
+	CFG_CH_CONT		= '\\',
+	CFG_CH_HEAD_OPEN	= '[',
+	CFG_CH_HEAD_CLOSE	= ']',
+	CFG_CH_KEY_SEP		= '='
+};
 
 enum _cfg_save_mode {
 	CONFIG_SAVE_WITH_COMMENT = 0,
@@ -47,6 +48,8 @@ public:
 private:
 	int parsing();
 	DISALLOW_COPY_AND_ASSIGN(Config);
+
+	static const char * CFG_HDR;
 };
 
 } /* namespace::vos */
