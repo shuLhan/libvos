@@ -17,10 +17,13 @@ Socket::Socket() : File(),
 	_family(0),
 	_port(0),
 	_timeout(),
+	_client_lock(),
 	_clients(NULL),
 	_next(NULL),
 	_prev(NULL)
-{}
+{
+	pthread_mutex_init(&_client_lock, NULL);
+}
 
 Socket::~Socket()
 {
@@ -30,6 +33,19 @@ Socket::~Socket()
 		delete _clients;
 		_clients = NULL;
 	}
+	pthread_mutex_destroy(&_client_lock);
+}
+
+void Socket::lock_client()
+{
+	while (pthread_mutex_trylock(&_client_lock) != 0)
+		;
+}
+
+void Socket::unlock_client()
+{
+	while (pthread_mutex_unlock(&_client_lock) != 0)
+		;
 }
 
 int Socket::init(const int bfr_size)
@@ -341,18 +357,11 @@ int Socket::connect_to(const char *address, const int port)
 	return s;
 }
 
-void Socket::add_client(Socket *client)
+void Socket::add_client_r(Socket *client)
 {
-	Socket *p = _clients;
-
-	if (! p) {
-		_clients = client;
-	} else {
-		while (p->_next)
-			p = p->_next;
-		p->_next	= client;
-		client->_prev	= p;
-	}
+	lock_client();
+	_clients = ADD_CLIENT(_clients, client);
+	unlock_client();
 }
 
 void Socket::remove_client(Socket *client)
@@ -370,7 +379,15 @@ void Socket::remove_client(Socket *client)
 		client->_next->_prev = client->_prev;
 	}
 
-	delete client;
+	client->_next = NULL;
+	client->_prev = NULL;
+}
+
+void Socket::remove_client_r(Socket *client)
+{
+	lock_client();
+	remove_client(client);
+	unlock_client();
 }
 
 /**
@@ -473,7 +490,7 @@ Socket * Socket::accept_conn()
 			client->_name._v);
 	}
 
-	add_client(client);
+	add_client_r(client);
 
 	return client;
 }
@@ -548,6 +565,22 @@ int Socket::recv_udp(struct sockaddr *addr)
 	_i = ::recvfrom(_d, _v, _l, 0, addr, &addr_len);
 
 	return _i;
+}
+
+Socket * Socket::ADD_CLIENT(Socket *list, Socket *client)
+{
+	Socket *p;
+
+	if (!list)
+		return client;
+
+	p = list;
+	while (p->_next)
+		p = p->_next;
+
+	p->_next = client;
+
+	return list;
 }
 
 } /* namespace::vos */

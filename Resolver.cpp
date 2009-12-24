@@ -17,7 +17,9 @@ Resolver::Resolver() :
 	_tcp(),
 	_udp(),
 	_servers(NULL)
-{}
+{
+	srand(time(NULL));
+}
 
 Resolver::~Resolver()
 {
@@ -39,20 +41,21 @@ int Resolver::init()
 {
 	int s;
 
-	srand(time(NULL));
-
 	s = _tcp.init(Socket::DFLT_BUFFER_SIZE);
-	if (s < 0)
+	if (s != 0)
 		return s;
 
 	s = _udp.init(UDP_PACKET_SIZE);
-	if (s < 0)
+	if (s != 0)
 		return s;
-	
-	_tcp.create_tcp();
-	_udp.create_udp();
 
-	return 0;
+	s = _tcp.create_tcp();
+	if (s != 0)
+		return s;
+
+	s = _udp.create_udp();
+
+	return s;
 }
 
 void Resolver::dump()
@@ -282,6 +285,11 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 	return -E_SOCK_TIMEOUT;
 }
 
+/**
+ * @return	:
+ *	< 0	: success, or question is empty.
+ *	< <0	; fail.
+ */
 int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 {
 	int		s	= 0;
@@ -366,6 +374,34 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 	}
 
 	return -E_SOCK_TIMEOUT;
+}
+
+
+int Resolver::send_query(DNSQuery *question, DNSQuery *answer)
+{
+	int s;
+
+	if (!question)
+		return 0;
+
+	if (question->_bfr_type == BUFFER_IS_TCP) {
+		s = send_query_tcp(question, answer);
+	} else {
+		s = send_query_udp(question, answer);
+	}
+
+	return s;
+}
+
+int Resolver::send_udp(struct sockaddr *addr, Buffer *bfr)
+{
+	return _udp.send_udp(addr, bfr);
+}
+
+int Resolver::send_udp_raw(struct sockaddr *addr, const char *bfr,
+				const int len)
+{
+	return _udp.send_udp_raw(addr, bfr, len);
 }
 
 } /* namespace::vos */

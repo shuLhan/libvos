@@ -30,6 +30,10 @@ public:
 	int create_question_udp(DNSQuery **query, const char *qname);
 	int send_query_udp(DNSQuery *question, DNSQuery *answer);
 	int send_query_tcp(DNSQuery *question, DNSQuery *answer);
+	int send_query(DNSQuery *question, DNSQuery *answer);
+	int send_udp(struct sockaddr *addr, Buffer *bfr);
+	int send_udp_raw(struct sockaddr *addr, const char *bfr,
+				const int len);
 
 	static unsigned int PORT;
 	static unsigned int UDP_PACKET_SIZE;

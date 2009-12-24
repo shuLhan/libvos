@@ -11,7 +11,7 @@ namespace vos {
 Dlogger::Dlogger() :
 	_lock()
 {
-	pthread_mutex_init(&_lock, 0);
+	pthread_mutex_init(&_lock, NULL);
 
 	_d	= STDOUT_FILENO;
 	_status	= vos::FILE_OPEN_W;
@@ -72,7 +72,7 @@ int Dlogger::er(const char *fmt, ...)
 	va_list		args;
 	va_list		args2;
 
-	do { s = pthread_mutex_lock(&_lock); } while (s);
+	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
 
 	va_start(args, fmt);
 
@@ -95,7 +95,7 @@ int Dlogger::it(const char *fmt, ...)
 	register int	s;
 	va_list		args;
 
-	do { s = pthread_mutex_lock(&_lock); } while (s);
+	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
 
 	va_start(args, fmt);
 	s = writef(fmt, args);

@@ -11,6 +11,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <pthread.h>
 #include "File.hpp"
 
 namespace vos {
@@ -21,6 +22,8 @@ public:
 	~Socket();
 
 	int init(const int bfr_size);
+	void lock_client();
+	void unlock_client();
 
 	int create(const int family, const int type);
 	int create_tcp();
@@ -38,8 +41,9 @@ public:
 
 	int connect_to(const char *address, const int port);
 
-	void add_client(Socket *client);
+	void add_client_r(Socket *client);
 	void remove_client(Socket *client);
+	void remove_client_r(Socket *client);
 
 	Socket * accept();
 	Socket * accept6();
@@ -53,6 +57,8 @@ public:
 				const int len);
 	int recv_udp(struct sockaddr *addr);
 
+	static Socket * ADD_CLIENT(Socket *list, Socket *client);
+
 	static unsigned int	DFLT_BUFFER_SIZE;
 	static unsigned int	DFLT_LISTEN_SIZE;
 	static unsigned int	DFLT_NAME_SIZE;
@@ -61,6 +67,7 @@ public:
 	int		_family;
 	int		_port;
 	struct timeval	_timeout;
+	pthread_mutex_t	_client_lock;
 	Socket		*_clients;
 	Socket		*_next;
 	Socket		*_prev;
