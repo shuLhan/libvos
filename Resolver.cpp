@@ -10,7 +10,7 @@ namespace vos {
 
 unsigned int Resolver::PORT		= 53;
 unsigned int Resolver::UDP_PACKET_SIZE	= 512;
-unsigned int Resolver::TIMEOUT		= 3;
+unsigned int Resolver::TIMEOUT		= 6;
 unsigned int Resolver::N_TRY		= 0;
 
 Resolver::Resolver() :

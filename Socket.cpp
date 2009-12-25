@@ -563,6 +563,7 @@ int Socket::recv_udp(struct sockaddr *addr)
 	socklen_t addr_len = sizeof(struct sockaddr);
 
 	_i = ::recvfrom(_d, _v, _l, 0, addr, &addr_len);
+	_v[_i] = '\0';
 
 	return _i;
 }
