@@ -69,6 +69,7 @@ int Reader::refill_buffer(const int len)
  */
 int Reader::read(Record *r, RecordMD *rmd)
 {
+	int n		= 0;
 	int startp	= _p;
 	int len		= 0;
 	int s		= 0;
@@ -83,9 +84,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 		if (rmd->_start_p) {
 			if (_p + rmd->_start_p >= _i) {
 				s = refill_buffer(rmd->_start_p);
-				if (0 == s)
-					return 1;
-				if (s < 0)
+				if (s <= 0)
 					goto reject;
 			}
 
@@ -101,9 +100,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 			if (startp >= _i) {
 				startp = _i - _p;
 				s = refill_buffer(0);
-				if (0 == s)
-					return 1;
-				if (s < 0)
+				if (s <= 0)
 					goto reject;
 			}
 		}
@@ -113,9 +110,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 			if (startp + len >= _i) {
 				startp = startp - _p;
 				s = refill_buffer(0);
-				if (0 == s)
-					return 1;
-				if (s < 0)
+				if (s <= 0)
 					goto reject;
 			}
 			memcpy(&r->_i, &_v[startp], len);
@@ -130,18 +125,14 @@ int Reader::read(Record *r, RecordMD *rmd)
 			if (r->_i > _l) {
 				startp = startp - _p;
 				s = refill_buffer(_l + r->_i);
-				if (0 == s)
-					return 1;
-				if (s < 0)
+				if (s <= 0)
 					goto reject;
 			}
 
 			if ((startp + r->_i) >= _i) {
 				startp = startp - _p;
 				s = refill_buffer(r->_i);
-				if (0 == s)
-					return 1;
-				if (s < 0)
+				if (s <= 0)
 					goto reject;
 			}
 
@@ -152,7 +143,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 				startp = _i - _p;
 				s = refill_buffer(0);
 				if (0 == s)
-					return 1;
+					goto next;
 				if (s < 0)
 					goto reject;
 			}
@@ -166,7 +157,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 					startp = _i - _p;
 					s = refill_buffer(0);
 					if (0 == s)
-						return 1;
+						goto next;
 					if (s < 0)
 						goto reject;
 				}
@@ -179,7 +170,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 						startp = _i - _p;
 						s = refill_buffer(0);
 						if (0 == s)
-							return 1;
+							goto next;
 						if (s < 0)
 							goto reject;
 					}
@@ -190,7 +181,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 					startp = _i - _p;
 					s = refill_buffer(0);
 					if (0 == s)
-						return 1;
+						goto next;
 					if (s < 0)
 						goto reject;
 				}
@@ -206,9 +197,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 				if (startp + len >= _i) {
 					startp = startp - _p;
 					s = refill_buffer(0);
-					if (0 == s)
-						return 1;
-					if (s < 0)
+					if (s <= 0)
 						goto reject;
 				}
 
@@ -222,7 +211,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 						startp = _i - _p;
 						s = refill_buffer(0);
 						if (0 == s)
-							return 1;
+							goto next;
 						if (s < 0)
 							goto reject;
 					}
@@ -233,7 +222,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 					startp = _i - _p;
 					s = refill_buffer(0);
 					if (0 == s)
-						return 1;
+						goto next;
 					if (s < 0)
 						goto reject;
 				}
@@ -245,7 +234,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 							startp = _i - _p;
 							s = refill_buffer(0);
 							if (0 == s)
-								return 1;
+								goto next;
 							if (s < 0)
 								goto reject;
 						}
@@ -256,7 +245,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 						startp = _i - _p;
 						s = refill_buffer(0);
 						if (0 == s)
-							return 1;
+							goto next;
 						if (s < 0)
 							goto reject;
 					}
@@ -269,7 +258,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 						startp = _i - _p;
 						s = refill_buffer(0);
 						if (0 == s)
-							return 1;
+							goto next;
 						if (s < 0)
 							goto reject;
 					}
@@ -280,41 +269,39 @@ int Reader::read(Record *r, RecordMD *rmd)
 					startp = _i - _p;
 					s = refill_buffer(0);
 					if (0 == s)
-						return 1;
+						goto next;
 					if (s < 0)
 						goto reject;
 				}
 			} else {
-				while (_v[startp] != __eol[0]) {
+				while (_v[startp] != _eol) {
 					r->appendc(_v[startp]);
 					++startp;
 					if (startp >= _i) {
 						startp = _i - _p;
 						s = refill_buffer(0);
 						if (0 == s)
-							return 1;
+							goto next;
 						if (s < 0)
 							goto reject;
 					}
 				}
-
-				++startp;
-				if (startp >= _i) {
-					startp = _i - _p;
-					s = refill_buffer(0);
-					if (0 == s)
-						return 1;
-					if (s < 0)
-						goto reject;
-				}
 			}
 		}
-
+next:
 		r	= r->_next_col;
 		rmd	= rmd->_next;
+		++n;
 	}
 
-	while (_v[startp] != __eol[0]) {
+	if (n == 0) {
+		return 0;
+	}
+	if (rmd) {
+		goto reject;
+	}
+
+	while (_v[startp] != _eol) {
 		++startp;
 		if (startp >= _i) {
 			startp = _i - _p;
@@ -329,7 +316,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 
 	return 1;
 reject:
-	while (_v[startp] != __eol[0]) {
+	while (_v[startp] != _eol) {
 		++startp;
 		if (startp >= _i) {
 			startp = _i - _p;
