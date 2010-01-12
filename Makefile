@@ -26,7 +26,7 @@ endif
 LIBVOS_BLD_D	= ${LIBVOS_SRC_D}/build
 
 LIBVOS_OBJS	=						\
-			${LIBVOS_BLD_D}/Error.oo		\
+			${LIBVOS_BLD_D}/libvos.oo		\
 			${LIBVOS_BLD_D}/Buffer.oo		\
 			${LIBVOS_BLD_D}/ConfigData.oo		\
 			${LIBVOS_BLD_D}/Config.oo		\
@@ -58,7 +58,7 @@ endif
 
 all:: ${LIBVOS_OBJS}
 
-${LIBVOS_BLD_D}/Buffer.oo	: ${LIBVOS_BLD_D}/Error.oo
+${LIBVOS_BLD_D}/Buffer.oo	: ${LIBVOS_BLD_D}/libvos.oo
 
 ${LIBVOS_BLD_D}/Record.oo	\
 ${LIBVOS_BLD_D}/DNS_rr.oo	\

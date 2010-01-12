@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -26,6 +26,25 @@ enum _number_base {
 	NUM_DFLT_BASE	= 10
 };
 
+/**
+ * @class		: Buffer
+ * @attr		:
+ *	- _i		: index of buffer.
+ *	- _l		: current size of buffer.
+ *	- _v		: pointer to the raw buffer.
+ *	- DFLT_SIZE	: static, default buffer size for (re)allocating a new
+ *                        buffer object.
+ *	- CHAR_SIZE	: static, size of one character.
+ *
+ * @desc		:
+ *
+ *	Buffer object can be used as pointer to an raw string, by
+ *	passing 0 to '_l' and later set '_v' point to array of char and use
+ *	'_i' to count the length of '_v'.
+ *
+ *	if you set '_l' to value other than zero, Buffer destructor will
+ *	destroy any value in '_v' at exit.
+ */
 class Buffer {
 public:
 	Buffer();
@@ -40,7 +59,7 @@ public:
 	void trim();
 
 	int appendc(const char c);
-	int appendi(int i, const int base);
+	int appendi(int i);
 	int appendd(double d);
 	int append(const Buffer *bfr);
 	int append_raw(const char *bfr, int len);
@@ -79,7 +98,8 @@ public:
 	static int	DFLT_SIZE;
 	static int	CHAR_SIZE;
 private:
-	DISALLOW_COPY_AND_ASSIGN(Buffer);
+	Buffer(const Buffer&);
+	void operator=(const Buffer&);
 };
 
 } /* namespace::vos */

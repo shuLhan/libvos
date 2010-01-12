@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -103,7 +103,7 @@ int Record::set_column_number(int n, const int number)
 	if (n < 0 || ! p)
 		return -E_RECORD_INV_COLUMN;
 
-	s = p->appendi(number, NUM_BASE_10);
+	s = p->appendi(number);
 
 	return s;
 }

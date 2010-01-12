@@ -42,6 +42,7 @@ public:
 	int open_wo(const char *path);
 	int open_wa(const char *path);
 	int read();
+	int readn(int n);
 	int write(const Buffer *bfr);
 	int write_raw(const char *bfr, int len);
 	int writef(const char *fmt, va_list args);

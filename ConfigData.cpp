@@ -125,7 +125,7 @@ int ConfigData::add_value(const ConfigData *value)
 			k = k->_next_key;
 		}
 
-		s = key.appendi(i, 10);
+		s = key.appendi(i);
 		if (s < 0)
 			return s;
 

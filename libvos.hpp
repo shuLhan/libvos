@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -6,6 +6,8 @@
 
 #ifndef _LIBVOS_MACRO_HPP
 #define	_LIBVOS_MACRO_HPP	1
+
+#include <stdlib.h>
 
 namespace vos {
 /**
@@ -25,7 +27,7 @@ extern int LIBVOS_DEBUG;
 enum _errcode {
 	E_OK		= 0,
 
-	E_INVALID_PARAM	= 1,
+	E_INVALID_PARAM	= 2,
 	E_MEM,
 	E_PRINT,
 	E_HOST_UNKNOWN,
@@ -59,6 +61,8 @@ enum _errcode {
 
 	N_ERRCODE
 };
+
+extern const char *_errmsg[N_ERRCODE];
 
 enum _libvos_stat {
 	STAT_OK	= 0,

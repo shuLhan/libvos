@@ -229,6 +229,41 @@ int File::read()
 	return _i;
 }
 
+/**
+ * @method	: File:readn
+ * @param	:
+ *	> n	: number.
+ * @return	:
+ *	< >0	: success, return number of bytes readed.
+ *	< 0	: EOF, or file is not open.
+ *	< <0	: fail.
+ * @desc	:
+ *	read n bytes of characters from file, automatically increase buffer if n
+ *	is greater than _l.
+ */
+int File::readn(int n)
+{
+	int s;
+
+	if (! (_status & vos::FILE_OPEN_R))
+		return 0;
+
+	if (n > _l) {
+		s = resize(n);
+		if (s != 0)
+			return s; 
+	}
+	_i = 0;
+	while (n) {
+		s = ::read(_d, &_v[_i], n);
+		if (s < 0)
+			return s;
+		_i += s;
+		n -= s;
+	}
+
+	return _i;
+}
 
 /**
  * @desc	: get one line at a time from buffer.
