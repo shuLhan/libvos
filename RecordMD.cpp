@@ -20,6 +20,8 @@ enum _rmd_parser {
 	MD_TYPE
 };
 
+int RecordMD::BLOB_SIZE = sizeof(int);
+
 RecordMD::RecordMD() :
 	_n_md(0),
 	_idx(0),

@@ -11,6 +11,20 @@ namespace vos {
 /* a 16 characters for <= 16 base digits */
 static char __digits[17] = "0123456789ABCDEF";
 
+enum __print_flag {
+	FL_LEFT		= 1,
+	FL_SIGN		= 2,
+	FL_ZERO		= 4,
+	FL_OCTAL	= 8,
+	FL_HEX		= 16,
+	FL_NUMBER	= 32,
+	FL_WIDTH	= 64,
+	FL_ALT_OUT	= 128,
+	FL_SHORT	= 256,
+	FL_LONG		= 512,
+	FL_LONG_DBL	= 1024
+};
+
 /* default buffer size */
 int Buffer::DFLT_SIZE = 15;
 int Buffer::CHAR_SIZE = sizeof(char);
@@ -206,11 +220,11 @@ int Buffer::appendc(const char c)
  *	< -E_MEM	: fail.
  * @desc		: append an integer 'i' to the end of buffer.
  */
-int Buffer::appendi(int i)
+int Buffer::appendi(long int i, int base)
 {
 	register int	s	= 0;
 	register int	x	= 0;
-	char		rebmun[32];
+	char		rebmun[23];
 
 	if (i < 0) {
 		s = appendc('-');
@@ -220,8 +234,42 @@ int Buffer::appendi(int i)
 		i = -(i);
 	}
 	while (i >= 0) {
-		rebmun[x]	= __digits[i % NUM_BASE_10];
-		i		= i / NUM_BASE_10;
+		rebmun[x]	= __digits[i % base];
+		i		= i / base;
+		if (0 == i) {
+			break;
+		}
+		++x;
+	}
+	while (x >= 0) {
+		s = appendc(rebmun[x]);
+		if (s < 0) {
+			return s;
+		}
+		--x;
+	}
+	return 0;
+}
+
+/**
+ * @method		: Buffer::appendui
+ * @param		:
+ *	> i		: an unsigned number to be appended to the end buffer.
+ * @return		:
+ *	< >=0		: success, number of bytes appended to the end of
+ *                        buffer.
+ *	< -E_MEM	: fail.
+ * @desc		: append an unsigned integer 'i' to the end of buffer.
+ */
+int Buffer::appendui(long unsigned int i, int base)
+{
+	register int	s	= 0;
+	register int	x	= 0;
+	char		rebmun[23];
+
+	while (i > 0) {
+		rebmun[x]	= __digits[i % base];
+		i		= i / base;
 		if (0 == i) {
 			break;
 		}
@@ -420,12 +468,13 @@ int Buffer::vprint(const char *fmt, va_list args)
  * @method	: Buffer::shiftr
  * @param	:
  *	> nbyte	: size of buffer to be left on the right side.
+ *	> c	: fill the new empty content with value of c.
  * @return	:
  *	< 0	: success.
  *	< -E_MEM: fail.
  * @desc	: move contents of buffer n bytes to the right.
  */
-int Buffer::shiftr(const int nbyte)
+int Buffer::shiftr(const int nbyte, int c)
 {
 	if (_i + nbyte > _l) {
 		_l += nbyte;
@@ -436,7 +485,7 @@ int Buffer::shiftr(const int nbyte)
 	}
 
 	memmove(&_v[nbyte], _v, _i);
-	memset(_v, '\0', nbyte);
+	memset(_v, c, nbyte);
 
 	_i	+= nbyte;
 	_v[_i]	= '\0';
@@ -802,11 +851,16 @@ int Buffer::INIT_SIZE(Buffer **o, const int size)
  */
 int Buffer::VSNPRINTF(char *bfr, int len, const char *fmt, va_list args)
 {
-	register int		s;
-	register const char	*p	= fmt;
-	Buffer			b;
+	register int	flen	= 0;
+	register int	s;
+	register int	flag	= 0;
+	char		*p	= (char *) fmt;
+	Buffer		b;
+	Buffer		o;
 
 	b.init(NULL);
+	o.init(NULL);
+
 	while (*p) {
 		while (*p && *p != '%') {
 			s = b.appendc(*p);
@@ -818,62 +872,164 @@ int Buffer::VSNPRINTF(char *bfr, int len, const char *fmt, va_list args)
 			break;
 
 		*p++;
+		while (*p) {
+			switch (*p) {
+			case '-':
+				flag |= FL_LEFT;
+				break;
+			case '+':
+				flag |= FL_SIGN;
+				break;
+			case '#':
+				flag |= FL_ALT_OUT;
+				break;
+			case '0':
+				flag |= FL_ZERO;
+				break;
+			default:
+				goto next;
+			}
+			*p++;
+		}
+next:
+		if (*p == 'h') {
+			flag |= FL_SHORT;
+			*p++;
+		} else if (*p == 'l') {
+			flag |= FL_LONG;
+			*p++;
+		} else if (*p == 'L') {
+			flag |= FL_LONG_DBL;
+			*p++;
+		}
+
+		if (isdigit(*p)) {
+			flag |= FL_WIDTH;
+			flen = strtol(p, &p, 10);
+		}
 		if (!*p)
 			break;
 
 		switch (*p) {
 		case 'c':
-			s = b.appendc(va_arg(args, int));
+			s = o.appendc(va_arg(args, int));
 			if (s < 0)
 				return s;
 			break;
 		case 'd':
 		case 'i':
-			s = b.appendi(va_arg(args, int));
+			flag |= FL_NUMBER;
+			if (flag & FL_LONG) {
+				s = o.appendi(va_arg(args, long int));
+			} else {
+				s = o.appendi(va_arg(args, int));
+			}
+			if (s < 0)
+				return s;
+			break;
+		case 'u':
+			flag |= FL_NUMBER;
+			if (flag & FL_LONG) {
+				s = o.appendui(va_arg(args, long unsigned));
+			} else {
+				s = o.appendui(va_arg(args, unsigned int));
+			}
 			if (s < 0)
 				return s;
 			break;
 		case 's':
-			s = b.append_raw(va_arg(args, const char *), 0);
+			s = o.append_raw(va_arg(args, const char *), 0);
 			if (s < 0)
 				return s;
 			break;
-		case 'l':
-			*p++;
-			if (!*p)
-				goto out;
-			switch (*p) {
-			case 'd':
-			case 'i':
-				s = b.appendi(va_arg(args, int));
-				if (s < 0)
-					return s;
-				break;
-			default:
-				s = b.appendc(*p);
-				if (s < 0)
-					return s;
-				break;
-			}
-			break;
 		case 'f':
-			s = b.appendd(va_arg(args, double));
+			flag |= FL_NUMBER;
+			s = o.appendd(va_arg(args, double));
+			if (s < 0)
+				return s;
+			break;
+		case 'o':
+			flag |= FL_OCTAL | FL_NUMBER;
+			flag &= ~FL_SIGN;
+			if (flen) {
+				if (flag & FL_ALT_OUT)
+					--flen;
+			}
+			s = o.appendi(va_arg(args, int), NUM_BASE_8);
+			if (s < 0)
+				return s;
+			break;
+		case 'p':
+			flag |= FL_ALT_OUT;
+		case 'x':
+		case 'X':
+			flag |= FL_HEX | FL_NUMBER;
+			flag &= ~FL_SIGN;
+			if (flen > 2) {
+				if (flag & FL_ALT_OUT)
+					flen -= 2;
+			} else {
+				flen = 0;
+			}
+			s = o.appendi(va_arg(args, int), NUM_BASE_16);
 			if (s < 0)
 				return s;
 			break;
 		default:
-			s = b.appendc('%');
+			s = o.appendc('%');
 			if (s < 0)
 				return s;
 
-			s = b.appendc(*p);
+			s = o.appendc(*p);
 			if (s < 0)
 				return s;
+
+			flag = 0;
 			break;
 		}
+
+		if (flag) {
+			if (flag & FL_WIDTH) {
+				if ((flag & FL_SIGN) && (flag & FL_NUMBER)) {
+					--flen;
+				}
+				if (flen > o._i)
+					flen = flen - o._i;
+				else
+					flen = 0;
+			}
+			if ((flag & FL_NUMBER)) {
+				if ((flag & FL_ZERO) && flen) {
+					o.shiftr(flen, '0');
+					flen = 0;
+				}
+				if (flag & FL_SIGN) {
+					o.shiftr(1);
+					o._v[0] = '+';
+				}
+			}
+			if (flen) {
+				o.shiftr(flen, ' ');
+			}
+
+			if (flag & FL_ALT_OUT) {
+				if (flag & FL_OCTAL) {
+					o.shiftr(1, '0');
+				} else if (flag & FL_HEX) {
+					o.shiftr(2, 'x');
+					o._v[0] = '0';
+				}
+			}
+			flag = 0;
+			flen = 0;
+		}
+
+		b.append(&o);
+		o.reset();
+
 		*p++;
 	}
-out:
+
 	if (bfr) {
 		len = len < b._i ? len : b._i;
 		memcpy(bfr, b._v, len);

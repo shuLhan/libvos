@@ -59,7 +59,8 @@ public:
 	void trim();
 
 	int appendc(const char c);
-	int appendi(int i);
+	int appendi(long int i, int base = NUM_BASE_10);
+	int appendui(long unsigned int i, int base = NUM_BASE_10);
 	int appendd(double d);
 	int append(const Buffer *bfr);
 	int append_raw(const char *bfr, int len);
@@ -67,7 +68,7 @@ public:
 	int aprint(const char *fmt, ...);
 	int vprint(const char *fmt, va_list args);
 
-	int shiftr(const int nbyte);
+	int shiftr(const int nbyte, int c = 0);
 
 	int copy(const Buffer *bfr);
 	int copy_raw(const char *bfr, int len);

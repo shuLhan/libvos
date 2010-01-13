@@ -59,13 +59,12 @@ int Writer::write(Record *cols, RecordMD *rmd)
 				return s;
 			break;
 		case RMD_T_BLOB:
-			len = sizeof(cols->_i);
-			s = cols->shiftr(len);
+			s = cols->shiftr(RecordMD::BLOB_SIZE);
 			if (s < 0)
 				return s;
 
 			p = cols->_v;
-			memcpy(p, &cols->_i, len);
+			memcpy(p, &cols->_i, RecordMD::BLOB_SIZE);
 
 			s = _line.append_raw(cols->_v, cols->_i);
 			if (s < 0)

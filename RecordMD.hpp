@@ -45,6 +45,8 @@ public:
 	Buffer		*_date_format;
 	Buffer		*_fltr_v;
 	RecordMD	*_next;
+
+	static int	BLOB_SIZE;
 private:
 	DISALLOW_COPY_AND_ASSIGN(RecordMD);
 };

@@ -106,17 +106,17 @@ int Reader::read(Record *r, RecordMD *rmd)
 		}
 
 		if (rmd->_type == RMD_T_BLOB) {
-			len = sizeof(r->_i);
-			if (startp + len >= _i) {
+			if (startp + RecordMD::BLOB_SIZE >= _i) {
 				startp = startp - _p;
 				s = refill_buffer(0);
 				if (s <= 0)
 					goto reject;
 			}
-			memcpy(&r->_i, &_v[startp], len);
-			startp += len;
+			r->_i = 0;
+			memcpy(&r->_i, &_v[startp], RecordMD::BLOB_SIZE);
+			startp += RecordMD::BLOB_SIZE;
 
-			r->_i = r->_i - len;
+			r->_i = r->_i - RecordMD::BLOB_SIZE;
 
 			if (r->_i > r->_l) {
 				r->resize(r->_i + 1);
