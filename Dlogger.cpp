@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -9,11 +9,14 @@
 namespace vos {
 
 Dlogger::Dlogger() :
-	_lock()
+	_lock(),
+	_tmp(),
+	_time_s(0),
+	_time()
 {
 	pthread_mutex_init(&_lock, NULL);
 
-	_d	= STDOUT_FILENO;
+	_d	= STDERR_FILENO;
 	_status	= vos::FILE_OPEN_W;
 }
 
@@ -21,28 +24,27 @@ Dlogger::~Dlogger()
 {
 	pthread_mutex_destroy(&_lock);
 
-	if (_d == STDOUT_FILENO)
+	if (_d == STDERR_FILENO)
 		_d = 0;
 }
 
 /**
- * @desc		: start the log daemon on the file 'logfile'.
- *
+ * @method		: Dlogger::open
  * @param		:
  *	> logfile	: a log file name, with or without leading path.
- *
  * @return		:
  *	< 0		: success.
  *	< <0		: fail.
+ * @desc		: start the log daemon on the file 'logfile'.
  */
 int Dlogger::open(const char *logfile)
 {
-	if (_d && _d != STDOUT_FILENO) {
+	if (_d && _d != STDERR_FILENO) {
 		File::close();
 	}
 	if (!logfile) {
 		File::init(File::DFLT_BUFFER_SIZE);
-		_d	= STDOUT_FILENO;
+		_d	= STDERR_FILENO;
 		_status	= vos::FILE_OPEN_W;
 	} else {
 		File::init(File::DFLT_BUFFER_SIZE);
@@ -52,34 +54,63 @@ int Dlogger::open(const char *logfile)
 }
 
 /**
- * @desc: close log file, and revert the log output back to standard output.
+ * @method	: Dlogger::close
+ * @desc	:
+ *	close log file, and revert the log output back to standard error.
  */
 void Dlogger::close()
 {
-	if (_d && _d != STDOUT_FILENO) {
+	if (_d && _d != STDERR_FILENO) {
 		File::close();
-		_d	= STDOUT_FILENO;
+		_d	= STDERR_FILENO;
 		_status	= vos::FILE_OPEN_W;
 	}
 }
 
 /**
- * @desc: write message to stdout and log file.
+ * @method	: Dlogger::add_timestamp
+ * @desc	:
+ *	add timestamp to log output.
+ *	Timestamp format: YEAR.MONTH.DAY HOUR:MINUTE:SECOND.
+ */
+inline void Dlogger::add_timestamp()
+{
+	_time_s = time(NULL);
+	localtime_r(&_time_s, &_time);
+
+	_tmp.aprint("[%d.%02d.%02d %02d:%02d:%02d] ",
+		1900 + _time.tm_year, 1 + _time.tm_mon, _time.tm_mday,
+		_time.tm_hour, _time.tm_min, _time.tm_sec);
+}
+
+/**
+ * @method	: Dlogger::er
+ * @param	:
+ *	> fmt	: formatted string output.
+ *	> ...	: one or more arguments for output.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: write message to standard error and log file.
  */
 int Dlogger::er(const char *fmt, ...)
 {
 	register int	s;
 	va_list		args;
-	va_list		args2;
 
 	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
 
 	va_start(args, fmt);
 
-	__va_copy(args2, args);
-	vfprintf(stdout, fmt, args2);
-	s = writef(fmt, args);
-	va_end(args2);
+	add_timestamp();
+	_tmp.vprint(fmt, args);
+
+	if (_d != STDERR_FILENO) {
+		s = write(&_tmp);
+	}
+	fprintf(stderr, "%s", _tmp._v);
+
+	_tmp.reset();
 	va_end(args);
 
 	pthread_mutex_unlock(&_lock);
@@ -88,7 +119,14 @@ int Dlogger::er(const char *fmt, ...)
 }
 
 /**
- * @desc: write message to log file only.
+ * @method	: Dlogger::it
+ * @param	:
+ *	> fmt	: formatted string output.
+ *	> ...	: one or more arguments for output.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: write message to log file only.
  */
 int Dlogger::it(const char *fmt, ...)
 {
@@ -98,7 +136,10 @@ int Dlogger::it(const char *fmt, ...)
 	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
 
 	va_start(args, fmt);
-	s = writef(fmt, args);
+	add_timestamp();
+	_tmp.vprint(fmt, args);
+	s = write(&_tmp);
+	_tmp.reset();
 	va_end(args);
 
 	pthread_mutex_unlock(&_lock);
