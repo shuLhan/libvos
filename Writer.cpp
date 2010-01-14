@@ -35,7 +35,6 @@ int Writer::write(Record *cols, RecordMD *rmd)
 {
 	int	s;
 	int	len;
-	char	*p = NULL;
 
 	while (rmd && cols) {
 		if (rmd->_start_p) {
@@ -63,8 +62,7 @@ int Writer::write(Record *cols, RecordMD *rmd)
 			if (s < 0)
 				return s;
 
-			p = cols->_v;
-			memcpy(p, &cols->_i, RecordMD::BLOB_SIZE);
+			memcpy(&cols->_v[0], &cols->_i, RecordMD::BLOB_SIZE);
 
 			s = _line.append_raw(cols->_v, cols->_i);
 			if (s < 0)

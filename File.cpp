@@ -455,9 +455,6 @@ int File::writes(const char *fmt, ...)
 	s = b.vprint(fmt, al);
 	va_end(al);
 
-	if (s < 0)
-		return s;
-
 	return write_raw(b._v, b._i);
 }
 

@@ -157,6 +157,11 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 			break;
 
 		case MD_META_SEP:
+			if (i >= len) {
+				todo = MD_DONE;
+				continue;
+			}
+
 			switch (meta[i]) {
 			case ':':
 				todo = todo_next;
@@ -406,7 +411,7 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 				v.appendc(meta[i]);
 				++i;
 				if (i >= len)
-					goto err;
+					break;
 			}
 
 			if (v._i) {
@@ -421,11 +426,11 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 				} else {
 					md->_type = RMD_T_STRING;
 				}
+				v.reset();
 			} else {
 				md->_type = RMD_T_STRING;
 			}
 
-			v.reset();
 			todo		= MD_META_SEP;
 			todo_next	= MD_START;
 			break;

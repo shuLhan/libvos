@@ -44,9 +44,9 @@ public:
 	int read();
 	int readn(int n);
 	int write(const Buffer *bfr);
-	int write_raw(const char *bfr, int len);
+	int write_raw(const char *bfr, int len = 0);
 	int writef(const char *fmt, va_list args);
-	int writes(const char *fmt ...);
+	int writes(const char *fmt, ...);
 	int writec(const char c);
 	int flush();
 	void close();
