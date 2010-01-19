@@ -56,6 +56,7 @@ enum _errcode {
 	E_SOCK_TIMEOUT,
 
 	E_RECORD_INV_COLUMN,
+	E_RECORD_REJECT,
 
 	E_OCI,
 

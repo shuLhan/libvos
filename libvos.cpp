@@ -39,6 +39,7 @@ const char *_errmsg[N_ERRCODE] = {
 	"[LIBVOS] Socket error: timeout reached!\n",
 
 	"[LIBVOS] Record error: invalid column!\n",
+	"[LIBVOS] Record rejected!\n",
 
 	"[LIBVOS] OCI Error: %d - %s\n"
 };

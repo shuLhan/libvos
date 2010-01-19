@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -18,11 +18,12 @@ public:
 	Reader();
 	~Reader();
 
-	int refill_buffer(const int len);
+	int refill_buffer(const int read_min);
 	int read(Record *r, RecordMD *rmd);
 private:
-	DISALLOW_COPY_AND_ASSIGN(Reader);
+	Reader(const Reader &);
+	void operator=(const Reader &);
 };
 
-}
+} /* namespace::vos */
 #endif
