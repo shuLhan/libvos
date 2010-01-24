@@ -309,7 +309,7 @@ int Config::parsing()
 	_e_row	= 0;
 	while (i < l) {
 		while (i < l && isspace(_v[i])) {
-			if (_v[i] == _eol) {
+			if (_v[i] == GET_EOL_CHR(_eol)) {
 				++_e_row;
 				line_i = i;
 			}
@@ -321,7 +321,7 @@ int Config::parsing()
 
 		if (_v[i] == CFG_CH_COMMENT || _v[i] == CFG_CH_COMMENT2) {
 			i_str = i;
-			while (i < l &&_v[i] != _eol)
+			while (i < l &&_v[i] != GET_EOL_CHR(_eol))
 				++i;
 
 			line_i = i;
@@ -353,7 +353,7 @@ int Config::parsing()
 			++i;
 			i_str = i;
 			while (i < l && _v[i] != CFG_CH_HEAD_CLOSE
-			&& _v[i] != _eol) {
+			&& _v[i] != GET_EOL_CHR(_eol)) {
 				++i;
 			}
 
@@ -393,10 +393,10 @@ int Config::parsing()
 			i_str = i;
 			while (i < l
 			&& _v[i] != CFG_CH_KEY_SEP
-			&& _v[i] != _eol) {
+			&& _v[i] != GET_EOL_CHR(_eol)) {
 				++i;
 			}
-			if (i >= l || _v[i] == _eol) {
+			if (i >= l || _v[i] == GET_EOL_CHR(_eol)) {
 				_e_col = i - line_i;
 				return E_CFG_BAD;
 			}
@@ -425,7 +425,7 @@ int Config::parsing()
 		case P_CFG_VALUE:
 			i_str = i;
 			while (i < l) {
-				if (_v[i] == _eol) {
+				if (_v[i] == GET_EOL_CHR(_eol)) {
 					++_e_row;
 					break;
 				}

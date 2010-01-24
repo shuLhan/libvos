@@ -8,7 +8,7 @@
 
 namespace vos {
 
-const char *_file_eol[N_FILE_EOL_TYPE] = {
+const char *__eol[N_FILE_EOL_TYPE] = {
 	"\n",
 	"\r\n"
 };
@@ -19,9 +19,8 @@ File::File() : Buffer(),
 	_d(0),
 	_p(0),
 	_status(vos::FILE_OPEN_NO),
-	_eol(_file_eol[FILE_EOL_NIX][0]),
-	_name(),
-	__eol(_file_eol[FILE_EOL_NIX])
+	_eol(FILE_EOL_NIX),
+	_name()
 {}
 
 File::~File()
@@ -286,8 +285,8 @@ int File::get_line(Buffer **line)
 	}
 
 	start = _p;
-	while (_v[_p] != _eol) {
-		if (_p >= _i && _v[_p] != _eol) {
+	while (_v[_p] != GET_EOL_CHR(_eol)) {
+		if (_p >= _i && _v[_p] != GET_EOL_CHR(_eol)) {
 			_p = _p - start;
 			memmove(&_v[0], &_v[start], _p);
 
@@ -563,32 +562,15 @@ int File::get_size()
 }
 
 /**
- * @method	: File::set_eol_mode
- * @param	:
- *	> mode	: mode of end of line: Unix or DOS.
- * @desc	: set end of line character for file based on known mode.
- */
-void File::set_eol_mode(const int mode)
-{
-	if (mode < FILE_EOL_NIX || mode >= N_FILE_EOL_TYPE)
-		return;
-
-	_eol	= _file_eol[mode][0];
-	__eol	= _file_eol[mode];
-}
-
-/**
  * @method	: File::set_eol
  * @param	:
- *	> eol	: a character to indicate eol.
- * @desc	: set a custom end of line character.
+ *	> mode	: mode of end of line: Unix or DOS.
+ * @desc	: set end of line mode for this current File object.
  */
-void File::set_eol(const char *eol)
+void File::set_eol(const int mode)
 {
-	if (eol) {
-		_eol = eol[0];
-		__eol = eol;
-	}
+	if (mode == FILE_EOL_NIX || mode == FILE_EOL_DOS)
+		_eol = mode;
 }
 
 /**

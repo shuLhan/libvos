@@ -83,8 +83,8 @@ int FTP::connect(const char *host, const int port, const int mode)
 			if (_i == 0)
 				break;
 			/* get & set server EOL */
-			if (_v[_i - 2] == _file_eol[FILE_EOL_DOS][0]) {
-				_eol = _file_eol[FILE_EOL_DOS][0];
+			if (_v[_i - 2] == GET_EOL_CHR(FILE_EOL_DOS)) {
+				set_eol(FILE_EOL_DOS);
 			}
 		} while (s);
 	}
@@ -191,9 +191,9 @@ int FTP::send_cmd(const int cmd, const char *parm)
 	reset();
 
 	if (parm)
-		s = concat(_ftp_cmd[cmd], " ", parm, __eol, NULL);
+		s = concat(_ftp_cmd[cmd], " ", parm, GET_EOL_STR(_eol), NULL);
 	else
-		s = concat(_ftp_cmd[cmd], __eol, NULL);
+		s = concat(_ftp_cmd[cmd], GET_EOL_STR(_eol), NULL);
 	if (s < 0)
 		return s;
 

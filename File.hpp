@@ -20,7 +20,10 @@ enum _file_eol_type {
 	FILE_EOL_DOS	= 1,
 	N_FILE_EOL_TYPE
 };
-extern const char *_file_eol[N_FILE_EOL_TYPE];
+extern const char *__eol[N_FILE_EOL_TYPE];
+
+#define	GET_EOL_CHR(t)	__eol[t][0]
+#define	GET_EOL_STR(t)	__eol[t]
 
 enum _file_open_type {
 	FILE_OPEN_NO	= 0,
@@ -39,6 +42,10 @@ enum _file_open_type {
  *	- _name		:
  *		file name, with or without path, depends on how user
  *		called at opening it.
+ * @desc		:
+ *
+ *	_p is used to mark the end of line when used to read one line, using
+ *	get_line() method, from buffer.
  */
 class File : public Buffer {
 public:
@@ -66,8 +73,7 @@ public:
 	int get_size();
 	int get_line(Buffer **line);
 
-	void set_eol_mode(const int mode);
-	void set_eol(const char *eol);
+	void set_eol(const int mode);
 
 	static int GET_SIZE(const char *path);
 	static int IS_EXIST(const char *path, int acc_mode);
@@ -78,9 +84,8 @@ public:
 	int		_d;
 	int		_p;
 	int		_status;
-	char		_eol;
+	int		_eol;
 	Buffer		_name;
-	const char	*__eol;
 private:
 	File(const File&);
 	void operator=(const File&);
