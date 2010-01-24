@@ -919,11 +919,7 @@ next:
 		case 'd':
 		case 'i':
 			flag |= FL_NUMBER;
-			if (flag & FL_LONG) {
-				s = o.appendi(va_arg(args, long int));
-			} else {
-				s = o.appendi(va_arg(args, int));
-			}
+			s = o.appendi(va_arg(args, int));
 			if (s < 0)
 				return s;
 			break;

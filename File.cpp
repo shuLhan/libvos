@@ -18,7 +18,7 @@ unsigned int File::DFLT_BUFFER_SIZE = 8192;
 File::File() : Buffer(),
 	_d(0),
 	_p(0),
-	_status(vos::FILE_OPEN_NO),
+	_status(FILE_OPEN_NO),
 	_eol(FILE_EOL_NIX),
 	_name()
 {}
@@ -43,9 +43,50 @@ int File::init(const int bfr_size)
 
 	s = Buffer::init_size(bfr_size);
 	if (s == 0)
-		s = _name.init(NULL);
+		s = _name.init_size(Buffer::DFLT_SIZE);
 
 	return s;
+}
+
+/**
+ * @method	: File::open
+ * @param	:
+ *	> path	: path to a file name.
+ *	> mode	: mode for opened file.
+ *	> perm	: permission for a new file.
+ * @return	:
+ *	< 0	: success, or 'path' is nil.
+ *	< <0	: fail, error at opening file.
+ * @desc	:
+ *	the generic method to open file with specific mode and permission.
+ */
+int File::_open(const char *path, const int mode, const int perm)
+{
+	register int s;
+
+	if (!path) {
+		return -E_FILE_OPEN;
+	}
+	if (!_v) {
+		s = File::init();
+		if (s < 0)
+			return s;
+	}
+
+	_d = ::open(path, mode, perm);
+	if (_d < 0) {
+		_d = 0;
+		return -E_FILE_OPEN;
+	}
+
+	s = _name.copy_raw(path, 0);
+	if (s < 0)
+		return s;
+
+	_status = (mode & (O_RDONLY | O_WRONLY | O_RDWR));
+
+	return 0;
+
 }
 
 /**
@@ -57,35 +98,10 @@ int File::init(const int bfr_size)
  *	< <0	: fail, error at opening file.
  * @desc	:
  *	open file for read and write, create a file if it is not exist.
- *	in case of 'path' is nil, any access read/write later will do nothing,
- *	because status of file is not opened.
  */
 int File::open(const char *path)
 {
-	register int s;
-
-	if (!path) {
-		return 0;
-	}
-	if (!_v) {
-		s = File::init(DFLT_BUFFER_SIZE);
-		if (s < 0)
-			return s;
-	}
-
-	_d = ::open(path, O_RDWR | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
-	if (_d < 0) {
-		_d = 0;
-		return -E_FILE_OPEN;
-	}
-
-	s = _name.copy_raw(path, 0);
-	if (s < 0)
-		return s;
-
-	_status = vos::FILE_OPEN_RW;
-
-	return 0;
+	return _open(path, FILE_OPEN_RW);
 }
 
 /**
@@ -99,30 +115,7 @@ int File::open(const char *path)
  */
 int File::open_ro(const char *path)
 {
-	register int s;
-
-	if (!path) {
-		return 0;
-	}
-	if (!_v) {
-		s = File::init(DFLT_BUFFER_SIZE);
-		if (s < 0)
-			return s;
-	}
-
-	_d = ::open(path, O_RDONLY);
-	if (_d < 0) {
-		_d = 0;
-		return -E_FILE_OPEN;
-	}
-
-	s = _name.copy_raw(path, 0);
-	if (s < 0)
-		return s;
-
-	_status = vos::FILE_OPEN_R;
-
-	return 0;
+	return _open(path, FILE_OPEN_R);
 }
 
 /**
@@ -136,30 +129,7 @@ int File::open_ro(const char *path)
  */
 int File::open_wo(const char *path)
 {
-	register int s;
-
-	if (!path) {
-		return 0;
-	}
-	if (!_v) {
-		s = File::init(DFLT_BUFFER_SIZE);
-		if (s < 0)
-			return s;
-	}
-
-	_d = ::open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-	if (_d < 0) {
-		_d = 0;
-		return -E_FILE_OPEN;
-	}
-
-	s = _name.copy_raw(path, 0);
-	if (s < 0)
-		return s;
-
-	_status = vos::FILE_OPEN_W;
-
-	return 0;
+	return _open(path, FILE_OPEN_W);
 }
 
 /**
@@ -173,30 +143,7 @@ int File::open_wo(const char *path)
  */
 int File::open_wa(const char *path)
 {
-	register int s;
-
-	if (!path) {
-		return 0;
-	}
-	if (!_v) {
-		s = File::init(DFLT_BUFFER_SIZE);
-		if (s < 0)
-			return s;
-	}
-
-	_d = ::open(path, O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
-	if (_d < 0) {
-		_d = 0;
-		return -E_FILE_OPEN;
-	}
-
-	s = _name.copy_raw(path, 0);
-	if (s < 0)
-		return s;
-
-	_status = vos::FILE_OPEN_W;
-
-	return 0;
+	return _open(path, FILE_OPEN_WA);
 }
 
 /**
@@ -209,10 +156,10 @@ int File::open_wa(const char *path)
  */
 int File::read()
 {
-	if (! (_status & vos::FILE_OPEN_R))
+	if (_status == O_WRONLY)
 		return 0;
 
-	_i = ::read(_d, &_v[_i], _l);
+	_i = ::read(_d, &_v[0], _l);
 	if (_i < 0) {
 		return -E_FILE_READ;
 	}
@@ -239,7 +186,7 @@ int File::readn(int n)
 {
 	register int s;
 
-	if (! (_status & vos::FILE_OPEN_R))
+	if (_status == O_WRONLY)
 		return 0;
 
 	if (n > _l) {
@@ -356,7 +303,7 @@ int File::write_raw(const char *bfr, int len)
 	register int x = 0;
 	register int s;
 
-	if (! (_status & vos::FILE_OPEN_W) || ! bfr) {
+	if (_status == O_RDONLY || ! bfr) {
 		return 0;
 	}
 	if (!bfr) {
@@ -413,7 +360,7 @@ int File::writef(const char *fmt, va_list args)
 	register int	s;
 	Buffer		b;
 
-	if (! (_status & vos::FILE_OPEN_W) || ! fmt)
+	if (_status == O_RDONLY || ! fmt)
 		return 0;
 
 	s = b.vprint(fmt, args);
@@ -486,7 +433,7 @@ int File::flush()
 	register int x = 0;
 	register int s;
 
-	if (! (_status & vos::FILE_OPEN_W))
+	if (_status == O_RDONLY)
 		return 0;
 
 	while (_i > 0) {
@@ -513,8 +460,8 @@ void File::close()
 	_name.reset();
 	if (_d && _d != STDOUT_FILENO && _d != STDERR_FILENO)
 		::close(_d);
-	_status = vos::FILE_OPEN_NO;
-	_d = 0;
+	_status = FILE_OPEN_NO;
+	_d	= 0;
 }
 
 /**
@@ -607,11 +554,16 @@ int File::GET_SIZE(const char *path)
  * @method		: File::IS_EXIST
  * @param		:
  *	> path		: a path to directory or file.
- *	> acc_mode	: access mode; read only, write only, or read-write.
+ *	> acc_mode	: access mode; read only (O_RDONLY), write only
+ *                        (O_WRONLY), or read-write (O_RDWR).
+ *                        Default to read-write.
  * @return		:
- *	< 1		: if 'path' is exist.
- *	< 0		: if 'path' does not exist.
- * @desc		: check if 'path' is exist in file system.
+ *	< 1		: if 'path' is exist and accesible by user.
+ *	< 0		: if 'path' does not exist or user does not have
+ *                        permission to access it.
+ * @desc		:
+ *	check if 'path' is exist in file system and user had a permission to
+ *	access it.
  */
 int File::IS_EXIST(const char *path, int acc_mode)
 {
@@ -619,21 +571,6 @@ int File::IS_EXIST(const char *path, int acc_mode)
 
 	if (!path)
 		return 0;
-
-	switch (acc_mode) {
-	case vos::FILE_OPEN_R:
-		acc_mode = O_RDONLY;
-		break;
-	case vos::FILE_OPEN_W:
-		acc_mode = O_WRONLY;
-		break;
-	case vos::FILE_OPEN_RW:
-		acc_mode = O_RDWR;
-		break;
-	default:
-		printf("[FILE] unknown access mode %d\n", acc_mode);
-		return 0;
-	}
 
 	fd = ::open(path, acc_mode);
 	if (fd < 0)

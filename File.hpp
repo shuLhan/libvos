@@ -26,10 +26,11 @@ extern const char *__eol[N_FILE_EOL_TYPE];
 #define	GET_EOL_STR(t)	__eol[t]
 
 enum _file_open_type {
-	FILE_OPEN_NO	= 0,
-	FILE_OPEN_R,
-	FILE_OPEN_W,
-	FILE_OPEN_RW
+	FILE_OPEN_NO	= -1,
+	FILE_OPEN_R	= O_RDONLY,
+	FILE_OPEN_W	= O_WRONLY | O_CREAT | O_TRUNC,
+	FILE_OPEN_WA	= O_WRONLY | O_CREAT | O_APPEND,
+	FILE_OPEN_RW	= O_RDWR | O_CREAT | O_APPEND,
 };
 
 /**
@@ -55,6 +56,8 @@ public:
 
 	int init(const int bfr_size = DFLT_BUFFER_SIZE);
 
+	int _open(const char *path, const int mode,
+			const int perm = S_IRUSR | S_IWUSR);
 	int open(const char *path);
 	int open_ro(const char *path);
 	int open_wo(const char *path);
@@ -76,7 +79,7 @@ public:
 	void set_eol(const int mode);
 
 	static int GET_SIZE(const char *path);
-	static int IS_EXIST(const char *path, int acc_mode);
+	static int IS_EXIST(const char *path, int acc_mode = O_RDWR);
 	static Buffer* BASENAME(const char *path);
 
 	static unsigned int DFLT_BUFFER_SIZE;
