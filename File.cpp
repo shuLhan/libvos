@@ -54,6 +54,7 @@ int File::init(const int bfr_size)
  *	> path	: path to a file name.
  *	> mode	: mode for opened file.
  *	> perm	: permission for a new file.
+ *                default to 0600 (read-write for user only).
  * @return	:
  *	< 0	: success, or 'path' is nil.
  *	< <0	: fail, error at opening file.
@@ -590,37 +591,37 @@ int File::IS_EXIST(const char *path, int acc_mode)
 /**
  * @method		: File::BASENAME
  * @param		:
+ *	> name		: return value, the last directory of 'path'.
  *	> path		: a path to directory or file.
  * @return		:
- *	< Buffer*	: buffer contain last directory on path.
- * @desc		: get the last directory on path.
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		: get the basename, last directory, of path.
  */
-Buffer* File::BASENAME(const char *path)
+int File::BASENAME(Buffer *name, const char *path)
 {
 	register int	s;
 	register int	len;
 	register int	p;
-	Buffer		*name = NULL;
 
-	s = Buffer::INIT(&name, NULL);
-	if (s < 0)
-		return NULL;
+	if (!name)
+		return -1;
 
 	if (!path) {
 		s = name->appendc('.');
 		if (s < 0)
-			goto err;
+			return s;
 	} else {
 		if (path[0] != '/') {
 			s = name->copy_raw(path, 0);
 			if (s < 0)
-				goto err;
+				return s;
 		} else {
 			len = strlen(path);
 			if (path[0] == '/' && len == 1) {
 				s = name->copy_raw(path, 0);
 				if (s < 0)
-					goto err;
+					return s;
 			} else {
 				p = len - 1;
 				if (path[p] == '/')
@@ -633,14 +634,11 @@ Buffer* File::BASENAME(const char *path)
 				++p;
 				s = name->copy_raw(&path[p], len - p);
 				if (s < 0)
-					goto err;
+					return s;
 			}
 		}
 	}
-	return name;
-err:
-	delete name;
-	return NULL;
+	return 0;
 }
 
 } /* namespace::vos */

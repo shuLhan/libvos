@@ -80,7 +80,7 @@ public:
 
 	static int GET_SIZE(const char *path);
 	static int IS_EXIST(const char *path, int acc_mode = O_RDWR);
-	static Buffer* BASENAME(const char *path);
+	static int BASENAME(Buffer *name, const char *path);
 
 	static unsigned int DFLT_BUFFER_SIZE;
 
