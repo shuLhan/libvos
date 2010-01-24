@@ -156,18 +156,7 @@ int File::open_wa(const char *path)
  */
 int File::read()
 {
-	if (_status == O_WRONLY)
-		return 0;
-
-	_i = ::read(_d, &_v[0], _l);
-	if (_i < 0) {
-		return -E_FILE_READ;
-	}
-
-	_p	= 0;
-	_v[_i]	= '\0';
-
-	return _i;
+	return readn(_l);
 }
 
 /**
@@ -195,13 +184,18 @@ int File::readn(int n)
 			return s; 
 	}
 	_i = 0;
-	while (n) {
+	while (n > 0) {
 		s = ::read(_d, &_v[_i], n);
 		if (s < 0)
-			return s;
+			return -E_FILE_READ;
+		if (s == 0)
+			break;
 		_i += s;
 		n -= s;
 	}
+
+	_p	= 0;
+	_v[_i]	= '\0';
 
 	return _i;
 }
@@ -233,17 +227,29 @@ int File::get_line(Buffer **line)
 
 	start = _p;
 	while (_v[_p] != GET_EOL_CHR(_eol)) {
-		if (_p >= _i && _v[_p] != GET_EOL_CHR(_eol)) {
+		if (_p >= _i) {
 			_p = _p - start;
 			memmove(&_v[0], &_v[start], _p);
 
-			_i = ::read(_d, &_v[_p], _l - _p);
-			if (_i < 0) {
-				return -E_FILE_READ;
+			len = _l - _p;
+			if (len == 0) {
+				len = _l;
+				resize(_l * 2);
+			}
+
+			_i = _p;
+			while (len > 0) {
+				s = ::read(_d, &_v[_i], len);
+				if (s < 0) {
+					return -E_FILE_READ;
+				}
+				if (s == 0)
+					break;
+				_i	+= s;
+				len	-= s;
 			}
 
 			start	= 0;
-			_i	+= _p;
 			_v[_i]	= '\0';
 			if (_i == 0)
 				break;
