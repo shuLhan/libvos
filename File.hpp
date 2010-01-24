@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -29,13 +29,24 @@ enum _file_open_type {
 	FILE_OPEN_RW
 };
 
+/**
+ * @class		: File
+ * @attr		:
+ *	- _d		: file descriptor.
+ *	- _p		: file iterator.
+ *	- _status	: status of open file.
+ *	- _eol		: end of line character that used on this File.
+ *	- _name		:
+ *		file name, with or without path, depends on how user
+ *		called at opening it.
+ */
 class File : public Buffer {
 public:
 
 	File();
 	~File();
 
-	int init(const int bfr_size);
+	int init(const int bfr_size = DFLT_BUFFER_SIZE);
 
 	int open(const char *path);
 	int open_ro(const char *path);
@@ -64,14 +75,15 @@ public:
 
 	static unsigned int DFLT_BUFFER_SIZE;
 
-	int		_d;		/* file descriptor */
-	int		_p;		/* file iterator */
-	int		_status;	/* file status */
-	char		_eol;		/* file end of line character */
-	Buffer		_name;		/* file name */
-	const char	*__eol;		/* file end of line string */
+	int		_d;
+	int		_p;
+	int		_status;
+	char		_eol;
+	Buffer		_name;
+	const char	*__eol;
 private:
-	DISALLOW_COPY_AND_ASSIGN(File);
+	File(const File&);
+	void operator=(const File&);
 };
 
 } /* namespace::vos */

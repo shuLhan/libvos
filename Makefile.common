@@ -19,3 +19,12 @@ do_compile	= echo "[C] $@"; \
 			${CPP} ${CPPFLAGS} -c $< -o $@
 do_build	= echo "[B] $@"; \
 			${CPP} ${CPPFLAGS} ${LDFLAGS} $^ -o $@
+
+do_install	=						\
+			echo "    [I] installing ${1} => ${2}";	\
+			rm -f ${2} 2&> /dev/null;		\
+			cp -f ${1} ${2};
+do_link		=						\
+			echo "    [S] linking ${1} => ${2}";	\
+			rm -f ${2} 2&> /dev/null;		\
+			ln -s ${1} ${2};
