@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -19,6 +19,19 @@ enum _config_type {
 	CONFIG_T_MISC
 };
 
+/**
+ * @class		: ConfigData
+ * @attr		:
+ *	- _t		: type of config data.
+ *	- _value	: value of config data object.
+ *	- _next_head	: pointer to the next header.
+ *	- _last_head	: pointer to the last header.
+ *	- _next_key	: pointer to the next key.
+ *	- _last_key	: pointer to the last key.
+ * @desc		:
+ *	ConfigData is a class that mapping all header, key, value, and
+ *	comments from ini config file to list of object in memory.
+ */
 class ConfigData : public Buffer {
 public:
 	ConfigData();
@@ -49,7 +62,8 @@ public:
 	ConfigData	*_next_key;
 	ConfigData	*_last_key;
 private:
-	DISALLOW_COPY_AND_ASSIGN(ConfigData);
+	ConfigData(const ConfigData&);
+	void operator=(const ConfigData&);
 
 	static const char * DFLT_KEY_FMT;
 };

@@ -150,27 +150,37 @@ int File::open_wa(const char *path)
 /**
  * @method	: File::read
  * @return	:
- * 	< >0	: success, return number of bytes readed.
- * 	< 0	: EOF
+ *	< >0	: success, return number of bytes readed.
+ *	< 0	: EOF
  *	< <0	: fail, error at reading descriptor.
  * @desc	: read contents of file and saved it to buffer.
  */
 int File::read()
 {
-	return readn(_l);
+	if (_status == O_WRONLY)
+		return 0;
+
+	_i = ::read(_d, &_v[0], _l);
+	if (_i < 0)
+		return -E_FILE_READ;
+
+	_p	= 0;
+	_v[_i]	= '\0';
+
+	return _i;
 }
 
 /**
- * @method	: File:readn
+ * @method	: File::readn
  * @param	:
- *	> n	: number.
+ *	> n	: number of bytes to be read from descriptor.
  * @return	:
  *	< >0	: success, return number of bytes readed.
  *	< 0	: EOF, or file is not open.
  *	< <0	: fail.
  * @desc	:
  *	read n bytes of characters from file, automatically increase buffer if n
- *	is greater than _l.
+ *	is greater than File buffer size.
  */
 int File::readn(int n)
 {
@@ -187,8 +197,11 @@ int File::readn(int n)
 	_i = 0;
 	while (n > 0) {
 		s = ::read(_d, &_v[_i], n);
-		if (s < 0)
+		if (s < 0) {
+			if (s == EAGAIN || s == EWOULDBLOCK)
+				break;
 			return -E_FILE_READ;
+		}
 		if (s == 0)
 			break;
 		_i += s;

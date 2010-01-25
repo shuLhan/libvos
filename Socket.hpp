@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -21,7 +21,7 @@ public:
 	Socket();
 	~Socket();
 
-	int init(const int bfr_size);
+	int init(const int bfr_size = Socket::DFLT_BUFFER_SIZE);
 	void lock_client();
 	void unlock_client();
 

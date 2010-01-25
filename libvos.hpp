@@ -7,6 +7,7 @@
 #ifndef _LIBVOS_MACRO_HPP
 #define	_LIBVOS_MACRO_HPP	1
 
+#include <errno.h>
 #include <stdlib.h>
 
 namespace vos {

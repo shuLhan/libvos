@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -47,16 +47,15 @@ FTP::~FTP()
 }
 
 /**
- * @desc	: create FTP connection to 'host:port'.
- *
+ * @method	: FTP::connect
  * @param	:
  *	> host	: hostname or IP address destination.
  *	> port	: port number for FTP service on destination.
  *	> mode	: mode of connection (NORMAL | PASV).
- *
  * @return	:
  *	< 0	: success.
  *	< !0	: fail.
+ * @desc	: create FTP connection to 'host:port'.
  */
 int FTP::connect(const char *host, const int port, const int mode)
 {
@@ -113,10 +112,9 @@ int FTP::login(const char *username, const char *password)
 
 void FTP::logout()
 {
-	if (!(_status & FTP_STT_LOGGED_IN))
-		return;
-
-	send_cmd(FTP_CMD_QUIT, NULL);
+	if (_status & FTP_STT_LOGGED_IN) {
+		send_cmd(FTP_CMD_QUIT, NULL);
+	}
 }
 
 void FTP::disconnect()
@@ -140,7 +138,7 @@ void FTP::disconnect()
  */
 int FTP::recv(const int to_sec, const int to_usec)
 {
-	int		s;
+	register int	s;
 	fd_set		fd_all;
 	fd_set		fd_read;
 
@@ -183,7 +181,7 @@ int FTP::recv(const int to_sec, const int to_usec)
  */
 int FTP::send_cmd(const int cmd, const char *parm)
 {
-	int s;
+	register int s;
 
 	if (_status == FTP_STT_DISCONNECT)
 		return 1;
@@ -241,7 +239,7 @@ int FTP::get_reply(const int timeout)
 			_status = FTP_STT_CONNECTED;
 		return 0;
 	case 221: /* logout successful */
-		_status &= FTP_STT_LOGGED_OUT;
+		_status = (FTP_STT_CONNECTED | FTP_STT_LOGGED_OUT);
 		return 0;
 	case 230: /* login successful */
 		_status |= FTP_STT_LOGGED_IN;
@@ -348,7 +346,7 @@ int FTP::do_pasv(const int cmd, const char *parm, const char *out)
 	if (s < 0)
 		return s;
 
-	s = fout.init(File::DFLT_BUFFER_SIZE);
+	s = fout.init();
 	if (s < 0)
 		return s;
 
@@ -374,7 +372,7 @@ int FTP::do_pasv(const int cmd, const char *parm, const char *out)
 		s = fout.open_wo(parm);
 	} else {
 		fout._d		= STDOUT_FILENO;
-		fout._status	= vos::FILE_OPEN_W;
+		fout._status	= O_WRONLY;
 	}
 	if (s < 0)
 		return s;

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -10,6 +10,10 @@ namespace vos {
 
 const char * ConfigData::DFLT_KEY_FMT = "KEY-";
 
+/**
+ * @method	: ConfigData::ConfigData
+ * @desc	: ConfigData constructor, initializing all attributes.
+ */
 ConfigData::ConfigData() :
 	_t(0),
 	_value(NULL),
@@ -19,6 +23,10 @@ ConfigData::ConfigData() :
 	_last_key(this)
 {}
 
+/**
+ * @method	: ConfigData::~ConfigData
+ * @desc	: release ConfigData object.
+ */
 ConfigData::~ConfigData()
 {
 	if (CONFIG_T_KEY == _t) {
@@ -32,15 +40,14 @@ ConfigData::~ConfigData()
 }
 
 /**
- * @desc	: initialize ConfigData object.
- *
+ * @method	: ConfigData::init
  * @param	:
  *	> type	: type for a new ConfigData object.
  *	> data	: a contents for a ConfigData object.
- *
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: initialize ConfigData object.
  */
 int ConfigData::init(const int type, const char *data)
 {
@@ -49,7 +56,10 @@ int ConfigData::init(const int type, const char *data)
 }
 
 /**
- * @desc	: add new head to Config list.
+ * @method	: ConfigData::add_head
+ * @param	:
+ *	> head	: pointer to new ConfigData header object.
+ * @desc	: add new header to Config list.
  */
 void ConfigData::add_head(const ConfigData *head)
 {
@@ -60,13 +70,17 @@ void ConfigData::add_head(const ConfigData *head)
 }
 
 /**
+ * @method	: ConfigData::add_head_raw
+ * @param	:
+ *	> head	: name of config header.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: add new header to Config list.
  */
 int ConfigData::add_head_raw(const char *head)
 {
-	int		s;
+	register int	s;
 	ConfigData	*h = NULL;
 
 	s = ConfigData::INIT(&h, CONFIG_T_HEAD, head);
@@ -76,6 +90,12 @@ int ConfigData::add_head_raw(const char *head)
 	return s;
 }
 
+/**
+ * @method	: ConfigData::add_key
+ * @param	:
+ *	> key	: pointer to new ConfigData key object.
+ * @desc	: add new key to the last header in Config list.
+ */
 void ConfigData::add_key(const ConfigData *key)
 {
 	if (key) {
@@ -84,9 +104,18 @@ void ConfigData::add_key(const ConfigData *key)
 	}
 }
 
+/**
+ * @method	: ConfigData::add_key_raw
+ * @param	:
+ *	> key	: a name of the key.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: add new key to the last header in Config list.
+ */
 int ConfigData::add_key_raw(const char *key)
 {
-	int		s;
+	register int	s;
 	ConfigData	*k = NULL;
 
 	s = ConfigData::INIT(&k, CONFIG_T_KEY, key);
@@ -97,13 +126,17 @@ int ConfigData::add_key_raw(const char *key)
 }
 
 /**
+ * @method	: ConfigData::add_value
+ * @param	:
+ *	> value	: pointer to a new ConfigData value object.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: add value to the last key in the last header in Config list.
  */
 int ConfigData::add_value(const ConfigData *value)
 {
-	int s;
+	register int s;
 
 	if (!value)
 		return 0;
@@ -136,13 +169,17 @@ int ConfigData::add_value(const ConfigData *value)
 }
 
 /**
+ * @method	: ConfigData::add_value_raw
+ * @param	:
+ *	> value : a string value for key.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: add value to the last key in the last header in Config list.
  */
 int ConfigData::add_value_raw(const char *value)
 {
-	int		s;
+	register int	s;
 	ConfigData	*v = NULL;
 
 	s = ConfigData::INIT(&v, CONFIG_T_VALUE, value);
@@ -152,6 +189,13 @@ int ConfigData::add_value_raw(const char *value)
 	return s;
 }
 
+/**
+ * @method	: ConfigData::add_misc
+ * @param	:
+ *	> misc	: pointer to ConfigData object.
+ * @desc	: add a non-key and non-header object, i.e: comment, to Config
+ *                list.
+ */
 void ConfigData::add_misc(const ConfigData *misc)
 {
 	if (misc) {
@@ -161,13 +205,16 @@ void ConfigData::add_misc(const ConfigData *misc)
 }
 
 /**
+ * @method	: ConfigData::add_misc_raw
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: add a non-key and non-header object, i.e: comment, to Config
+ *                list.
  */
 int ConfigData::add_misc_raw(const char *misc)
 {
-	int		s;
+	register int	s;
 	ConfigData	*m = NULL;
 
 	s = ConfigData::INIT(&m, CONFIG_T_MISC, misc);
@@ -177,6 +224,11 @@ int ConfigData::add_misc_raw(const char *misc)
 	return s;
 }
 
+/**
+ * @method	: ConfigData::dump
+ * @desc	: dump content of ConfigData object to standard output,
+ *                including the next header, key, and value.
+ */
 void ConfigData::dump()
 {
 	ConfigData *h = this;
@@ -202,13 +254,19 @@ void ConfigData::dump()
 }
 
 /**
+ * @method	: ConfigData::INIT
+ * @param	:
+ *	> o	: return value, pointer to unallocated ConfigData object.
+ *	> type	: type for a new ConfigData object.
+ *	> data	: content for a new ConfigData object.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: create and initialize a new ConfigData object.
  */
 int ConfigData::INIT(ConfigData **o, const int type, const char *data)
 {
-	int s = -E_MEM;
+	register int s = -E_MEM;
 
 	(*o) = new ConfigData();
 	if ((*o)) {

@@ -8,6 +8,11 @@
 
 namespace vos {
 
+/**
+ * @method	: Dlogger::Dlogger()
+ * @desc	: initialize all Dlogger attributes, set standard error as
+ *                default output.
+ */
 Dlogger::Dlogger() :
 	_lock(),
 	_tmp(),
@@ -17,15 +22,16 @@ Dlogger::Dlogger() :
 	pthread_mutex_init(&_lock, NULL);
 
 	_d	= STDERR_FILENO;
-	_status	= vos::FILE_OPEN_W;
+	_status	= O_WRONLY;
 }
 
+/**
+ * @method	: Dlogger::~Dlogger
+ * @desc	: release Dlogger object to system.
+ */
 Dlogger::~Dlogger()
 {
 	pthread_mutex_destroy(&_lock);
-
-	if (_d == STDERR_FILENO)
-		_d = 0;
 }
 
 /**
@@ -39,15 +45,10 @@ Dlogger::~Dlogger()
  */
 int Dlogger::open(const char *logfile)
 {
-	if (_d && _d != STDERR_FILENO) {
-		File::close();
-	}
-	if (!logfile) {
-		File::init(File::DFLT_BUFFER_SIZE);
-		_d	= STDERR_FILENO;
-		_status	= vos::FILE_OPEN_W;
-	} else {
-		File::init(File::DFLT_BUFFER_SIZE);
+	close();
+
+	if (logfile) {
+		File::init();
 		return open_wa(logfile);
 	}
 	return 0;
@@ -63,7 +64,7 @@ void Dlogger::close()
 	if (_d && _d != STDERR_FILENO) {
 		File::close();
 		_d	= STDERR_FILENO;
-		_status	= vos::FILE_OPEN_W;
+		_status	= O_WRONLY;
 	}
 }
 

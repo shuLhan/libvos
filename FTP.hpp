@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -39,9 +39,9 @@ enum __ftp_cmd_idx {
 
 enum _ftp_stat {
 	FTP_STT_DISCONNECT	= vos::FILE_OPEN_NO,
-	FTP_STT_CONNECTED	= vos::FILE_OPEN_RW,
-	FTP_STT_LOGGED_IN	= vos::FILE_OPEN_W << 1,
-	FTP_STT_LOGGED_OUT	= vos::FILE_OPEN_W << 2
+	FTP_STT_CONNECTED	= O_RDWR,
+	FTP_STT_LOGGED_IN	= O_RDWR << 1,
+	FTP_STT_LOGGED_OUT	= O_RDWR << 2
 };
 
 enum _ftp_mode {
