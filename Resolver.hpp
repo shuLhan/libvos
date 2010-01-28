@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -8,7 +8,7 @@
 #define	_LIBVOS_RESOLVER_HPP	1
 
 #include <time.h>
-#include "Record.hpp"
+#include "SockAddr.hpp"
 #include "DNSQuery.hpp"
 
 using vos::DNSQuery;
@@ -24,15 +24,15 @@ public:
 	int init();
 
 	void dump();
-	void set_server(const char *server_list);
-	void add_server(const char *server_list);
+	int set_server(char *server_list);
+	int add_server(char *server_list);
 
 	int create_question_udp(DNSQuery **query, const char *qname);
 	int send_query_udp(DNSQuery *question, DNSQuery *answer);
 	int send_query_tcp(DNSQuery *question, DNSQuery *answer);
 	int send_query(DNSQuery *question, DNSQuery *answer);
-	int send_udp(struct sockaddr *addr, Buffer *bfr);
-	int send_udp_raw(struct sockaddr *addr, const char *bfr,
+	int send_udp(struct sockaddr_in *addr, Buffer *bfr);
+	int send_udp_raw(struct sockaddr_in *addr, const char *bfr,
 				const int len);
 
 	static unsigned int PORT;
@@ -42,9 +42,10 @@ public:
 
 	Socket		_tcp;
 	Socket		_udp;
-	Record		*_servers;
+	SockAddr	*_servers;
 private:
-	DISALLOW_COPY_AND_ASSIGN(Resolver);
+	Resolver(const Resolver&);
+	void operator=(const Resolver&);
 };
 
 }

@@ -7,15 +7,23 @@
 #ifndef _LIBVOS_SOCKET_HPP
 #define	_LIBVOS_SOCKET_HPP	1
 
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <netinet/in.h>
 #include <sys/socket.h>
 #include <pthread.h>
 #include "File.hpp"
+#include "SockAddr.hpp"
 
 namespace vos {
 
+/**
+ * @class		: Socket
+ * @attr		:
+ *	- _family	: group or namespace this socket belong to.
+ *	- _timeout	: time data used by socket as server.
+ *	- _client_lock	: lock for accessing list of clients object.
+ *	- _clients	: list of client connection, used by socket as server.
+ *	- _next		: pointer to the next client object.
+ *	- _last		: pointer to the last client object.
+ */
 class Socket : public File {
 public:
 	Socket();
@@ -34,7 +42,8 @@ public:
 
 	int bind_listen(const char *address, const int port);
 
-	int connect_to(const char *address, const int port);
+	int connect_to(struct sockaddr_in *sin);
+	int connect_to_raw(const char *address, const int port);
 
 	void add_client_r(Socket *client);
 	void remove_client(Socket *client);
@@ -47,16 +56,10 @@ public:
 	int send(Buffer *bfr);
 	int send_raw(const char *bfr, const int len);
 
-	int send_udp(struct sockaddr *addr, Buffer *bfr);
-	int send_udp_raw(struct sockaddr *addr, const char *bfr,
+	int send_udp(struct sockaddr_in *addr, Buffer *bfr);
+	int send_udp_raw(struct sockaddr_in *addr, const char *bfr,
 				const int len);
-	int recv_udp(struct sockaddr *addr);
-
-	static int IS_IPV4(const char *str);
-	static int CREATE_ADDR(struct sockaddr_in *sin, const char *addr,
-				const int port);
-	static int CREATE_ADDR6(struct sockaddr_in6 *sin6, const char *address,
-				const int port);
+	int recv_udp(struct sockaddr_in *addr);
 
 	static Socket * ADD_CLIENT(Socket *list, Socket *client);
 
@@ -66,7 +69,6 @@ public:
 	static const char*	ADDR_WILCARD;
 
 	int		_family;
-	int		_port;
 	struct timeval	_timeout;
 	pthread_mutex_t	_client_lock;
 	Socket		*_clients;

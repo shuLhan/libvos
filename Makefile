@@ -39,6 +39,7 @@ LIBVOS_OBJS	=						\
 			${LIBVOS_BLD_D}/RecordMD.oo		\
 			${LIBVOS_BLD_D}/Record.oo		\
 			${LIBVOS_BLD_D}/Resolver.oo		\
+			${LIBVOS_BLD_D}/SockAddr.oo		\
 			${LIBVOS_BLD_D}/Socket.oo		\
 			${LIBVOS_BLD_D}/Writer.oo
 

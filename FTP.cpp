@@ -65,7 +65,7 @@ int FTP::connect(const char *host, const int port, const int mode)
 	if (s < 0)
 		return s;
 
-	s = connect_to(host, port);
+	s = connect_to_raw(host, port);
 	if (s < 0)
 		return s;
 

@@ -13,9 +13,12 @@ unsigned int	Socket::DFLT_LISTEN_SIZE	= 4;
 unsigned int	Socket::DFLT_NAME_SIZE		= 255;
 const char*	Socket::ADDR_WILCARD		= "0.0.0.0";
 
+/**
+ * @method	: Socket::Socket
+ * @desc	: Socket object constructor.
+ */
 Socket::Socket() : File(),
 	_family(0),
-	_port(0),
 	_timeout(),
 	_client_lock(),
 	_clients(NULL),
@@ -23,6 +26,10 @@ Socket::Socket() : File(),
 	_prev(NULL)
 {}
 
+/**
+ * @method	: Socket::~Socket
+ * @desc	: Socket object destructor.
+ */
 Socket::~Socket()
 {
 	_next	= NULL;
@@ -34,12 +41,20 @@ Socket::~Socket()
 	pthread_mutex_destroy(&_client_lock);
 }
 
+/**
+ * @method	: Socket::lock_client
+ * @desc	: block other thread from accessing list of client objects.
+ */
 void Socket::lock_client()
 {
 	while (pthread_mutex_trylock(&_client_lock) != 0)
 		;
 }
 
+/**
+ * @method	: Socket::unlock_client
+ * @desc	: allow other thread to access to list of client objects.
+ */
 void Socket::unlock_client()
 {
 	while (pthread_mutex_unlock(&_client_lock) != 0)
@@ -77,7 +92,8 @@ int Socket::init(const int bfr_size)
 /**
  * @method		: Socket::create
  * @param		:
- *	> family	: address family (AF_LOCAL, AF_UNIX, AF_INET, etc).
+ *	> family	: address family (AF_LOCAL, AF_UNIX, AF_FILE, AF_INET,
+ *				AF_INET6).
  *	> type		: socket type (SOCK_STREAM, SOCK_DGRAM, SOCK_RAW).
  * @return		:
  *	< 0		: success.
@@ -168,19 +184,19 @@ int Socket::bind(const char *address, const int port)
 	if (_family == AF_INET6) {
 		struct sockaddr_in6 sin6;
 
-		s = CREATE_ADDR6(&sin6, address, port);
+		s = SockAddr::CREATE_ADDR6(&sin6, address, port);
 		if (s < 0)
 			return s;
 
-		s = ::bind(_d, (struct sockaddr *) &sin6, sizeof(sin6));
+		s = ::bind(_d, (struct sockaddr *) &sin6, SockAddr::IN6_SIZE);
 	} else {
 		struct sockaddr_in sin;
 
-		s = CREATE_ADDR(&sin, address, port);
+		s = SockAddr::CREATE_ADDR(&sin, address, port);
 		if (s < 0)
 			return s;
 
-		s = ::bind(_d, (struct sockaddr *) &sin, sizeof(sin));
+		s = ::bind(_d, (struct sockaddr *) &sin, SockAddr::IN_SIZE);
 	}
 	if (s < 0) {
 		return -E_SOCK_BIND;
@@ -188,7 +204,6 @@ int Socket::bind(const char *address, const int port)
 
 	_status = O_RDWR;
 	s	= _name.copy_raw(address, 0);
-	_port	= port;
 
 	return s;
 }
@@ -238,7 +253,30 @@ int Socket::bind_listen(const char *address, const int port)
 }
 
 /**
- * @method		: Socket::connect_to
+ * @method	: Socket::connect_to
+ * @param	:
+ *	> sin	: socket address internet.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: connect to end point as defined in sockaddr_in object 'sin'.
+ */
+int Socket::connect_to(struct sockaddr_in *sin)
+{
+	register int s;
+
+	s = ::connect(_d, (struct sockaddr *) sin, SockAddr::IN_SIZE);
+	if (s < 0) {
+		return -1;
+	}
+
+	_status	= O_RDWR;
+
+	return 0;
+}
+
+/**
+ * @method		: Socket::connect_to_raw
  * @param		:
  *	> address	: destination hostname or IP address to connect to.
  *	> port		: destination port number.
@@ -247,26 +285,27 @@ int Socket::bind_listen(const char *address, const int port)
  *	< <0		: fail.
  * @desc		: connect socket to 'address' with 'port'.
  */
-int Socket::connect_to(const char *address, const int port)
+int Socket::connect_to_raw(const char *address, const int port)
 {
 	register int s;
 
 	if (_family == AF_INET6) {
 		struct sockaddr_in6 sin6;
 
-		s = CREATE_ADDR6(&sin6, address, port);
+		s = SockAddr::CREATE_ADDR6(&sin6, address, port);
 		if (s < 0)
 			return s;
 
-		s = ::connect(_d, (struct sockaddr *) &sin6, sizeof(sin6));
+		s = ::connect(_d, (struct sockaddr *) &sin6,
+				SockAddr::IN6_SIZE);
 	} else {
 		struct sockaddr_in sin;
 
-		s = CREATE_ADDR(&sin, address, port);
+		s = SockAddr::CREATE_ADDR(&sin, address, port);
 		if (s < 0)
 			return s;
 
-		s = ::connect(_d, (struct sockaddr *) &sin, sizeof(sin));
+		s = ::connect(_d, (struct sockaddr *) &sin, SockAddr::IN_SIZE);
 	}
 	if (s < 0) {
 		return -E_SOCK_CONNECT;
@@ -274,7 +313,6 @@ int Socket::connect_to(const char *address, const int port)
 
 	_status	= O_RDWR;
 	s	= _name.copy_raw(address, 0);
-	_port	= port;
 
 	return s;
 }
@@ -360,7 +398,7 @@ Socket * Socket::accept()
 		return NULL;
 	}
 
-	client_addrlen = sizeof(client_addr);
+	client_addrlen = SockAddr::IN_SIZE;
 	client->_d = ::accept(_d, (struct sockaddr *) &client_addr,
 				&client_addrlen);
 	if (client->_d < 0) {
@@ -375,7 +413,6 @@ Socket * Socket::accept()
 			client->_name.resize(_name._l * 2);
 	} while (NULL == p);
 
-	client->_port	= ntohs(client_addr.sin_port);
 	client->_status	= O_RDWR;
 
 	return client;
@@ -407,7 +444,7 @@ Socket * Socket::accept6()
 		return NULL;
 	}
 
-	client_addrlen = sizeof(client_addr);
+	client_addrlen = SockAddr::IN_SIZE;
 	client->_d = ::accept(_d, (struct sockaddr *) &client_addr,
 				&client_addrlen);
 	if (client->_d < 0) {
@@ -422,7 +459,6 @@ Socket * Socket::accept6()
 			_name.resize(_name._l * 2);
 	} while (NULL == p);
 
-	client->_port	= ntohs(client_addr.sin6_port);
 	client->_status	= O_RDWR;
 
 	return client;
@@ -463,7 +499,7 @@ Socket * Socket::accept_conn()
  * @param	:
  *	> bfr	: Buffer object, data that will be send.
  * @return	:
- *	< 0	: success.
+ *	< >=0	: success, number of bytes sended.
  *	< <0	: fail.
  * @desc	: send data 'bfr' to end point connection.
  */
@@ -496,7 +532,7 @@ int Socket::send(Buffer *bfr)
  *	> bfr	: raw data.
  *	> len	: length of 'bfr'.
  * @return	:
- *	< 0	: success.
+ *	< >=0	: success, number of bytes sended.
  *	< <0	: fail.
  * @desc	: send data 'bfr' with length 'len' to end point connection.
  */
@@ -519,16 +555,16 @@ int Socket::send_raw(const char *bfr, const int len)
  *	> addr	: address of end point.
  *	> bfr	: buffer object to be send.
  * @return	:
- *	< 0	: success.
+ *	< >=0	: success, number of bytes sended.
  *	< <0	: fail.
  * @desc	: send 'bfr' to 'addr' using datagram protocol.
  */
-int Socket::send_udp(struct sockaddr *addr, Buffer *bfr)
+int Socket::send_udp(struct sockaddr_in *addr, Buffer *bfr)
 {
 	register int n_send;
 
-	n_send = ::sendto(_d, bfr->_v, bfr->_i, 0, addr,
-				sizeof(struct sockaddr));
+	n_send = ::sendto(_d, bfr->_v, bfr->_i, 0, (struct sockaddr *) addr,
+				SockAddr::IN_SIZE);
 
 	return n_send;
 }
@@ -539,12 +575,12 @@ int Socket::send_udp(struct sockaddr *addr, Buffer *bfr)
  *	> addr	: address of end point.
  *	> bfr	: buffer object to be send.
  * @return	:
- *	< 0	: success.
+ *	< >=0	: success, number of bytes sended.
  *	< <0	: fail.
  * @desc	:
  *	send 'bfr' with length is 'len' to 'addr' using datagram protocol.
  */
-int Socket::send_udp_raw(struct sockaddr *addr, const char *bfr,
+int Socket::send_udp_raw(struct sockaddr_in *addr, const char *bfr,
 				const int len)
 {
 	register int n_send;
@@ -556,7 +592,8 @@ int Socket::send_udp_raw(struct sockaddr *addr, const char *bfr,
 	if (!len)
 		return 0;
 
-	n_send = ::sendto(_d, bfr, len, 0, addr, sizeof(struct sockaddr));
+	n_send = ::sendto(_d, bfr, len, 0, (struct sockaddr *) addr,
+				SockAddr::IN_SIZE);
 
 	return n_send;
 }
@@ -572,189 +609,14 @@ int Socket::send_udp_raw(struct sockaddr *addr, const char *bfr,
  *	received data from end point using datagram protocl and save the end
  *	point address to 'addr'.
  */
-int Socket::recv_udp(struct sockaddr *addr)
+int Socket::recv_udp(struct sockaddr_in *addr)
 {
-	socklen_t addr_len = sizeof(struct sockaddr);
+	socklen_t addr_len = SockAddr::IN_SIZE;
 
-	_i = ::recvfrom(_d, _v, _l, 0, addr, &addr_len);
+	_i = ::recvfrom(_d, _v, _l, 0, (struct sockaddr *) addr, &addr_len);
 	_v[_i] = '\0';
 
 	return _i;
-}
-
-/**
- * @method	: Socket::IS_IPV4
- * @param	:
- *	> str	: string to check for.
- * @return	:
- *	< 1	: true.
- *	< 0	: false.
- * @desc	: check if 'str' is IPv4 address and it is valid address.
- *	Minimum length of IPv4 address is x.x.x.x == 7, and
- *	maximum length of IPv4 address is xxx.xxx.xxx.xxx == 15.
- *
- */
-int Socket::IS_IPV4(const char *str)
-{
-	if (!str) {
-		return 0;
-	}
-	register int	n	= 0;
-	register int	dot	= 0;
-	char		x[3];
-
-	while (*str) {
-		if (isdigit(*str)) {
-			x[n] = *str;
-			n++;
-		} else if (*str == '.') {
-			if (n == 0 || n > 4) {
-				return 0;
-			}
-			if (n == 3) {
-				if (x[0] > '2') {
-					return 0;
-				}
-				if (x[1] > '5') {
-					return 0;
-				}
-				if (x[2] > '5') {
-					return 0;
-				}
-			}
-			n = 0;
-			dot++;
-		} else {
-			return 0;
-		}
-		*str++;
-	}
-	if (dot != 3 || n == 0 || n > 4)  {
-		return 0;
-	}
-	if (n == 3) {
-		if (x[0] > '2') {
-			return 0;
-		}
-		if (x[1] > '5') {
-			return 0;
-		}
-		if (x[2] > '5') {
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
-/**
- * @method	: Socket::CREATE_ADDR
- * @param	:
- *	> sin	: return value, struct sockaddr_in object.
- *	> addr	: hostname or IPv4 address.
- *	> port	: port number.
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
- * @desc	:
- *	create a IPv4 socket address object from address 'addr' and port
- *	'port', with address family default to internet (AF_INET).
- */
-int Socket::CREATE_ADDR(struct sockaddr_in *sin, const char *addr,
-			const int port)
-{
-	int		s;
-	int		buf_len	= 512;
-	int		err	= 0;
-	struct hostent	he;
-	struct hostent	*hep	= NULL;
-	char		*buf	= NULL;
-
-	memset(sin, 0, sizeof(struct sockaddr_in));
-
-	sin->sin_family	= AF_INET;
-	sin->sin_port	= htons(port);
-
-	if (IS_IPV4(addr)) {
-		s = inet_pton(AF_INET, addr, &sin->sin_addr);
-		if (s <= 0) {
-			return -1;
-		}
-	} else {
-		do {
-			buf = (char *) calloc(buf_len, sizeof(char));
-			s = gethostbyname2_r(addr, AF_INET, &he, buf,
-						buf_len, &hep, &err);
-			if (ERANGE == s) {
-				free(buf);
-				buf_len *= 2;
-			}
-		} while (ERANGE == s);
-
-		if (err) {
-			free(buf);
-			return -1;
-		}
-
-		memcpy(&sin->sin_addr, hep->h_addr, hep->h_length);
-		free(buf);
-	}
-	return 0;
-}
-
-/**
- * @method	: Socket::CREATE_ADDR6
- * @param	:
- *	< sin6	: return value, struct sockaddr_in6 object.
- *	< addr	: hostname or IP address.
- *	< port	: port number.
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
- * @desc	:
- *	create IPv6 internet address using 'address' and 'port'.
- */
-int Socket::CREATE_ADDR6(struct sockaddr_in6 *sin6, const char *addr,
-				const int port)
-{
-	int		s;
-	int		buf_len	= 512;
-	int		err	= 0;
-	struct hostent	he;
-	struct hostent	*hep	= NULL;
-	char		*buf	= NULL;
-
-	memset(sin6, 0, sizeof(struct sockaddr_in6));
-
-	sin6->sin6_family	= AF_INET6;
-	sin6->sin6_port		= htons(port);
-
-	buf = (char *) strchr(addr, ':');
-	if (buf) {
-		s = inet_pton(AF_INET6, addr, &sin6->sin6_addr);
-		if (s <= 0) {
-			return -1;
-		}
-	} else {
-		do {
-			buf = (char *) calloc(buf_len, sizeof(char));
-			s = gethostbyname2_r(addr, AF_INET6, &he, buf,
-						buf_len, &hep, &err);
-			if (ERANGE == s) {
-				free(buf);
-				buf_len *= 2;
-			}
-		} while (ERANGE == s);
-
-		if (err) {
-			free(buf);
-			return -1;
-		}
-
-		memcpy(&sin6->sin6_addr, hep->h_addr, hep->h_length);
-		free(buf);
-	}
-	return 0;
 }
 
 /**

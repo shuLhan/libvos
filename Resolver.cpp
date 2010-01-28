@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -29,13 +29,12 @@ Resolver::~Resolver()
 	}
 }
 
-
 /**
- * @desc	: initialize Resolver object.
- *
+ * @method	: Resolver::init
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: initialize Resolver object.
  */
 int Resolver::init()
 {
@@ -58,6 +57,10 @@ int Resolver::init()
 	return s;
 }
 
+/**
+ * @method	: Resolver::dump
+ * @desc	: print content of this Resolver object.
+ */
 void Resolver::dump()
 {
 	if (_servers) {
@@ -66,39 +69,75 @@ void Resolver::dump()
 	}
 }
 
-void Resolver::set_server(const char *server_list)
+/**
+ * @method		: Resolver::set_server
+ * @param		:
+ *	< server_list	: list of server name, separated by comma.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		: add another server to list of server '_servers'.
+ */
+int Resolver::set_server(char *server_list)
 {
 	if (_servers) {
 		delete _servers;
 		_servers = NULL;
 	}
 
-	add_server(server_list);
-}
-
-void Resolver::add_server(const char *server_list)
-{
-	Record *server = new Record();
-
-	while (*server_list) {
-		if (*server_list == ',') {
-			Record::ADD_COL(&_servers, server);
-			server = new Record();
-		} else {
-			if (isalnum(*server_list) || *server_list == '.') {
-				server->appendc(*server_list);
-			}
-		}
-		*server_list++;
-	}
-
-	Record::ADD_COL(&_servers, server);
+	return add_server(server_list);
 }
 
 /**
+ * @method		: Resolver::add_server
+ * @param		:
+ *	< server_list	: list of server name, separated by comma.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		: add another server to list of server '_servers'.
+ */
+int Resolver::add_server(char *server_list)
+{
+	register int	s;
+	char		*addr;
+	SockAddr	*saddr;
+
+	addr = server_list; 
+	while (*server_list) {
+		if (*server_list == ',') {
+			*server_list = '\0';
+			s = SockAddr::INIT(&saddr, addr, PORT);
+			*server_list = ',';
+			if (s < 0) {
+				return s;
+			}
+			SockAddr::ADD(&_servers, saddr);
+
+			*server_list++;
+			addr = server_list;
+		} else {
+			*server_list++;
+		}
+	}
+	s = SockAddr::INIT(&saddr, addr, PORT);
+	if (s < 0) {
+		return s;
+	}
+	SockAddr::ADD(&_servers, saddr);
+
+	return 0;
+}
+
+/**
+ * @method	: Resolver::create_question_udp
+ * @param	:
+ *	> query	: return value.
+ *	> qname	: hostname that will be saved in DNSQuery object.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: create a DNSQuery object for hostname 'qname'.
  */
 int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 {
@@ -194,9 +233,15 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 }
 
 /**
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
+ * @method		: Resolver::send_query_udp
+ * @param		:
+ *	> question	: query to be send to server.
+ *	> answer	: return value, answer from server.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		:
+ *	send 'question' to server to get an 'answer' using UDP protocol.
  */
 int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 {
@@ -205,7 +250,7 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 	unsigned int	n_try	= 0;
 	fd_set		fd_all;
 	fd_set		fd_read;
-	Record		*server	= _servers;
+	SockAddr	*server	= _servers;
 
 	if (!question)
 		return 0;
@@ -220,18 +265,12 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 		_udp.reset();
 
 		if (LIBVOS_DEBUG) {
-			printf(">> querying %s... ", server->_v);
+			printf(">> querying %s... ", server->_addr->_v);
 		}
 
-		s = _udp.connect_to(server->_v, PORT);
+		s = _udp.send_udp(server->_in, question->_bfr);
 		if (s < 0) {
-			server = server->_next_col;
-			continue;
-		}
-
-		s = _udp.send(question->_bfr);
-		if (s < 0) {
-			server = server->_next_col;
+			server = server->_next;
 			continue;
 		}
 
@@ -279,16 +318,22 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 			return 0;
 		} while (n_try < N_TRY);
 
-		server = server->_next_col;
+		server = server->_next;
 	}
 
 	return -E_SOCK_TIMEOUT;
 }
 
 /**
- * @return	:
- *	< 0	: success, or question is empty.
- *	< <0	; fail.
+ * @method		: Resolver::send_query_tcp
+ * @param		:
+ *	> question	: query to be send to server.
+ *	> answer	: return value, answer from server.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		:
+ *	send 'question' to server to get an 'answer' using TCP protocol.
  */
 int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 {
@@ -296,7 +341,7 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 	unsigned int	n_try	= 0;
 	fd_set		fd_all;
 	fd_set		fd_read;
-	Record		*server	= _servers;
+	SockAddr	*server	= _servers;
 
 	if (!question)
 		return 0;
@@ -310,18 +355,18 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 		_tcp.reset();
 
 		if (LIBVOS_DEBUG) {
-			printf(">> querying %s...\n", server->_v);
+			printf(">> querying %s...\n", server->_addr->_v);
 		}
 
-		s = _tcp.connect_to(server->_v, PORT);
+		s = _tcp.connect_to(server->_in);
 		if (s < 0) {
-			server = server->_next_col;
+			server = server->_next;
 			continue;
 		}
 
 		s = _tcp.send(question->_bfr);
 		if (s < 0) {
-			server = server->_next_col;
+			server = server->_next;
 			continue;
 		}
 
@@ -370,13 +415,25 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 			return 0;
 		} while (n_try < N_TRY);
 
-		server = server->_next_col;
+		server = server->_next;
 	}
 
 	return -E_SOCK_TIMEOUT;
 }
 
-
+/**
+ * @method		: Resolver::send_query
+ * @param		:
+ *	> question	: query to be send to server.
+ *	> answer	: return value, answer from server.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		:
+ *	send 'question' to server to get an 'answer'. This is a generic form
+ *	of sending query, query send using protocol based on type of buffer in
+ *	'question'.
+ */
 int Resolver::send_query(DNSQuery *question, DNSQuery *answer)
 {
 	int s;
@@ -393,12 +450,31 @@ int Resolver::send_query(DNSQuery *question, DNSQuery *answer)
 	return s;
 }
 
-int Resolver::send_udp(struct sockaddr *addr, Buffer *bfr)
+/**
+ * @method	: Resolver::send_udp
+ * @param	:
+ *	> addr	: address of end point where 'bfr' will be send.
+ *	> bfr	: data to be send.
+ * @return	:
+ *	< >=0	: success, number of bytes sended.
+ *	< <0	: fail.
+ */
+int Resolver::send_udp(struct sockaddr_in *addr, Buffer *bfr)
 {
 	return _udp.send_udp(addr, bfr);
 }
 
-int Resolver::send_udp_raw(struct sockaddr *addr, const char *bfr,
+/**
+ * @method	: Resolver::send_udp_raw
+ * @param	:
+ *	> addr	: address of end point where 'bfr' will be send.
+ *	> bfr	: data to be send.
+ *	> len	: length of 'bfr' data.
+ * @return	:
+ *	< >=0	: success, number of bytes sended.
+ *	< <0	: fail.
+ */
+int Resolver::send_udp_raw(struct sockaddr_in *addr, const char *bfr,
 				const int len)
 {
 	return _udp.send_udp_raw(addr, bfr, len);
