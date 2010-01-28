@@ -29,11 +29,6 @@ public:
 	int create_tcp();
 	int create_udp();
 
-	int create_addr(struct sockaddr_in *sin, const char *address,
-				const int port);
-	int create_addr6(struct sockaddr_in6 *sin6, const char *address,
-				const int port);
-
 	int bind(const char *address, const int port);
 	int listen(const unsigned int queue_len);
 
@@ -57,6 +52,12 @@ public:
 				const int len);
 	int recv_udp(struct sockaddr *addr);
 
+	static int IS_IPV4(const char *str);
+	static int CREATE_ADDR(struct sockaddr_in *sin, const char *addr,
+				const int port);
+	static int CREATE_ADDR6(struct sockaddr_in6 *sin6, const char *address,
+				const int port);
+
 	static Socket * ADD_CLIENT(Socket *list, Socket *client);
 
 	static unsigned int	DFLT_BUFFER_SIZE;
@@ -72,7 +73,8 @@ public:
 	Socket		*_next;
 	Socket		*_prev;
 private:
-	DISALLOW_COPY_AND_ASSIGN(Socket);	
+	Socket(const Socket&);
+	void operator=(const Socket&);
 };
 
 }

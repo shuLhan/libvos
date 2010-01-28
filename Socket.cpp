@@ -81,7 +81,6 @@ int Socket::init(const int bfr_size)
  *	> type		: socket type (SOCK_STREAM, SOCK_DGRAM, SOCK_RAW).
  * @return		:
  *	< 0		: success.
- *	< -1		: fail, cannot set O_NONBLOCK to descriptor.
  *	< <0		: fail.
  * @desc		: create a new socket descriptor.
  */
@@ -97,7 +96,7 @@ int Socket::create(const int family, const int type)
 
 	_d = ::socket(family, type, 0);
 	if (_d < 0)
-		return -E_SOCK_CREATE;
+		return -1;
 
 	_family	= family;
 	_status = vos::FILE_OPEN_NO;
@@ -105,125 +104,30 @@ int Socket::create(const int family, const int type)
 	return 0;
 }
 
+/**
+ * @method	: Socket::create_tcp
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: create stream socket for TCP connection.
+ */
 int Socket::create_tcp()
 {
 	return Socket::create(PF_INET, SOCK_STREAM);
 }
 
+/**
+ * @method	: Socket::create_udp
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: create datagram socket for UDP connection.
+ */
 int Socket::create_udp()
 {
 	return Socket::create(PF_INET, SOCK_DGRAM);
 }
 
-/**
- * @method		: Socket::create_addr
- * @param		:
- *	< sin		: return value, socket address object.
- *	< address	: hostname or IP address.
- *	< port		: port number.
- * @return		:
- *	< 0		: success.
- *	< <0		: fail.
- * @desc		: create socket address from 'address' and 'port'.
- */
-int Socket::create_addr(struct sockaddr_in *sin, const char *address,
-			const int port)
-{
-	int		s;
-	int		buf_len	= 512;
-	int		err	= 0;
-	struct hostent	he;
-	struct hostent	*hep	= NULL;
-	char		*buf	= NULL;
-
-	memset(sin, 0, sizeof(struct sockaddr_in));
-
-	sin->sin_family		= _family;
-	sin->sin_port		= htons(port);
-	_port			= port;
-
-	if (isdigit(address[0])) {
-		s = inet_pton(_family, address, &sin->sin_addr);
-		if (s <= 0) {
-			return -E_SOCK_ADDR_INV;
-		}
-	} else {
-		do {
-			buf = (char *) calloc(buf_len, sizeof(char));
-			s = gethostbyname2_r(address, _family, &he, buf,
-						buf_len, &hep, &err);
-			if (ERANGE == s) {
-				free(buf);
-				buf_len *= 2;
-			}
-		} while (ERANGE == s);
-
-		if (err) {
-			free(buf);
-			return -E_SOCK_ADDR_RESOLV;
-		}
-
-		memcpy(&sin->sin_addr, hep->h_addr, hep->h_length);
-		free(buf);
-	}
-	return 0;
-}
-
-/**
- * @method		: Socket::create_addr6
- * @param		:
- *	< sin6		: return value, socket address object.
- *	< address	: hostname or IP address.
- *	< port		: port number.
- * @return		:
- *	< 0		: success.
- *	< !0		: fail.
- * @desc		: create socket address for IPv6 from 'address' and
- *                        'port'.
- */
-int Socket::create_addr6(struct sockaddr_in6 *sin6, const char *address,
-				const int port)
-{
-	int		s;
-	int		buf_len	= 512;
-	int		err	= 0;
-	struct hostent	he;
-	struct hostent	*hep	= NULL;
-	char		*buf	= NULL;
-
-	memset(sin6, 0, sizeof(*sin6));
-
-	sin6->sin6_family	= _family;
-	sin6->sin6_port		= htons(port);
-	_port			= port;
-
-	buf = (char *) strchr(address, ':');
-	if (buf) {
-		s = inet_pton(_family, address, &sin6->sin6_addr);
-		if (!s) {
-			return -E_SOCK_ADDR_INV;
-		}
-	} else {
-		do {
-			buf = (char *) calloc(buf_len, sizeof(char));
-			s = gethostbyname2_r(address, _family, &he, buf,
-						buf_len, &hep, &err);
-			if (ERANGE == s) {
-				free(buf);
-				buf_len *= 2;
-			}
-		} while (ERANGE == s);
-
-		if (err) {
-			free(buf);
-			return -E_SOCK_ADDR_RESOLV;
-		}
-
-		memcpy(&sin6->sin6_addr, hep->h_addr, hep->h_length);
-		free(buf);
-	}
-	return 0;
-}
 
 /**
  * @method			: Socket::bind
@@ -264,7 +168,7 @@ int Socket::bind(const char *address, const int port)
 	if (_family == AF_INET6) {
 		struct sockaddr_in6 sin6;
 
-		s = create_addr6(&sin6, address, port);
+		s = CREATE_ADDR6(&sin6, address, port);
 		if (s < 0)
 			return s;
 
@@ -272,7 +176,7 @@ int Socket::bind(const char *address, const int port)
 	} else {
 		struct sockaddr_in sin;
 
-		s = create_addr(&sin, address, port);
+		s = CREATE_ADDR(&sin, address, port);
 		if (s < 0)
 			return s;
 
@@ -284,6 +188,7 @@ int Socket::bind(const char *address, const int port)
 
 	_status = O_RDWR;
 	s	= _name.copy_raw(address, 0);
+	_port	= port;
 
 	return s;
 }
@@ -349,7 +254,7 @@ int Socket::connect_to(const char *address, const int port)
 	if (_family == AF_INET6) {
 		struct sockaddr_in6 sin6;
 
-		s = create_addr6(&sin6, address, port);
+		s = CREATE_ADDR6(&sin6, address, port);
 		if (s < 0)
 			return s;
 
@@ -357,7 +262,7 @@ int Socket::connect_to(const char *address, const int port)
 	} else {
 		struct sockaddr_in sin;
 
-		s = create_addr(&sin, address, port);
+		s = CREATE_ADDR(&sin, address, port);
 		if (s < 0)
 			return s;
 
@@ -369,10 +274,17 @@ int Socket::connect_to(const char *address, const int port)
 
 	_status	= O_RDWR;
 	s	= _name.copy_raw(address, 0);
+	_port	= port;
 
 	return s;
 }
 
+/**
+ * @method		: Socket::add_client_r
+ * @param		:
+ *	> client	: socket object.
+ * @desc		: add client object to list of clients.
+ */
 void Socket::add_client_r(Socket *client)
 {
 	lock_client();
@@ -380,6 +292,13 @@ void Socket::add_client_r(Socket *client)
 	unlock_client();
 }
 
+/**
+ * @method		: Socket::remove_client
+ * @param		:
+ *	> client	: Socket object.
+ * @desc		:
+ *	remove client object pointed by 'client' from list of clients.
+ */
 void Socket::remove_client(Socket *client)
 {
 	if (! client)
@@ -399,6 +318,14 @@ void Socket::remove_client(Socket *client)
 	client->_prev = NULL;
 }
 
+/**
+ * @method		: Socket::remove_client
+ * @param		:
+ *	> client	: Socket object.
+ * @desc		:
+ *	remove client object pointed by 'client' from list of clients.
+ *	this is a reentrant version of remove_client().
+ */
 void Socket::remove_client_r(Socket *client)
 {
 	lock_client();
@@ -407,9 +334,13 @@ void Socket::remove_client_r(Socket *client)
 }
 
 /**
+ * @method		: Socket::accept
  * @return		:
  *	< Socket*	: success, new client accepted.
  *	< NULL		: fail.
+ * @desc		:
+ *	This method is used by server socket for accepting a new client
+ *	connection.
  */
 Socket * Socket::accept()
 {
@@ -450,6 +381,14 @@ Socket * Socket::accept()
 	return client;
 }
 
+/**
+ * @method		: Socket::accept6
+ *	< Socket*	: success, new client accepted.
+ *	< NULL		: fail.
+ * @desc		:
+ *	This method is used by server socket for accepting a new client
+ *	connection. This is a for IPv6 server socket.
+ */
 Socket * Socket::accept6()
 {
 	int			s;
@@ -489,6 +428,14 @@ Socket * Socket::accept6()
 	return client;
 }
 
+/**
+ * @method		: Socket::accept_conn
+ *	< Socket*	: success, new client accepted.
+ *	< NULL		: fail.
+ * @desc		:
+ *	This method is used by server socket for accepting a new client
+ *	connection. This is a generic version.
+ */
 Socket * Socket::accept_conn()
 {
 	Socket *client = NULL;
@@ -511,6 +458,15 @@ Socket * Socket::accept_conn()
 	return client;
 }
 
+/**
+ * @method	: Socket::send
+ * @param	:
+ *	> bfr	: Buffer object, data that will be send.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: send data 'bfr' to end point connection.
+ */
 int Socket::send(Buffer *bfr)
 {
 	register int s;
@@ -534,6 +490,16 @@ int Socket::send(Buffer *bfr)
 	return s;
 }
 
+/**
+ * @method	: Socket::send_raw
+ * @param	:
+ *	> bfr	: raw data.
+ *	> len	: length of 'bfr'.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: send data 'bfr' with length 'len' to end point connection.
+ */
 int Socket::send_raw(const char *bfr, const int len)
 {
 	register int s;
@@ -547,6 +513,16 @@ int Socket::send_raw(const char *bfr, const int len)
 	return s;
 }
 
+/**
+ * @method	: Socket::send_udp
+ * @param	:
+ *	> addr	: address of end point.
+ *	> bfr	: buffer object to be send.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: send 'bfr' to 'addr' using datagram protocol.
+ */
 int Socket::send_udp(struct sockaddr *addr, Buffer *bfr)
 {
 	register int n_send;
@@ -557,6 +533,17 @@ int Socket::send_udp(struct sockaddr *addr, Buffer *bfr)
 	return n_send;
 }
 
+/**
+ * @method	: Socket::send_udp_raw
+ * @param	:
+ *	> addr	: address of end point.
+ *	> bfr	: buffer object to be send.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	:
+ *	send 'bfr' with length is 'len' to 'addr' using datagram protocol.
+ */
 int Socket::send_udp_raw(struct sockaddr *addr, const char *bfr,
 				const int len)
 {
@@ -574,6 +561,17 @@ int Socket::send_udp_raw(struct sockaddr *addr, const char *bfr,
 	return n_send;
 }
 
+/**
+ * @method	: Socket::recv_udp
+ * @param	:
+ *	> addr	: originating address of end point.
+ * @return	:
+ *	< >=0	: success, size of received data.
+ *	< <0	: fail.
+ * @desc	:
+ *	received data from end point using datagram protocl and save the end
+ *	point address to 'addr'.
+ */
 int Socket::recv_udp(struct sockaddr *addr)
 {
 	socklen_t addr_len = sizeof(struct sockaddr);
@@ -584,14 +582,197 @@ int Socket::recv_udp(struct sockaddr *addr)
 	return _i;
 }
 
+/**
+ * @method	: Socket::IS_IPV4
+ * @param	:
+ *	> str	: string to check for.
+ * @return	:
+ *	< 1	: true.
+ *	< 0	: false.
+ * @desc	: check if 'str' is IPv4 address and it is valid address.
+ *	Minimum length of IPv4 address is x.x.x.x == 7, and
+ *	maximum length of IPv4 address is xxx.xxx.xxx.xxx == 15.
+ *
+ */
+int Socket::IS_IPV4(const char *str)
+{
+	if (!str) {
+		return 0;
+	}
+	register int	n	= 0;
+	register int	dot	= 0;
+	char		x[3];
+
+	while (*str) {
+		if (isdigit(*str)) {
+			x[n] = *str;
+			n++;
+		} else if (*str == '.') {
+			if (n == 0 || n > 4) {
+				return 0;
+			}
+			if (n == 3) {
+				if (x[0] > '2') {
+					return 0;
+				}
+				if (x[1] > '5') {
+					return 0;
+				}
+				if (x[2] > '5') {
+					return 0;
+				}
+			}
+			n = 0;
+			dot++;
+		} else {
+			return 0;
+		}
+		*str++;
+	}
+	if (dot != 3 || n == 0 || n > 4)  {
+		return 0;
+	}
+	if (n == 3) {
+		if (x[0] > '2') {
+			return 0;
+		}
+		if (x[1] > '5') {
+			return 0;
+		}
+		if (x[2] > '5') {
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+/**
+ * @method	: Socket::CREATE_ADDR
+ * @param	:
+ *	> sin	: return value, struct sockaddr_in object.
+ *	> addr	: hostname or IPv4 address.
+ *	> port	: port number.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	:
+ *	create a IPv4 socket address object from address 'addr' and port
+ *	'port', with address family default to internet (AF_INET).
+ */
+int Socket::CREATE_ADDR(struct sockaddr_in *sin, const char *addr,
+			const int port)
+{
+	int		s;
+	int		buf_len	= 512;
+	int		err	= 0;
+	struct hostent	he;
+	struct hostent	*hep	= NULL;
+	char		*buf	= NULL;
+
+	memset(sin, 0, sizeof(struct sockaddr_in));
+
+	sin->sin_family	= AF_INET;
+	sin->sin_port	= htons(port);
+
+	if (IS_IPV4(addr)) {
+		s = inet_pton(AF_INET, addr, &sin->sin_addr);
+		if (s <= 0) {
+			return -1;
+		}
+	} else {
+		do {
+			buf = (char *) calloc(buf_len, sizeof(char));
+			s = gethostbyname2_r(addr, AF_INET, &he, buf,
+						buf_len, &hep, &err);
+			if (ERANGE == s) {
+				free(buf);
+				buf_len *= 2;
+			}
+		} while (ERANGE == s);
+
+		if (err) {
+			free(buf);
+			return -1;
+		}
+
+		memcpy(&sin->sin_addr, hep->h_addr, hep->h_length);
+		free(buf);
+	}
+	return 0;
+}
+
+/**
+ * @method	: Socket::CREATE_ADDR6
+ * @param	:
+ *	< sin6	: return value, struct sockaddr_in6 object.
+ *	< addr	: hostname or IP address.
+ *	< port	: port number.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	:
+ *	create IPv6 internet address using 'address' and 'port'.
+ */
+int Socket::CREATE_ADDR6(struct sockaddr_in6 *sin6, const char *addr,
+				const int port)
+{
+	int		s;
+	int		buf_len	= 512;
+	int		err	= 0;
+	struct hostent	he;
+	struct hostent	*hep	= NULL;
+	char		*buf	= NULL;
+
+	memset(sin6, 0, sizeof(struct sockaddr_in6));
+
+	sin6->sin6_family	= AF_INET6;
+	sin6->sin6_port		= htons(port);
+
+	buf = (char *) strchr(addr, ':');
+	if (buf) {
+		s = inet_pton(AF_INET6, addr, &sin6->sin6_addr);
+		if (s <= 0) {
+			return -1;
+		}
+	} else {
+		do {
+			buf = (char *) calloc(buf_len, sizeof(char));
+			s = gethostbyname2_r(addr, AF_INET6, &he, buf,
+						buf_len, &hep, &err);
+			if (ERANGE == s) {
+				free(buf);
+				buf_len *= 2;
+			}
+		} while (ERANGE == s);
+
+		if (err) {
+			free(buf);
+			return -1;
+		}
+
+		memcpy(&sin6->sin6_addr, hep->h_addr, hep->h_length);
+		free(buf);
+	}
+	return 0;
+}
+
+/**
+ * @method		: Socket::ADD_CLIENT
+ * @param		:
+ *	> list		: Socket object, as the head of the list.
+ *	> client	: a new client that will add to list of clients.
+ * @return		:
+ *	< Socket*	: pointer to a new head of list.
+ * @desc		: add 'client' to the list 'list'.
+ */
 Socket * Socket::ADD_CLIENT(Socket *list, Socket *client)
 {
-	Socket *p;
-
 	if (!list)
 		return client;
 
-	p = list;
+	Socket *p = list;
+
 	while (p->_next)
 		p = p->_next;
 
