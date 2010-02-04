@@ -44,20 +44,27 @@ enum _RR_CLASS {
 };
 
 /**
- * @class	: DNS_rr
- * @desc	:
+ * @class		: DNS_rr
+ * @attr		:
+ *	- _type		: type of Resource Record.
+ *	- _class	: class of Resource Record.
+ *	- _ttl		: time-to-live of Resource Record.
+ *	- _len		: length of Resource Record.
+ *	- _mx_pref	: priority of Resource Record with MX type.
+ *	- _name		: domain name for MX record.
+ *	- _data		: data of Resource Record, depend on type of RR.
+ *	- _next		: pointer to the next RR.
+ *	- DNS_RDATA_MAX_SIZE	: static, maximum size for '_data'.
+ * @desc		:
  *	submodule of DNSQuery, for listing Resource Record of DNS packet.
  */
 class DNS_rr {
 public:
 	DNS_rr();
 	~DNS_rr();
-
 	int init();
-
 	void reset();
 	void dump();
-
 	static void ADD(DNS_rr **root, DNS_rr *rr);
 
 	uint16_t	_type;
@@ -70,7 +77,7 @@ public:
 	DNS_rr		*_next;
 private:
 	DNS_rr(const DNS_rr&);
-	const operator=(const DNS_rr&);
+	void operator=(const DNS_rr&);
 
 	static unsigned int DNS_RDATA_MAX_SIZE;
 };

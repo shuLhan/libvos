@@ -66,8 +66,29 @@ enum _dnsq_do_type {
 };
 
 /**
- * @class	: DNSQuery
- * @desc	: module for processing DNS packet.
+ * @class		: DNSQuery
+ * @attr		:
+ *	- _id		: packet transaction ID.
+ *	- _flag		: packet header status.
+ *	- _n_qry	: number of query RR.
+ *	- _n_ans	: number of answer RR.
+ *	- _n_aut	: number of authority RR.
+ *	- _n_add	: number of additional RR.
+ *	- _type		: type of packet, if question.
+ *	- _class	: class of packet, if question.
+ *	- _name		: domain name that will be queried.
+ *	- _bfr_type	: type of packet (UDP or TCP).
+ *	- _bfr		: packet that ready to transmitted or received.
+ *	- _rr_ans	: list of answers record.
+ *	- _rr_aut	: list of authority record.
+ *	- _rr_add	: list of additional record.
+ *	- _rr_ans_p	: pointer to the first byte of answer record on
+ *	                  buffer.
+ *	- _rr_aut_p	: pointer to the first byte of authority record on
+ *	                  buffer.
+ *	- _rr_add_p	: pointer to the first byte of additional RR on
+ *                        buffer.
+ * @desc		: module for processing DNS packet.
  */
 class DNSQuery {
 public:

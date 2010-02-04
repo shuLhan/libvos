@@ -33,11 +33,19 @@ const char *_ftp_cmd[N_FTP_CMD] = {
 	"QUIT"	/* QUIT				*/
 };
 
+/**
+ * @method	: FTP::FTP
+ * @desc	: FTP object constructor.
+ */
 FTP::FTP() : Socket(),
 	_reply(0),
 	_mode(FTP_STT_DISCONNECT)
 {}
 
+/**
+ * @method	: FTP::~FTP
+ * @desc	: FTP object destructor.
+ */
 FTP::~FTP()
 {
 	if (_status & FTP_STT_LOGGED_IN)
@@ -54,12 +62,12 @@ FTP::~FTP()
  *	> mode	: mode of connection (NORMAL | PASV).
  * @return	:
  *	< 0	: success.
- *	< !0	: fail.
+ *	< <0	: fail.
  * @desc	: create FTP connection to 'host:port'.
  */
 int FTP::connect(const char *host, const int port, const int mode)
 {
-	int s;
+	register int s;
 
 	s = create_tcp();
 	if (s < 0)
@@ -91,25 +99,40 @@ int FTP::connect(const char *host, const int port, const int mode)
 	return 0;
 }
 
+/**
+ * @method		: FTP::login
+ * @param		:
+ *	> username	: name of user on FTP server.
+ *	> password	: password for 'username'.
+ * @return		:
+ *	< 1		: socket is not connected.
+ * 	< 0		: success.
+ *	< <0		: fail.
+ * @desc		: login to FTP server.
+ */
 int FTP::login(const char *username, const char *password)
 {
-	int s;
+	register int s;
 
 	s = send_cmd(FTP_CMD_USER, username);
-	if (s)
+	if (s != 0)
 		return s;
 
 	s = send_cmd(FTP_CMD_PASS, password);
-	if (s)
+	if (s != 0)
 		return s;
 
 	s = send_cmd(FTP_CMD_TYPE, "I");
-	if (s)
+	if (s != 0)
 		return s;
 
 	return s;
 }
 
+/**
+ * @method	: FTP::logout
+ * @desc	: log out from FTP server, but keep the connection open.
+ */
 void FTP::logout()
 {
 	if (_status & FTP_STT_LOGGED_IN) {
@@ -117,6 +140,10 @@ void FTP::logout()
 	}
 }
 
+/**
+ * @method	: FTP::disconnect
+ * @desc	: completely close connection to FTP server.
+ */
 void FTP::disconnect()
 {
 	if (_status == FTP_STT_DISCONNECT)
@@ -132,9 +159,14 @@ void FTP::disconnect()
 }
 
 /**
- * @return:
- *	< 0	: success.
- *	< <0	: fail.
+ * @method		: FTP::recv
+ * @param		:
+ *	> to_sec	: time out in seconds.
+ *	> to_usec	: time out in micro-seconds.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		: receive data from server.
  */
 int FTP::recv(const int to_sec, const int to_usec)
 {
@@ -175,9 +207,16 @@ int FTP::recv(const int to_sec, const int to_usec)
 }
 
 /**
+ * @method	: FTP::send_cmd
+ * @param	:
+ *	> cmd	: type of command to send.
+ *	> parm	: parameter to be send, if needed.
  * @return	:
+ *	< 1	: socket is not connected.
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: send 'cmd' to server with or without additional paramater
+ *                'parm'.
  */
 int FTP::send_cmd(const int cmd, const char *parm)
 {
@@ -205,13 +244,18 @@ int FTP::send_cmd(const int cmd, const char *parm)
 }
 
 /**
- * @return:
- *	< 0	: success.
- *	< <0	: fail.
+ * @method		: FTP::get_reply
+ * @param		:
+ *	> timeout	: time out value, in seconds, for waiting a reply from
+ *                        server.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		: wait and get a reply from server.
  */
 int FTP::get_reply(const int timeout)
 {
-	int s;
+	register int s;
 
 	s = recv(timeout, 0);
 	if (s < 0) {
@@ -286,38 +330,46 @@ int FTP::get_reply(const int timeout)
 }
 
 /**
- * @return:
- *	< host: address of passive server.
- *	< port: port for passive connection.
- *	< 0   : success.
- *	< 1   : fail.
+ * @method	: FTP::parsing_pasv_reply
+ * @param	:
+ *	> addr	: return value, address of server that will accepting passive
+ *                connection.
+ *	> port	: return value, port that server will be accepting for passive
+ *                connection.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
  */
 int FTP::parsing_pasv_reply(Buffer *addr, int *port)
 {
-	int	s;
-	char	*p = _v;
+	register int	s;
+	char		*p = _v;
 
 	/* get reply code : 227 */ 
 	s = strtol(_v, &p, 0);
-	if (LIBVOS_DEBUG)
+	if (LIBVOS_DEBUG) {
 		printf("[FTP] ftp pasv reply code : %d\n", s);
+	}
 
 	/* get address */
 	for (s = 1; s <= 4; ++s) {
-		while (*p && ! isdigit(*p))
+		while (*p && ! isdigit(*p)) {
 			++p;
-		if (! *p)
-			return 1;
+		}
+		if (!*p) {
+			return -1;
+		}
 
 		while (*p && isdigit(*p)) {
 			addr->appendc(*p);
 			++p;
 		}
-		if (! *p)
-			return 1;
-
-		if (s < 4)
+		if (! *p) {
+			return -1;
+		}
+		if (s < 4) {
 			addr->appendc('.');
+		}
 	}
 	++p;
 
@@ -328,12 +380,30 @@ int FTP::parsing_pasv_reply(Buffer *addr, int *port)
 	s	= strtol(p, 0, 0);
 	*port	+= s;
 
-	if (LIBVOS_DEBUG)
+	if (LIBVOS_DEBUG) {
 		printf("[FTP] pasv '%s:%d'\n", addr->_v, *port);
+	}
 
 	return 0;
 }
 
+/**
+ * @method	: FTP::do_pasv
+ * @param	:
+ *	> cmd	: type of command to be passed after in passive mode.
+ *	> parm	: parameter for command 'cmd'.
+ *	> out	: file name where output of 'cmd' will be saved.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	:
+ *
+ *	create a passive connection to server and send command 'cmd' after
+ *	connection created, then save the 'cmd' output to file 'out'.
+ *
+ *	if 'out' is nil then output of 'cmd' will be printed to standard
+ *	output.
+ */
 int FTP::do_pasv(const int cmd, const char *parm, const char *out)
 {
 	int	port	= 0;
@@ -390,6 +460,15 @@ int FTP::do_pasv(const int cmd, const char *parm, const char *out)
 	return s;
 }
 
+/**
+ * @method	: FTP::do_put
+ * @param	:
+ *	> path	: path to a file to be saved in server.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: send file 'path' to server.
+ */
 int FTP::do_put(const char *path)
 {
 	int	port	= 0;
@@ -438,9 +517,19 @@ int FTP::do_put(const char *path)
 	return s;
 }
 
+/**
+ * @method	: FTP::do_rename
+ * @param	:
+ *	> from	: a file name to be renamed.
+ *	> to	: a new name for file.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: rename file 'from' on server into 'to'.
+ */
 int FTP::do_rename(const char *from, const char *to)
 {
-	int s;
+	register int s;
 
 	if (!from || !to)
 		return 0;

@@ -49,6 +49,17 @@ enum _ftp_mode {
 	FTP_MODE_PASV		= 1
 };
 
+/**
+ * @class		: FTP
+ * @attr		:
+ *	- PORT		: static, default port number to be used.
+ *	- TIMEOUT	: static, default time out value, in seconds.
+ *	- UTIMEOUT	: static, additional time out value in micro-seconds.
+ *	- _reply	: status of reply code.
+ *	- _mode		: mode of current FTP object, is it in normal or
+ *	                  passive connection
+ * @desc		: module to talk to server using FTP protocol.
+ */
 class FTP : public Socket {
 public:
 	FTP();
@@ -66,49 +77,49 @@ public:
 
 	int parsing_pasv_reply(Buffer *addr, int *port);
 	int do_pasv(const int cmd, const char *in, const char *out);
+	int do_put(const char *path);
+	int do_rename(const char *from, const char *to);
 
-	int do_cdup() {
+	inline int do_cdup() {
 		return send_cmd(FTP_CMD_CDUP, NULL);
-	};
-	int do_cd(const char *path = "/") {
+	}
+	inline int do_cd(const char *path = "/") {
 		return send_cmd(FTP_CMD_CWD, path);
-	};
-	int do_delete(const char *path) {
+	}
+	inline int do_delete(const char *path) {
 		return send_cmd(FTP_CMD_DELE, path);
-	};
-	int do_mkdir(const char *path) {
+	}
+	inline int do_mkdir(const char *path) {
 		return send_cmd(FTP_CMD_MKD, path);
-	};
-	int do_pwd() {
+	}
+	inline int do_pwd() {
 		return send_cmd(FTP_CMD_PWD, NULL);
-	};
-	int do_rmdir(const char *path) {
+	}
+	inline int do_rmdir(const char *path) {
 		return send_cmd(FTP_CMD_RMD, path);
-	};
-	int do_type() {
+	}
+	inline int do_type() {
 		return send_cmd(FTP_CMD_TYPE, NULL);
-	};
-	int do_get(const char *in, const char *out) {
+	}
+	inline int do_get(const char *in, const char *out) {
 		return do_pasv(FTP_CMD_RETR, in, out);
 	}
-	int do_list(const char *path, const char *out) {
+	inline int do_list(const char *path, const char *out) {
 		return do_pasv(FTP_CMD_LIST, path, out);
 	}
-	int do_list_simple(const char *path, const char *out) {
+	inline int do_list_simple(const char *path, const char *out) {
 		return do_pasv(FTP_CMD_NLST, path, out);
 	}
 
 	static unsigned int PORT;
 	static unsigned int TIMEOUT;
 	static unsigned int UTIMEOUT;
-
-	int do_put(const char *path);
-	int do_rename(const char *from, const char *to);
 private:
-	int		_reply;
-	int		_mode;
+	FTP(const FTP&);
+	void operator=(const FTP&);
 
-	DISALLOW_COPY_AND_ASSIGN(FTP);
+	int _reply;
+	int _mode;
 };
 
 } /* namespace::vos */

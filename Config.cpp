@@ -174,7 +174,7 @@ err:
  *	> dflt		: default return value if head or key is not found in
  *                        config file.
  * @return		:
- *	< const char *	: success, pointer to config value.
+ *	< value		: success, pointer to config value.
  *	< NULL		: fail, no 'head' or 'key' found in config file, and
  *                        'dflt' parameter is NULL too.
  * @desc		:

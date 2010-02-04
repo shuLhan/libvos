@@ -27,8 +27,12 @@ enum _cfg_save_mode {
 };
 
 /**
- * @class	: Config
- * @desc	: module for reading config file in INI format.
+ * @class		: Config
+ * @attr		:
+ *	- _e_row	: error for line number.
+ *	- _e_col	: error for column number.
+ *	- _data		: list of config headers, keys, and values.
+ * @desc		: module for reading config file in INI format.
  */
 class Config : public File {
 public:
