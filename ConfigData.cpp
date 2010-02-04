@@ -136,15 +136,14 @@ int ConfigData::add_key_raw(const char *key)
  */
 int ConfigData::add_value(const ConfigData *value)
 {
-	register int s;
-
 	if (!value)
 		return 0;
 
 	if ((CONFIG_T_KEY == _last_head->_last_key->_t)
-	&&  ! _last_head->_last_key->_value) {
+	&&  NULL == _last_head->_last_key->_value) {
 		_last_head->_last_key->_value = (ConfigData *) value;
 	} else {
+		int		s;
 		int		i = 0;
 		Buffer		key;
 		ConfigData	*k = _last_head->_next_key;
@@ -266,7 +265,7 @@ void ConfigData::dump()
  */
 int ConfigData::INIT(ConfigData **o, const int type, const char *data)
 {
-	register int s = -E_MEM;
+	register int s = -1;
 
 	(*o) = new ConfigData();
 	if ((*o)) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -46,8 +46,10 @@ public:
 	int		_e_col;
 	ConfigData	*_data;
 private:
+	Config(const Config&);
+	void operator=(const Config&);
+
 	int parsing();
-	DISALLOW_COPY_AND_ASSIGN(Config);
 
 	static const char * CFG_HDR;
 };

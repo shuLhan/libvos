@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -17,36 +17,47 @@ enum _cfg_parsing_stt {
 
 const char * Config::CFG_HDR = "__CONFIG__";
 
+/**
+ * @method	: Config::Config
+ * @desc	: Config object constructor.
+ */
 Config::Config() :
 	_e_row(0),
 	_e_col(0),
 	_data(NULL)
 {}
 
+/**
+ * @method	: Config::~Config
+ * @desc	: Config object destructor.
+ */
 Config::~Config()
 {
 	if (_data)
 		delete _data;
 }
 
+/**
+ * @method	: Config::dump
+ * @desc	: dump content of Config object to standard output.
+ */
 void Config::dump()
 {
 	_data->dump();
 }
 
 /**
- * @desc	: open config file and load all key and values.
- *
+ * @method	: Config::load
  * @param	:
  *	> ini	: a name of configuration file, with or without leading path.
- *
  * @return	:
  *	< 0	: success, or 'ini' is nil.
  *	< <0	: fail.
+ * @desc	: open config file and load all key and values.
  */
 int Config::load(const char *ini)
 {
-	int s;
+	register int s;
 
 	if (!ini)
 		return 0;
@@ -69,16 +80,16 @@ int Config::load(const char *ini)
 }
 
 /**
- * @desc	: save all heads, keys, and values to file.
- *
+ * @method	: Config::save
  * @return	:
  *	> 0	: success.
- (	> <0	: fail.
+ *	> <0	: fail.
+ * @desc	: save all heads, keys, and values to file.
  */
 int Config::save()
 {
-	int	s;
-	Buffer	ini;
+	register int	s;
+	Buffer		ini;
 
 	s = ini.init(&_name);
 	if (s < 0)
@@ -92,14 +103,14 @@ int Config::save()
 }
 
 /**
- * @desc	: save all heads, keys, and values to a new 'ini' file.
- *
+ * @method	: Config::save_as
  * @param	:
- *	> ini	: a output filename, with or without leading path.
- *	> mode	: save with or without comment.
+ *	> ini	: an output filename, with or without leading path.
+ *	> mode	: save with (1) or without comment (0).
  * @return	:
  *	< 0	: success.
- *	< !0	: fail.
+ *	< <0	: fail.
+ * @desc	: save all heads, keys, and values to a new 'ini' file.
  */
 int Config::save_as(const char *ini, const int mode)
 {
@@ -131,7 +142,8 @@ int Config::save_as(const char *ini, const int mode)
 			if (CONFIG_T_KEY == pkey->_t) {
 				s = fini.writes("\t%s = %s\n",
 						pkey->_v,
-						pkey->_value->_v);
+						pkey->_value ?
+						pkey->_value->_v : "");
 				if (s < 0) {
 					goto err;
 				}
@@ -155,19 +167,19 @@ err:
 }
 
 /**
- * @desc	: get config value, based on 'head' and 'key'. If 'head' or 'key' is
- *			not found then return 'dflt' value;
- *
- * @param	:
- *	> head	: header of configuration, where key will reside.
- *	> key	: key of value that will be searched.
- *	> dflt	: default return value if head or key is not found in config
- *			file.
- *
+ * @method		: Config::get
+ * @param		:
+ *	> head		: header of configuration, where key will reside.
+ *	> key		: key of value that will be searched.
+ *	> dflt		: default return value if head or key is not found in
+ *                        config file.
  * @return		:
  *	< const char *	: success, pointer to config value.
- *	< NULL		: fail, no head or key found in config file, and dflt
- *			parameter is NULL too.
+ *	< NULL		: fail, no 'head' or 'key' found in config file, and
+ *                        'dflt' parameter is NULL too.
+ * @desc		:
+ *	get config value, based on 'head' and 'key'. If 'head' or 'key' is not
+ *	found then return 'dflt' value.
  */
 const char * Config::get(const char *head, const char *key, const char *dflt)
 {
@@ -193,6 +205,16 @@ const char * Config::get(const char *head, const char *key, const char *dflt)
 	return dflt;
 }
 
+/**
+ * @method	: Config::get_number
+ * @param	:
+ *	> head	: header of configuration.
+ *	> key	: key of value that will be searched.
+ *	> dflt	: default return value if 'head' or 'key' is not found in
+ *                config file.
+ * @return	:
+ *	< int	: a value, converted from string to number.
+ */
 int Config::get_number(const char *head, const char *key, const int dflt)
 {
 	int		n;
@@ -207,16 +229,15 @@ int Config::get_number(const char *head, const char *key, const int dflt)
 }
 
 /**
- * @desc	: set a 'key' where the head is 'head' to 'value'.
- *
+ * @method	: Config::set
  * @param	:
  *	> head	: a name of head, where the key is resided.
  *	> key	: a name of key.
  *	> value	: a new value for key.
- *
- * @return:
+ * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: set a 'key' value, where the head is 'head', to 'value'.
  */
 int Config::set(const char *head, const char *key, const char *value)
 {
@@ -276,19 +297,33 @@ int Config::set(const char *head, const char *key, const char *value)
 	return s;
 }
 
+/**
+ * @method	: Config::add
+ * @param	:
+ *	> head	: a name of head, where the key is resided.
+ *	> key	: a name of key.
+ *	> value	: a new value for key.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	:
+ *	add a new 'head', or a new 'key' with 'value', to Config data.
+ */
 void Config::add(const char *head, const char *key, const char *value)
 {
 	set(head, key, value);
 }
 
 /**
+ * @method		: Config::parsing
  * @return:
  *	< 0		: success.
  *	< -E_CFG_BAD	: fail, bad configuration, at lines '_e_row' and
  *			column '_e_col'.
  *	< <0		: fail.
+ * @desc		: inline, parsing content of config file.
  */
-int Config::parsing()
+inline int Config::parsing()
 {
 	int	s	= 0;
 	int	todo	= 0;

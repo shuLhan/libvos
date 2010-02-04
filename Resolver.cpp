@@ -279,9 +279,8 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 			_udp._timeout.tv_sec	= TIMEOUT;
 			_udp._timeout.tv_usec	= 0;
 
-			select(maxfd, &fd_read, NULL, NULL, &_udp._timeout);
-	
-			if (!FD_ISSET(_udp._d, &fd_read)) {
+			s = select(maxfd, &fd_read, NULL, NULL, &_udp._timeout);
+			if (0 == s || 0 == FD_ISSET(_udp._d, &fd_read)) {
 				++n_try;
 				if (LIBVOS_DEBUG) {
 					printf(">> timeout...(%d)\n", n_try);
@@ -375,10 +374,9 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 			_tcp._timeout.tv_sec	= TIMEOUT;
 			_tcp._timeout.tv_usec	= 0;
 
-			select(_tcp._d + 1, &fd_read, NULL, NULL,
+			s = select(_tcp._d + 1, &fd_read, NULL, NULL,
 				&_tcp._timeout);
-	
-			if (!FD_ISSET(_tcp._d, &fd_read)) {
+			if (0 == s || 0 == FD_ISSET(_tcp._d, &fd_read)) {
 				++n_try;
 				if (LIBVOS_DEBUG) {
 					printf(">> timeout...(%d)\n", n_try);
