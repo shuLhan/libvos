@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -10,6 +10,9 @@ namespace vos {
 
 unsigned int DNS_rr::DNS_RDATA_MAX_SIZE = 255;
 
+/**
+ * @method	: DNS_rr::DNS_rr
+ */
 DNS_rr::DNS_rr() :
 	_type(0),
 	_class(0),
@@ -21,6 +24,9 @@ DNS_rr::DNS_rr() :
 	_next(NULL)
 {}
 
+/**
+ * @method	: DNS_rr::~DNS_rr
+ */
 DNS_rr::~DNS_rr()
 {
 	if (_next)
@@ -28,13 +34,15 @@ DNS_rr::~DNS_rr()
 }
 
 /**
+ * @method	: DNS_rr::init
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: initialize DNS_rr object data.
  */
 int DNS_rr::init()
 {
-	int s;
+	register int s;
 
 	s = _name.init(NULL);
 	if (s < 0)
@@ -45,6 +53,10 @@ int DNS_rr::init()
 	return s;
 }
 
+/**
+ * @method	: DNS_rr::reset
+ * @desc	: reset DNS RR data.
+ */
 void DNS_rr::reset()
 {
 	_type	= 0;
@@ -57,6 +69,10 @@ void DNS_rr::reset()
 		delete _next;
 }
 
+/**
+ * @method	: DNS_rr::dump
+ * @desc	: print content of DNS_rr buffer to standard output.
+ */
 void DNS_rr::dump()
 {
 	DNS_rr *p = this;
@@ -70,6 +86,13 @@ void DNS_rr::dump()
 	}
 }
 
+/**
+ * @method	: DNS_rr::ADD
+ * @param	:
+ *	> root	: head of list.
+ *	> rr	: a new node.
+ * @desc	: add a new node 'rr' to the list of 'root'.
+ */
 void DNS_rr::ADD(DNS_rr **root, DNS_rr *rr)
 {
 	if (! (*root)) {

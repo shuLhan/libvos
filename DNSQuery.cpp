@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -8,6 +8,9 @@
 
 namespace vos {
 
+/**
+ * @method	: DNSQuery::DNSQuery
+ */
 DNSQuery::DNSQuery() :
 	_id(0),
 	_flag(0),
@@ -28,6 +31,9 @@ DNSQuery::DNSQuery() :
 	_rr_add_p(NULL)
 {}
 
+/**
+ * @method	: DNSQuery::~DNSQuery
+ */
 DNSQuery::~DNSQuery()
 {
 	if (_bfr) {
@@ -45,15 +51,15 @@ DNSQuery::~DNSQuery()
 }
 
 /**
- * @desc	: initialize DNSQuery object.
- *
+ * @method	: DNSQuery::init
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: initialize DNSQuery object.
  */
 int DNSQuery::init(const Buffer *bfr)
 {
-	int s = 0;
+	register int s;
 
 	s = _name.init(NULL);
 	if (0 == s) {
@@ -64,43 +70,38 @@ int DNSQuery::init(const Buffer *bfr)
 }
 
 /**
- * @desc	: set content of DNSQuery buffer to 'bfr'.
- *
+ * @method	: DNSQuery::set_buffer
  * @param	:
- 	> bfr	: pointer to Buffer object.
- *
+ *	> bfr	: pointer to Buffer object.
+ *	> type	: type of DNS packet buffer (UDP or TCP).
  * @return	:
  *	< 0	: success, or 'bfr' is null.
  *	< <0	: fail.
+ * @desc	: set content of DNSQuery buffer to 'bfr'.
  */
 int DNSQuery::set_buffer(const Buffer *bfr, int type)
 {
-	int s = 0;
-
 	if (!bfr)
 		return 0;
 
-	_bfr_type = type;
+	register int s;
 
 	if (!_bfr) {
 		s = Buffer::INIT(&_bfr, bfr);
 	} else {
 		s = _bfr->copy(bfr);
 	}
+	_bfr_type = type;
 
 	return s;
 }
 
 /**
- * @desc	: extract contents of buffer.
- *
- * @parm	:
- *	> bfr	: pointer to Buffer object.
- *	> type	: type of buffer come from, is it TCP or UDP ?
- *
+ * @method	: DNSQuery::extract
  * @return	:
  *	< 0	: success, or buffer is empty.
  *	< <0	: fail.
+ * @desc	: extract contents of buffer (DNS packet).
  */
 int DNSQuery::extract()
 {
@@ -182,17 +183,12 @@ int DNSQuery::extract()
 }
 
 /**
- * @desc		: extract header of DNS packet.
- *
- * @param		:
- *	> bfr		: DNS packet.
- *	> bfr_len	: length of 'bfr'.
- *	> type		: type of DNS packet come from, TCP or UDP.
- *
- * @return		:
- *	< 0		: buffer is empty.
- *	< >0		: success, length of header.
- *	< <0		: fail.
+ * @method	: DNSQuery::extract_header
+ * @return	:
+ *	< 0	: buffer is empty.
+ *	< >0	: success, length of header.
+ *	< <0	: fail.
+ * @desc	: extract header of DNS packet.
  */
 int DNSQuery::extract_header()
 {
@@ -225,17 +221,12 @@ int DNSQuery::extract_header()
 }
 
 /**
- * @desc		: extract question data from buffer.
- *
- * @param		:
- *	> bfr		: DNS packet.
- *	> bfr_len	: length of 'bfr'.
- *	> type		: type of DNS packet come from, TCP or UDP.
- *
- * @return		:
- *	< 0		: buffer is empty.
- *	< >0		: success, length of question, label + type + class.
- *	< <0		: fail.
+ * @method	: DNSQuery::extract_question
+ * @return	:
+ *	< 0	: buffer is empty.
+ *	< >0	: success, length of question, label + type + class.
+ *	< <0	: fail.
+ * @desc	: extract question data from buffer.
  */
 int DNSQuery::extract_question()
 {
@@ -279,20 +270,19 @@ int DNSQuery::extract_question()
 }
 
 /**
- * @desc		: extract Resource-Record (RR) from buffer 'bfr'.
- *
+ * @method		: DNSQuery::extract_rr
  * @param:
  *	> rr		: return value, RR object after extracted.
  *	> bfr_org	: the original buffer, pointer to the original buffer
- *			received from network.
+ *                        received from network.
  *	> bfr		: pointer to the part of original buffer.
  *	> bfr_ret	: pointer to position of buffer after RR has been
- *			extracted.
+ *                        extracted.
  *	> type		: type of the last extracted rr.
- *
  * @return:
  *	< 0		: success.
  *	< <0		: fail.
+ * @desc		: extract Resource-Record (RR) from buffer 'bfr'.
  */
 int DNSQuery::extract_rr(DNS_rr **rr, const unsigned char *bfr_org,
 				const unsigned char *bfr,
@@ -306,7 +296,7 @@ int DNSQuery::extract_rr(DNS_rr **rr, const unsigned char *bfr_org,
 	if (! (*rr)) {
 		(*rr) = new DNS_rr();
 		if (! (*rr))
-			return -E_MEM;
+			return -1;
 
 		s = (*rr)->init();
 		if (s < 0)
@@ -372,6 +362,20 @@ int DNSQuery::extract_rr(DNS_rr **rr, const unsigned char *bfr_org,
 	return 0;
 }
 
+/**
+ * @method		: DNSQuery::read_label
+ * @param		:
+ *	> label		: return value, content of DNS packet.
+ *	> bfr_org	: the original buffer, pointer to the original DNS
+ *                        packet buffer.
+ *	> bfr		: pointer to the part of original buffer, usually
+ *                        passed by user in process of extracting RR.
+ *	> bfr_off	: buffer offset.
+ * @return		:
+ *	> >=0		: success, ength of label.
+ *	< <0		: fail.
+ * @desc		: read a label from DNS packet buffer.
+ */
 int DNSQuery::read_label(Buffer *label, const unsigned char *bfr_org,
 				const unsigned char *bfr, const int bfr_off)
 {
@@ -413,7 +417,8 @@ int DNSQuery::read_label(Buffer *label, const unsigned char *bfr_org,
 }
 
 /**
- * @desc : remove authority record from buffer.
+ * @method	: DNSQuery::remove_rr_aut
+ * @desc	: remove authority record from buffer.
  *
  *	buffer '_bfr' MUST be extracted before calling this function, using
  *	extract() method.
@@ -447,7 +452,8 @@ void DNSQuery::remove_rr_aut()
 }
 
 /**
- * @desc : remove additional record from buffer.
+ * @method	: DNSQuery::remove_rr_add
+ * @desc	: remove additional record from buffer.
  *
  *	buffer '_bfr' MUST be extracted before calling this function, using
  *	extract() method.
@@ -480,11 +486,17 @@ void DNSQuery::remove_rr_add()
 	}
 }
 
+/**
+ * @method	: DNSQuery::set_id
+ * @param	:
+ *	> id	: a new identifier for DNS packet.
+ * @desc	: set a new transaction ID for DNS packet buffer.
+ */
 void DNSQuery::set_id(const int id)
 {
 	_id = htons(id);
 
-	if (! _bfr)
+	if (!_bfr)
 		return;
 
 	if (_bfr_type == BUFFER_IS_UDP) {
@@ -496,6 +508,13 @@ void DNSQuery::set_id(const int id)
 	}
 }
 
+/**
+ * @method	: DNSQuery::set_tcp_size
+ * @param	:
+ *	> size	: a new size for DNS TCP packet.
+ * @desc	: set size field in DNS packet, only work if DNS packet is
+ *                from TCP connection.
+ */
 void DNSQuery::set_tcp_size(int size)
 {
 	if (_bfr_type != BUFFER_IS_TCP)
@@ -506,6 +525,13 @@ void DNSQuery::set_tcp_size(int size)
 	memcpy(_bfr->_v, &size, DNS_TCP_HDR_SIZE);
 }
 
+/**
+ * @method		: DNSQuery::reset
+ * @param		:
+ *	> do_type	: reset type.
+ * @desc		: reset DNS packet buffer with reset mode is defined
+ *                        by 'do_type'.
+ */
 void DNSQuery::reset(const int do_type)
 {
 	_id		= 0;
@@ -536,6 +562,11 @@ void DNSQuery::reset(const int do_type)
 	}
 }
 
+/**
+ * @method	: DNSQuery::net_to_host
+ * @desc	: convert all integer value in DNS packet from network to host
+ *                byte order.
+ */
 void DNSQuery::net_to_host()
 {
 	_id	= ntohs(_id);
@@ -548,6 +579,10 @@ void DNSQuery::net_to_host()
 	_class	= ntohs(_class);
 }
 
+/**
+ * @method	: DNSQuery::dump
+ * @desc	: print content of DNS packet buffer to standard output.
+ */
 void DNSQuery::dump(const int do_type)
 {
 	printf("\n; Buffer\n");
@@ -584,25 +619,30 @@ void DNSQuery::dump(const int do_type)
 }
 
 /**
+ * @method	: DNSQuery::INIT
+ * @param	:
+ *	> o	: return value, pointer to DNSQuery object.
+ *	> bfr	: pointer to DNS packet buffer.
+ *	> type	: type of DNS packet (UDP or TCP).
  * @return	:
  *	> 0	: success.
  *	> <0	: fail.
+ * @desc	: initialize DNSQuery object 'o' using 'bfr' value.
  */
 int DNSQuery::INIT(DNSQuery **o, const Buffer *bfr, const int type)
 {
-	int s = -E_MEM;
+	register int s = -1;
 
 	(*o) = new DNSQuery();
 	if ((*o)) {
+		(*o)->_bfr_type = type;
+
 		s = (*o)->init(bfr);
 		if (s != 0) {
 			delete (*o);
 			(*o) = NULL;
 		}
 	}
-
-	(*o)->_bfr_type = type;
-
 	return s;
 }
 

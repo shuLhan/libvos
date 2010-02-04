@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -65,6 +65,10 @@ enum _dnsq_do_type {
 	DNSQ_DO_EXCEPT_BUFFER	= 1
 };
 
+/**
+ * @class	: DNSQuery
+ * @desc	: module for processing DNS packet.
+ */
 class DNSQuery {
 public:
 	DNSQuery();
@@ -117,7 +121,8 @@ public:
 	const char	*_rr_aut_p;
 	const char	*_rr_add_p;
 private:
-	DISALLOW_COPY_AND_ASSIGN(DNSQuery);
+	DNSQuery(const DNSQuery&);
+	void operator=(const DNSQuery&);
 };
 
 } /* namespace::vos */

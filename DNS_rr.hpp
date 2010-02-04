@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -43,6 +43,11 @@ enum _RR_CLASS {
 	QUERY_C_ALL	= 255
 };
 
+/**
+ * @class	: DNS_rr
+ * @desc	:
+ *	submodule of DNSQuery, for listing Resource Record of DNS packet.
+ */
 class DNS_rr {
 public:
 	DNS_rr();
@@ -64,7 +69,8 @@ public:
 	Buffer		_data;
 	DNS_rr		*_next;
 private:
-	DISALLOW_COPY_AND_ASSIGN(DNS_rr);
+	DNS_rr(const DNS_rr&);
+	const operator=(const DNS_rr&);
 
 	static unsigned int DNS_RDATA_MAX_SIZE;
 };

@@ -26,6 +26,10 @@ enum _cfg_save_mode {
 	CONFIG_SAVE_WOUT_COMMENT
 };
 
+/**
+ * @class	: Config
+ * @desc	: module for reading config file in INI format.
+ */
 class Config : public File {
 public:
 	Config();
