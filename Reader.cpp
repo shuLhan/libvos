@@ -8,21 +8,29 @@
 
 namespace vos {
 
+/**
+ * @method	: Reader::Reader
+ * @desc	: Reader object constructor.
+ */
 Reader::Reader()
 {}
 
+/**
+ * @method	: Reader::~Reader
+ * @desc	: Reader object desctructor.
+ */
 Reader::~Reader()
 {}
 
 /**
- * @method	: Reader::refill_buffer
- * @param	:
- *	< len	: size to be read from descriptor and fill the buffer.
- * @return	:
- *	> >0	: success, number of bytes filled in buffer.
- *	> 0	: EOF.
- *	> <0	: fail, error at reading descriptor.
- * @desc	:
+ * @method		: Reader::refill_buffer
+ * @param		:
+ *	< read_min	: size to be read from descriptor and fill the buffer.
+ * @return		:
+ *	> >0		: success, number of bytes filled in buffer.
+ *	> 0		: EOF.
+ *	> <0		: fail, error at reading descriptor.
+ * @desc		:
  *	move unparsed line to the first position, and fill the rest with a new
  *	content.
  */
@@ -69,17 +77,17 @@ inline int Reader::refill_buffer(const int read_min)
 }
 
 /**
- * @desc: read one row from file, using 'r' as record buffer, and 'md' as
- *	record meta data.
- *
- * @param:
- *	> r	: record buffer, already allocated by user.
+ * @method	: Reader::read
+ * @param	:
+ *	> r	: return value, record buffer; already allocated by user.
  *	> md	: record meta data, already set by user.
- *	
- * @return:
+ * @return	:
  *	< 1	: one record readed.
  *	< 0	: EOF.
  *	< -1	: record rejected.
+ * @desc	:
+ *	read one row from file, using 'r' as record buffer, and 'md' as record
+ *	meta data.
  */
 int Reader::read(Record *r, RecordMD *rmd)
 {

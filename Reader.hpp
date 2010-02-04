@@ -13,6 +13,10 @@
 
 namespace vos {
 
+/**
+ * @class	: Reader
+ * @desc	: a module for reading DSV file.
+ */
 class Reader : public File {
 public:
 	Reader();

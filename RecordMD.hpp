@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -18,6 +18,38 @@ enum _rmd_type {
 	RMD_T_BLOB
 };
 
+/**
+ * @class		: RecordMD
+ * @attr		:
+ *	- _n_md		: number of meta-data record in list.
+ *	- _idx		: index of current meta-data record.
+ *	- _flag		: flag of current meta-data record.
+ *	- _type		: type of record that this meta-data hold.
+ *	- _left_q	: left character used in record data.
+ *	- _right_q	: right character used in record data.
+ *	- _start_p	: start position of record data.
+ *	- _end_p	: end position of record data.
+ *	- _sep		: character used as separator between record data.
+ *	- _fltr_idx	: index of filter used in record.
+ *	- _fltr_rule	: rule of filter that will be used in record.
+ *	- _fop		: pointer to filter function.
+ *	- _name		: name of record.
+ *	- _date_format	: format of date used in data.
+ *	- _fltr_v	: value of filter, if filter is in comparable mode.
+ *	- _next		: pointer to the next meta-data.
+ *	- BLOB_SIZE	: static, size of blob header.
+ * @desc		:
+ *
+ *	Record Meta-Data hold a definition of records in DSV file, or in
+ *	general: describing how the record will be parsed later on DSV file.
+ *	In example, does the record data start with a single quote, double
+ *	quote, or any pritable character; what character separated the record,
+ *	or does its used fixed position; etc.
+ *
+ *	Its also defined type of filter that will be applied to current
+ *	record. A filter is used to accepting or rejecting record after
+ *	parsed.
+ */
 class RecordMD {
 public:
 	RecordMD();
@@ -48,9 +80,10 @@ public:
 
 	static int	BLOB_SIZE;
 private:
-	DISALLOW_COPY_AND_ASSIGN(RecordMD);
+	RecordMD(const RecordMD&);
+	void operator=(const RecordMD&);
 };
 
-}
+} /* namespace::vos */
 
 #endif

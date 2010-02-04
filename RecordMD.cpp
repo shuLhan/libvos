@@ -22,6 +22,10 @@ enum _rmd_parser {
 
 int RecordMD::BLOB_SIZE = sizeof(int);
 
+/**
+ * @method	: RecordMD::RecordMD
+ * @desc	: RecordMD object constructor.
+ */
 RecordMD::RecordMD() :
 	_n_md(0),
 	_idx(0),
@@ -41,6 +45,10 @@ RecordMD::RecordMD() :
 	_next(NULL)
 {}
 
+/**
+ * @method	: RecordMD::~RecordMD
+ * @desc	: RecordMD object destructor.
+ */
 RecordMD::~RecordMD()
 {
 	if (_name)
@@ -53,6 +61,10 @@ RecordMD::~RecordMD()
 		delete _next;
 }
 
+/**
+ * @method	: RecordMD::dump
+ * @desc	: print content or RecordMD object to standard output.
+ */
 void RecordMD::dump()
 {
 	RecordMD *p = this;
@@ -91,6 +103,13 @@ void RecordMD::dump()
 	}
 }
 
+/**
+ * @method	: RecordMD::ADD
+ * @param	:
+ *	> rmd	: head of list.
+ *	> md	: a new RecordMD object that will be added to lis 'rmd'.
+ * @desc	: add 'md' object to list 'rmd'.
+ */
 void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
 {
 	if (! (*rmd)) {
@@ -107,7 +126,16 @@ void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
 }
 
 /**
- * @desc: initialize meta data using field declaration in 'meta'.
+ * @method	: RecordMD::INIT
+ * @param	:
+ *	> o	: return value, list of RecordMD object.
+ *	> meta	: formatted string of field declaration.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	:
+ *
+ * initialize meta data using field declaration in 'meta'.
  *
  * field format:
  *
@@ -115,13 +143,6 @@ void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
  *
  *	[]	: optional.
  *	<char>	: any single character, in c-style for escape char.
- *
- * @param	:
- *	> meta	: formatted string of field declaration.
- *
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
  */
 int RecordMD::INIT(RecordMD **o, const char *meta)
 {
@@ -452,24 +473,25 @@ err:
 }
 
 /**
- * @desc	: load meta-data from file 'fmeta'.
- *
+ * @method	: RecordMD::INIT_FROM_FILE
  * @param	:
+ *	> o	: return value, list of RecordMD object.
  *	> fmeta	: a name of file contains meta-data, with or without leading
- *		path.
- *
+ *                path.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: load meta-data from file 'fmeta'.
  */
 int RecordMD::INIT_FROM_FILE(RecordMD **o, const char *fmeta)
 {
-	int	s;
-	File	f;
+	register int	s;
+	File		f;
 
 	s = f.open_ro(fmeta);
-	if (s < 0)
+	if (s < 0) {
 		return s;
+	}
 
 	s = f.resize(f.get_size());
 	if (s < 0) {
