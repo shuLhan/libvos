@@ -15,7 +15,27 @@ using vos::DNSQuery;
 
 namespace vos {
 
-/* DNS QUERY Section */
+/**
+ * @class			: Resolver
+ * @attr			:
+ *	- PORT			: static, default DNS server port.
+ *	- UDP_PACKET_SIZE	: static, default DNS packet size.
+ *	- TIMEOUT		:
+ *		static, default time-out value in second for waiting packet
+ *		reply from server.
+ *	- N_TRY			:
+ *		static, maximum number of client trying to resend a packet
+ *		back to server when no reply from server after specific
+ *		'TIMEOUT' is reached.
+ *	- _tcp			: Socket object for handling TCP connection.
+ *	- _udp			: Socket object for handling UDP connection.
+ *	- _servers		: list of parent DNS server addresses.
+ * @desc			:
+ *
+ *	module for translating hostname to IP address, by sending a DNS query
+ *	to one of the server in the list of '_servers' using UDP or TCP
+ *	protocol.
+ */
 class Resolver {
 public:
 	Resolver();

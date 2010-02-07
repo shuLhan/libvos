@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -11,6 +11,16 @@
 
 namespace vos {
 
+/**
+ * @class		: Record
+ * @attr		:
+ *	- _next_col	: pointer to the next column.
+ *	- _last_col	: pointer to the last column.
+ *	- _next_row	: pointer to the next row.
+ *	- _last_row	: pointer to the last row.
+ * @desc		:
+ *	module to handle field data when parsing DSV file.
+ */
 class Record : public Buffer {
 public:
 	Record();
@@ -27,14 +37,15 @@ public:
 	static void ADD_COL(Record **row, Record *col);
 	static void ADD_ROW(Record **rows, Record *row);
 	static int INIT(Record **o, const int bfr_size);
-	static int INIT_ROW(Record **o, int col_size, const int bfr_size);
+	static int INIT_ROW(Record **o, int n_col, const int bfr_size);
 
 	Record *_next_col;
 	Record *_last_col;
 	Record *_next_row;
 	Record *_last_row;
 private:
-	DISALLOW_COPY_AND_ASSIGN(Record);
+	Record(const Record&);
+	void operator=(const Record&);
 };
 
 } /* namespace::vos */

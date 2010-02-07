@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2009,2010 kilabit.org
+ * Author:
+ *	- m.shulhan (ms@kilabit.org)
+ */
+
 #ifndef _LIBVOS_SOCKET_ADDRESS_HPP
 #define	_LIBVOS_SOCKET_ADDRESS_HPP	1
 
@@ -9,12 +15,16 @@
 namespace vos {
 
 /**
- * @class	: SockAddr
- * @attr	:
- *	- _addr	: the readable address.
- *	- _in	: the internet address.
- *	- _next	: pointer to the next SockAddr in the list.
- *	- _last	: pointer to the last SockAddr in the list.
+ * @class		: SockAddr
+ * @attr		:
+ *	- IN_SIZE	: static, size of 'struct sockaddr_in'.
+ *	- IN6_SIZE	: static, size of 'struct sockaddr_in6'.
+ *	- _addr		: the readable address.
+ *	- _in		: the internet address.
+ *	- _next		: pointer to the next SockAddr in the list.
+ *	- _last		: pointer to the last SockAddr in the list.
+ * @desc		:
+ *	module for handling socket address.
  */
 class SockAddr {
 public:

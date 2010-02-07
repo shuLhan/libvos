@@ -8,6 +8,10 @@
 
 namespace vos {
 
+/**
+ * @method	: Record::Record
+ * @desc	: Record object constructor.
+ */
 Record::Record() : Buffer(),
 	_next_col(NULL),
 	_last_col(this),
@@ -15,6 +19,10 @@ Record::Record() : Buffer(),
 	_last_row(this)
 {}
 
+/**
+ * @method	: Record::~Record
+ * @desc	: Record object destructor.
+ */
 Record::~Record()
 {
 	if (_next_col)
@@ -23,11 +31,24 @@ Record::~Record()
 		delete _next_row;
 }
 
+/**
+ * @method		: Record::init
+ * @param		:
+ *	> bfr_size	: initial buffer size.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		: initialize Record object.
+ */
 int Record::init(const int bfr_size)
 {
 	return init_size(bfr_size);
 }
 
+/**
+ * @method	: Record::dump
+ * @desc	: print content of Record object to standard output.
+ */
 void Record::dump()
 {
 	Record *row = this;
@@ -45,6 +66,14 @@ void Record::dump()
 	}
 }
 
+/**
+ * @method		: Record::get_column
+ * @param		:
+ *	> n		: index of column, started from zero.
+ * @return		:
+ *	< Record	: pointer to Record at column 'n'.
+ * @desc		: get record in column 'n'.
+ */
 Record *Record::get_column(int n)
 {
 	Record *p = this;
@@ -56,28 +85,27 @@ Record *Record::get_column(int n)
 }
 
 /**
- * @desc	: set column 'n' value to 'bfr'.
- *
+ * @method	: Record::set_column
  * @param	:
- *	> n	: column number.
+ *	> n	: index of column to set to, started from zero.
  *	> bfr	: content for new column value.
- *
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: set column 'n' value to 'bfr'.
  */
 int Record::set_column(int n, Buffer *bfr)
 {
-	int	s	= 0;
-	Record	*p	= this;
-
 	if (!bfr)
 		return 0;
+
+	register int	s	= 0;
+	Record		*p	= this;
 
 	for (; n > 0 && p; --n)
 		p = p->_next_col;
 
-	if (n < 0 || ! p)
+	if (n < 0 || NULL == p)
 		return -E_RECORD_INV_COLUMN;
 
 	if (bfr->_v) {
@@ -88,14 +116,19 @@ int Record::set_column(int n, Buffer *bfr)
 }
 
 /**
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
+ * @method		: Record::set_column_number
+ * @param		:
+ *	> n		: index of column to set to, started from zero.
+ *	> number	: content for a new column value.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		: set column 'n' value to 'number'.
  */
 int Record::set_column_number(int n, const int number)
 {
-	int	s	= 0;
-	Record	*p	= this;
+	register int	s	= 0;
+	Record		*p	= this;
 
 	for (; n > 0 && p; --n)
 		p = p->_next_col;
@@ -108,6 +141,10 @@ int Record::set_column_number(int n, const int number)
 	return s;
 }
 
+/**
+ * @method	: Record::columns_reset
+ * @desc	: empties all columns.
+ */
 void Record::columns_reset()
 {
 	Record *p = this;
@@ -118,6 +155,13 @@ void Record::columns_reset()
 	}
 }
 
+/**
+ * @method	: Record::ADD_COL
+ * @param	:
+ *	> row	: header or row.
+ *	> col	: a new column to be added to 'row'.
+ * @desc	: add a new column 'col' to 'row'.
+ */
 void Record::ADD_COL(Record **row, Record *col)
 {
 	if (! (*row)) {
@@ -128,6 +172,13 @@ void Record::ADD_COL(Record **row, Record *col)
 	}
 }
 
+/**
+ * @method	: Record::ADD_ROW
+ * @param	:
+ *	> rows	: pointer to the first row.
+ *	> row	: a new row to be added to list of 'rows'.
+ * @desc	: add a new 'row' to the list of 'rows'.
+ */
 void Record::ADD_ROW(Record **rows, Record *row)
 {
 	if (! (*rows)) {
@@ -138,12 +189,23 @@ void Record::ADD_ROW(Record **rows, Record *row)
 	}
 }
 
+/**
+ * @method		: Record::INIT
+ * @param		:
+ *	> o		: return value, pointer to Record object.
+ *	> bfr_size	: initial size for Record buffer.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		:
+ *	create and initialize a new Record object 'o', using 'bfr_size' as
+ *	initial buffer size for Record buffer.
+ */
 int Record::INIT(Record **o, const int bfr_size)
 {
-	int s = -E_MEM;
+	register int s = -1;
 	
 	(*o) = new Record();
-
 	if ((*o)) {
 		s = (*o)->init(bfr_size);
 		if (s != 0) {
@@ -155,19 +217,25 @@ int Record::INIT(Record **o, const int bfr_size)
 }
 
 /**
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
+ * @method		: Record::INIT_ROW
+ * @param		:
+ *	> row		: head of row or pointer to first column.
+ *	> n_col		: number of column to be added to 'row'
+ *	> bfr_size	: initial buffer size for each new column.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		: add 'n_col' number of column to the 'row'.
  */
-int Record::INIT_ROW(Record **row, int col_size, const int bfr_size)
+int Record::INIT_ROW(Record **row, int n_col, const int bfr_size)
 {
-	int	s;
-	Record	*col = NULL;
-
-	if (0 == col_size)
+	if (0 == n_col)
 		return 0;
 
-	for (; col_size > 0; --col_size) {
+	register int	s;
+	Record		*col = NULL;
+
+	for (; n_col > 0; --n_col) {
 		s = Record::INIT(&col, bfr_size);
 		if (s != 0) {
 			delete row;

@@ -374,7 +374,7 @@ void Socket::remove_client_r(Socket *client)
 /**
  * @method		: Socket::accept
  * @return		:
- *	< Socket*	: success, new client accepted.
+ *	< Socket	: success, new client accepted.
  *	< NULL		: fail.
  * @desc		:
  *	This method is used by server socket for accepting a new client
@@ -420,7 +420,8 @@ Socket * Socket::accept()
 
 /**
  * @method		: Socket::accept6
- *	< Socket*	: success, new client accepted.
+ * @return		:
+ *	< Socket	: success, new client accepted.
  *	< NULL		: fail.
  * @desc		:
  *	This method is used by server socket for accepting a new client
@@ -466,7 +467,8 @@ Socket * Socket::accept6()
 
 /**
  * @method		: Socket::accept_conn
- *	< Socket*	: success, new client accepted.
+ * @return		:
+ *	< Socket	: success, new client accepted.
  *	< NULL		: fail.
  * @desc		:
  *	This method is used by server socket for accepting a new client
@@ -625,7 +627,7 @@ int Socket::recv_udp(struct sockaddr_in *addr)
  *	> list		: Socket object, as the head of the list.
  *	> client	: a new client that will add to list of clients.
  * @return		:
- *	< Socket*	: pointer to a new head of list.
+ *	< Socket	: pointer to a new head of list.
  * @desc		: add 'client' to the list 'list'.
  */
 Socket * Socket::ADD_CLIENT(Socket *list, Socket *client)

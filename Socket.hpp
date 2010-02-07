@@ -15,14 +15,20 @@
 namespace vos {
 
 /**
- * @class		: Socket
- * @attr		:
- *	- _family	: group or namespace this socket belong to.
- *	- _timeout	: time data used by socket as server.
- *	- _client_lock	: lock for accessing list of clients object.
- *	- _clients	: list of client connection, used by socket as server.
- *	- _next		: pointer to the next client object.
- *	- _last		: pointer to the last client object.
+ * @class			: Socket
+ * @attr			:
+ *	- DFLT_BUFFER_SIZE	: static, default size of buffer object.
+ *	- DFLT_LISTEN_SIZE	: static, default size of client queue.
+ *	- DFLT_NAME_SIZE	: static, default length of hostname.
+ *	- ADDR_WILCARD		: static, wilcard address for IPv4.
+ *	- _family		: group or namespace this socket belong to.
+ *	- _timeout		: time data used by socket as server.
+ *	- _client_lock		: lock for accessing list of clients object.
+ *	- _clients		: list of client connections.
+ *	- _next			: pointer to the next client object.
+ *	- _prev			: pointer to the previous client object.
+ * @desc			:
+ *	module for handling Socket.
  */
 class Socket : public File {
 public:
@@ -39,7 +45,6 @@ public:
 
 	int bind(const char *address, const int port);
 	int listen(const unsigned int queue_len);
-
 	int bind_listen(const char *address, const int port);
 
 	int connect_to(struct sockaddr_in *sin);

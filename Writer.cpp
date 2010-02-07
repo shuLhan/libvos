@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -8,33 +8,47 @@
 
 namespace vos {
 
+/**
+ * @method	: Writer::Writer
+ * @desc	: Writer object constructor.
+ */
 Writer::Writer() :
 	_line()
 {}
 
+/**
+ * @method	: Writer::~Writer
+ * @desc	: Writer object destructor.
+ */
 Writer::~Writer()
 {}
 
+/**
+ * @method	: Writer::init
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: initialize Writer object.
+ */
 int Writer::init()
 {
 	return _line.init(NULL);
 }
 
 /**
- * @desc: write one row using 'rmd' as meta-data to file.
- *
- * @param:
- *	> r	: record buffer.
+ * @method	: Writer::write
+ * @param	:
+ *	> cols	: record buffer, in list of column.
  *	> rmd	: record meta-data.
- *
- * @return:
+ * @return	:
  *	< 0	: success.
  *	< <0	: fail.
+ * @desc	: write one row using 'rmd' as meta-data to file.
  */
 int Writer::write(Record *cols, RecordMD *rmd)
 {
-	int	s;
-	int	len;
+	register int	s;
+	register int	len;
 
 	while (rmd && cols) {
 		if (rmd->_start_p) {
@@ -117,9 +131,19 @@ int Writer::write(Record *cols, RecordMD *rmd)
 	return 0;
 }
 
+/**
+ * @method	: Writer::writes
+ * @param	:
+ *	> rows	: list of row of Record objects.
+ *	> rmd	: Record meta-data.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: write all 'rows' to file.
+ */
 int Writer::writes(Record *rows, RecordMD *rmd)
 {
-	int s;
+	register int s;
 
 	while (rows) {
 		s = write(rows, rmd);

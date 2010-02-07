@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2009,2010 kilabit.org
+ * Author:
+ *	- m.shulhan (ms@kilabit.org)
+ */
+
 #include "SockAddr.hpp"
 
 namespace vos {
@@ -49,10 +55,14 @@ void SockAddr::dump()
 
 /**
  * @method	: SockAddr::init
+ * @param	:
+ *	> o	: return value, SockAddr object.
+ *	> addr	: hostname or IP address.
+ *	> port	: port number.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
- * @desc	: initialize SockAddr object.
+ * @desc	: create and initialize initialize SockAddr object.
  */
 int SockAddr::INIT(SockAddr **o, const char *addr, const int port)
 {
@@ -222,9 +232,9 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in *sin, const char *addr,
 /**
  * @method	: SockAddr::CREATE_ADDR6
  * @param	:
- *	< sin6	: return value, struct sockaddr_in6 object.
- *	< addr	: hostname or IP address.
- *	< port	: port number.
+ *	> sin6	: return value, struct sockaddr_in6 object.
+ *	> addr	: hostname or IP address.
+ *	> port	: port number.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.

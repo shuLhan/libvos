@@ -13,6 +13,12 @@ unsigned int Resolver::UDP_PACKET_SIZE	= 512;
 unsigned int Resolver::TIMEOUT		= 6;
 unsigned int Resolver::N_TRY		= 0;
 
+/**
+ * @method	: Resolver::Resolver
+ * @desc	:
+ *	Resolver object constructor.
+ *	This constructor initialize RNG for DNS transaction ID.
+ */
 Resolver::Resolver() :
 	_tcp(),
 	_udp(),
@@ -21,6 +27,10 @@ Resolver::Resolver() :
 	srand(time(NULL));
 }
 
+/**
+ * @method	: Resolver::~Resolver
+ * @desc	: Resolver object destructor.
+ */
 Resolver::~Resolver()
 {
 	if (_servers) {
@@ -72,7 +82,7 @@ void Resolver::dump()
 /**
  * @method		: Resolver::set_server
  * @param		:
- *	< server_list	: list of server name, separated by comma.
+ *	> server_list	: list of server name, separated by comma.
  * @return		:
  *	< 0		: success.
  *	< <0		: fail.
@@ -91,7 +101,7 @@ int Resolver::set_server(char *server_list)
 /**
  * @method		: Resolver::add_server
  * @param		:
- *	< server_list	: list of server name, separated by comma.
+ *	> server_list	: list of server name, separated by comma.
  * @return		:
  *	< 0		: success.
  *	< <0		: fail.
@@ -456,6 +466,7 @@ int Resolver::send_query(DNSQuery *question, DNSQuery *answer)
  * @return	:
  *	< >=0	: success, number of bytes sended.
  *	< <0	: fail.
+ * @desc	: send data 'bfr' to 'addr' using UDP protocol.
  */
 int Resolver::send_udp(struct sockaddr_in *addr, Buffer *bfr)
 {
@@ -471,6 +482,7 @@ int Resolver::send_udp(struct sockaddr_in *addr, Buffer *bfr)
  * @return	:
  *	< >=0	: success, number of bytes sended.
  *	< <0	: fail.
+ * @desc	: send data 'bfr' to 'addr' using UDP protocol.
  */
 int Resolver::send_udp_raw(struct sockaddr_in *addr, const char *bfr,
 				const int len)
