@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -107,7 +107,7 @@ void RecordMD::dump()
  * @method	: RecordMD::ADD
  * @param	:
  *	> rmd	: head of list.
- *	> md	: a new RecordMD object that will be added to lis 'rmd'.
+ *	> md	: a new RecordMD object that will be added to list 'rmd'.
  * @desc	: add 'md' object to list 'rmd'.
  */
 void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
@@ -134,10 +134,9 @@ void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
  *	< 0	: success.
  *	< <0	: fail.
  * @desc	:
+ *	create and initialize meta data using field declaration in 'meta'.
  *
- * initialize meta data using field declaration in 'meta'.
- *
- * field format:
+ *	Field format:
  *
  *	'<char>':name:'<char>':[start-pos]:[end-pos | '<char>']:[type]
  *
@@ -481,7 +480,9 @@ err:
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
- * @desc	: load meta-data from file 'fmeta'.
+ * @desc	:
+ *	create and initialize meta-data object 'o' by loading meta-data from
+ *	file 'fmeta'.
  */
 int RecordMD::INIT_FROM_FILE(RecordMD **o, const char *fmeta)
 {

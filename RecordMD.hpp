@@ -39,16 +39,14 @@ enum _rmd_type {
  *	- _next		: pointer to the next meta-data.
  *	- BLOB_SIZE	: static, size of blob header.
  * @desc		:
- *
- *	Record Meta-Data hold a definition of records in DSV file, or in
+ *	Record meta-data hold each definition of records in DSV file, or in
  *	general: describing how the record will be parsed later on DSV file.
- *	In example, does the record data start with a single quote, double
- *	quote, or any pritable character; what character separated the record,
- *	or does its used fixed position; etc.
+ *	In example, does the record data started with a single quote, double
+ *	quote, or any printable character; what character is used as a
+ *	separator between record or does its used fixed position; etc.
  *
- *	Its also defined type of filter that will be applied to current
- *	record. A filter is used to accepting or rejecting record after
- *	parsed.
+ *	It's also defined type of filter that will be applied to record. A
+ *	filter is used to accepting or rejecting record after parsed.
  */
 class RecordMD {
 public:
