@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -28,6 +28,10 @@ int OCI::_spool_max		= 8;
 int OCI::_spool_inc		= 1;
 int OCI::_stmt_cache_size	= 10;
 
+/**
+ * @method	: OCI::OCI
+ * @desc	: OCI object constructor.
+ */
 OCI::OCI() :
 	_s(0),
 	_cs(OCI_STT_DISCONNECT),
@@ -44,6 +48,10 @@ OCI::OCI() :
 	_stmt(NULL)
 {}
 
+/**
+ * @method	: OCI::~OCI
+ * @desc	: OCI object destructor.
+ */
 OCI::~OCI()
 {
 /*
@@ -54,11 +62,18 @@ OCI::~OCI()
 */
 }
 
+/**
+ * @method	: OCI::init
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: initialize OCI object.
+ */
 int OCI::init()
 {
 	_v = reinterpret_cast<OCIValue **> (calloc(_value_sz, sizeof(_v)));
 	if (!_v) {
-		return -E_MEM;
+		return -1;
 	}
 
 	create_env();
@@ -68,9 +83,15 @@ int OCI::init()
 }
 
 /**
- * @return:
- *	< 0	: success.
- *	< !0	: fail.
+ * @method		: OCI::check
+ * @param		:
+ *	> handle	: pointer to OCIError object.
+ *	> type		: type of error.
+ * @return		:
+ *	< 0		: success.
+ *	< !0		: fail.
+ * @desc		:
+ *	function to check for error after calling one of the OCI functions.
  */
 int OCI::check(void *handle, int type)
 {
@@ -120,18 +141,37 @@ int OCI::check(void *handle, int type)
 	return E_OCI;
 }
 
+/**
+ * @method	: OCI::create_env
+ * @desc	: create OCI Environment handle.
+ */
 void OCI::create_env()
 {
 	_s = OCIEnvCreate(&_env, OCI_THREADED, 0, 0, 0, 0, 0, 0);
 	check_env();
 }
 
+/**
+ * @method	: OCI::create_err
+ * @desc	: create OCI Error handle.
+ */
 void OCI::create_err()
 {
 	_s = OCIHandleAlloc(_env, (void **) &_err, OCI_HTYPE_ERROR, 0, 0);
 	check_env();
 }
 
+/**
+ * @method		: OCI::connect
+ * @param		:
+ *	> hostname	: hostname or IP address of Oracle database.
+ *	> service_name	: SID or service name of Oracle database.
+ *	> port		: Oracle database port.
+ * @desc		:
+ *	create a connection to Oracle database identified by 'service_name' at
+ *	'hostname':'port'. In case of success connection status '_cs' will be
+ *	set to connected.
+ */
 void OCI::connect(const char *hostname, const char *service_name, int port)
 {
 	Buffer *conn = new Buffer();
@@ -165,6 +205,15 @@ void OCI::connect(const char *hostname, const char *service_name, int port)
 	_cs = OCI_STT_CONNECTED;
 }
 
+/**
+ * @method		: OCI::login
+ * @param		:
+ *	> username	: name of user on Oracle database.
+ *	> password	: identification for 'username'.
+ * @desc		:
+ *	login to Oracle database as user 'username' identified by 'password'.
+ *	In case of success, connection status will be set to logged-in.
+ */
 void OCI::login(const char *username, const char *password)
 {
 	_s = OCIHandleAlloc(_env, (void **) &_auth, OCI_HTYPE_AUTHINFO, 0, 0);
@@ -186,6 +235,14 @@ void OCI::login(const char *username, const char *password)
 	_cs = OCI_STT_LOGGED_IN;
 }
 
+/**
+ * @method	: OCI::stmt_describe
+ * @param	:
+ *	> stmt	: Oracle SQL query (DDL or DML).
+ * @desc	:
+ *	describe statement 'stmt' to get number of column in result set,
+ *	including type, length, and width of column.
+ */
 void OCI::stmt_describe(const char *stmt)
 {
 	int		n_cols		= 0;
@@ -246,6 +303,12 @@ void OCI::stmt_describe(const char *stmt)
 	}
 }
 
+/**
+ * @method	: OCI::stmt_prepare
+ * @param	:
+ *	> stmt	: Oracle SQL query (DDL or DML).
+ * @desc	: prepare SQL query 'stmt' for execution.
+ */
 void OCI::stmt_prepare(const char *stmt)
 {
 	_s = OCIStmtPrepare2(_session, &_stmt, _err, (const OraText *) stmt,
@@ -254,6 +317,12 @@ void OCI::stmt_prepare(const char *stmt)
 	check_err();
 }
 
+/**
+ * @method	: OCI::stmt_execute
+ * @param	:
+ *	> stmt	: Oracle SQL query (DDL or DML).
+ * @desec	: execute SQL query in 'stmt'.
+ */
 void OCI::stmt_execute(const char *stmt)
 {
 	int i = 0;
@@ -282,6 +351,13 @@ void OCI::stmt_execute(const char *stmt)
 	}
 }
 
+/**
+ * @method	: OCI::stmt_fetch
+ * @return	:
+ *	< 0	: success.
+ *	< !0	: fail.
+ * @desc	: get the next value from result set.
+ */
 int OCI::stmt_fetch()
 {
 	_s = OCIStmtFetch(_stmt, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
@@ -298,6 +374,10 @@ int OCI::stmt_fetch()
 	return 0;
 }
 
+/**
+ * @method	: OCI::stmt_release
+ * @desc	: release OCI Statement object.
+ */
 void OCI::stmt_release()
 {
 	_s = OCIStmtRelease(_stmt, _err, 0, 0, OCI_DEFAULT);
@@ -307,6 +387,10 @@ void OCI::stmt_release()
 	_value_i	= 0;
 }
 
+/**
+ * @method	: OCI::logout
+ * @desc	: logout from Oracle database.
+ */
 void OCI::logout()
 {
 	OCISessionRelease(_session, _err, 0, 0, OCI_DEFAULT);
@@ -315,6 +399,10 @@ void OCI::logout()
 	_cs	= OCI_STT_CONNECTED;
 }
 
+/**
+ * @method	: OCI::disconnect
+ * @desc	: close database connection from server.
+ */
 void OCI::disconnect()
 {
 	_s = OCISessionPoolDestroy(_spool, _err, OCI_DEFAULT);
@@ -329,6 +417,14 @@ void OCI::disconnect()
 	_cs = OCI_STT_DISCONNECT;
 }
 
+/**
+ * @method	: OCI::stmt_new_value
+ * @param	:
+ *	> pos	: position of value in array.
+ *	> type	: type of value to create.
+ * @desc	:
+ *	initialize value of result set, at index 'pos' in array of '_v'.
+ */
 void OCI::stmt_new_value(const int pos, const int type)
 {
 	if (pos >= _value_sz) {
@@ -390,6 +486,15 @@ void OCI::stmt_new_value(const int pos, const int type)
 	_v[pos]->_p = pos;
 }
 
+/**
+ * @method	: OCI::stmt_bind
+ * @param	:
+ *	> pos	: position of value to bind to.
+ *	> type	: type of value.
+ * @desc	:
+ *	bind variable '_v[pos]' to statement object to query the result later,
+ *	after executing the statement.
+ */
 void OCI::stmt_bind(const int pos, const int type)
 {
 	stmt_new_value(pos, type);
@@ -400,6 +505,15 @@ void OCI::stmt_bind(const int pos, const int type)
 	check_err();
 }
 
+/**
+ * @method	: OCI::stmt_define
+ * @param	:
+ *	> pos	: position of value in statement.
+ *	> type	: type of value.
+ * @desc	:
+ *	define a variable '_v[pos]' to statement object to query the result
+ *	later, after executing the statement.
+ */
 void OCI::stmt_define(const int pos, const int type)
 {
 	stmt_new_value(pos, type);
@@ -411,6 +525,15 @@ void OCI::stmt_define(const int pos, const int type)
 	check_err();
 }
 
+/**
+ * @method	: OCI::get_value
+ * @param	:
+ *	> pos	: position of value in statement.
+ * @return	:
+ *	< v	: success.
+ *	< 0	: fail.
+ * @desc	: get a value of result set at column 'pos' as string.
+ */
 char * OCI::get_value(const int pos)
 {
 	if (pos > _value_i || !_v[pos])
@@ -422,6 +545,15 @@ char * OCI::get_value(const int pos)
 	return _v[pos]->_v;
 }
 
+/**
+ * @method	: OCI::get_value_number
+ * @param	:
+ *	> pos	: position of value in statement.
+ * @return	:
+ *	< v	: success.
+ *	< 0	: fail.
+ * @desc	: get a value of result set at column 'pos' as number.
+ */
 int OCI::get_value_number(const int pos)
 {
 	if (pos > _value_i || ! _v[pos])

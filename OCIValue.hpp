@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
@@ -29,65 +29,77 @@ enum _oci_type {
 	OCI_T_UROWID
 };
 
+/**
+ * @class		: OCIValue
+ * @attr		:
+ *	- _t		: type of value data.
+ *	- _p		: position of value on SQL query.
+ *	- _bind		: OCIBind object.
+ *	- _define	: OCIDefine object.
+ *	- DFLT_SIZE	: static, default OCIValue buffer size.
+ * @desc		:
+ *	module for handling OCI result set value.
+ */
 class OCIValue : public Buffer {
 public:
-	static unsigned int DFLT_SIZE;
-
 	OCIValue();
+	~OCIValue();
 
 	int init(const int pos, const int type = OCI_T_VARCHAR,
 			const int len = DFLT_SIZE);
 
-
 	static OCIValue* INIT(const int pos, const int type = OCI_T_VARCHAR,
 				const int len = DFLT_SIZE);
 
-	static OCIValue * NUMBER(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_NUMBER, 22);
+	static inline OCIValue * NUMBER(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_NUMBER, 22);
 	}
-	static OCIValue * DATE(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_DATE, 8);
+	static inline OCIValue * DATE(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_DATE, 8);
 	}
-	static OCIValue * RAW(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_RAW, 2002);
+	static inline OCIValue * RAW(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_RAW, 2002);
 	}
-	static OCIValue * ROWID(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_ROWID, 11);
+	static inline OCIValue * ROWID(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_ROWID, 11);
 	}
-	static OCIValue * CHAR(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_CHAR, 2001);
+	static inline OCIValue * CHAR(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_CHAR, 2001);
 	}
-	static OCIValue * BINARY_FLOAT(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_BINARY_FLOAT, 5);
+	static inline OCIValue * BINARY_FLOAT(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_BINARY_FLOAT, 5);
 	}
-	static OCIValue * BINARY_DOUBLE(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_BINARY_DOUBLE, 9);
+	static inline OCIValue * BINARY_DOUBLE(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_BINARY_DOUBLE, 9);
 	}
-	static OCIValue * TIMESTAMP(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_TIMESTAMP, 12);
+	static inline OCIValue * TIMESTAMP(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_TIMESTAMP, 12);
 	}
-	static OCIValue * TIMESTAMP_WITH_TZ(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_TIMESTAMP_WITH_TZ, 14);
+	static inline OCIValue * TIMESTAMP_WITH_TZ(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_TIMESTAMP_WITH_TZ, 14);
 	}
-	static OCIValue * TIMESTAMP_WITH_LTZ(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_TIMESTAMP_WITH_LTZ, 12);
+	static inline OCIValue * TIMESTAMP_WITH_LTZ(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_TIMESTAMP_WITH_LTZ, 12);
 	}
-	static OCIValue * INTERVAL_Y_TO_M(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_INTERVAL_Y_TO_M, 6);
+	static inline OCIValue * INTERVAL_Y_TO_M(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_INTERVAL_Y_TO_M, 6);
 	}
-	static OCIValue * INTERVAL_D_TO_S(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_INTERVAL_D_TO_S, 12);
+	static inline OCIValue * INTERVAL_D_TO_S(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_INTERVAL_D_TO_S, 12);
 	}
-	static OCIValue * UROWID(const int pos) {
-			return OCIValue::INIT(pos, OCI_T_UROWID, 3951);
+	static inline OCIValue * UROWID(const int pos) {
+		return OCIValue::INIT(pos, OCI_T_UROWID, 3951);
 	}
+
+	static unsigned int DFLT_SIZE;
 
 	int		_t;
 	int		_p;
 	OCIBind		*_bind;
 	OCIDefine	*_define;
 private:
-	DISALLOW_COPY_AND_ASSIGN(OCIValue);
+	OCIValue(const OCIValue&);
+	void operator=(const OCIValue&);
 };
 
 } /* namespace::vos */
