@@ -11,13 +11,16 @@ SYS		= $(shell uname)
 
 CPP		= g++
 ifndef CPPFLAGS
-CPPFLAGS	= -Wall -Wextra -Weffc++ -Werror -fno-rtti -g -O0 -pipe
+CPPFLAGS	= -Wall -Wextra -Weffc++ -Werror -fno-rtti -Os -pipe
 endif
+CPPFLAGS_DEBUG	= -Wall -Wextra -Weffc++ -Werror -fno-rtti -g -O0 -pipe
 LDFLAGS		= -lpthread
 
-do_compile	= echo "[C] $@"; \
+do_compile	=						\
+			echo "[C] $@";				\
 			${CPP} ${CPPFLAGS} -c $< -o $@
-do_build	= echo "[B] $@"; \
+do_build	=						\
+			echo "[B] $@";				\
 			${CPP} ${CPPFLAGS} ${LDFLAGS} $^ -o $@
 
 do_install	=						\

@@ -16,7 +16,7 @@ endif
 
 include ${LIBVOS_SRC_D}/Makefile.common
 
-CPPFLAGS	+= -I${LIBVOS_SRC_D}
+CPPFLAGS_ADD	+= -I${LIBVOS_SRC_D}
 
 # link needed for FTP and OCI on Solaris system.
 ifeq (${SYS},SunOS)
@@ -50,14 +50,18 @@ ifneq (${ORACLE_HOME},)
 LIBVOS_OBJS	+=	${LIBVOS_BLD_D}/OCIValue.oo	\
 			${LIBVOS_BLD_D}/OCI.oo
 
-CPPFLAGS	+=	-I${ORACLE_HOME}/include
+CPPFLAGS_ADD	+=	-I${ORACLE_HOME}/include
 LDFLAGS		+=	-L${ORACLE_HOME}/lib -lclntsh
 endif
 
 
-.PHONY: all clean
+.PHONY: all debug clean
 
+all:: CPPFLAGS+=${CPPFLAGS_ADD}
 all:: ${LIBVOS_OBJS}
+
+debug:: CPPFLAGS=${CPPFLAGS_DEBUG} ${CPPFLAGS_ADD}
+debug:: all
 
 ${LIBVOS_BLD_D}/Buffer.oo	: ${LIBVOS_BLD_D}/libvos.oo
 
