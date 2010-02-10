@@ -22,8 +22,6 @@ const char * Config::CFG_HDR = "__CONFIG__";
  * @desc	: Config object constructor.
  */
 Config::Config() :
-	_e_row(0),
-	_e_col(0),
 	_data(NULL)
 {}
 
@@ -315,33 +313,31 @@ void Config::add(const char *head, const char *key, const char *value)
 }
 
 /**
- * @method		: Config::parsing
- * @return:
- *	< 0		: success.
- *	< -E_CFG_BAD	: fail, bad configuration, at lines '_e_row' and
- *			column '_e_col'.
- *	< <0		: fail.
- * @desc		: inline, parsing content of config file.
+ * @method	: Config::parsing
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: inline, parsing content of config file.
  */
 inline int Config::parsing()
 {
 	int	s	= 0;
-	int	todo	= 0;
+	int	todo	= P_CFG_START;
 	int	line_i	= 0;
 	int	i	= 0;
 	int	i_str	= 0;
 	int	l	= get_size();
+	int	_e_row	= 1;
+	int	_e_col	= 0;
 	Buffer	b;
 
 	s = b.init(NULL);
-	if (s)
+	if (s != 0)
 		return s;
 
 	resize(l);
 	read();
 
-	todo	= P_CFG_START;
-	_e_row	= 0;
 	while (i < l) {
 		while (i < l && isspace(_v[i])) {
 			if (_v[i] == GET_EOL_CHR(_eol)) {
@@ -382,7 +378,7 @@ inline int Config::parsing()
 		case P_CFG_START:
 			if (_v[i] != CFG_CH_HEAD_OPEN) {
 				_e_col = i - line_i;
-				return E_CFG_BAD;
+				goto bad_cfg;
 			}
 
 			++i;
@@ -395,7 +391,7 @@ inline int Config::parsing()
 			if (i >= l || i_str == i
 			|| _v[i] != CFG_CH_HEAD_CLOSE) {
 				_e_col = i - line_i;
-				return E_CFG_BAD;
+				goto bad_cfg;
 			}
 
 			s = b.append_raw(&_v[i_str], i - i_str);
@@ -406,7 +402,7 @@ inline int Config::parsing()
 			/* empty ? */
 			if (b._i == 0) {
 				_e_col = i - line_i;
-				return E_CFG_BAD;
+				goto bad_cfg;
 			}
 
 			s = _data->add_head_raw(b._v);
@@ -433,23 +429,25 @@ inline int Config::parsing()
 			}
 			if (i >= l || _v[i] == GET_EOL_CHR(_eol)) {
 				_e_col = i - line_i;
-				return E_CFG_BAD;
+				goto bad_cfg;
 			}
 
 			s = b.append_raw(&_v[i_str], i - i_str);
-			if (s < 0)
+			if (s < 0) {
 				return s;
+			}
 
 			b.trim();
 			/* empty ? */
 			if (b._i == 0) {
 				_e_col = i - line_i;
-				return E_CFG_BAD;
+				goto bad_cfg;
 			}
 
 			s = _data->add_key_raw(b._v);
-			if (s < 0)
+			if (s < 0) {
 				return s;
+			}
 
 			b.reset();
 
@@ -468,18 +466,20 @@ inline int Config::parsing()
 			}
 
 			s = b.append_raw(&_v[i_str], i - i_str);
-			if (s < 0)
+			if (s < 0) {
 				return s;
+			}
 
 			b.trim();
 			if (b._i == 0) {
 				_e_col = i - line_i;
-				return E_CFG_BAD;
+				goto bad_cfg;
 			}
 
 			s = _data->add_value_raw(b._v);
-			if (s < 0)
+			if (s < 0) {
 				return s;
+			}
 
 			b.reset();
 
@@ -492,6 +492,12 @@ inline int Config::parsing()
 	}
 
 	return 0;
+
+bad_cfg:
+	fprintf(stderr, " [CONFIG-ERROR] line %d: invalid config format.\n",
+			_e_row);
+
+	return -1;
 }
 
 } /* namespace::vos */

@@ -166,7 +166,10 @@ void FTP::disconnect()
  * @return		:
  *	< 0		: success.
  *	< <0		: fail.
- * @desc		: receive data from server.
+ * @desc		:
+ *	Receive data from server.
+ *	To check if function fail because of timeout or not, check the errno
+ *	value.
  */
 int FTP::recv(const int to_sec, const int to_usec)
 {
@@ -185,7 +188,7 @@ int FTP::recv(const int to_sec, const int to_usec)
 
 	s = select(_d + 1, &fd_read, 0, 0, &_timeout);
 	if (s < 0)
-		return -E_SOCK_SELECT;
+		return -1;
 
 	if (FD_ISSET(_d, &fd_read)) {
 		s = read();
@@ -196,11 +199,11 @@ int FTP::recv(const int to_sec, const int to_usec)
 			return 0;
 		}
 	} else {
+		s = -1;
 		if (LIBVOS_DEBUG) {
 			printf("[FTP] timeout after %d.%d seconds.\n", to_sec,
 				to_usec);
 		}
-		s = -E_SOCK_TIMEOUT;
 	}
 
 	return s;
@@ -259,7 +262,7 @@ int FTP::get_reply(const int timeout)
 
 	s = recv(timeout, 0);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 	if (!_i) {
 		return 0;

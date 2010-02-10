@@ -66,7 +66,7 @@ int File::_open(const char *path, const int mode, const int perm)
 	register int s;
 
 	if (!path) {
-		return -E_FILE_OPEN;
+		return -1;
 	}
 	if (!_v) {
 		s = File::init();
@@ -77,7 +77,7 @@ int File::_open(const char *path, const int mode, const int perm)
 	_d = ::open(path, mode, perm);
 	if (_d < 0) {
 		_d = 0;
-		return -E_FILE_OPEN;
+		return -1;
 	}
 
 	s = _name.copy_raw(path, 0);
@@ -162,7 +162,7 @@ int File::read()
 
 	_i = ::read(_d, &_v[0], _l);
 	if (_i < 0)
-		return -E_FILE_READ;
+		return -1;
 
 	_p	= 0;
 	_v[_i]	= '\0';
@@ -200,7 +200,7 @@ int File::readn(int n)
 		if (s < 0) {
 			if (s == EAGAIN || s == EWOULDBLOCK)
 				break;
-			return -E_FILE_READ;
+			return -1;
 		}
 		if (s == 0)
 			break;
@@ -255,7 +255,7 @@ int File::get_line(Buffer **line)
 			while (len > 0) {
 				s = ::read(_d, &_v[_i], len);
 				if (s < 0) {
-					return -E_FILE_READ;
+					return -1;
 				}
 				if (s == 0)
 					break;
@@ -344,7 +344,7 @@ int File::write_raw(const char *bfr, int len)
 		while (len > 0) {
 			s = ::write(_d, &bfr[x], len);
 			if (s < 0)
-				return -E_FILE_WRITE;
+				return -1;
 
 			x	+= s;
 			len	-= s;
@@ -440,13 +440,11 @@ int File::writec(const char c)
 }
 
 /**
- * @method		: File::flush
- * @return		:
- *	< >=0		: success, size of buffer flushed to the system, in
- *                        bytes.
- *	< -E_FILE_WRITE	: fail, error at writing to descriptor.
- * @desc		: flush buffer cache.
- *	Write all File buffer to disk.
+ * @method	: File::flush
+ * @return	:
+ *	< >=0	: success, size of buffer flushed to the system, in bytes.
+ *	< <0	: fail, error at writing to descriptor.
+ * @desc	: flush buffer cache; write all File buffer to disk.
  */
 int File::flush()
 {
@@ -459,7 +457,7 @@ int File::flush()
 	while (_i > 0) {
 		s = ::write(_d, &_v[x], _i);
 		if (s < 0)
-			return -E_FILE_WRITE;
+			return -1;
 
 		x	+= s;
 		_i	-= s;
@@ -511,19 +509,19 @@ int File::get_size()
 
 	cur = lseek(_d, 0, SEEK_CUR);
 	if (cur < 0)
-		return -E_FILE_SEEK;
+		return -1;
 
 	s = lseek(_d, 0, SEEK_SET);
 	if (s < 0)
-		return -E_FILE_SEEK;
+		return -1;
 
 	size = lseek(_d, 0, SEEK_END);
 	if (size < 0)
-		return -E_FILE_SEEK;
+		return -1;
 
 	cur = lseek(_d, cur, SEEK_SET);
 	if (cur < 0)
-		return -E_FILE_SEEK;
+		return -1;
 
 	return size;
 }

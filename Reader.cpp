@@ -66,7 +66,7 @@ inline int Reader::refill_buffer(const int read_min)
 
 	_i = ::read(_d, &_v[move_len], len);
 	if (_i < 0) {
-		return -E_FILE_READ;
+		return -1;
 	}
 
 	_i	+= move_len;
@@ -379,7 +379,7 @@ reject:
 			s = refill_buffer(0);
 			if (0 == s) {
 				_p = startp;
-				return -vos::E_RECORD_REJECT;
+				return -1;
 			}
 			if (s < 0)
 				break;
@@ -387,7 +387,7 @@ reject:
 	}
 	_p = startp + 1;
 
-	return -vos::E_RECORD_REJECT;
+	return -1;
 }
 
 } /* namespace::vos */

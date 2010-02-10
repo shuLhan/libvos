@@ -290,6 +290,11 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 			_udp._timeout.tv_usec	= 0;
 
 			s = select(maxfd, &fd_read, NULL, NULL, &_udp._timeout);
+			if (s < 0) {
+				if (EINTR == errno) {
+					goto intr;
+				}
+			}
 			if (0 == s || 0 == FD_ISSET(_udp._d, &fd_read)) {
 				++n_try;
 				if (LIBVOS_DEBUG) {
@@ -330,7 +335,8 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 		server = server->_next;
 	}
 
-	return -E_SOCK_TIMEOUT;
+intr:
+	return -1;
 }
 
 /**
@@ -385,8 +391,13 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 			_tcp._timeout.tv_usec	= 0;
 
 			s = select(_tcp._d + 1, &fd_read, NULL, NULL,
-				&_tcp._timeout);
-			if (0 == s || 0 == FD_ISSET(_tcp._d, &fd_read)) {
+					&_tcp._timeout);
+			if (s < 0) {
+				if (EINTR == errno) {
+					goto intr;
+				}
+			}
+			if (0 == s || !FD_ISSET(_tcp._d, &fd_read)) {
 				++n_try;
 				if (LIBVOS_DEBUG) {
 					printf(">> timeout...(%d)\n", n_try);
@@ -425,8 +436,8 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 
 		server = server->_next;
 	}
-
-	return -E_SOCK_TIMEOUT;
+intr:
+	return -1;
 }
 
 /**

@@ -29,8 +29,6 @@ enum _cfg_save_mode {
 /**
  * @class		: Config
  * @attr		:
- *	- _e_row	: error for line number.
- *	- _e_col	: error for column number.
  *	- _data		: list of config headers, keys, and values.
  * @desc		: module for reading config file in INI format.
  */
@@ -50,9 +48,7 @@ public:
 	int set(const char *head, const char *key, const char *value);
 	void add(const char *head, const char *key, const char *value);
 
-	int		_e_row;
-	int		_e_col;
-	ConfigData	*_data;
+	ConfigData *_data;
 private:
 	Config(const Config&);
 	void operator=(const Config&);

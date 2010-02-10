@@ -106,7 +106,7 @@ int Record::set_column(int n, Buffer *bfr)
 		p = p->_next_col;
 
 	if (n < 0 || NULL == p)
-		return -E_RECORD_INV_COLUMN;
+		return -1;
 
 	if (bfr->_v) {
 		s = p->copy_raw(bfr->_v, bfr->_i);
@@ -134,7 +134,7 @@ int Record::set_column_number(int n, const int number)
 		p = p->_next_col;
 
 	if (n < 0 || ! p)
-		return -E_RECORD_INV_COLUMN;
+		return -1;
 
 	s = p->appendi(number);
 

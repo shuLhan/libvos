@@ -152,9 +152,6 @@ int Socket::create_udp()
  *	> port			: port number.
  * @return			:
  *	< 0			: success.
- *	< -E_SOCK_ADDR_INV	: fail, address invalid.
- *	< -E_SOCK_ADDR_REUSE	: fail, address and port is already used.
- *	< -E_SOCK_BIND		: fail, cannot bind to address:port.
  *	< <0			: fail.
  * @desc			: bind socket to 'address' and 'port'.
  */
@@ -178,7 +175,7 @@ int Socket::bind(const char *address, const int port)
 
 	s = setsockopt(_d, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int));
 	if (s != 0) {
-		return -E_SOCK_ADDR_REUSE;
+		return -1;
 	}
 
 	if (_family == AF_INET6) {
@@ -199,7 +196,7 @@ int Socket::bind(const char *address, const int port)
 		s = ::bind(_d, (struct sockaddr *) &sin, SockAddr::IN_SIZE);
 	}
 	if (s < 0) {
-		return -E_SOCK_BIND;
+		return -1;
 	}
 
 	_status = O_RDWR;
@@ -209,12 +206,12 @@ int Socket::bind(const char *address, const int port)
 }
 
 /**
- * @method			: Socket::listen
- * @param			:
- *	> queue_len		: length of queue for client connections.
- * @return			:
- *	< 0			: success.
- *	< -E_SOCK_LISTEN	: fail.
+ * @method		: Socket::listen
+ * @param		:
+ *	> queue_len	: length of queue for client connections.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
  */
 int Socket::listen(const unsigned int queue_len)
 {
@@ -222,21 +219,22 @@ int Socket::listen(const unsigned int queue_len)
 
 	s = ::listen(_d, queue_len);
 	if (s < 0)
-		return -E_SOCK_LISTEN;
+		return -1;
 
 	return 0;
 }
 
 /**
- * @method			: Socket::bind_listen
- * @param			:
- *	> address		: IP address or host name to listen to.
- *	> port			: port for accepting client connection.
- * @return			:
- *	< 0			: success.
- *	< -E_SOCK_LISTEN	: fail.
- * @desc			: create a socket that accepting client
- *                                connection at 'address' and 'port'.
+ * @method		: Socket::bind_listen
+ * @param		:
+ *	> address	: IP address or host name to listen to.
+ *	> port		: port for accepting client connection.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		:
+ *	create a socket that accepting client connection at 'address' and
+ *	'port'.
  */
 int Socket::bind_listen(const char *address, const int port)
 {
@@ -246,7 +244,7 @@ int Socket::bind_listen(const char *address, const int port)
 	if (0 == s) {
 		s = ::listen(_d, 0);
 		if (s != 0) {
-			s = -E_SOCK_LISTEN;
+			s = -1;
 		}
 	}
 	return s;
@@ -308,7 +306,7 @@ int Socket::connect_to_raw(const char *address, const int port)
 		s = ::connect(_d, (struct sockaddr *) &sin, SockAddr::IN_SIZE);
 	}
 	if (s < 0) {
-		return -E_SOCK_CONNECT;
+		return s;
 	}
 
 	_status	= O_RDWR;

@@ -44,13 +44,13 @@ Buffer::~Buffer()
 }
 
 /**
- * @method		: Buffer::init
- * @param		:
- *	> bfr		: pointer to Buffer object.
- * @return		:
- *	< 0		: success.
- *	< -E_MEM	: fail, out of memory.
- * @desc		:
+ * @method	: Buffer::init
+ * @param	:
+ *	> bfr	: pointer to Buffer object.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	:
  *	Initialize a new Buffer object using contents from 'bfr' object.
  *	If 'bfr' is nil then a new empty buffer will allocated with the size
  *	is equal to DFLT_SIZE.
@@ -64,14 +64,14 @@ int Buffer::init(const Buffer *bfr)
 }
 
 /**
- * @method		: Buffer::init_raw
- * @param		:
- *	> bfr		: raw buffer.
- *	> len		: length of raw buffer.
- * @return		:
- *	< 0		: success.
- *	< -E_MEM	: fail, out of memory.
- * @desc		: initialize new Buffer object using raw buffer.
+ * @method	: Buffer::init_raw
+ * @param	:
+ *	> bfr	: raw buffer.
+ *	> len	: length of raw buffer.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: initialize new Buffer object using raw buffer.
  */
 int Buffer::init_raw(const char *bfr, const int len)
 {
@@ -85,7 +85,7 @@ int Buffer::init_raw(const char *bfr, const int len)
 
 		_v = (char *) calloc(_l + CHAR_SIZE, CHAR_SIZE);
 		if (!_v) {
-			return -E_MEM;
+			return -1;
 		}
 
 		memcpy(_v, bfr, _l);
@@ -94,21 +94,21 @@ int Buffer::init_raw(const char *bfr, const int len)
 		_l = DFLT_SIZE;
 		_v = (char *) calloc(_l + CHAR_SIZE, CHAR_SIZE);
 		if (!_v) {
-			return -E_MEM;
+			return -1;
 		}
 	}
 	return 0;
 }
 
 /**
- * @method		: Buffer::init_size
- * @param		:
- *	> size		: initial size of new Buffer object.
- * @return		:
- *	< 0		: success.
- *	< -E_MEM	: fail, out of memory.
- * @desc		: create Buffer object with buffer size equal to
- *                        'size'.
+ * @method	: Buffer::init_size
+ * @param	:
+ *	> size	: initial size of new Buffer object.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	:
+ *	create a Buffer object with initial buffer size set to 'size'.
  */
 int Buffer::init_size(const int size)
 {
@@ -120,27 +120,27 @@ int Buffer::init_size(const int size)
 		_l = size;
 		_v = (char *) calloc(_l + CHAR_SIZE, CHAR_SIZE);
 		if (!_v) {
-			return -E_MEM;
+			return -1;
 		}
 	}
 	return 0;
 }
 
 /**
- * @method		: Buffer::resize
- * @param		:
- *	> len		: the new length for buffer.
- * @return		:
- *	< 0		: success.
- *	< -E_MEM	: fail, out of memory.
- * @desc		: change the size of buffer to 'size'.
+ * @method	: Buffer::resize
+ * @param	:
+ *	> len	: the new length for buffer.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	: change the size of buffer to 'size'.
  */
 int Buffer::resize(const int size)
 {
 	if (_l < size) {
 		_v = (char *) realloc(_v, size + CHAR_SIZE);
 		if (!_v) {
-			return -E_MEM;
+			return -1;
 		}
 		_l	= size;
 		_v[_i]	= '\0';
@@ -188,13 +188,13 @@ void Buffer::trim()
 }
 
 /**
- * @method		: Buffer::appendc
- * @param		:
- *	> c		: a character to be added to buffer.
- * @return:
- *	< 0		: success.
- *	< -E_MEM	: fail, out of memory.
- * @desc		: append one character to the end of buffer.
+ * @method	: Buffer::appendc
+ * @param	:
+ *	> c	: a character to be added to buffer.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	: append one character to the end of buffer.
  */
 int Buffer::appendc(const char c)
 {
@@ -202,7 +202,7 @@ int Buffer::appendc(const char c)
 		_l += DFLT_SIZE;
 		_v = (char *) realloc(_v, _l + CHAR_SIZE);
 		if (!_v) {
-			return -E_MEM;
+			return -1;
 		}
 	}
 	_v[_i]		= c;
@@ -211,14 +211,13 @@ int Buffer::appendc(const char c)
 }
 
 /**
- * @method		: Buffer::appendi
- * @param		:
- *	> i		: a number to be appended to the end buffer.
- * @return		:
- *	< >=0		: success, number of bytes appended to the end of
- *                        buffer.
- *	< -E_MEM	: fail.
- * @desc		: append an integer 'i' to the end of buffer.
+ * @method	: Buffer::appendi
+ * @param	:
+ *	> i	: a number to be appended to the end of buffer.
+ * @return	:
+ *	< >=0	: success, number of bytes appended to the end of buffer.
+ *	< <0	: fail.
+ * @desc	: append an integer 'i' to the end of buffer.
  */
 int Buffer::appendi(long int i, int base)
 {
@@ -252,14 +251,13 @@ int Buffer::appendi(long int i, int base)
 }
 
 /**
- * @method		: Buffer::appendui
- * @param		:
- *	> i		: an unsigned number to be appended to the end buffer.
- * @return		:
- *	< >=0		: success, number of bytes appended to the end of
- *                        buffer.
- *	< -E_MEM	: fail.
- * @desc		: append an unsigned integer 'i' to the end of buffer.
+ * @method	: Buffer::appendui
+ * @param	:
+ *	> i	: an unsigned number to be appended to the end of buffer.
+ * @return	:
+ *	< >=0	: success, number of bytes appended to the end of buffer.
+ *	< <0	: fail.
+ * @desc	: append an unsigned integer 'i' to the end of buffer.
  */
 int Buffer::appendui(long unsigned int i, int base)
 {
@@ -286,15 +284,13 @@ int Buffer::appendui(long unsigned int i, int base)
 }
 
 /**
- * @method		: Buffer::appendd
- * @param		:
- *	> f		: float or double number.
- * @return		:
- *	< >=0		: success, number of bytes appended to the end of
- *                        buffer.
- *	< -E_MEM	: fail, out of memory.
- *	< -E_PRINT	: fail, invalid number format.
- * @desc		: append a float number to the end of buffer.
+ * @method	: Buffer::appendd
+ * @param	:
+ *	> f	: float or double number.
+ * @return	:
+ *	< >=0	: success, number of bytes appended to the end of buffer.
+ *	< <0	: fail.
+ * @desc	: append a float number to the end of buffer.
  *	maximum digit in fraction is six digits.
  */
 int Buffer::appendd(double d)
@@ -304,20 +300,19 @@ int Buffer::appendd(double d)
 
 	s = ::snprintf(f, 31, "%f", d);
 	if (s < 0)
-		return -E_PRINT;
+		return -1;
 
 	return append_raw(f, 0);
 }
 
 /**
- * @method		: Buffer::append
- * @param		:
- *	> bfr		: Buffer object to be appended to the end of buffer.
- * @return		:
- *	< >=0		: success, number of bytes appended to the end of
- *                        buffer.
- *	< -E_MEM	: fail.
- * @desc		: append a Buffer object data to the end of buffer.
+ * @method	: Buffer::append
+ * @param	:
+ *	> bfr	: Buffer object to be appended to the end of buffer.
+ * @return	:
+ *	< >=0	: success, number of bytes appended to the end of buffer.
+ *	< <0	: fail.
+ * @desc	: append a Buffer object data to the end of buffer.
  */
 int Buffer::append(const Buffer *bfr)
 {
@@ -328,15 +323,14 @@ int Buffer::append(const Buffer *bfr)
 }
 
 /**
- * @method		: Buffer::append_raw
- * @param		:
- *	> bfr		: a raw buffer to be appended.
- *	> len		: optional, length of 'bfr'.
- * @return		:
- *	> >=0		: success, number of bytes appended to the end of
- *                        buffer.
- *	< -E_MEM	: fail.
- * @desc		: append a raw buffer to the end of buffer.
+ * @method	: Buffer::append_raw
+ * @param	:
+ *	> bfr	: a raw buffer to be appended.
+ *	> len	: optional, length of 'bfr'.
+ * @return	:
+ *	> >=0	: success, number of bytes appended to the end of buffer.
+ *	< <0	: fail.
+ * @desc	: append a raw buffer to the end of buffer.
  */
 int Buffer::append_raw(const char *bfr, int len)
 {
@@ -447,7 +441,7 @@ int Buffer::vprint(const char *fmt, va_list args)
 	va_end(args2);
 
 	if (len < 0)
-		return -E_MEM;
+		return -1;
 
 	++len;
 	s = resize(_i + len);
@@ -456,7 +450,7 @@ int Buffer::vprint(const char *fmt, va_list args)
 
 	len = Buffer::VSNPRINTF(&_v[_i], len, fmt, args);
 	if (len < 0)
-		return -E_MEM;
+		return -1;
 
 	_i	+= len;
 	_v[_i]	= '\0';
@@ -471,7 +465,7 @@ int Buffer::vprint(const char *fmt, va_list args)
  *	> c	: fill the new empty content with value of c.
  * @return	:
  *	< 0	: success.
- *	< -E_MEM: fail.
+ *	< -1	: fail.
  * @desc	: move contents of buffer n bytes to the right.
  */
 int Buffer::shiftr(const int nbyte, int c)
@@ -480,7 +474,7 @@ int Buffer::shiftr(const int nbyte, int c)
 		_l += nbyte;
 		_v = (char *) realloc(_v, (_l + CHAR_SIZE));
 		if (!_v) {
-			return -E_MEM;
+			return -1;
 		}
 	}
 
@@ -499,7 +493,7 @@ int Buffer::shiftr(const int nbyte, int c)
  *	> bfr	: a pointer to Buffer object.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail, out of memory.
+ *	< <0	: fail.
  * @desc	: copy the content of Buffer object.
  */
 int Buffer::copy(const Buffer *bfr)
@@ -511,14 +505,14 @@ int Buffer::copy(const Buffer *bfr)
 }
 
 /**
- * @method		: Buffer::copy_raw
- * @param		:
- *	> bfr		: a pointer to raw buffer.
- *	> len		: optional, length of 'bfr'.
- * @return		:
- *	< 0		: success.
- *	< -E_MEM	: fail, out of memory.
- * @desc		: copy the content of raw buffer.
+ * @method	: Buffer::copy_raw
+ * @param	:
+ *	> bfr	: a pointer to raw buffer.
+ *	> len	: optional, length of 'bfr'.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	: copy the content of raw buffer.
  */
 int Buffer::copy_raw(const char *bfr, int len)
 {
@@ -534,7 +528,7 @@ int Buffer::copy_raw(const char *bfr, int len)
 		_l = len;
 		_v = (char *) realloc(_v, _l + CHAR_SIZE);
 		if (!_v)
-			return -E_MEM;
+			return -1;
 	}
 	memcpy(_v, bfr, len);
 	_i	= len;
@@ -588,7 +582,7 @@ int Buffer::set_raw(const char *bfr, const char *dflt)
  *	> bfr	: a pointer to another buffer.
  * @return	:
  *	< 0	: success.
- *	< -E_MEM: fail.
+ *	< -1	: fail.
  * @desc	: move contents to another Buffer object, 'bfr',
  *                leave current object to be an empty Buffer object.
  */
@@ -599,7 +593,7 @@ int Buffer::move_to(Buffer **bfr)
 	} else {
 		(*bfr) = new Buffer();
 		if (! (*bfr))
-			return -E_MEM;
+			return -1;
 	}
 
 	(*bfr)->_l	= _l;
@@ -769,7 +763,7 @@ void Buffer::dump_hex()
  */
 int Buffer::INIT(Buffer **o, const Buffer *bfr)
 {
-	register int s = -E_MEM;
+	register int s = -1;
 
 	(*o) = new Buffer();
 	if ((*o)) {
@@ -795,7 +789,7 @@ int Buffer::INIT(Buffer **o, const Buffer *bfr)
  */
 int Buffer::INIT_RAW(Buffer **o, const char *bfr)
 {
-	register int s = -E_MEM;
+	register int s = -1;
 	
 	(*o) = new Buffer();
 	if ((*o)) {
@@ -821,7 +815,7 @@ int Buffer::INIT_RAW(Buffer **o, const char *bfr)
  */
 int Buffer::INIT_SIZE(Buffer **o, const int size)
 {
-	register int s = -E_MEM;
+	register int s = -1;
 
 	(*o) = new Buffer();
 	if ((*o)) {

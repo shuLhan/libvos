@@ -468,7 +468,7 @@ err:
 		(*o) = NULL;
 	}
 
-	return -E_CFG_BAD;
+	return -1;
 }
 
 /**
