@@ -120,6 +120,39 @@ int Dlogger::er(const char *fmt, ...)
 }
 
 /**
+ * @method	: Dlogger::er_b
+ * @param	:
+ *	> bfr	: pointer to Buffer object.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: append Buffer content to standard error and log file.
+ */
+int Dlogger::er_b(Buffer *bfr)
+{
+	if (!bfr) {
+		return 0;
+	}
+	if (bfr->_i <= 0) {
+		return 0;
+	}
+
+	int s;
+
+	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
+
+	add_timestamp();
+	if (_d != STDERR_FILENO) {
+		s = write(bfr);
+	}
+	fprintf(stderr, "%s", bfr->_v);
+
+	pthread_mutex_unlock(&_lock);
+
+	return s;
+}
+
+/**
  * @method	: Dlogger::it
  * @param	:
  *	> fmt	: formatted string output.

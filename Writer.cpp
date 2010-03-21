@@ -115,7 +115,7 @@ int Writer::write(Record *cols, RecordMD *rmd)
 		rmd	= rmd->_next;
 	}
 
-	_line.appendc(GET_EOL_CHR(_eol));
+	_line.appendc(_eol);
 
 	len = _i + _line._i;
 	if (len > _l) {

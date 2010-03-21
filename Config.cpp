@@ -251,7 +251,7 @@ int Config::set(const char *head, const char *key, const char *value)
 			k = h;
 			while (k) {
 				if (k->like_raw(key) == 0) {
-					s = k->_value->copy_raw(value, 0);
+					s = k->_value->copy_raw(value);
 					return s;
 				}
 				k = k->_next_key;
@@ -340,7 +340,7 @@ inline int Config::parsing()
 
 	while (i < l) {
 		while (i < l && isspace(_v[i])) {
-			if (_v[i] == GET_EOL_CHR(_eol)) {
+			if (_v[i] == _eol) {
 				++_e_row;
 				line_i = i;
 			}
@@ -352,7 +352,7 @@ inline int Config::parsing()
 
 		if (_v[i] == CFG_CH_COMMENT || _v[i] == CFG_CH_COMMENT2) {
 			i_str = i;
-			while (i < l &&_v[i] != GET_EOL_CHR(_eol))
+			while (i < l &&_v[i] != _eol)
 				++i;
 
 			line_i = i;
@@ -384,7 +384,7 @@ inline int Config::parsing()
 			++i;
 			i_str = i;
 			while (i < l && _v[i] != CFG_CH_HEAD_CLOSE
-			&& _v[i] != GET_EOL_CHR(_eol)) {
+			&& _v[i] != _eol) {
 				++i;
 			}
 
@@ -424,10 +424,10 @@ inline int Config::parsing()
 			i_str = i;
 			while (i < l
 			&& _v[i] != CFG_CH_KEY_SEP
-			&& _v[i] != GET_EOL_CHR(_eol)) {
+			&& _v[i] != _eol) {
 				++i;
 			}
-			if (i >= l || _v[i] == GET_EOL_CHR(_eol)) {
+			if (i >= l || _v[i] == _eol) {
 				_e_col = i - line_i;
 				goto bad_cfg;
 			}
@@ -458,7 +458,7 @@ inline int Config::parsing()
 		case P_CFG_VALUE:
 			i_str = i;
 			while (i < l) {
-				if (_v[i] == GET_EOL_CHR(_eol)) {
+				if (_v[i] == _eol) {
 					++_e_row;
 					break;
 				}

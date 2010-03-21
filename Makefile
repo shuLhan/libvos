@@ -16,7 +16,7 @@ endif
 
 include ${LIBVOS_SRC_D}/Makefile.common
 
-CPPFLAGS_ADD	+= -I${LIBVOS_SRC_D}
+CXXFLAGS_ADD	+= -I${LIBVOS_SRC_D}
 
 # link needed for FTP and OCI on Solaris system.
 ifeq (${SYS},SunOS)
@@ -25,7 +25,7 @@ endif
 
 LIBVOS_BLD_D	= ${LIBVOS_SRC_D}/build
 
-LIBVOS_OBJS	=						\
+TARGET_OBJS	=						\
 			${LIBVOS_BLD_D}/libvos.oo		\
 			${LIBVOS_BLD_D}/Buffer.oo		\
 			${LIBVOS_BLD_D}/ConfigData.oo		\
@@ -35,6 +35,7 @@ LIBVOS_OBJS	=						\
 			${LIBVOS_BLD_D}/DNSQuery.oo		\
 			${LIBVOS_BLD_D}/File.oo			\
 			${LIBVOS_BLD_D}/FTP.oo			\
+			${LIBVOS_BLD_D}/Msg.oo			\
 			${LIBVOS_BLD_D}/Reader.oo		\
 			${LIBVOS_BLD_D}/RecordMD.oo		\
 			${LIBVOS_BLD_D}/Record.oo		\
@@ -46,22 +47,27 @@ LIBVOS_OBJS	=						\
 #
 # with OCI library
 #
-ifneq (${ORACLE_HOME},)
-LIBVOS_OBJS	+=	${LIBVOS_BLD_D}/OCIValue.oo	\
+ifdef ORACLE_HOME
+TARGET_OBJS	+=	${LIBVOS_BLD_D}/OCIValue.oo	\
 			${LIBVOS_BLD_D}/OCI.oo
 
-CPPFLAGS_ADD	+=	-I${ORACLE_HOME}/include
+CXXFLAGS_ADD	+=	-I${ORACLE_HOME}/include
 LDFLAGS		+=	-L${ORACLE_HOME}/lib -lclntsh
 endif
 
+PRE_TARGET	= ${LIBVOS_BLD_D}
+TARGET		= ${TARGET_OBJS}
 
-.PHONY: all debug clean
+.PHONY: all debug install clean
 
-all:: CPPFLAGS+=${CPPFLAGS_ADD}
-all:: ${LIBVOS_OBJS}
+all:: CXXFLAGS+=${CXXFLAGS_ADD}
+all:: ${PRE_TARGET} ${TARGET}
 
-debug:: CPPFLAGS=${CPPFLAGS_DEBUG} ${CPPFLAGS_ADD}
-debug:: all
+debug:: CXXFLAGS=${CXXFLAGS_DEBUG} ${CXXFLAGS_ADD}
+debug:: ${PRE_TARGET} ${TARGET}
+
+${LIBVOS_BLD_D}:
+	@mkdir -p $@
 
 ${LIBVOS_BLD_D}/Buffer.oo	: ${LIBVOS_BLD_D}/libvos.oo
 
@@ -90,8 +96,8 @@ ${LIBVOS_BLD_D}/Writer.oo	: ${LIBVOS_BLD_D}/Record.oo
 
 
 ${LIBVOS_BLD_D}/%.oo: ${LIBVOS_SRC_D}/%.cpp ${LIBVOS_SRC_D}/%.hpp
-	@mkdir -p ${LIBVOS_BLD_D}
 	@${do_compile}
 
 clean::
-	@rm -rf ${LIBVOS_BLD_D}
+	@echo "[R] ${LIBVOS_BLD_D}";	\
+		rm -rf ${LIBVOS_BLD_D}

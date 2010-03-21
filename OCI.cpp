@@ -33,7 +33,7 @@ int OCI::_stmt_cache_size	= 10;
  * @desc	: OCI object constructor.
  */
 OCI::OCI() :
-	_s(0),
+	_stat(0),
 	_cs(OCI_STT_DISCONNECT),
 	_v(NULL),
 	_spool_name_len(0),
@@ -71,7 +71,7 @@ OCI::~OCI()
  */
 int OCI::init()
 {
-	_v = reinterpret_cast<OCIValue **> (calloc(_value_sz, sizeof(_v)));
+	_v = (OCIValue **) (calloc(_value_sz, sizeof(_v)));
 	if (!_v) {
 		return -1;
 	}
@@ -98,47 +98,41 @@ int OCI::check(void *handle, int type)
 	char	*errmsg = 0;
 	sb4	errcode = 0;
 
-	switch (_s) {
+	switch (_stat) {
 	case OCI_SUCCESS:
 		return 0;
 	case OCI_SUCCESS_WITH_INFO:
-		errmsg = const_cast<char *>
-			(_oci_errmsg[E_OCI_SUCC_WITH_INFO]);
+		errmsg = (char *)_oci_errmsg[E_OCI_SUCC_WITH_INFO];
 		return 0;
 	case OCI_NEED_DATA:
-		errmsg = const_cast<char *>
-			(_oci_errmsg[E_OCI_NEED_DATA]);
+		errmsg = (char *)_oci_errmsg[E_OCI_NEED_DATA];
 		break;
 	case OCI_NO_DATA:
-		errmsg = const_cast<char *>
-			(_oci_errmsg[E_OCI_NO_DATA]);
+		errmsg = (char *)_oci_errmsg[E_OCI_NO_DATA];
 		break;
 	case OCI_ERROR:
 		if (handle) {
-			errmsg = reinterpret_cast<char *> (calloc(2048,
-							sizeof(errmsg)));
+			errmsg = (char *)calloc(2048, sizeof(errmsg));
 			OCIErrorGet(handle, 1, 0, &errcode, (text *) errmsg,
 					2048, type);
 		} else {
-			errmsg = const_cast<char *>
-				(_oci_errmsg[E_OCI_NULL_HNDL]);
+			errmsg = (char *)_oci_errmsg[E_OCI_NULL_HNDL];
 		}
 		break;
 	case OCI_INVALID_HANDLE:
-		errmsg = const_cast<char *>
-			(_oci_errmsg[E_OCI_INVLD_HNDL]);
+		errmsg = (char *)_oci_errmsg[E_OCI_INVLD_HNDL];
 		break;
 	case OCI_STILL_EXECUTING:
-		errmsg = const_cast<char *>
-			(_oci_errmsg[E_OCI_STILL_EXEC]);
+		errmsg = (char *)_oci_errmsg[E_OCI_STILL_EXEC];
 		break;
 	case OCI_CONTINUE:
-		errmsg = const_cast<char *>
-			(_oci_errmsg[E_OCI_CONT]);
+		errmsg = (char *)_oci_errmsg[E_OCI_CONT];
 		break;
 	}
 
-	return E_OCI;
+	fprintf(stderr, "[OCI-%d-%d] %s\n", _stat, errcode, errmsg);
+
+	return -1;
 }
 
 /**
@@ -147,7 +141,7 @@ int OCI::check(void *handle, int type)
  */
 void OCI::create_env()
 {
-	_s = OCIEnvCreate(&_env, OCI_THREADED, 0, 0, 0, 0, 0, 0);
+	_stat = OCIEnvCreate(&_env, OCI_THREADED, 0, 0, 0, 0, 0, 0);
 	check_env();
 }
 
@@ -157,7 +151,7 @@ void OCI::create_env()
  */
 void OCI::create_err()
 {
-	_s = OCIHandleAlloc(_env, (void **) &_err, OCI_HTYPE_ERROR, 0, 0);
+	_stat = OCIHandleAlloc(_env, (void **) &_err, OCI_HTYPE_ERROR, 0, 0);
 	check_env();
 }
 
@@ -167,42 +161,59 @@ void OCI::create_err()
  *	> hostname	: hostname or IP address of Oracle database.
  *	> service_name	: SID or service name of Oracle database.
  *	> port		: Oracle database port.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
  * @desc		:
  *	create a connection to Oracle database identified by 'service_name' at
  *	'hostname':'port'. In case of success connection status '_cs' will be
  *	set to connected.
  */
-void OCI::connect(const char *hostname, const char *service_name, int port)
+int OCI::connect(const char *hostname, const char *service_name, int port)
 {
-	Buffer *conn = new Buffer();
+	register int	s;
+	Buffer		conn;
 
-	conn->aprint("//%s:%d/%s", hostname, port, service_name);
+	conn.aprint("//%s:%d/%s", hostname, port, service_name);
 
-	_s = OCIHandleAlloc(_env, (void **) &_spool, OCI_HTYPE_SPOOL, 0, 0);
-	check_env();
+	_stat = OCIHandleAlloc(_env, (void **) &_spool, OCI_HTYPE_SPOOL, 0, 0);
+	s = check_env();
+	if (s < 0) {
+		return s;
+	}
 
-	_s = OCIAttrSet(_spool, OCI_HTYPE_SPOOL,
+	_stat = OCIAttrSet(_spool, OCI_HTYPE_SPOOL,
 				&OCI::_stmt_cache_size, 0,
 				OCI_ATTR_SPOOL_STMTCACHESIZE, _err);
-	check_err();
+	s = check_err();
+	if (s < 0) {
+		return s;
+	}
 
 	_spool_name = (char *) calloc(128, sizeof(_spool_name));
+	if (!_spool_name) {
+		return -1;
+	}
 
-	_s = OCISessionPoolCreate(_env, _err, _spool, (OraText **) &_spool_name,
+	_stat = OCISessionPoolCreate(_env, _err, _spool, (OraText **) &_spool_name,
 				(ub4 *) &_spool_name_len,
-				(const OraText *) conn->_v, conn->_i,
+				(const OraText *) conn._v, conn._i,
 				OCI::_spool_min, OCI::_spool_max,
 				OCI::_spool_inc,
 				(OraText *) "", 0,
 				(OraText *) "", 0, OCI_SPC_STMTCACHE);
-	check_err();
+	s = check_err();
+	if (s < 0) {
+		return s;
+	}
 
-	if (LIBVOS_DEBUG)
+	if (LIBVOS_DEBUG) {
 		printf("[OCI] session pool name : %s\n", _spool_name);
-
-	delete conn;
+	}
 
 	_cs = OCI_STT_CONNECTED;
+
+	return 0;
 }
 
 /**
@@ -210,41 +221,63 @@ void OCI::connect(const char *hostname, const char *service_name, int port)
  * @param		:
  *	> username	: name of user on Oracle database.
  *	> password	: identification for 'username'.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
  * @desc		:
  *	login to Oracle database as user 'username' identified by 'password'.
  *	In case of success, connection status will be set to logged-in.
  */
-void OCI::login(const char *username, const char *password)
+int OCI::login(const char *username, const char *password)
 {
-	_s = OCIHandleAlloc(_env, (void **) &_auth, OCI_HTYPE_AUTHINFO, 0, 0);
-	check_env();
+	register int s;
 
-	_s = OCIAttrSet(_auth, OCI_HTYPE_AUTHINFO, (void *) username,
+	_stat = OCIHandleAlloc(_env, (void **) &_auth, OCI_HTYPE_AUTHINFO, 0, 0);
+	s = check_env();
+	if (s < 0) {
+		return -1;
+	}
+
+	_stat = OCIAttrSet(_auth, OCI_HTYPE_AUTHINFO, (void *) username,
 			strlen(username), OCI_ATTR_USERNAME, _err);
-	check_err();
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
 
-	_s = OCIAttrSet(_auth, OCI_HTYPE_AUTHINFO, (void *) password,
+	_stat = OCIAttrSet(_auth, OCI_HTYPE_AUTHINFO, (void *) password,
 			strlen(password), OCI_ATTR_PASSWORD, _err);
-	check_err();
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
 
-	_s = OCISessionGet(_env, _err, &_session, _auth, (OraText *) _spool_name,
+	_stat = OCISessionGet(_env, _err, &_session, _auth, (OraText *) _spool_name,
 				_spool_name_len, 0, 0, 0, 0, 0,
 				OCI_SESSGET_SPOOL);
-	check_err();
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
 
 	_cs = OCI_STT_LOGGED_IN;
+	return 0;
 }
 
 /**
  * @method	: OCI::stmt_describe
  * @param	:
  *	> stmt	: Oracle SQL query (DDL or DML).
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
  * @desc	:
  *	describe statement 'stmt' to get number of column in result set,
  *	including type, length, and width of column.
  */
-void OCI::stmt_describe(const char *stmt)
+int OCI::stmt_describe(const char *stmt)
 {
+	register int	s		= 0;
 	int		n_cols		= 0;
 	int		dtype		= 0;
 	int		col_name_len	= 0;
@@ -253,102 +286,155 @@ void OCI::stmt_describe(const char *stmt)
 	char		*col_name	= 0;
 	OCIParam	*parm		= 0;
 
-	if (! stmt)
-		return;
+	if (! stmt) {
+		return 0;
+	}
 
-	_s = OCIHandleAlloc(_env, (void **) &_stmt, OCI_HTYPE_STMT, 0, 0);
-	check_env();
+	_stat = OCIHandleAlloc(_env, (void **) &_stmt, OCI_HTYPE_STMT, 0, 0);
+	s = check_env();
+	if (s < 0) {
+		return s;
+	}
 
-	_s = OCIStmtPrepare(_stmt, _err, (OraText *) stmt, strlen(stmt),
+	_stat = OCIStmtPrepare(_stmt, _err, (OraText *) stmt, strlen(stmt),
 				OCI_NTV_SYNTAX, OCI_DEFAULT);
-	check_err();
+	s = check_err();
+	if (s < 0) {
+		return s;
+	}
 
-	_s = OCIStmtExecute(_session, _stmt, _err, 0, 0, 0, 0, OCI_DEFAULT);
-	check_err();
+	_stat = OCIStmtExecute(_session, _stmt, _err, 0, 0, 0, 0, OCI_DEFAULT);
+	s = check_err();
+	if (s) {
+		return s;
+	}
 
-	_s = OCIAttrGet(_stmt, OCI_HTYPE_STMT, &n_cols, 0,
+	_stat = OCIAttrGet(_stmt, OCI_HTYPE_STMT, &n_cols, 0,
 			OCI_ATTR_PARAM_COUNT, _err);
-	check_err();
+	s = check_err();
+	if (s < 0) {
+		return s;
+	}
 
 	for (int i = 1; i <= n_cols; i++) {
-		_s = OCIParamGet(_stmt, OCI_HTYPE_STMT, _err, (void **) &parm,
+		_stat = OCIParamGet(_stmt, OCI_HTYPE_STMT, _err, (void **) &parm,
 					i);
-		check_err();
+		s = check_err();
+		if (s < 0) {
+			return s;
+		}
 
-		_s = OCIAttrGet(parm, OCI_DTYPE_PARAM, &dtype, 0,
+		_stat = OCIAttrGet(parm, OCI_DTYPE_PARAM, &dtype, 0,
 				OCI_ATTR_DATA_TYPE, _err);
-		check_err();
+		s = check_err();
+		if (s < 0) {
+			return s;
+		}
 
-		_s = OCIAttrGet(parm, OCI_DTYPE_PARAM, &col_name,
+		_stat = OCIAttrGet(parm, OCI_DTYPE_PARAM, &col_name,
 				(ub4 *) &col_name_len, OCI_ATTR_NAME, _err);
-		check_err();
+		s = check_err();
+		if (s < 0) {
+			return s;
+		}
 
-		_s = OCIAttrGet(parm, OCI_DTYPE_PARAM, &char_semantics, 0,
+		_stat = OCIAttrGet(parm, OCI_DTYPE_PARAM, &char_semantics, 0,
 				OCI_ATTR_CHAR_USED, _err);
-		check_err();
+		s = check_err();
+		if (s < 0) {
+			return s;
+		}
 
 		if (char_semantics) {
-			_s = OCIAttrGet(parm, OCI_DTYPE_PARAM, &col_width, 0,
+			_stat = OCIAttrGet(parm, OCI_DTYPE_PARAM, &col_width, 0,
 					OCI_ATTR_CHAR_SIZE, _err);
 		} else {
-			_s = OCIAttrGet(parm, OCI_DTYPE_PARAM, &col_width, 0,
+			_stat = OCIAttrGet(parm, OCI_DTYPE_PARAM, &col_width, 0,
 					OCI_ATTR_DATA_SIZE, _err);
 		}
-		check_err();
+		s = check_err();
+		if (s < 0) {
+			return s;
+		}
 
 		printf(" data type     : %d\n", dtype);
 		printf(" column name   : %s\n", col_name);
 		printf(" column length : %d\n", col_name_len);
 		printf(" column width  : %d\n\n", col_width);
 	}
+
+	return 0;
 }
 
 /**
  * @method	: OCI::stmt_prepare
  * @param	:
  *	> stmt	: Oracle SQL query (DDL or DML).
+ * @return	:
+ *	> 0	: success.
+ *	> <0	: fail.
  * @desc	: prepare SQL query 'stmt' for execution.
  */
-void OCI::stmt_prepare(const char *stmt)
+int OCI::stmt_prepare(const char *stmt)
 {
-	_s = OCIStmtPrepare2(_session, &_stmt, _err, (const OraText *) stmt,
+	register int s;
+
+	_stat = OCIStmtPrepare2(_session, &_stmt, _err, (const OraText *) stmt,
 				strlen(stmt), 0, 0, OCI_NTV_SYNTAX,
 				OCI_DEFAULT);
-	check_err();
+	s = check_err();
+
+	return s;
 }
 
 /**
  * @method	: OCI::stmt_execute
  * @param	:
  *	> stmt	: Oracle SQL query (DDL or DML).
- * @desec	: execute SQL query in 'stmt'.
+ * @return	:
+ *	> 0	: success.
+ *	< <0	: fail.
+ * @desc	: execute SQL query in 'stmt'.
  */
-void OCI::stmt_execute(const char *stmt)
+int OCI::stmt_execute(const char *stmt)
 {
-	int i = 0;
-	int stmt_type = 0;
+	register int	s		= 0;
+	register int	i		= 0;
+	int		stmt_type	= 0;
 
-	/* prepare statement */
-	if (stmt)
-		stmt_prepare(stmt);
+	if (stmt) {
+		s = stmt_prepare(stmt);
+		if (s < 0) {
+			return s;
+		}
+	}
 
-	_s = OCIAttrGet(_stmt, OCI_HTYPE_STMT, &stmt_type, 0,
+	_stat = OCIAttrGet(_stmt, OCI_HTYPE_STMT, &stmt_type, 0,
 			OCI_ATTR_STMT_TYPE, _err);
-	check_err();
+	s = check_err();
+	if (s < 0) {
+		return s;
+	}
 
-	if (stmt_type == OCI_STMT_SELECT)
+	if (stmt_type == OCI_STMT_SELECT) {
 		i = 0;
-	else
+	} else {
 		i = 1;
+	}
 
-	_s = OCIStmtExecute(_session, _stmt, _err, i, 0, 0, 0,
+	_stat = OCIStmtExecute(_session, _stmt, _err, i, 0, 0, 0,
 				OCI_COMMIT_ON_SUCCESS);
-	check_err();
+	s = check_err();
+	if (s < 0) {
+		return s;
+	}
 
 	if (stmt_type != OCI_STMT_SELECT) {
 		for (i = 1; i <= _value_i; i++)
 			_v[i]->_i = Buffer::TRIM(_v[i]->_v, 0);
 	}
+
+	return 0;
 }
 
 /**
@@ -360,11 +446,17 @@ void OCI::stmt_execute(const char *stmt)
  */
 int OCI::stmt_fetch()
 {
-	_s = OCIStmtFetch(_stmt, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
-	if (_s == OCI_NO_DATA)
-		return 1;
+	register int s;
 
-	check_err();
+	_stat = OCIStmtFetch(_stmt, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
+	if (_stat == OCI_NO_DATA) {
+		return 1;
+	}
+
+	s = check_err();
+	if (s < 0) {
+		return s;
+	}
 
 	for (int idx = 1; idx <= _value_i; idx++) {
 		if (_v[idx])
@@ -380,7 +472,7 @@ int OCI::stmt_fetch()
  */
 void OCI::stmt_release()
 {
-	_s = OCIStmtRelease(_stmt, _err, 0, 0, OCI_DEFAULT);
+	_stat = OCIStmtRelease(_stmt, _err, 0, 0, OCI_DEFAULT);
 
 	check_err();
 	_stmt		= 0;
@@ -405,7 +497,7 @@ void OCI::logout()
  */
 void OCI::disconnect()
 {
-	_s = OCISessionPoolDestroy(_spool, _err, OCI_DEFAULT);
+	_stat = OCISessionPoolDestroy(_spool, _err, OCI_DEFAULT);
 	check_err();
 
 	_spool = 0;
@@ -499,7 +591,7 @@ void OCI::stmt_bind(const int pos, const int type)
 {
 	stmt_new_value(pos, type);
 
-	_s = OCIBindByPos(_stmt, &_v[pos]->_bind, _err, pos, _v[pos]->_v,
+	_stat = OCIBindByPos(_stmt, &_v[pos]->_bind, _err, pos, _v[pos]->_v,
 				_v[pos]->_l - 1, SQLT_CHR, 0, 0, 0, 0, 0,
 				OCI_DEFAULT);
 	check_err();
@@ -518,7 +610,7 @@ void OCI::stmt_define(const int pos, const int type)
 {
 	stmt_new_value(pos, type);
 
-	_s = OCIDefineByPos(_stmt, &_v[pos]->_define, _err, pos,
+	_stat = OCIDefineByPos(_stmt, &_v[pos]->_define, _err, pos,
 				_v[pos]->_v, _v[pos]->_l - 1,
 				SQLT_CHR, 0, 0, 0,
 				OCI_DEFAULT);

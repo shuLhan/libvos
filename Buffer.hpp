@@ -63,7 +63,7 @@ public:
 	int appendui(long unsigned int i, int base = NUM_BASE_10);
 	int appendd(double d);
 	int append(const Buffer *bfr);
-	int append_raw(const char *bfr, int len);
+	int append_raw(const char *bfr, int len = 0);
 	int concat(const char *bfr, ...);
 	int aprint(const char *fmt, ...);
 	int vprint(const char *fmt, va_list args);
@@ -71,7 +71,7 @@ public:
 	int shiftr(const int nbyte, int c = 0);
 
 	int copy(const Buffer *bfr);
-	int copy_raw(const char *bfr, int len);
+	int copy_raw(const char *bfr, int len = 0);
 	int set(const Buffer *bfr, const Buffer *dflt);
 	int set_raw(const char *bfr, const char *dflt);
 	int move_to(Buffer **bfr);

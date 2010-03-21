@@ -87,13 +87,12 @@ int FTP::connect(const char *host, const int port, const int mode)
 		 */
 		do {
 			s = get_reply(TIMEOUT);
-			if (_i == 0)
-				break;
 			/* get & set server EOL */
-			if (_v[_i - 2] == GET_EOL_CHR(FILE_EOL_DOS)) {
-				set_eol(FILE_EOL_DOS);
+			if (_v[_i - 2] == __eol[EOL_DOS][0]) {
+				fprintf(stderr,"[FTP] EOL set to DOS\n");
+				set_eol(EOL_DOS);
 			}
-		} while (s);
+		} while (_reply > 0 && _i > 0);
 	}
 
 	return 0;
@@ -115,15 +114,15 @@ int FTP::login(const char *username, const char *password)
 	register int s;
 
 	s = send_cmd(FTP_CMD_USER, username);
-	if (s != 0)
+	if (s < 0)
 		return s;
 
 	s = send_cmd(FTP_CMD_PASS, password);
-	if (s != 0)
+	if (s < 0)
 		return s;
 
 	s = send_cmd(FTP_CMD_TYPE, "I");
-	if (s != 0)
+	if (s < 0)
 		return s;
 
 	return s;
@@ -225,21 +224,25 @@ int FTP::send_cmd(const int cmd, const char *parm)
 {
 	register int s;
 
-	if (_status == FTP_STT_DISCONNECT)
+	if (_status == FTP_STT_DISCONNECT) {
 		return 1;
+	}
 
 	reset();
 
-	if (parm)
-		s = concat(_ftp_cmd[cmd], " ", parm, GET_EOL_STR(_eol), NULL);
-	else
-		s = concat(_ftp_cmd[cmd], GET_EOL_STR(_eol), NULL);
-	if (s < 0)
+	if (parm) {
+		s = concat(_ftp_cmd[cmd], " ", parm, _eols, NULL);
+	} else {
+		s = concat(_ftp_cmd[cmd], _eols, NULL);
+	}
+	if (s < 0) {
 		return s;
+	}
 
 	s = send(NULL);
-	if (s < 0)
+	if (s < 0) {
 		return s;
+	}
 
 	s = get_reply(TIMEOUT);
 
@@ -268,7 +271,15 @@ int FTP::get_reply(const int timeout)
 		return 0;
 	}
 
-	_reply = atoi(_v);
+	if (isdigit(_v[0])) {
+		_reply = atoi(_v);
+	} else {
+		_reply = 0;
+	}
+
+	if (LIBVOS_DEBUG) {
+		printf("[FTP] reply code : %d\n", _reply);
+	}
 
 	switch (_reply) {
 	case   0: /* reply without number, usually come after 220 */
@@ -305,7 +316,7 @@ int FTP::get_reply(const int timeout)
 	case 425: /* can not open data connection */
 	case 426: /* connection closed, transfor aborted */
 		_status = FTP_STT_DISCONNECT;
-		return 1;
+		return -1;
 
 	case 120: /* service not ready yet */
 
@@ -324,12 +335,13 @@ int FTP::get_reply(const int timeout)
 	case 551: /* request action aborted; page type unknown */
 	case 552: /* requested file action aborted. exceeded storage allocation */
 	case 553: /* requested action not taken, file name not allowed */
-		return 1;
+		fprintf(stderr, "[FTP] server message: %s", _v);
+		return -1;
 	default:
 		fprintf(stderr, "[FTP-ERROR] unknown reply code %d!", _reply);
 	}
 
-	return 1;
+	return -1;
 }
 
 /**

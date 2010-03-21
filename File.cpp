@@ -8,7 +8,7 @@
 
 namespace vos {
 
-const char *__eol[N_FILE_EOL_TYPE] = {
+const char *__eol[N_EOL_MODE] = {
 	"\n",
 	"\r\n"
 };
@@ -19,7 +19,8 @@ File::File() : Buffer(),
 	_d(0),
 	_p(0),
 	_status(FILE_OPEN_NO),
-	_eol(FILE_EOL_NIX),
+	_eol(__eol[EOL_NIX][0]),
+	_eols(__eol[EOL_NIX]),
 	_name()
 {}
 
@@ -80,7 +81,7 @@ int File::_open(const char *path, const int mode, const int perm)
 		return -1;
 	}
 
-	s = _name.copy_raw(path, 0);
+	s = _name.copy_raw(path);
 	if (s < 0)
 		return s;
 
@@ -240,7 +241,7 @@ int File::get_line(Buffer **line)
 	}
 
 	start = _p;
-	while (_v[_p] != GET_EOL_CHR(_eol)) {
+	while (_v[_p] != _eol) {
 		if (_p >= _i) {
 			_p = _p - start;
 			memmove(&_v[0], &_v[start], _p);
@@ -488,9 +489,10 @@ void File::close()
  */
 void File::dump()
 {
-	printf("file descriptor: %d\n", _d);
-	printf("file name      : %s\n", _name._v);
-	printf("file contents  :\n>> %s\n", _v);
+	printf("[FILE-%d]\n", _d);
+	printf("\t name     : %s\n", _name._v);
+	printf("\t contents :\n"
+		"\t >> %s\n", _v);
 }
 
 /**
@@ -534,8 +536,10 @@ int File::get_size()
  */
 void File::set_eol(const int mode)
 {
-	if (mode == FILE_EOL_NIX || mode == FILE_EOL_DOS)
-		_eol = mode;
+	if (mode == EOL_NIX || mode == EOL_DOS) {
+		_eol	= __eol[mode][0];
+		_eols	= __eol[mode];
+	}
 }
 
 /**
@@ -624,13 +628,13 @@ int File::BASENAME(Buffer *name, const char *path)
 			return s;
 	} else {
 		if (path[0] != '/') {
-			s = name->copy_raw(path, 0);
+			s = name->copy_raw(path);
 			if (s < 0)
 				return s;
 		} else {
 			len = strlen(path);
 			if (path[0] == '/' && len == 1) {
-				s = name->copy_raw(path, 0);
+				s = name->copy_raw(path);
 				if (s < 0)
 					return s;
 			} else {

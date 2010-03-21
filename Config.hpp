@@ -42,8 +42,9 @@ public:
 	int save();
 	int save_as(const char *ini, const int mode);
 
-	const char *get(const char *head, const char *key, const char *dflt);
-	int get_number(const char *head, const char *key, const int dflt);
+	const char *get(const char *head, const char *key,
+			const char *dflt = NULL);
+	int get_number(const char *head, const char *key, const int dflt = 0);
 
 	int set(const char *head, const char *key, const char *value);
 	void add(const char *head, const char *key, const char *value);

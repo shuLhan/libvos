@@ -317,7 +317,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 				}
 			} else {
 				chop_bgn = startp;
-				while (_v[startp] != GET_EOL_CHR(_eol)) {
+				while (_v[startp] != _eol) {
 					++startp;
 					if (startp >= _i) {
 						startp = startp - _p;
@@ -354,7 +354,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 		goto reject;
 	}
 
-	while (_v[startp] != GET_EOL_CHR(_eol)) {
+	while (_v[startp] != _eol) {
 		++startp;
 		if (startp >= _i) {
 			startp = startp - _p;
@@ -372,7 +372,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 	return 1;
 
 reject:
-	while (_v[startp] != GET_EOL_CHR(_eol)) {
+	while (_v[startp] != _eol) {
 		++startp;
 		if (startp >= _i) {
 			startp = startp - _p;

@@ -65,7 +65,8 @@ public:
 	FTP();
 	~FTP();
 
-	int connect(const char *host, const int port, const int mode);
+	int connect(const char *host, const int port,
+			const int mode = FTP_MODE_NORMAL);
 	int login(const char *username, const char *password);
 	void logout();
 	void disconnect();

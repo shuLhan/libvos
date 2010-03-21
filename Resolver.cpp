@@ -180,7 +180,7 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 	(*query)->_n_add	= htons(0);
 	(*query)->_type		= htons(QUERY_T_ADDRESS);
 	(*query)->_class	= htons(QUERY_C_IN);
-	(*query)->_name.copy_raw(qname, 0);
+	(*query)->_name.copy_raw(qname);
 
 	len = (*query)->_name._i + 16;
 

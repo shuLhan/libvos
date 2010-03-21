@@ -29,6 +29,7 @@ public:
 	void add_timestamp();
 
 	int er(const char *fmt, ...);
+	int er_b(Buffer *bfr);
 	int it(const char *fmt, ...);
 private:
 	Dlogger(const Dlogger&);

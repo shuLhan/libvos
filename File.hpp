@@ -15,17 +15,14 @@ using vos::Buffer;
 
 namespace vos {
 
-enum _file_eol_type {
-	FILE_EOL_NIX	= 0,
-	FILE_EOL_DOS	= 1,
-	N_FILE_EOL_TYPE
+enum _eol_mode {
+	EOL_NIX	= 0,
+	EOL_DOS	= 1,
+	N_EOL_MODE
 };
-extern const char *__eol[N_FILE_EOL_TYPE];
+extern const char *__eol[N_EOL_MODE];
 
-#define	GET_EOL_CHR(t)	__eol[t][0]
-#define	GET_EOL_STR(t)	__eol[t]
-
-enum _file_open_type {
+enum _open_type {
 	FILE_OPEN_NO	= -1,
 	FILE_OPEN_R	= O_RDONLY,
 	FILE_OPEN_W	= O_WRONLY | O_CREAT | O_TRUNC,
@@ -39,7 +36,8 @@ enum _file_open_type {
  *	- _d		: file descriptor.
  *	- _p		: file iterator.
  *	- _status	: status of open file.
- *	- _eol		: end of line character that used on this File.
+ *	- _eol		: end of line as a character.
+ *	- _eols		: end of line as a string.
  *	- _name		:
  *		file name, with or without path, depends on how user
  *		called at opening it.
@@ -88,6 +86,7 @@ public:
 	int		_p;
 	int		_status;
 	int		_eol;
+	const char	*_eols;
 	Buffer		_name;
 private:
 	File(const File&);

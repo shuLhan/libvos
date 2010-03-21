@@ -302,7 +302,7 @@ int Buffer::appendd(double d)
 	if (s < 0)
 		return -1;
 
-	return append_raw(f, 0);
+	return append_raw(f);
 }
 
 /**
@@ -571,9 +571,9 @@ int Buffer::set(const Buffer *bfr, const Buffer *dflt)
 int Buffer::set_raw(const char *bfr, const char *dflt)
 {
 	if (bfr) {
-		return copy_raw(bfr, 0);
+		return copy_raw(bfr);
 	}
-	return copy_raw(dflt, 0);
+	return copy_raw(dflt);
 }
 
 /**
@@ -928,7 +928,7 @@ next:
 				return s;
 			break;
 		case 's':
-			s = o.append_raw(va_arg(args, const char *), 0);
+			s = o.append_raw(va_arg(args, const char *));
 			if (s < 0)
 				return s;
 			break;

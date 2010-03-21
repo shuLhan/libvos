@@ -33,7 +33,7 @@ enum _oci_conn_status {
  * @attr			:
  *	- PORT			: static, default Oracle database server.
  *	- DFLT_SIZE		: static, default buffer size for '_v'.
- *	- _s			: status of OCI call.
+ *	- _stat			: status of OCI call.
  *	- _cs			: OCI client connection status.
  *	- _v			: a return value or result set after executing
  *                                SQL query.
@@ -63,12 +63,12 @@ public:
 	int init();
 	void create_env();
 	void create_err();
-	void connect(const char *hostname, const char *service_name,
+	int connect(const char *hostname, const char *service_name,
 			int port = PORT);
-	void login(const char *username, const char *password);
-	void stmt_describe(const char *stmt);
-	void stmt_prepare(const char *stmt);
-	void stmt_execute(const char *stmt = 0);
+	int login(const char *username, const char *password);
+	int stmt_describe(const char *stmt);
+	int stmt_prepare(const char *stmt);
+	int stmt_execute(const char *stmt = 0);
 	int  stmt_fetch();
 	void stmt_release();
 	void logout();
@@ -166,7 +166,7 @@ public:
 	static unsigned int PORT;
 	static unsigned int DFLT_SIZE;
 
-	int		_s;
+	int		_stat;
 	int		_cs;
 	OCIValue	**_v;
 private:
@@ -174,8 +174,12 @@ private:
 	void operator=(const OCI&);
 
 	int check(void *handle, int type);
-	inline void check_env() { check(_env, OCI_HTYPE_ENV); }
-	inline void check_err() { check(_err, OCI_HTYPE_ERROR); }
+	inline int check_env() {
+		return check(_env, OCI_HTYPE_ENV);
+	}
+	inline int check_err() {
+		return check(_err, OCI_HTYPE_ERROR);
+	}
 
 	static int	_spool_min;
 	static int	_spool_max;

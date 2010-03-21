@@ -200,7 +200,7 @@ int Socket::bind(const char *address, const int port)
 	}
 
 	_status = O_RDWR;
-	s	= _name.copy_raw(address, 0);
+	s	= _name.copy_raw(address);
 
 	return s;
 }
@@ -310,7 +310,7 @@ int Socket::connect_to_raw(const char *address, const int port)
 	}
 
 	_status	= O_RDWR;
-	s	= _name.copy_raw(address, 0);
+	s	= _name.copy_raw(address);
 
 	return s;
 }
