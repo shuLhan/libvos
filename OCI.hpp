@@ -65,7 +65,10 @@ public:
 	void create_err();
 	int connect(const char *hostname, const char *service_name,
 			int port = PORT);
+	int connect_raw(const char *conn, int conn_len = 0);
 	int login(const char *username, const char *password);
+	int connect_login(const char *username, const char *password,
+				const char *conn);
 	int stmt_describe(const char *stmt);
 	int stmt_prepare(const char *stmt);
 	int stmt_execute(const char *stmt = 0);

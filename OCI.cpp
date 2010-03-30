@@ -174,7 +174,43 @@ int OCI::connect(const char *hostname, const char *service_name, int port)
 	register int	s;
 	Buffer		conn;
 
-	conn.aprint("//%s:%d/%s", hostname, port, service_name);
+	s = conn.aprint("//%s:%d/%s", hostname, port, service_name);
+	if (s < 0) {
+		return -1;
+	}
+
+	s = connect_raw(conn._v, conn._i);
+
+	return s;
+}
+
+/**
+ * @method		: OCI::connect_raw
+ * @param		:
+ *	> conn		: Oracle connection string.
+ *	> conn_len	: length of 'conn' string (default to zero).
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
+ * @desc		:
+ *	create a connection to Oracle database, identified by connection
+ *	string 'conn' with format: '//hostname:port/service-name'.
+ */
+
+int OCI::connect_raw(const char *conn, int conn_len)
+{
+	if (!conn) {
+		return -1;
+	}
+
+	register int s;
+
+	if (!_env) {
+		s = init();
+		if (s < 0) {
+			return -1;
+		}
+	}
 
 	_stat = OCIHandleAlloc(_env, (void **) &_spool, OCI_HTYPE_SPOOL, 0, 0);
 	s = check_env();
@@ -195,9 +231,13 @@ int OCI::connect(const char *hostname, const char *service_name, int port)
 		return -1;
 	}
 
+	if (0 == conn_len) {
+		conn_len = strlen(conn);
+	}
+
 	_stat = OCISessionPoolCreate(_env, _err, _spool, (OraText **) &_spool_name,
 				(ub4 *) &_spool_name_len,
-				(const OraText *) conn._v, conn._i,
+				(const OraText *) conn, conn_len,
 				OCI::_spool_min, OCI::_spool_max,
 				OCI::_spool_inc,
 				(OraText *) "", 0,
@@ -214,6 +254,7 @@ int OCI::connect(const char *hostname, const char *service_name, int port)
 	_cs = OCI_STT_CONNECTED;
 
 	return 0;
+
 }
 
 /**
@@ -262,6 +303,34 @@ int OCI::login(const char *username, const char *password)
 
 	_cs = OCI_STT_LOGGED_IN;
 	return 0;
+}
+
+/**
+ * @method		: OCI::connect_login
+ * @param		:
+ *	> username	: database username.
+ *	> password	: database password.
+ *	> conn		: database connection string.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
+ * @desc		:
+ *	connect and login to database 'conn' using user 'username' and
+ *	identified by 'password'.
+ */
+int OCI::connect_login(const char *username, const char *password,
+			const char *conn)
+{
+	register int s;
+
+	s = connect_raw(conn);
+	if (s < 0) {
+		return -1;
+	}
+
+	s = login(username, password);
+
+	return s;
 }
 
 /**

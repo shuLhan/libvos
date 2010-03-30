@@ -52,7 +52,7 @@ TARGET_OBJS	+=	${LIBVOS_BLD_D}/OCIValue.oo	\
 			${LIBVOS_BLD_D}/OCI.oo
 
 CXXFLAGS_ADD	+=	-I${ORACLE_HOME}/include
-LDFLAGS		+=	-L${ORACLE_HOME}/lib -lclntsh
+LDFLAGS		+=	-L${ORACLE_HOME}/lib -lclntsh -lnnz10
 endif
 
 PRE_TARGET	= ${LIBVOS_BLD_D}
