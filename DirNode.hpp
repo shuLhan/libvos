@@ -15,7 +15,7 @@ namespace vos {
 
 class DirNode {
 public:
-	DirNode();
+	DirNode(long id = 0);
 	virtual ~DirNode();
 
 	int get_stat(const char *realpath, const char *path = NULL);
@@ -24,8 +24,12 @@ public:
 	int is_link();
 	virtual void dump();
 
-	static void ADD(DirNode **head, DirNode *node);
+	static int INIT(DirNode **node, const char *realpath,
+			const char *path, long id);
 
+	long		_id;
+	long		_pid;
+	long		_cid;
 	int		_mode;
 	int		_uid;
 	int		_gid;
@@ -33,10 +37,6 @@ public:
 	long		_mtime;
 	Buffer		_name;
 	Buffer		*_linkname;
-	DirNode		*_parent;
-	DirNode		*_child;
-	DirNode		*_next;
-	DirNode		*_last;
 private:
 	DirNode(const DirNode&);
 	void operator=(const DirNode &);

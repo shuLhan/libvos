@@ -13,9 +13,14 @@
 namespace vos {
 
 /**
- * @class	: Dir
- * @attr	:
- * @decs	:
+ * @class		: Dir
+ * @attr		:
+ *	- _i		: number of DirNode object in '_ls'.
+ *	- _l		: lenght of '_ls' array.
+ *	- _depth	: maximum depth of child directory to scan for.
+ *	- _name		: the first name of directory to scan.
+ *	- _ls		: array of DirNode objects.
+ * @decs		:
  * a module for handling task involving directory (listing,
  * creating, and removing directory).
  */
@@ -24,19 +29,23 @@ public:
 	Dir();
 	~Dir();
 
-	int open(const char *path);
+	int open(const char *path, int depth = 1);
+	int get_parent_path(Buffer *path, DirNode *ls, int depth = 1);
+	int get_list(const char *path, long pid);
+	void reset();
 	void dump();
-	void close();
 
-	long	_n_ls;
+	long	_i;
+	long	_l;
+	int	_depth;
 	Buffer	_name;
-	DIR	*_d;
-	DirNode	*_ls;
+	DirNode	**_ls;
 private:
 	Dir(const Dir&);
 	void operator=(const Dir&);
+	int resize();
 
-	int get_list();
+	static int DEF_LS_SIZE;
 };
 
 } /* namespace::vos */

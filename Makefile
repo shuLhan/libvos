@@ -37,7 +37,6 @@ TARGET_OBJS	=						\
 			${LIBVOS_BLD_D}/DNSQuery.oo		\
 			${LIBVOS_BLD_D}/File.oo			\
 			${LIBVOS_BLD_D}/FTP.oo			\
-			${LIBVOS_BLD_D}/Msg.oo			\
 			${LIBVOS_BLD_D}/Reader.oo		\
 			${LIBVOS_BLD_D}/RecordMD.oo		\
 			${LIBVOS_BLD_D}/Record.oo		\
