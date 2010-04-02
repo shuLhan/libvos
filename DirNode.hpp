@@ -13,6 +13,8 @@
 
 namespace vos {
 
+#define	LINKNAME_INIT_SIZE	255
+
 class DirNode {
 public:
 	DirNode(long id = 0);
@@ -36,7 +38,7 @@ public:
 	long		_size;
 	long		_mtime;
 	Buffer		_name;
-	Buffer		*_linkname;
+	Buffer		_linkname;
 private:
 	DirNode(const DirNode&);
 	void operator=(const DirNode &);

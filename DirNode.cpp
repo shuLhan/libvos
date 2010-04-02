@@ -18,15 +18,11 @@ DirNode::DirNode(long id) :
 	_size(0),
 	_mtime(0),
 	_name(),
-	_linkname(NULL)
+	_linkname()
 {}
 
 DirNode::~DirNode()
-{
-	if (_linkname) {
-		delete _linkname;
-	}
-}
+{}
 
 /**
  * @method		: DirNode::get_stat
@@ -65,7 +61,7 @@ int DirNode::get_stat(const char *realpath, const char *path)
 		}
 
 		memset(&st, 0, sizeof(struct stat));
-		s = lstat(_linkname->_v, &st);
+		s = lstat(_linkname._v, &st);
 		if (s < 0) {
 			return -1;
 		}
@@ -91,23 +87,23 @@ int DirNode::get_linkname()
 {
 	int s = 0;
 
-	if (!_linkname) {
-		s = Buffer::INIT_SIZE(&_linkname, 255);
+	if (_linkname._i == 0) {
+		s = _linkname.init_size(LINKNAME_INIT_SIZE);
 		if (s < 0) {
 			return -1;
 		}
 	}
 
 	while (1) {
-		s = readlink(_name._v, _linkname->_v, _linkname->_l);
+		s = readlink(_name._v, _linkname._v, _linkname._l);
 		if (s < 0) {
 			return -1;
 		}
-		if (s < _linkname->_l) {
+		if (s < _linkname._l) {
 			break;
 		}
 
-		s = _linkname->resize(_linkname->_l * 2);
+		s = _linkname.resize(_linkname._l * 2);
 		if (s < 0) {
 			return -1;
 		}

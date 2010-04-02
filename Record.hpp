@@ -37,7 +37,8 @@ public:
 	static void ADD_COL(Record **row, Record *col);
 	static void ADD_ROW(Record **rows, Record *row);
 	static int INIT(Record **o, const int bfr_size);
-	static int INIT_ROW(Record **o, int n_col, const int bfr_size);
+	static int INIT_ROW(Record **o, int n_col,
+				const int bfr_size = Buffer::DFLT_SIZE);
 
 	Record *_next_col;
 	Record *_last_col;

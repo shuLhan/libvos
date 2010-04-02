@@ -115,7 +115,7 @@ int Dir::open(const char *path, int depth)
 					return -1;
 				}
 
-				s = ppath.copy(_ls[c]->_linkname);
+				s = ppath.copy(&_ls[c]->_linkname);
 			} else {
 				ppath.append_raw(path);
 				s = get_parent_path(&ppath, _ls[c]);
@@ -209,6 +209,9 @@ int Dir::get_list(const char *path, long pid)
 
 	dir = opendir(path);
 	if (!dir) {
+		if (errno == EACCES) {
+			return 0;
+		}
 		return -1;
 	}
 
@@ -257,6 +260,24 @@ void Dir::dump()
 	for (int c = 1; c < _i; c++) {
 		_ls[c]->dump();
 	}
+}
+
+/**
+ * @method	: Dir::CREATE
+ * @param	:
+ *	> path	: a path to directory.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	: create a new directory 'path'.
+ */
+int Dir::CREATE(const char *path, mode_t mode)
+{
+	register int s = 0;
+
+	s = mkdir(path, mode);
+
+	return s;
 }
 
 } /* namespace::vos */

@@ -12,6 +12,8 @@
 
 namespace vos {
 
+#define	DEF_CREATE_MODE	(S_IRWXU | S_IRGRP | S_IXGRP)
+
 /**
  * @class		: Dir
  * @attr		:
@@ -34,6 +36,8 @@ public:
 	int get_list(const char *path, long pid);
 	void reset();
 	void dump();
+
+	static int CREATE(const char *path, mode_t mode = DEF_CREATE_MODE);
 
 	long	_i;
 	long	_l;
