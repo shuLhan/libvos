@@ -27,6 +27,28 @@ Dir::~Dir()
 }
 
 /**
+ * @method	: Dir::init
+ * @param	:
+ *	> path	: path to the root directory.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	: initialize Dir object.
+ */
+int Dir::init()
+{
+	register int s;
+
+	if (_ls) {
+		reset();
+	} else {
+		s = resize();
+	}
+
+	return s;
+}
+
+/**
  * @method	: Dir::resize
  * @return	:
  *	< 0	: success.
@@ -87,16 +109,17 @@ int Dir::open(const char *path, int depth)
 		return 0;
 	}
 
-	if (_ls) {
-		reset();
-	} else {
-		s = resize();
-		if (s < 0) {
-			return s;
-		}
+	s = init();
+	if (s < 0) {
+		return -1;
 	}
 
-	_i	= 1;
+	s = DirNode::INIT(&_ls[_i], path, path, 0);
+	if (s < 0) {
+		return -1;
+	}
+	_i++;
+
 	c	= 1;
 	_depth	= depth;
 
@@ -232,6 +255,7 @@ int Dir::get_list(const char *path, long pid)
 
 		realpath.reset();
 		realpath.append_raw(path);
+		realpath.appendc('/');
 		realpath.append_raw(dent->d_name);
 
 		s = DirNode::INIT(&_ls[_i], realpath._v, dent->d_name, _i);
@@ -252,12 +276,34 @@ int Dir::get_list(const char *path, long pid)
 }
 
 /**
+ * @method	: Dir::insert
+ * @param	:
+ *	> node	: pointer to DirNode object.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	: insert 'node' to the array of DirNode '_ls'.
+ */
+int Dir::insert(DirNode *node)
+{
+	register int s;
+
+	_ls[_i] = node;
+	_i++;
+	if (_i >= _l) {
+		s = resize();
+	}
+
+	return s;
+}
+
+/**
  * @method	: Dir::dump
  * @desc	: dump content of Dir object.
  */
 void Dir::dump()
 {
-	for (int c = 1; c < _i; c++) {
+	for (int c = 0; c < _i; c++) {
 		_ls[c]->dump();
 	}
 }

@@ -27,8 +27,8 @@ DirNode::~DirNode()
 /**
  * @method		: DirNode::get_stat
  * @param		:
- *	> realpath	: a real name for path, if 'path' is symbolic link.
- *	> path		: path to directory.
+ *	> realpath	: a full path, from current directory.
+ *	> path		: the basename of 'realpath'.
  * @return		:
  *	< 0		: success.
  *	< -1		: fail.
@@ -36,7 +36,7 @@ DirNode::~DirNode()
  */
 int DirNode::get_stat(const char *realpath, const char *path)
 {
-	if (!path) {
+	if (!realpath && !path) {
 		return 0;
 	}
 
@@ -147,8 +147,9 @@ void DirNode::dump()
 	} else {
 		printf("- ");
 	}
-	printf("|%8ld|%8ld|%8ld|%d|%d|%d|%12ld|%ld|%s\n",
-		_id, _pid, _cid, _mode, _uid, _gid, _size, _mtime, _name._v);
+	printf("|%8ld|%8ld|%8ld|%5d|%5d|%5d|%12ld|%ld|%s|%s\n",
+		_id, _pid, _cid, _mode, _uid, _gid, _size, _mtime, _name._v,
+		_linkname._v);
 }
 
 /**

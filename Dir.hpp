@@ -31,10 +31,12 @@ public:
 	Dir();
 	~Dir();
 
+	int init();
+	void reset();
 	int open(const char *path, int depth = 1);
 	int get_parent_path(Buffer *path, DirNode *ls, int depth = 1);
 	int get_list(const char *path, long pid);
-	void reset();
+	int insert(DirNode *node);
 	void dump();
 
 	static int CREATE(const char *path, mode_t mode = DEF_CREATE_MODE);

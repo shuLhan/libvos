@@ -81,6 +81,9 @@ public:
 	int like(const Buffer *bfr);
 	int like_raw(const char *bfr);
 
+	int to_int();
+	long to_lint();
+
 	int is_empty();
 	void dump();
 	void dump_hex();
