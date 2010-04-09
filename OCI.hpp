@@ -11,6 +11,9 @@
 
 namespace vos {
 
+#define	OCI_DEF_PORT		1521
+#define	OCI_DEF_ENV_MODE	(OCI_THREADED | OCI_OBJECT | OCI_EVENTS)
+
 enum _oci_errcode {
 	E_OCI_OK			= 0,
 	E_OCI_SUCC_WITH_INFO,
@@ -35,23 +38,36 @@ enum _oci_conn_status {
  *	- DFLT_SIZE		: static, default buffer size for '_v'.
  *	- _stat			: status of OCI call.
  *	- _cs			: OCI client connection status.
+ *	- _env_mode		: OCI environment mode.
+ *	- _table_changes_n	: number of table changed after receiving
+ *				notification.
+ *	- _row_changes_n	: number of row changed after receiving
+ *				notification.
  *	- _v			: a return value or result set after executing
  *                                SQL query.
+ *	- _value_i		: current size of '_v' array.
+ *	- _value_sz		: maximum size of '_v' array.
+ *	- _env			: OCI Environment handle.
+ *	- _err			: OCI Error handle.
+ *	- _server		: OCI Server handle.
+ *	- _session		: OCI Session handle.
+ *	- _spool		: OCI Session Pool handle.
+ *	- _service		: OCI service context handle.
+ *	- _spool_name		: name of session pool.
+ *	- _auth			: OCI Authority handle.
+ *	- _stmt			: OCI Statement handle.
+ *	- _subscr		: OCI Subscription handle, for database change
+ *				notification.
+ *	- _table_changes	: OCI collection for table changes.
+ *	- _row_changes		: OCI collection for row changes.
+ *
  *	- _spool_min		: static, minimum session pool.
  *	- _spool_max		: static, maximum session pool.
  *	- _spool_inc		: static, incremental value for session pool.
  *	- _stmt_cache_size	: static, maximum query to be cached by
  *                                session pool.
  *	- _spool_name_len	: length of session pool name.
- *	- _value_i		: current size of '_v' array.
- *	- _value_sz		: maximum size of '_v' array.
- *	- _env			: OCI Environment handle.
- *	- _err			: OCI Error handle.
- *	- _spool		: OCI Session Pool handle.
- *	- _session		: OCI service context handle.
- *	- _spool_name		: name of session pool.
- *	- _auth			: OCI Authority handle.
- *	- _stmt			: OCI Statement handle.
+ *
  * @desc			:
  *	module to talking to Oracle database server using Oracle Client
  *	Interface library.
@@ -63,14 +79,23 @@ public:
 	int init();
 	void create_env();
 	void create_err();
+
 	int connect(const char *hostname, const char *service_name,
-			int port = PORT);
-	int connect_raw(const char *conn, int conn_len = 0);
-	int login(const char *username, const char *password);
-	int connect_login(const char *username, const char *password,
-				const char *conn);
+			int port = OCI_DEF_PORT);
+
+	int create_session(const char *conn, unsigned int conn_len = 0);
+	int create_session_pool(const char *conn, unsigned int conn_len = 0);
+
+	int login(const char *username, const char *password,
+			const char *conn = NULL);
+	int login_new_session(const char *username, const char *password,
+				const char *conn = NULL);
 	int stmt_describe(const char *stmt);
 	int stmt_prepare(const char *stmt);
+
+	int stmt_subscribe(void *callback);
+	void stmt_unsubscribe();
+
 	int stmt_execute(const char *stmt = 0);
 	int  stmt_fetch();
 	void stmt_release();
@@ -164,13 +189,26 @@ public:
 	}
 
 	char * get_value(const int pos);
-	int get_value_number(const int pos);
+	long get_value_number(const int pos);
 
-	static unsigned int PORT;
-	static unsigned int DFLT_SIZE;
+	int get_notification_type(void *descriptor, unsigned int *type);
+
+	int get_table_changes(void *descriptor);
+	int get_table_descriptor(int index, void **table_desc);
+	int get_table_operation(void *table_desc, unsigned int *operation);
+	int get_table_name(void *table_desc, char **table_name);
+
+	int get_row_changes(void *table_d);
+	int get_row_change_descriptor(int index, void **rowd);
+	int get_row_change_op(void *rowd, unsigned int *op);
+	int get_row_change_id(void *rowd, char **rowid,
+				unsigned int *rowid_len);
 
 	int		_stat;
 	int		_cs;
+	int		_env_mode;
+	int		_table_changes_n;
+	int		_row_changes_n;
 	OCIValue	**_v;
 private:
 	OCI(const OCI&);
@@ -188,17 +226,24 @@ private:
 	static int	_spool_max;
 	static int	_spool_inc;
 	static int	_stmt_cache_size;
+	static int	_spool_name_len;
+	static char	*_spool_name;
+	static Buffer	_spool_conn_name;
 
-	int		_spool_name_len;
 	int		_value_i;
 	int		_value_sz;
+
 	OCIEnv		*_env;
 	OCIError	*_err;
+	OCIServer	*_server;
+	OCISession	*_session;
 	OCISPool	*_spool;
-	OCISvcCtx	*_session;
-	char		*_spool_name;
+	OCISvcCtx	*_service;
 	OCIAuthInfo	*_auth;
 	OCIStmt		*_stmt;
+	OCISubscription	*_subscr;
+	OCIColl		*_table_changes;
+	OCIColl		*_row_changes;
 };
 
 } /* namespace::vos */

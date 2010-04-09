@@ -20,13 +20,13 @@ const char *_oci_errmsg[] = {
 	"[OCI] Error: OCI continue\n"
 };
 
-unsigned int OCI::PORT		= 1521;
-unsigned int OCI::DFLT_SIZE	= 8;
-
-int OCI::_spool_min		= 0;
-int OCI::_spool_max		= 8;
-int OCI::_spool_inc		= 1;
-int OCI::_stmt_cache_size	= 10;
+int	OCI::_spool_min		= 0;
+int	OCI::_spool_max		= 8;
+int	OCI::_spool_inc		= 1;
+int	OCI::_stmt_cache_size	= 10;
+int	OCI::_spool_name_len	= 0;
+char*	OCI::_spool_name	= NULL;
+Buffer	OCI::_spool_conn_name;
 
 /**
  * @method	: OCI::OCI
@@ -35,17 +35,23 @@ int OCI::_stmt_cache_size	= 10;
 OCI::OCI() :
 	_stat(0),
 	_cs(OCI_STT_DISCONNECT),
+	_env_mode(OCI_DEF_ENV_MODE),
+	_table_changes_n(0),
+	_row_changes_n(0),
 	_v(NULL),
-	_spool_name_len(0),
 	_value_i(0),
-	_value_sz(DFLT_SIZE),
+	_value_sz(Buffer::DFLT_SIZE),
 	_env(NULL),
 	_err(NULL),
-	_spool(NULL),
+	_server(NULL),
 	_session(NULL),
-	_spool_name(NULL),
+	_spool(NULL),
+	_service(NULL),
 	_auth(NULL),
-	_stmt(NULL)
+	_stmt(NULL),
+	_subscr(NULL),
+	_table_changes(NULL),
+	_row_changes(NULL)
 {}
 
 /**
@@ -54,12 +60,16 @@ OCI::OCI() :
  */
 OCI::~OCI()
 {
-/*
-	if (_cs == OCI_STT_LOGGED_IN)
+
+	if (_cs == OCI_STT_LOGGED_IN) {
 		logout();
-	if (_cs == OCI_STT_CONNECTED)
+	}
+	if (_cs == OCI_STT_CONNECTED) {
 		disconnect();
-*/
+	}
+	if (_subscr) {
+		stmt_unsubscribe();
+	}
 }
 
 /**
@@ -141,7 +151,7 @@ int OCI::check(void *handle, int type)
  */
 void OCI::create_env()
 {
-	_stat = OCIEnvCreate(&_env, OCI_THREADED, 0, 0, 0, 0, 0, 0);
+	_stat = OCIEnvCreate(&_env, _env_mode, 0, 0, 0, 0, 0, 0);
 	check_env();
 }
 
@@ -179,13 +189,59 @@ int OCI::connect(const char *hostname, const char *service_name, int port)
 		return -1;
 	}
 
-	s = connect_raw(conn._v, conn._i);
+	s = create_session_pool(conn._v, conn._i);
 
 	return s;
 }
 
+int OCI::create_session(const char *conn, unsigned int conn_len)
+{
+	register int s = 0;
+
+	_stat = OCIHandleAlloc(_env, (void **) &_server, OCI_HTYPE_SERVER, 0,
+				0);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	if (!conn_len) {
+		conn_len = strlen(conn);
+	}
+
+	_stat = OCIServerAttach(_server, _err, (text *) conn, conn_len,
+				OCI_DEFAULT);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	_stat = OCIHandleAlloc(_env, (void **) &_service, OCI_HTYPE_SVCCTX, 0,
+				0);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	_stat = OCIAttrSet(_service, OCI_HTYPE_SVCCTX, (void *) _server, 0,
+				OCI_ATTR_SERVER, _err);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	_stat = OCIHandleAlloc(_env, (void **) &_session, OCI_HTYPE_SESSION,
+				0, 0);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
 /**
- * @method		: OCI::connect_raw
+ * @method		: OCI::get_session
  * @param		:
  *	> conn		: Oracle connection string.
  *	> conn_len	: length of 'conn' string (default to zero).
@@ -197,7 +253,7 @@ int OCI::connect(const char *hostname, const char *service_name, int port)
  *	string 'conn' with format: '//hostname:port/service-name'.
  */
 
-int OCI::connect_raw(const char *conn, int conn_len)
+int OCI::create_session_pool(const char *conn, unsigned int conn_len)
 {
 	if (!conn) {
 		return -1;
@@ -247,7 +303,10 @@ int OCI::connect_raw(const char *conn, int conn_len)
 		return s;
 	}
 
+	_spool_conn_name.copy_raw(conn);
+
 	if (LIBVOS_DEBUG) {
+		printf("[OCI] connected to      : %s\n", _spool_conn_name._v);
 		printf("[OCI] session pool name : %s\n", _spool_name);
 	}
 
@@ -269,9 +328,16 @@ int OCI::connect_raw(const char *conn, int conn_len)
  *	login to Oracle database as user 'username' identified by 'password'.
  *	In case of success, connection status will be set to logged-in.
  */
-int OCI::login(const char *username, const char *password)
+int OCI::login(const char *username, const char *password, const char *conn)
 {
 	register int s;
+
+	if (!_spool_name || !_spool_conn_name.like_raw(conn)) {
+		s = create_session_pool(conn);
+		if (s < 0) {
+			return -1;
+		}
+	}
 
 	_stat = OCIHandleAlloc(_env, (void **) &_auth, OCI_HTYPE_AUTHINFO, 0, 0);
 	s = check_env();
@@ -293,9 +359,9 @@ int OCI::login(const char *username, const char *password)
 		return -1;
 	}
 
-	_stat = OCISessionGet(_env, _err, &_session, _auth, (OraText *) _spool_name,
-				_spool_name_len, 0, 0, 0, 0, 0,
-				OCI_SESSGET_SPOOL);
+	_stat = OCISessionGet(_env, _err, &_service, _auth,
+				(OraText *) _spool_name, _spool_name_len,
+				0, 0, 0, 0, 0, OCI_SESSGET_SPOOL);
 	s = check_err();
 	if (s < 0) {
 		return -1;
@@ -305,32 +371,55 @@ int OCI::login(const char *username, const char *password)
 	return 0;
 }
 
-/**
- * @method		: OCI::connect_login
- * @param		:
- *	> username	: database username.
- *	> password	: database password.
- *	> conn		: database connection string.
- * @return		:
- *	< 0		: success.
- *	< -1		: fail.
- * @desc		:
- *	connect and login to database 'conn' using user 'username' and
- *	identified by 'password'.
- */
-int OCI::connect_login(const char *username, const char *password,
-			const char *conn)
+int OCI::login_new_session(const char *username, const char *password,
+				const char *conn)
 {
 	register int s;
 
-	s = connect_raw(conn);
-	if (s < 0) {
+	s = init();
+	if (s != 0) {
 		return -1;
 	}
 
-	s = login(username, password);
+	s = create_session(conn);
+	if (s != 0) {
+		return -1;
+	}
 
-	return s;
+	/* set user name */
+	_stat = OCIAttrSet(_session, OCI_HTYPE_SESSION,
+				(text *) username, strlen(username),
+				OCI_ATTR_USERNAME, _err);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	/* set user password */
+	_stat = OCIAttrSet(_session, OCI_HTYPE_SESSION,
+			(text *) password, strlen(password),
+			OCI_ATTR_PASSWORD, _err);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	/* start new session */
+	_stat = OCISessionBegin(_service, _err, _session, OCI_CRED_RDBMS,
+				OCI_DEFAULT);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	_stat = OCIAttrSet(_service, OCI_HTYPE_SVCCTX, _session, 0,
+				OCI_ATTR_SESSION, _err);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	return 0;
 }
 
 /**
@@ -372,7 +461,7 @@ int OCI::stmt_describe(const char *stmt)
 		return s;
 	}
 
-	_stat = OCIStmtExecute(_session, _stmt, _err, 0, 0, 0, 0, OCI_DEFAULT);
+	_stat = OCIStmtExecute(_service, _stmt, _err, 0, 0, 0, 0, OCI_DEFAULT);
 	s = check_err();
 	if (s) {
 		return s;
@@ -448,12 +537,89 @@ int OCI::stmt_prepare(const char *stmt)
 {
 	register int s;
 
-	_stat = OCIStmtPrepare2(_session, &_stmt, _err, (const OraText *) stmt,
+	_stat = OCIStmtPrepare2(_service, &_stmt, _err, (const OraText *) stmt,
 				strlen(stmt), 0, 0, OCI_NTV_SYNTAX,
 				OCI_DEFAULT);
 	s = check_err();
 
 	return s;
+}
+
+int OCI::stmt_subscribe(void *callback)
+{
+	register int	s		= 0;
+	unsigned int	type		= OCI_SUBSCR_NAMESPACE_DBCHANGE;
+	int		get_rowid	= TRUE;
+	int		timeout		= 0;
+
+	_stat = OCIHandleAlloc(_env, (void **) &_subscr,
+				OCI_HTYPE_SUBSCRIPTION, 0, 0);
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
+
+	_stat = OCIAttrSet(_subscr, OCI_HTYPE_SUBSCRIPTION,
+				(void *) &type, sizeof(ub4),
+				OCI_ATTR_SUBSCR_NAMESPACE, _err);
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
+
+	/* Associate a notification callback */
+	_stat = OCIAttrSet(_subscr, OCI_HTYPE_SUBSCRIPTION,
+				callback, 0,
+				OCI_ATTR_SUBSCR_CALLBACK, _err);
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
+
+	/* Allow extraction of rowid information */
+	_stat = OCIAttrSet(_subscr, OCI_HTYPE_SUBSCRIPTION,
+				(void *) &get_rowid, sizeof(ub4),
+				OCI_ATTR_CHNF_ROWIDS, _err);
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
+
+	/* Set a timeout value */
+	_stat = OCIAttrSet(_subscr, OCI_HTYPE_SUBSCRIPTION,
+				(void *) &timeout, 0,
+				OCI_ATTR_SUBSCR_TIMEOUT, _err);
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
+
+	/* Create a new registration in the DBCHANGE namespace */
+	_stat = OCISubscriptionRegister(_service, &_subscr, 1, _err,
+					OCI_DEFAULT);
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
+
+	/* Associate the statement with the subscription handle */
+	s = OCIAttrSet(_stmt, OCI_HTYPE_STMT, _subscr, 0,
+			OCI_ATTR_CHNF_REGHANDLE, _err);
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+void OCI::stmt_unsubscribe()
+{
+	if (_subscr) {
+		_stat = OCISubscriptionUnRegister(_service, _subscr, _err,
+							OCI_DEFAULT);
+		check_err();
+	}
 }
 
 /**
@@ -491,7 +657,7 @@ int OCI::stmt_execute(const char *stmt)
 		i = 1;
 	}
 
-	_stat = OCIStmtExecute(_session, _stmt, _err, i, 0, 0, 0,
+	_stat = OCIStmtExecute(_service, _stmt, _err, i, 0, 0, 0,
 				OCI_COMMIT_ON_SUCCESS);
 	s = check_err();
 	if (s < 0) {
@@ -499,8 +665,11 @@ int OCI::stmt_execute(const char *stmt)
 	}
 
 	if (stmt_type != OCI_STMT_SELECT) {
-		for (i = 1; i <= _value_i; i++)
-			_v[i]->_i = Buffer::TRIM(_v[i]->_v, 0);
+		for (i = 1; i <= _value_i; i++) {
+			if (_v[i]) {
+				_v[i]->_i = Buffer::TRIM(_v[i]->_v, 0);
+			}
+		}
 	}
 
 	return 0;
@@ -528,8 +697,9 @@ int OCI::stmt_fetch()
 	}
 
 	for (int idx = 1; idx <= _value_i; idx++) {
-		if (_v[idx])
+		if (_v[idx]) {
 			_v[idx]->_i = Buffer::TRIM(_v[idx]->_v, 0);
+		}
 	}
 
 	return 0;
@@ -554,7 +724,7 @@ void OCI::stmt_release()
  */
 void OCI::logout()
 {
-	OCISessionRelease(_session, _err, 0, 0, OCI_DEFAULT);
+	OCISessionRelease(_service, _err, 0, 0, OCI_DEFAULT);
 	OCIHandleFree(_auth, OCI_HTYPE_AUTHINFO);
 	_auth	= 0;
 	_cs	= OCI_STT_CONNECTED;
@@ -571,7 +741,6 @@ void OCI::disconnect()
 
 	_spool = 0;
 	if (_spool_name) {
-		free(_spool_name);
 		_spool_name = 0;
 	}
 
@@ -589,7 +758,7 @@ void OCI::disconnect()
 void OCI::stmt_new_value(const int pos, const int type)
 {
 	if (pos >= _value_sz) {
-		_value_sz += DFLT_SIZE;
+		_value_sz += Buffer::DFLT_SIZE;
 		_v = (OCIValue **) realloc(_v, _value_sz * sizeof(_v));
 	}
 
@@ -637,14 +806,14 @@ void OCI::stmt_new_value(const int pos, const int type)
 		_v[pos] = OCIValue::UROWID(pos);
 		break;
 	default:
-		fprintf(stderr, "[LIBVOS] OCI error: unknow type %d!\n",
+		fprintf(stderr, "[LIBVOS] OCI error: unknown type %d!\n",
 				type);
 		return;
 	}
 
-	if (pos > _value_i)
+	if (pos > _value_i) {
 		_value_i = pos;
-	_v[pos]->_p = pos;
+	}
 }
 
 /**
@@ -711,11 +880,10 @@ char * OCI::get_value(const int pos)
  * @param	:
  *	> pos	: position of value in statement.
  * @return	:
- *	< v	: success.
- *	< 0	: fail.
+ *	< number: in long integer format.
  * @desc	: get a value of result set at column 'pos' as number.
  */
-int OCI::get_value_number(const int pos)
+long OCI::get_value_number(const int pos)
 {
 	if (pos > _value_i || ! _v[pos])
 		return 0;
@@ -724,6 +892,182 @@ int OCI::get_value_number(const int pos)
 		return 0;
 
 	return strtol(_v[pos]->_v, 0, 0); 
+}
+
+int OCI::get_notification_type(void *descriptor, unsigned int *type)
+{
+	register int s;
+
+	_stat = OCIAttrGet(descriptor, OCI_DTYPE_CHDES, type, 0,
+				OCI_ATTR_CHDES_NFYTYPE, _err);
+	s = check_err();
+
+	return s;
+}
+
+/**
+ * @method		: OCI::get_table_changes
+ * @param		:
+ *	> descriptor	: descriptor from notification callback.
+ * @return		:
+ *	> n		: number of table changes in notification.
+ * @desc		: get table changes from notification descriptor.
+ */
+int OCI::get_table_changes(void *descriptor)
+{
+	register int s;
+
+	_table_changes		= NULL;
+	_table_changes_n	= 0;
+
+	_stat = OCIAttrGet(descriptor, OCI_DTYPE_CHDES, &_table_changes, 0,
+				OCI_ATTR_CHDES_TABLE_CHANGES, _err);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	_stat = OCICollSize(_env, _err, _table_changes, &_table_changes_n);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	return _table_changes_n;
+}
+
+int OCI::get_table_descriptor(int index, void **table_desc)
+{
+	register int	s;
+	boolean		exist		= 0;
+	void		**table_desc_p	= NULL;
+	void		*elemen_index	= NULL;
+
+	_stat = OCICollGetElem(_env, _err, _table_changes, index,
+				&exist, (void **) &table_desc_p,
+				&elemen_index);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	(*table_desc) = *table_desc_p;
+
+	return 0;
+}
+
+/**
+ * @method		: OCI::get_table_operation
+ * @param		:
+ *	> table_desc	: pointer to table descriptor.
+ *	> operation	: return value, database operation 'table_desc'.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
+ * @desc		:
+ *	get type of operation of change on table descriptor 'table_desc'.
+ */
+int OCI::get_table_operation(void *table_desc , unsigned int *operation)
+{
+	register int s;
+
+	_stat = OCIAttrGet(table_desc, OCI_DTYPE_TABLE_CHDES, operation, 0,
+				OCI_ATTR_CHDES_TABLE_OPFLAGS, _err);
+	s = check_err();
+
+	return s;
+}
+
+int OCI::get_table_name(void *table_desc, char **table_name)
+{
+	register int s;
+
+	_stat = OCIAttrGet(table_desc, OCI_DTYPE_TABLE_CHDES, table_name,
+				0, OCI_ATTR_CHDES_TABLE_NAME, _err);
+	s = check_err();
+
+	return s;
+}
+
+/**
+ * @method		: OCI::get_row_changes
+ * @param		:
+ *	> table_desc	: pointer to table descriptor.
+ * @return		:
+ *	< >=0		: number of row changes on table 'table_desc'.
+ *	< -1		: fail.
+ * @desc		: get row changes.
+ */
+int OCI::get_row_changes(void *table_desc)
+{
+	register int s;
+
+	_stat = OCIAttrGet(table_desc, OCI_DTYPE_TABLE_CHDES, &_row_changes,
+				0, OCI_ATTR_CHDES_TABLE_ROW_CHANGES, _err);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	_stat = OCICollSize(_env, _err, _row_changes, &_row_changes_n);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	return _row_changes_n;
+}
+
+/**
+ * @method		: OCI::get_row_descriptor
+ * @param		:
+ *	> index		: index of row change.
+ *	> row_desc	: return value, pointer to row descriptor.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
+ * @desc		: get row descriptor from row changes.
+ */
+int OCI::get_row_change_descriptor(int index, void **row_desc)
+{
+	register int	s;
+	boolean		exist		= 0;
+	void		**row_desc_p	= NULL;
+	void		*element_idx	= NULL;
+
+	/* get row descriptor change */
+	_stat = OCICollGetElem(_env, _err, _row_changes, index, &exist,
+				(void **) &row_desc_p, &element_idx);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	(*row_desc) = *row_desc_p;
+
+	return 0;
+}
+
+int OCI::get_row_change_op(void *rowd, unsigned int *op)
+{
+	register int s;
+
+	_stat = OCIAttrGet(rowd, OCI_DTYPE_ROW_CHDES, (void *) op, 0,
+				OCI_ATTR_CHDES_ROW_OPFLAGS, _err);
+	s = check_err();
+
+	return s;
+}
+
+int OCI::get_row_change_id(void *rowd, char **rowid, unsigned int *rowid_len)
+{
+	register int s;
+
+	_stat = OCIAttrGet(rowd, OCI_DTYPE_ROW_CHDES, (void *) rowid,
+				rowid_len, OCI_ATTR_CHDES_ROW_ROWID, _err);
+	s = check_err();
+
+	return s;
 }
 
 } /* namespace::vos */

@@ -62,6 +62,10 @@ TARGET		= ${TARGET_OBJS}
 all:: CXXFLAGS+=${CXXFLAGS_ADD}
 all:: ${PRE_TARGET} ${TARGET}
 
+all-32:: CXXFLAGS_ADD+=-m32
+all-32:: LDFLAGS+=-m32
+all-32:: all
+
 debug:: CXXFLAGS=${CXXFLAGS_DEBUG} ${CXXFLAGS_ADD}
 debug:: ${PRE_TARGET} ${TARGET}
 
