@@ -49,6 +49,8 @@ OCI::OCI() :
 	_service(NULL),
 	_auth(NULL),
 	_stmt(NULL),
+	_cursor(NULL),
+	_cursor_bind(NULL),
 	_subscr(NULL),
 	_table_changes(NULL),
 	_row_changes(NULL)
@@ -853,6 +855,77 @@ void OCI::stmt_define(const int pos, const int type)
 				SQLT_CHR, 0, 0, 0,
 				OCI_DEFAULT);
 	check_err();
+}
+
+/**
+ * @method	: OCI::stmt_bind_cursor
+ * @param	:
+ *	> pos	: position of value to bind to in statement.
+ */
+int OCI::stmt_bind_cursor(const int pos)
+{
+	int s = 0;
+
+	_stat = OCIHandleAlloc(_env, (void **) &_cursor, OCI_HTYPE_STMT, 0,
+				NULL);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	_stat = OCIBindByPos(_stmt, &_cursor_bind, _err, pos, &_cursor, 0,
+				SQLT_RSET, 0, 0, NULL, 0, 0, OCI_DEFAULT);
+	s = check_err();
+	if (s != 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int OCI::cursor_define(const int pos, const int type)
+{
+	int s = 0;
+
+	stmt_new_value(pos, type);
+
+	_stat = OCIDefineByPos(_cursor, &_v[pos]->_define, _err, pos,
+				_v[pos]->_v, _v[pos]->_l - 1, SQLT_CHR,
+				0, 0, 0, OCI_DEFAULT);
+	s = check_err();
+
+	return s;
+}
+
+int OCI::cursor_fetch()
+{
+	int s = 0;
+
+	_stat = OCIStmtFetch(_cursor, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
+	if (_stat == OCI_NO_DATA) {
+		return 1;
+	}
+
+	s = check_err();
+	if (s < 0) {
+		return s;
+	}
+
+	for (int idx = 1; idx <= _value_i; idx++) {
+		if (_v[idx]) {
+			_v[idx]->_i = Buffer::TRIM(_v[idx]->_v, 0);
+		}
+	}
+
+	return 0;
+}
+
+void OCI::cursor_release()
+{
+	if (_cursor) {
+		OCIHandleFree(_cursor, OCI_HTYPE_STMT);
+		_cursor = 0;
+	}
 }
 
 /**

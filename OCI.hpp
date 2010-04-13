@@ -106,6 +106,11 @@ public:
 	void stmt_bind(const int pos, const int type = OCI_T_VARCHAR);
 	void stmt_define(const int pos, const int type = OCI_T_VARCHAR);
 
+	int stmt_bind_cursor(const int pos);
+	int cursor_define(const int pos, const int type = OCI_T_VARCHAR);
+	int cursor_fetch();
+	void cursor_release();
+
 	/* bind specific handle */
 	inline void stmt_bind_number(const int pos) {
 		stmt_bind(pos, OCI_T_NUMBER);
@@ -241,6 +246,8 @@ private:
 	OCISvcCtx	*_service;
 	OCIAuthInfo	*_auth;
 	OCIStmt		*_stmt;
+	OCIStmt		*_cursor;
+	OCIBind		*_cursor_bind;
 	OCISubscription	*_subscr;
 	OCIColl		*_table_changes;
 	OCIColl		*_row_changes;
