@@ -8,8 +8,6 @@
 
 namespace vos {
 
-const char * ConfigData::DFLT_KEY_FMT = "KEY-";
-
 /**
  * @method	: ConfigData::ConfigData
  * @desc	: ConfigData constructor, initializing all attributes.
@@ -148,7 +146,7 @@ int ConfigData::add_value(const ConfigData *value)
 		Buffer		key;
 		ConfigData	*k = _last_head->_next_key;
 
-		s = key.init_raw(ConfigData::DFLT_KEY_FMT, 0);
+		s = key.init_raw(CONFIGDATA_KEY_FMT, 0);
 		if (s < 0)
 			return s;
 
@@ -233,6 +231,7 @@ void ConfigData::dump()
 	ConfigData *h = this;
 	ConfigData *k = NULL;
 
+	printf("----------------------------------------------------\n");
 	while (h) {
 		printf("[%s]\n", h->_v);
 
@@ -250,6 +249,7 @@ void ConfigData::dump()
 
 		h = h->_next_head;
 	}
+	printf("----------------------------------------------------\n");
 }
 
 /**

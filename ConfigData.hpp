@@ -19,6 +19,8 @@ enum _config_type {
 	CONFIG_T_MISC
 };
 
+#define	CONFIGDATA_KEY_FMT	"KEY-"
+
 /**
  * @class		: ConfigData
  * @attr		:
@@ -64,8 +66,6 @@ public:
 private:
 	ConfigData(const ConfigData&);
 	void operator=(const ConfigData&);
-
-	static const char * DFLT_KEY_FMT;
 };
 
 } /* namespace::vos */
