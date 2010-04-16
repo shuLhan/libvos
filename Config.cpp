@@ -29,8 +29,9 @@ Config::Config() :
  */
 Config::~Config()
 {
-	if (_data)
+	if (_data) {
 		delete _data;
+	}
 }
 
 /**
@@ -163,6 +164,19 @@ err:
 }
 
 /**
+ * @method	: Config::close
+ * @desc	: close config file and release all data.
+ */
+void Config::close()
+{
+	File::close();
+	if (_data) {
+		delete _data;
+		_data = NULL;
+	}
+}
+
+/**
  * @method		: Config::get
  * @param		:
  *	> head		: header of configuration, where key will reside.
@@ -201,6 +215,16 @@ const char * Config::get(const char *head, const char *key, const char *dflt)
 	return dflt;
 }
 
+const char* Config::get(const char *head, const char *key)
+{
+	return get(head, key, NULL);
+}
+
+const char* Config::get(const char *key)
+{
+	return get(CONFIG_ROOT, key, NULL);
+}
+
 /**
  * @method	: Config::get_number
  * @param	:
@@ -216,12 +240,23 @@ int Config::get_number(const char *head, const char *key, const int dflt)
 	int		n;
 	const char	*v = get(head, key, NULL);
 
-	if (!v)
+	if (!v) {
 		return dflt;
+	}
 
 	n = strtol(v, 0, 0);
 
 	return n;
+}
+
+int Config::get_number(const char *head, const char *key)
+{
+	return get_number(head, key, 0);
+}
+
+int Config::get_number(const char *key)
+{
+	return get_number(CONFIG_ROOT, key, 0);
 }
 
 /**

@@ -43,21 +43,15 @@ public:
 	int load(const char *ini);
 	int save();
 	int save_as(const char *ini, const int mode);
+	void close();
 
-	const char* get(const char *head, const char *key,
-			const char *dflt = NULL);
+	const char* get(const char *head, const char *key, const char *dflt);
+	const char* get(const char *head, const char *key);
+	const char* get(const char *key);
 
-	inline const char* get_no_head(const char *key, const char *dflt = NULL)
-	{
-		return get(CONFIG_ROOT, key, dflt);
-	}
-
-	int get_number(const char *head, const char *key, const int dflt = 0);
-
-	inline int get_number_no_head(const char *key, const int dflt = 0)
-	{
-		return get_number(CONFIG_ROOT, key, dflt);
-	}
+	int get_number(const char *head, const char *key, const int dflt);
+	int get_number(const char *head, const char *key);
+	int get_number(const char *key);
 
 	int set(const char *head, const char *key, const char *value);
 	void add(const char *head, const char *key, const char *value);
