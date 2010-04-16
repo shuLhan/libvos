@@ -37,7 +37,7 @@ Dir::~Dir()
  */
 int Dir::init()
 {
-	register int s;
+	register int s = 0;
 
 	if (_ls) {
 		reset();
@@ -286,7 +286,7 @@ int Dir::get_list(const char *path, long pid)
  */
 int Dir::insert(DirNode *node)
 {
-	register int s;
+	register int s = 0;
 
 	_ls[_i] = node;
 	_i++;
