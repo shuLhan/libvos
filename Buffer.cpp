@@ -265,6 +265,8 @@ int Buffer::appendui(long unsigned int i, int base)
 	register int	x	= 0;
 	char		rebmun[23];
 
+	memset(rebmun, 0, 23);
+
 	while (i > 0) {
 		rebmun[x]	= __digits[i % base];
 		i		= i / base;
