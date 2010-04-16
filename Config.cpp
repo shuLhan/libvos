@@ -15,8 +15,6 @@ enum _cfg_parsing_stt {
 	P_CFG_VALUE
 };
 
-const char * Config::CFG_HDR = "__CONFIG__";
-
 /**
  * @method	: Config::Config
  * @desc	: Config object constructor.
@@ -31,8 +29,9 @@ Config::Config() :
  */
 Config::~Config()
 {
-	if (_data)
+	if (_data) {
 		delete _data;
+	}
 }
 
 /**
@@ -60,7 +59,7 @@ int Config::load(const char *ini)
 	if (!ini)
 		return 0;
 
-	s = ConfigData::INIT(&_data, CONFIG_T_HEAD, CFG_HDR);
+	s = ConfigData::INIT(&_data, CONFIG_T_HEAD, CONFIG_ROOT);
 	if (s < 0)
 		return s;
 
@@ -129,7 +128,7 @@ int Config::save_as(const char *ini, const int mode)
 		return s;
 
 	while (phead) {
-		if (phead->like_raw(CFG_HDR) != 0) {
+		if (phead->like_raw(CONFIG_ROOT) != 0) {
 			s = fini.writes("[%s]\n", phead->_v);
 			if (s < 0)
 				goto err;
@@ -162,6 +161,19 @@ err:
 	fini.close();
 
 	return s;
+}
+
+/**
+ * @method	: Config::close
+ * @desc	: close config file and release all data.
+ */
+void Config::close()
+{
+	File::close();
+	if (_data) {
+		delete _data;
+		_data = NULL;
+	}
 }
 
 /**
@@ -203,6 +215,16 @@ const char * Config::get(const char *head, const char *key, const char *dflt)
 	return dflt;
 }
 
+const char* Config::get(const char *head, const char *key)
+{
+	return get(head, key, NULL);
+}
+
+const char* Config::get(const char *key)
+{
+	return get(CONFIG_ROOT, key, NULL);
+}
+
 /**
  * @method	: Config::get_number
  * @param	:
@@ -218,12 +240,23 @@ int Config::get_number(const char *head, const char *key, const int dflt)
 	int		n;
 	const char	*v = get(head, key, NULL);
 
-	if (!v)
+	if (!v) {
 		return dflt;
+	}
 
 	n = strtol(v, 0, 0);
 
 	return n;
+}
+
+int Config::get_number(const char *head, const char *key)
+{
+	return get_number(head, key, 0);
+}
+
+int Config::get_number(const char *key)
+{
+	return get_number(CONFIG_ROOT, key, 0);
 }
 
 /**
@@ -332,8 +365,9 @@ inline int Config::parsing()
 	Buffer	b;
 
 	s = b.init(NULL);
-	if (s != 0)
+	if (s != 0) {
 		return s;
+	}
 
 	resize(l);
 	read();
@@ -347,8 +381,9 @@ inline int Config::parsing()
 			++i;
 		}
 
-		if (i >= l)
+		if (i >= l) {
 			break;
+		}
 
 		if (_v[i] == CFG_CH_COMMENT || _v[i] == CFG_CH_COMMENT2) {
 			i_str = i;
@@ -377,8 +412,8 @@ inline int Config::parsing()
 		switch (todo) {
 		case P_CFG_START:
 			if (_v[i] != CFG_CH_HEAD_OPEN) {
-				_e_col = i - line_i;
-				goto bad_cfg;
+				todo = P_CFG_KEY;
+				continue;
 			}
 
 			++i;
@@ -406,8 +441,9 @@ inline int Config::parsing()
 			}
 
 			s = _data->add_head_raw(b._v);
-			if (s < 0)
+			if (s < 0) {
 				return s;
+			}
 
 			b.reset();
 

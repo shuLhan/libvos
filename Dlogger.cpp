@@ -153,6 +153,43 @@ int Dlogger::er_b(Buffer *bfr)
 }
 
 /**
+ * @method	: Dlogger::out
+ * @param	:
+ *	> fmt	: formatted string output.
+ *	> ...	: one or more arguments for output.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	: write message to standard output and log file.
+ */
+int Dlogger::out(const char *fmt, ...)
+{
+	register int	s;
+	va_list		args;
+
+	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
+
+	va_start(args, fmt);
+
+	add_timestamp();
+	_tmp.vprint(fmt, args);
+
+	if (_d != STDERR_FILENO) {
+		s = write(&_tmp);
+	}
+	fprintf(stdout, "%s", _tmp._v);
+
+	_tmp.reset();
+	va_end(args);
+
+	pthread_mutex_unlock(&_lock);
+
+	return s;
+}
+
+
+
+/**
  * @method	: Dlogger::it
  * @param	:
  *	> fmt	: formatted string output.

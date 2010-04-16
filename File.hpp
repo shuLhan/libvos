@@ -42,9 +42,15 @@ enum _open_type {
  *		file name, with or without path, depends on how user
  *		called at opening it.
  * @desc		:
+ *	Just like Buffer, '_l' in File represent the length of buffer '_v',
+ *	and '_i' represent the length of data in that buffer, so '_i' <= '_l'.
  *
- *	_p is used to mark the end of line when used to read one line, using
- *	get_line() method, from buffer.
+ *	To walk through buffer use '_p' or for marking the position that you
+ *	have already checked/processed in buffer. So, '_p' <= '_i' <= '_l'.
+ *
+ *	'_p' is also used to mark the end of line when used to read one line,
+ *	using get_line() method, from buffer; or, used as pointer, iterating
+ *	through buffer '_v' from 0 until '_i'.
  */
 class File : public Buffer {
 public:
@@ -62,6 +68,7 @@ public:
 	int open_wa(const char *path);
 	int read();
 	int readn(int n);
+	int refill(int read_min = 0);
 	int write(const Buffer *bfr);
 	int write_raw(const char *bfr, int len = 0);
 	int writef(const char *fmt, va_list args);
@@ -71,12 +78,12 @@ public:
 	void close();
 	void dump();
 
-	int get_size();
+	off_t get_size();
 	int get_line(Buffer **line);
 
 	void set_eol(const int mode);
 
-	static int GET_SIZE(const char *path);
+	static off_t GET_SIZE(const char *path);
 	static int IS_EXIST(const char *path, int acc_mode = O_RDWR);
 	static int BASENAME(Buffer *name, const char *path);
 

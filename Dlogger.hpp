@@ -30,6 +30,7 @@ public:
 
 	int er(const char *fmt, ...);
 	int er_b(Buffer *bfr);
+	int out(const char *fmt, ...);
 	int it(const char *fmt, ...);
 private:
 	Dlogger(const Dlogger&);

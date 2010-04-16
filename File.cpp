@@ -216,6 +216,65 @@ int File::readn(int n)
 }
 
 /**
+ * @method		: File::refill
+ * @param		:
+ *	> read_min	: minimum length of buffer to fill, default to '0'.
+ * @return		:
+ *	< >= 0		: success.
+ *	< -1		: fail.
+ * @desc		: Refill buffer with new data.
+ *
+ * All data from position of '_p' until '_i' will be moved to the beginning of
+ * buffer and will not be replaced, new data will be filled in position after
+ * (_i - _p).
+ */
+int File::refill(int read_min)
+{
+	register int move_len	= 0;
+	register int len	= 0;
+
+	move_len = _i - _p;
+	if (move_len > 0 && _p > 0) {
+		memmove(&_v[0], &_v[_p], move_len);
+	} else { /* move_len <= 0 || _p <= 0 */
+		_p = 0;
+		return 0;
+	}
+
+	len = move_len + read_min;
+	if (len > _l) {
+		if (LIBVOS_DEBUG) {
+			printf("\n read resize: from %d to %d\n", _l, len);
+		}
+		resize(len);
+		len -= move_len;
+	} else {
+		len = _l - move_len;
+		if (len <= 0) {
+			len = _l * 2;
+			if (LIBVOS_DEBUG) {
+				printf("\n read resize: from %d to %d\n",
+					_l, len);
+			}
+			resize(len);
+			len -= move_len;
+		}
+	}
+
+	_i = ::read(_d, &_v[move_len], len);
+	if (_i < 0) {
+		return -1;
+	}
+
+	_i	+= move_len;
+	_p	= 0;
+	_v[_i]	= '\0';
+
+	return _i;
+
+}
+
+/**
  * @method	: File::get_line
  * @param	:
  *	> line	: out, pointer to Buffer object.
@@ -503,7 +562,7 @@ void File::dump()
  *	< <0	: fail, error at seek.
  * @desc	: get current size of file.
  */
-int File::get_size()
+off_t File::get_size()
 {
 	register off_t s;
 	register off_t cur;
@@ -551,10 +610,10 @@ void File::set_eol(const int mode)
  *	< 0	: if file is empty, or file is not exist.
  * @desc	: get the size of file.
  */
-int File::GET_SIZE(const char *path)
+off_t File::GET_SIZE(const char *path)
 {
 	register int fd;
-	register int size;
+	register off_t size;
 
 	if (!path)
 		return 0;

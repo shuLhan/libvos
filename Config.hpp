@@ -26,6 +26,8 @@ enum _cfg_save_mode {
 	CONFIG_SAVE_WOUT_COMMENT
 };
 
+#define	CONFIG_ROOT	"__CONFIG__"
+
 /**
  * @class		: Config
  * @attr		:
@@ -41,10 +43,15 @@ public:
 	int load(const char *ini);
 	int save();
 	int save_as(const char *ini, const int mode);
+	void close();
 
-	const char *get(const char *head, const char *key,
-			const char *dflt = NULL);
-	int get_number(const char *head, const char *key, const int dflt = 0);
+	const char* get(const char *head, const char *key, const char *dflt);
+	const char* get(const char *head, const char *key);
+	const char* get(const char *key);
+
+	int get_number(const char *head, const char *key, const int dflt);
+	int get_number(const char *head, const char *key);
+	int get_number(const char *key);
 
 	int set(const char *head, const char *key, const char *value);
 	void add(const char *head, const char *key, const char *value);
@@ -55,8 +62,6 @@ private:
 	void operator=(const Config&);
 
 	int parsing();
-
-	static const char * CFG_HDR;
 };
 
 } /* namespace::vos */
