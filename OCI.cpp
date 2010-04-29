@@ -34,7 +34,6 @@ Buffer	OCI::_spool_conn_name;
  */
 OCI::OCI() :
 	_stat(0),
-	_cs(OCI_STT_DISCONNECT),
 	_env_mode(OCI_DEF_ENV_MODE),
 	_table_changes_n(0),
 	_row_changes_n(0),
@@ -62,15 +61,33 @@ OCI::OCI() :
  */
 OCI::~OCI()
 {
+	cursor_release();
+	stmt_release();
 
-	if (_cs == OCI_STT_LOGGED_IN) {
-		logout();
-	}
-	if (_cs == OCI_STT_CONNECTED) {
-		disconnect();
-	}
+	logout();
+	disconnect();
 	if (_subscr) {
 		stmt_unsubscribe();
+	}
+	if (_err) {
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr, "[OCI] free error handle\n");
+		}
+		OCIHandleFree(_err, OCI_HTYPE_ERROR);
+		_err = 0;
+	}
+	if (_env) {
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr, "[OCI] free environment handle\n");
+		}
+		OCIHandleFree(_env, OCI_HTYPE_ENV);
+		_env = 0;
+	}
+
+	release_buffer();
+	if (_v) {
+		free(_v);
+		_v = 0;
 	}
 }
 
@@ -83,7 +100,7 @@ OCI::~OCI()
  */
 int OCI::init()
 {
-	_v = (OCIValue **) (calloc(_value_sz, sizeof(_v)));
+	_v = (OCIValue **) calloc(_value_sz, sizeof(OCIValue *));
 	if (!_v) {
 		return -1;
 	}
@@ -142,7 +159,7 @@ int OCI::check(void *handle, int type)
 		break;
 	}
 
-	fprintf(stderr, "[OCI-%d-%d] %s\n", _stat, errcode, errmsg);
+	fprintf(stderr, "[OCI(status:%d)(code:%d)] ERROR: %s\n", _stat, errcode, errmsg);
 
 	return -1;
 }
@@ -153,6 +170,10 @@ int OCI::check(void *handle, int type)
  */
 void OCI::create_env()
 {
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] create environment handle\n");
+	}
+
 	_stat = OCIEnvCreate(&_env, _env_mode, 0, 0, 0, 0, 0, 0);
 	check_env();
 }
@@ -163,6 +184,9 @@ void OCI::create_env()
  */
 void OCI::create_err()
 {
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] create error handle\n");
+	}
 	_stat = OCIHandleAlloc(_env, (void **) &_err, OCI_HTYPE_ERROR, 0, 0);
 	check_env();
 }
@@ -243,7 +267,7 @@ int OCI::create_session(const char *conn, unsigned int conn_len)
 }
 
 /**
- * @method		: OCI::get_session
+ * @method		: OCI::create_session_pool
  * @param		:
  *	> conn		: Oracle connection string.
  *	> conn_len	: length of 'conn' string (default to zero).
@@ -312,8 +336,6 @@ int OCI::create_session_pool(const char *conn, unsigned int conn_len)
 		printf("[OCI] session pool name : %s\n", _spool_name);
 	}
 
-	_cs = OCI_STT_CONNECTED;
-
 	return 0;
 
 }
@@ -334,14 +356,19 @@ int OCI::login(const char *username, const char *password, const char *conn)
 {
 	register int s;
 
-	if (!_spool_name || !_spool_conn_name.like_raw(conn)) {
-		s = create_session_pool(conn);
+	if (!_env) {
+		s = init();
 		if (s < 0) {
 			return -1;
 		}
 	}
 
-	_stat = OCIHandleAlloc(_env, (void **) &_auth, OCI_HTYPE_AUTHINFO, 0, 0);
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] create authentication handle\n");
+	}
+
+	_stat = OCIHandleAlloc(_env, (void **) &_auth, OCI_HTYPE_AUTHINFO, 0,
+				NULL);
 	s = check_env();
 	if (s < 0) {
 		return -1;
@@ -361,15 +388,18 @@ int OCI::login(const char *username, const char *password, const char *conn)
 		return -1;
 	}
 
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] get session\n");
+	}
+
 	_stat = OCISessionGet(_env, _err, &_service, _auth,
-				(OraText *) _spool_name, _spool_name_len,
-				0, 0, 0, 0, 0, OCI_SESSGET_SPOOL);
+				(OraText *) conn, strlen(conn),
+				NULL, 0, NULL, NULL, NULL, OCI_DEFAULT);
 	s = check_err();
 	if (s < 0) {
 		return -1;
 	}
 
-	_cs = OCI_STT_LOGGED_IN;
 	return 0;
 }
 
@@ -539,6 +569,11 @@ int OCI::stmt_prepare(const char *stmt)
 {
 	register int s;
 
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] statement prepare:\n%s\n",
+			stmt);
+	}
+
 	_stat = OCIStmtPrepare2(_service, &_stmt, _err, (const OraText *) stmt,
 				strlen(stmt), 0, 0, OCI_NTV_SYNTAX,
 				OCI_DEFAULT);
@@ -647,7 +682,7 @@ int OCI::stmt_execute(const char *stmt)
 	}
 
 	_stat = OCIAttrGet(_stmt, OCI_HTYPE_STMT, &stmt_type, 0,
-			OCI_ATTR_STMT_TYPE, _err);
+				OCI_ATTR_STMT_TYPE, _err);
 	s = check_err();
 	if (s < 0) {
 		return s;
@@ -657,6 +692,10 @@ int OCI::stmt_execute(const char *stmt)
 		i = 0;
 	} else {
 		i = 1;
+	}
+
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] statement executed\n");
 	}
 
 	_stat = OCIStmtExecute(_service, _stmt, _err, i, 0, 0, 0,
@@ -713,11 +752,18 @@ int OCI::stmt_fetch()
  */
 void OCI::stmt_release()
 {
-	_stat = OCIStmtRelease(_stmt, _err, 0, 0, OCI_DEFAULT);
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] release statement\n");
+	}
 
-	check_err();
-	_stmt		= 0;
-	_value_i	= 0;
+	if (_stmt) {
+		_stat = OCIStmtRelease(_stmt, _err, NULL, 0, OCI_DEFAULT);
+		check_err();
+		_stmt = 0;
+	}
+
+	release_buffer();
+	_value_i = 0;
 }
 
 /**
@@ -726,10 +772,20 @@ void OCI::stmt_release()
  */
 void OCI::logout()
 {
-	OCISessionRelease(_service, _err, 0, 0, OCI_DEFAULT);
-	OCIHandleFree(_auth, OCI_HTYPE_AUTHINFO);
-	_auth	= 0;
-	_cs	= OCI_STT_CONNECTED;
+	if (_service) {
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr, "[OCI] free session\n");
+		}
+		OCISessionRelease(_service, _err, NULL, 0, OCI_DEFAULT);
+		_service = 0;
+	}
+	if (_auth) {
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr, "[OCI] free auth\n");
+		}
+		OCIHandleFree(_auth, OCI_HTYPE_AUTHINFO);
+		_auth = 0;
+	}
 }
 
 /**
@@ -738,15 +794,19 @@ void OCI::logout()
  */
 void OCI::disconnect()
 {
-	_stat = OCISessionPoolDestroy(_spool, _err, OCI_DEFAULT);
-	check_err();
+	if (_spool) {
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr, "[OCI] free session pool handle\n");
+		}
 
-	_spool = 0;
-	if (_spool_name) {
-		_spool_name = 0;
+		_stat = OCISessionPoolDestroy(_spool, _err, OCI_DEFAULT);
+		check_err();
+		_spool = 0;
+
+		if (_spool_name) {
+			_spool_name = 0;
+		}
 	}
-
-	_cs = OCI_STT_DISCONNECT;
 }
 
 /**
@@ -761,7 +821,17 @@ void OCI::stmt_new_value(const int pos, const int type)
 {
 	if (pos >= _value_sz) {
 		_value_sz += Buffer::DFLT_SIZE;
-		_v = (OCIValue **) realloc(_v, _value_sz * sizeof(_v));
+		_v = (OCIValue **) realloc(_v, _value_sz * sizeof(OCIValue *));
+		if (!_v) {
+			return;
+		}
+
+		memset(_v + _value_i, 0,
+			Buffer::DFLT_SIZE * sizeof(OCIValue *));
+	}
+
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] new buffer at %d\n", pos);
 	}
 
 	switch (type) {
@@ -808,7 +878,7 @@ void OCI::stmt_new_value(const int pos, const int type)
 		_v[pos] = OCIValue::UROWID(pos);
 		break;
 	default:
-		fprintf(stderr, "[LIBVOS] OCI error: unknown type %d!\n",
+		fprintf(stderr, "[OCI] error: unknown type %d!\n",
 				type);
 		return;
 	}
@@ -849,6 +919,11 @@ void OCI::stmt_bind(const int pos, const int type)
 void OCI::stmt_define(const int pos, const int type)
 {
 	stmt_new_value(pos, type);
+
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] define type(%d) at '%d'\n", type,
+			pos);
+	}
 
 	_stat = OCIDefineByPos(_stmt, &_v[pos]->_define, _err, pos,
 				_v[pos]->_v, _v[pos]->_l - 1,
@@ -1141,6 +1216,20 @@ int OCI::get_row_change_id(void *rowd, char **rowid, unsigned int *rowid_len)
 	s = check_err();
 
 	return s;
+}
+
+void OCI::release_buffer()
+{
+	for (int i = 0; i <= _value_i; i++) {
+		if (!_v[i]) {
+			continue;
+		}
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr, "[OCI] free buffer at %d\n", i);
+		}
+		delete _v[i];
+		_v[i] = 0;
+	}
 }
 
 } /* namespace::vos */

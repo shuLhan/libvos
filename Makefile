@@ -57,7 +57,7 @@ endif
 PRE_TARGET	= ${LIBVOS_BLD_D}
 TARGET		= ${TARGET_OBJS}
 
-.PHONY: all debug install clean
+.PHONY: all all-32 all-64 debug install clean
 
 all:: CXXFLAGS+=${CXXFLAGS_ADD}
 all:: ${PRE_TARGET} ${TARGET}
@@ -66,8 +66,19 @@ all-32:: CXXFLAGS_ADD+=-m32
 all-32:: LDFLAGS+=-m32
 all-32:: all
 
+all-64:: CXXFLAGS_ADD+=-m64
+all-64:: LDFLAGS+=-m64
+all-64:: all
+
 debug:: CXXFLAGS=${CXXFLAGS_DEBUG} ${CXXFLAGS_ADD}
 debug:: ${PRE_TARGET} ${TARGET}
+
+debug-32:: CXXFLAGS=${CXXFLAGS_DEBUG} -m32
+debug-32:: debug
+
+debug-64:: CXXFLAGS=${CXXFLAGS_DEBUG} -m64
+debug-64:: debug
+
 
 ${LIBVOS_BLD_D}:
 	@mkdir -p $@
