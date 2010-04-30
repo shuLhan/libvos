@@ -715,4 +715,45 @@ int File::BASENAME(Buffer *name, const char *path)
 	return 0;
 }
 
+/**
+ * @method	: File::COPY
+ * @param	:
+ *	> src	: a path to source file to copy.
+ *	> dst	: a path to destination file.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	:
+ * copy file 'src' to 'dst', create a new file if 'dst' is not exist, or
+ * overwrite 'dst' if already exist.
+ */
+int File::COPY(const char *src, const char *dst)
+{
+	register int	s;
+	File		from;
+	File		to;
+
+	s = from.open_ro(src);
+	if (s < 0) {
+		return s;
+	}
+
+	s = to.open_wo(dst);
+	if (s < 0) {
+		return s;
+	}
+
+	s = from.read();
+	while (s > 0) {
+		s = to.write(&from);
+		if (s < 0) {
+			return s;
+		}
+
+		s = from.read();
+	}
+
+	return 0;
+}
+
 } /* namespace::vos */

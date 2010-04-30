@@ -50,7 +50,7 @@ ifdef ORACLE_HOME
 TARGET_OBJS	+=	${LIBVOS_BLD_D}/OCIValue.oo	\
 			${LIBVOS_BLD_D}/OCI.oo
 
-CXXFLAGS_ADD	+=	-I${ORACLE_HOME}/include
+CXXFLAGS_ADD	+=	-I${ORACLE_HOME}/include -I${ORACLE_HOME}/rdbms/public
 LDFLAGS		+=	-L${ORACLE_HOME}/lib -lclntsh -lnnz10
 endif
 
