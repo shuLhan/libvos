@@ -265,6 +265,8 @@ int Buffer::appendui(long unsigned int i, int base)
 	register int	x	= 0;
 	char		rebmun[23];
 
+	memset(rebmun, 0, 23);
+
 	while (i > 0) {
 		rebmun[x]	= __digits[i % base];
 		i		= i / base;
@@ -692,6 +694,23 @@ int Buffer::like_raw(const char *bfr)
 		return 1;
 
 	return 0;
+}
+
+int Buffer::to_int()
+{
+	return (int) to_lint();
+}
+
+long Buffer::to_lint()
+{
+	long v;
+
+	v = strtol(_v, NULL, 0);
+	if (errno) {
+		v = 0;
+	}
+
+	return v;
 }
 
 /**
