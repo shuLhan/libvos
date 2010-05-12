@@ -40,6 +40,7 @@ public:
 	void dump();
 
 	static int CREATE(const char *path, mode_t mode = DEF_CREATE_MODE);
+	static int CREATES(const char* path, mode_t mode = DEF_CREATE_MODE);
 
 	long	_i;
 	long	_l;

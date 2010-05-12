@@ -321,8 +321,72 @@ int Dir::CREATE(const char *path, mode_t mode)
 {
 	register int s = 0;
 
+	if (LIBVOS_DEBUG) {
+		printf("[DIR] create: %s\n", path);
+	}
+
 	s = mkdir(path, mode);
 
+	return s;
+}
+
+/**
+ * @method	: Dir::CREATES
+ * @param	:
+ *	> path	: a path to directory name.
+ *	> mode	: the file permission bits of the new directory.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	:
+ *	create 'path' directory recursively.
+ *	if 'path' is 'a/b/c', then create directory 'a', 'a/b', and then
+ *	'a/b/c'.
+ */
+int Dir::CREATES(const char* path, mode_t mode)
+{
+	if (!path) {
+		return 0;
+	}
+	if (LIBVOS_DEBUG) {
+		printf("[DIR] create recursive: %s\n", path);
+	}
+
+	int s = 0;
+	int i = 0;
+	int len = strlen(path);
+	Buffer d;
+
+	while (path[i] == '/') {
+		i++;
+	}
+	while (i < len) {
+		if (path[i] == '/') {
+			s = CREATE(d._v, mode);
+			if (s < 0 && errno != EEXIST) {
+				goto err;
+			}
+
+			d.appendc(path[i]);
+
+			do {
+				i++;
+			} while (path[i] == '/');
+		} else {
+			d.appendc(path[i]);
+			i++;
+		}
+	}
+	i--;
+	if (path[i] != '/' && path[i] != '.') {
+		s = CREATE(d._v, mode);
+		if (s < 0 && errno != EEXIST) {
+			goto err;
+		}
+	}
+
+	s = 0;
+err:
 	return s;
 }
 
