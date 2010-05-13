@@ -103,18 +103,21 @@ int Dir::open(const char *path, int depth)
 {
 	int	s;
 	int	c;
+	char	rpath[PATH_MAX];
 	Buffer	ppath;
 
 	if (!path) {
 		return 0;
 	}
 
+	realpath(path, rpath);
+
 	s = init();
 	if (s < 0) {
 		return -1;
 	}
 
-	s = DirNode::INIT(&_ls[_i], path, path, 0);
+	s = DirNode::INIT(&_ls[_i], rpath, rpath, 0);
 	if (s < 0) {
 		return -1;
 	}
@@ -123,41 +126,43 @@ int Dir::open(const char *path, int depth)
 	c	= 1;
 	_depth	= depth;
 
-	s = get_list(path, 0);
+	s = get_list(rpath, 0);
 	if (s < 0) {
 		return s;
 	}
 
 	for (; c < _i; c++) {
-		if (_ls[c]->is_dir()) {
-			ppath.reset();
+		if (!_ls[c]->is_dir()) {
+			continue;
+		}
 
-			if (_ls[c]->is_link()) {
-				s = _ls[c]->get_linkname();
-				if (s < 0) {
-					return -1;
-				}
+		ppath.reset();
 
-				s = ppath.copy(&_ls[c]->_linkname);
-			} else {
-				ppath.append_raw(path);
-				s = get_parent_path(&ppath, _ls[c]);
-				if (s < 0) {
-					goto err;
-				} else if (s > 0) {
-					break;
-				}
-			}
+		if (_ls[c]->is_link()) {
+			s = _ls[c]->get_linkname();
 			if (s < 0) {
+				return -1;
+			}
+
+			s = ppath.copy(&_ls[c]->_linkname);
+		} else {
+			ppath.append_raw(rpath);
+			s = get_parent_path(&ppath, _ls[c]);
+			if (s < 0) {
+				goto err;
+			} else if (s > 0) {
 				break;
 			}
+		}
+		if (s < 0) {
+			break;
+		}
 
-			_ls[c]->_cid = _i;
+		_ls[c]->_cid = _i;
 
-			s = get_list(ppath._v, c);
-			if (s < 0) {
-				break;
-			}
+		s = get_list(ppath._v, c);
+		if (s < 0) {
+			break;
 		}
 	}
 
@@ -165,7 +170,7 @@ int Dir::open(const char *path, int depth)
 		dump();
 	}
 
-	s = _name.copy_raw(path);
+	s = _name.copy_raw(rpath);
 err:
 	return s;
 }
@@ -191,7 +196,6 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
 	if (depth == _depth) {
 		return depth;
 	}
-
 	if (ls && ls->_pid) {
 		s = get_parent_path(path, _ls[ls->_pid], depth + 1);
 	}
@@ -199,11 +203,12 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
 		return -1;
 	}
 
+	path->appendc('/');
+
 	s = path->append(&ls->_name);
 	if (s < 0) {
 		return -1;
 	}
-
 	s = path->appendc('/');
 
 	return s;

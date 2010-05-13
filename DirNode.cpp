@@ -149,7 +149,7 @@ void DirNode::dump()
 	}
 	printf("|%8ld|%8ld|%8ld|%5d|%5d|%5d|%12ld|%ld|%s|%s\n",
 		_id, _pid, _cid, _mode, _uid, _gid, _size, _mtime, _name._v,
-		_linkname._v);
+		_linkname._v ? _linkname._v : "");
 }
 
 /**

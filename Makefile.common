@@ -10,10 +10,13 @@ MAKEFLAGS	+= --warn-undefined-variables
 SYS		= $(shell uname)
 
 CXX		= g++
+CXXFLAGS_GLOBAL	= -Wall -Wextra -Weffc++ -Werror -fno-rtti -fno-exceptions -pipe
+
 ifndef CXXFLAGS
-CXXFLAGS	= -Wall -Wextra -Weffc++ -Werror -fno-rtti -Os -pipe
+CXXFLAGS	= ${CXXFLAGS_GLOBAL} -Os
 endif
-CXXFLAGS_DEBUG	= -Wall -Wextra -Weffc++ -Werror -fno-rtti -g -O0 -pipe
+CXXFLAGS_DEBUG	= ${CXXFLAGS_GLOBAL} -g -O0
+
 LDFLAGS		= -lpthread
 
 do_compile	=						\
@@ -31,3 +34,11 @@ do_link		=						\
 			echo "    [S] linking ${1} => ${2}";	\
 			rm -f ${2} 2&> /dev/null;		\
 			ln -s ${1} ${2};
+
+do_mkdir	=						\
+			echo "    [M] mkdir ${1}";		\
+			mkdir -p $1
+
+do_rmdir	=						\
+			echo "    [R] remove dir ${1}";		\
+			rm -rf ${1}

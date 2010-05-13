@@ -66,14 +66,17 @@ public:
 	int open_ro(const char *path);
 	int open_wo(const char *path);
 	int open_wa(const char *path);
+
 	int read();
 	int readn(int n);
 	int refill(int read_min = 0);
+
 	int write(const Buffer *bfr);
 	int write_raw(const char *bfr, int len = 0);
 	int writef(const char *fmt, va_list args);
 	int writes(const char *fmt, ...);
 	int writec(const char c);
+
 	int flush();
 	void close();
 	void dump();

@@ -523,6 +523,7 @@ int File::flush()
 		_i	-= s;
 	}
 
+	_i = x;
 	reset();
 
 	return x;
@@ -551,7 +552,7 @@ void File::dump()
 	printf("[FILE-%d]\n", _d);
 	printf("\t name     : %s\n", _name._v);
 	printf("\t contents :\n"
-		"\t >> %s\n", _v);
+		"\t>>\n%s\n<<\n", _v);
 }
 
 /**

@@ -8,7 +8,7 @@
 
 namespace vos {
 
-unsigned int	Socket::DFLT_BUFFER_SIZE	= 65495;
+unsigned int	Socket::DFLT_BUFFER_SIZE	= 65536;
 unsigned int	Socket::DFLT_LISTEN_SIZE	= 4;
 unsigned int	Socket::DFLT_NAME_SIZE		= 255;
 const char*	Socket::ADDR_WILCARD		= "0.0.0.0";
@@ -32,12 +32,16 @@ Socket::Socket() : File(),
  */
 Socket::~Socket()
 {
-	_next	= NULL;
-	_prev	= NULL;
-	if (_clients) {
+	Socket *next = NULL;
+
+	while (_clients) {
+		next = _clients->_next;
 		delete _clients;
-		_clients = NULL;
+		_clients = next;
 	}
+
+	_next = NULL;
+	_prev = NULL;
 	pthread_mutex_destroy(&_client_lock);
 }
 
@@ -355,7 +359,7 @@ void Socket::remove_client(Socket *client)
 }
 
 /**
- * @method		: Socket::remove_client
+ * @method		: Socket::remove_client_r
  * @param		:
  *	> client	: Socket object.
  * @desc		:
@@ -536,14 +540,18 @@ int Socket::send(Buffer *bfr)
  *	< <0	: fail.
  * @desc	: send data 'bfr' with length 'len' to end point connection.
  */
-int Socket::send_raw(const char *bfr, const int len)
+int Socket::send_raw(const char *bfr, int len)
 {
 	register int s;
 
 	if (bfr) {
+		if (len <= 0) {
+			len = strlen(bfr);
+		}
 		s = write_raw(bfr, len);
-		if (s < 0)
+		if (s < 0) {
 			return s;
+		}
 	}
 	s = flush();
 	return s;

@@ -59,7 +59,7 @@ public:
 	Socket * accept_conn();
 
 	int send(Buffer *bfr);
-	int send_raw(const char *bfr, const int len);
+	int send_raw(const char *bfr, int len = 0);
 
 	int send_udp(struct sockaddr_in *addr, Buffer *bfr);
 	int send_udp_raw(struct sockaddr_in *addr, const char *bfr,
