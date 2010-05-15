@@ -13,21 +13,21 @@
 
 namespace vos {
 
-#define	LINKNAME_INIT_SIZE	255
+#define	LINKNAME_INIT_SIZE	3
 
 class DirNode {
 public:
 	DirNode(long id = 0);
 	virtual ~DirNode();
 
-	int get_stat(const char *realpath, const char *path = NULL);
-	int get_linkname();
+	int get_stat(const char *rpath, const char *path = NULL);
 	int is_dir();
 	int is_link();
 	virtual void dump();
 
-	static int INIT(DirNode **node, const char *realpath,
-			const char *path, long id);
+	static int INIT(DirNode** node, const char* rpath
+			, const char* path, long id);
+	static int GET_LINK_NAME(Buffer* linkname, const char* path);
 
 	long		_id;
 	long		_pid;

@@ -490,6 +490,55 @@ int Buffer::shiftr(const int nbyte, int c)
 }
 
 /**
+ * @method	: Buffer::prepend
+ * @param	:
+ *	> bfr	: pointer to Buffer object.
+ * @return	:
+ *	< >=0	: success, number of bytes added to the beginning of buffer.
+ *	< -1	: fail.
+ * @desc	:
+ * add buffer content of 'bfr' object to the beginning of this Buffer object.
+ */
+int Buffer::prepend(Buffer* bfr)
+{
+	if (!bfr) {
+		return 0;
+	}
+	return prepend_raw(bfr->_v, bfr->_i);
+}
+
+/**
+ * @method	: Buffer::prepend_raw
+ * @param	:
+ *	> bfr	: pointer to raw buffer.
+ *	> len	: length of 'bfr', default to zero if not set.
+ * @return	:
+ *	< >=0	: success, number of bytes added to the beginning of buffer.
+ *	< -1	: fail.
+ * @desc	: add raw buffer 'bfr' to the beginning of Buffer object.
+ */
+int Buffer::prepend_raw(const char* bfr, int len)
+{
+	if (!bfr) {
+		return 0;
+	}
+	if (len <= 0) {
+		len = strlen(bfr);
+	}
+
+	int s;
+
+	s = shiftr(len);
+	if (s < 0) {
+		return s;
+	}
+
+	memcpy(_v, bfr, len);
+
+	return len;
+}
+
+/**
  * @method	: Buffer::copy
  * @param	:
  *	> bfr	: a pointer to Buffer object.

@@ -70,6 +70,9 @@ public:
 
 	int shiftr(const int nbyte, int c = 0);
 
+	int prepend(Buffer* bfr);
+	int prepend_raw(const char* bfr, int len = 0);
+
 	int copy(const Buffer *bfr);
 	int copy_raw(const char *bfr, int len = 0);
 	int set(const Buffer *bfr, const Buffer *dflt);

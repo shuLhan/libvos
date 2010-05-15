@@ -49,7 +49,9 @@ public:
 private:
 	Dir(const Dir&);
 	void operator=(const Dir&);
+
 	int resize();
+	int get_link_child(DirNode* node, int root_len);
 
 	static int DEF_LS_SIZE;
 };
