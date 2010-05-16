@@ -13,8 +13,6 @@
 
 namespace vos {
 
-#define	LINKNAME_INIT_SIZE	3
-
 class DirNode {
 public:
 	DirNode(long id = 0);

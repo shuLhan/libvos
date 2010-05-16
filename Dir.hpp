@@ -22,7 +22,7 @@ namespace vos {
  *	- _depth	: maximum depth of child directory to scan for.
  *	- _name		: the first name of directory to scan.
  *	- _ls		: array of DirNode objects.
- * @decs		:
+ * @desc		:
  * a module for handling task involving directory (listing,
  * creating, and removing directory).
  */
@@ -35,6 +35,7 @@ public:
 	void reset();
 	int open(const char *path, int depth = 1);
 	int get_parent_path(Buffer *path, DirNode *ls, int depth = 1);
+	int get_link_child(Buffer* path, const char* root, int root_len);
 	int get_list(const char *path, long pid);
 	int insert(DirNode *node);
 	void dump();
@@ -51,7 +52,6 @@ private:
 	void operator=(const Dir&);
 
 	int resize();
-	int get_link_child(DirNode* node, int root_len);
 
 	static int DEF_LS_SIZE;
 };

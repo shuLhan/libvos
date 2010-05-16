@@ -181,7 +181,8 @@ int Dir::open(const char *path, int depth)
 			continue;
 		}
 		if (!_ls[c]->_linkname.is_empty()) {
-			s = get_link_child(_ls[c], rpath_len);
+			s = get_link_child(&_ls[c]->_linkname, rpath
+						, rpath_len);
 			if (s < 0) {
 				goto err;
 			}
@@ -226,9 +227,18 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
 		}
 	}
 
-	path->appendc('/');
-	path->append(&ls->_name);
-	path->appendc('/');
+	if ((path->_i <= 0)
+	||  (path->_i > 0 && path->_v[path->_i - 1] != '/')) {
+		path->appendc('/');
+	}
+
+	if (ls->_name.cmp_raw("/") != 0) {
+		path->append(&ls->_name);
+
+		if (path->_v[path->_i - 1] != '/') {
+			path->appendc('/');
+		}
+	}
 
 	return 0;
 }
@@ -268,11 +278,6 @@ int Dir::get_list(const char *path, long pid)
 		if (!dent) {
 			break;
 		}
-
-		if (LIBVOS_DEBUG) {
-			printf("[LIBVOS::DIR] checking '%s'\n", dent->d_name);
-		}
-
 		s = strcmp(dent->d_name, ".");
 		if (s == 0) {
 			continue;
@@ -281,10 +286,17 @@ int Dir::get_list(const char *path, long pid)
 		if (s == 0) {
 			continue;
 		}
+		if (LIBVOS_DEBUG) {
+			printf("[LIBVOS::DIR] checking '%s'\n", dent->d_name);
+		}
 
 		rpath.reset();
 		rpath.append_raw(path);
-		rpath.appendc('/');
+
+		if (rpath._v[rpath._i - 1] != '/') {
+			rpath.appendc('/');
+		}
+
 		rpath.append_raw(dent->d_name);
 
 		s = DirNode::INIT(&_ls[_i], rpath._v, dent->d_name, _i);
@@ -341,8 +353,9 @@ void Dir::dump()
 /**
  * @method		: Dir::get_link_child
  * @param		:
- *	> node		: pointer to DirNode object, which type is symlink.
- *	> root_len	: length of root name, the first node.
+ *	> path		: path to directory.
+ *	> root		: the root directory of Dir object.
+ *	> root_len	: length of 'root'.
  * @return		:
  *	> >=0		: success.
  *	< -1		: fail.
@@ -355,21 +368,30 @@ void Dir::dump()
  *	...
  *	node | linkname | /root/dir/real/path/to/dir
  *
- * 'node' is a symbolic link to 'x', so, instead of create list of directory
- * 'node' again, we just point the child-index of 'node' to the same value of
+ * 'path' is a symbolic link to 'x', so, instead of create list of directory
+ * 'path' again, we just point the child-index of 'path' to the same value of
  * child-index in directory 'x'.
+ *
+ * This function also can be used to get child node of any 'path', as long as
+ * they were in the same 'root'.
  */
-int Dir::get_link_child(DirNode* node, int root_len)
+int Dir::get_link_child(Buffer* path, const char* root, int root_len)
 {
 	int		s;
 	int		i;
 	int		cur_id;
 	Buffer		dir;
-	int		len	= node->_linkname._i;
-	const char*	name	= node->_linkname._v;
+	int		len	= path->_i;
+	const char*	name	= path->_v;
 
+	if (!root) {
+		return 0;
+	}
+	if (root_len <= 0) {
+		root_len = strlen(root);
+	}
 	if (LIBVOS_DEBUG) {
-		printf("[LIBVOS::DIR] get link child : %s\n" , name);
+		printf("[LIBVOS::DIR] get link child : %s\n", name);
 	}
 
 	cur_id	= 0;
@@ -392,17 +414,25 @@ int Dir::get_link_child(DirNode* node, int root_len)
 			cur_id = _ls[cur_id]->_pid;
 			continue;
 		}
-		for (s = cur_id; cur_id == _ls[s]->_pid; s++) {
+		for (s = _ls[cur_id]->_cid; cur_id == _ls[s]->_pid; s++) {
+			if (!_ls[s]->is_dir()) {
+				continue;
+			}
 			if (dir.cmp(&_ls[s]->_name) == 0) {
-				return _ls[s]->_cid;
+				dir.reset();
+				cur_id = s;
+				break;
 			}
 		}
-		break;
+		if (dir.is_empty()) {
+			continue;
+		}
+
+		fprintf(stderr, "[LIBVOS::DIR] invalid path : %s\n" , name);
+		return -1;
 	}
 
-	fprintf(stderr, "[LIBVOS::DIR] invalid symlink : %s\n" , name);
-
-	return -1;
+	return _ls[cur_id]->_cid;
 }
 
 /**
