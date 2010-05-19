@@ -35,7 +35,7 @@ public:
 	void reset();
 	int open(const char *path, int depth = 1);
 	int get_parent_path(Buffer *path, DirNode *ls, int depth = 1);
-	int get_link_child(Buffer* path, const char* root, int root_len);
+	int get_node_index(Buffer* path, const char* root, int root_len);
 	int get_list(const char *path, long pid);
 	int insert(DirNode *node);
 	void dump();

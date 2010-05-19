@@ -181,12 +181,12 @@ int Dir::open(const char *path, int depth)
 			continue;
 		}
 		if (!_ls[c]->_linkname.is_empty()) {
-			s = get_link_child(&_ls[c]->_linkname, rpath
+			s = get_node_index(&_ls[c]->_linkname, rpath
 						, rpath_len);
 			if (s < 0) {
 				goto err;
 			}
-			_ls[c]->_cid = s;
+			_ls[c]->_cid = _ls[s]->_cid;
 		}
 	}
 
@@ -357,8 +357,9 @@ void Dir::dump()
  *	> root		: the root directory of Dir object.
  *	> root_len	: length of 'root'.
  * @return		:
- *	> >=0		: success.
- *	< -1		: fail.
+ *	< >=0		: success.
+ *	< -1		: fail, path is not in the 'root' directory.
+ *	< -2		: fail, path not found.
  * @desc		:
  *
  * case example,
@@ -372,10 +373,10 @@ void Dir::dump()
  * 'path' again, we just point the child-index of 'path' to the same value of
  * child-index in directory 'x'.
  *
- * This function also can be used to get child node of any 'path', as long as
+ * This function also can be used to get node index of any 'path', as long as
  * they were in the same 'root'.
  */
-int Dir::get_link_child(Buffer* path, const char* root, int root_len)
+int Dir::get_node_index(Buffer* path, const char* root, int root_len)
 {
 	int		s;
 	int		i;
@@ -384,11 +385,15 @@ int Dir::get_link_child(Buffer* path, const char* root, int root_len)
 	int		len	= path->_i;
 	const char*	name	= path->_v;
 
-	if (!root) {
-		return 0;
+	if (!path || !root) {
+		return -1;
 	}
 	if (root_len <= 0) {
 		root_len = strlen(root);
+	}
+	s = strncmp(path->_v, root, root_len);
+	if (s != 0) {
+		return -1;
 	}
 	if (LIBVOS_DEBUG) {
 		printf("[LIBVOS::DIR] get link child : %s\n", name);
@@ -429,10 +434,10 @@ int Dir::get_link_child(Buffer* path, const char* root, int root_len)
 		}
 
 		fprintf(stderr, "[LIBVOS::DIR] invalid path : %s\n" , name);
-		return -1;
+		return -2;
 	}
 
-	return _ls[cur_id]->_cid;
+	return cur_id;
 }
 
 /**
