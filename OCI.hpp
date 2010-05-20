@@ -209,6 +209,24 @@ public:
 	int		_table_changes_n;
 	int		_row_changes_n;
 	OCIValue	**_v;
+
+	int		_value_i;
+	int		_value_sz;
+
+	OCIEnv		*_env;
+	OCIError	*_err;
+	OCIServer	*_server;
+	OCISession	*_session;
+	OCISPool	*_spool;
+	OCISvcCtx	*_service;
+	OCIAuthInfo	*_auth;
+	OCIStmt		*_stmt;
+	OCIStmt		*_cursor;
+	OCIBind		*_cursor_bind;
+	OCISubscription	*_subscr;
+	OCIColl		*_table_changes;
+	OCIColl		*_row_changes;
+
 private:
 	OCI(const OCI&);
 	void operator=(const OCI&);
@@ -229,23 +247,6 @@ private:
 	static int	_spool_name_len;
 	static char	*_spool_name;
 	static Buffer	_spool_conn_name;
-
-	int		_value_i;
-	int		_value_sz;
-
-	OCIEnv		*_env;
-	OCIError	*_err;
-	OCIServer	*_server;
-	OCISession	*_session;
-	OCISPool	*_spool;
-	OCISvcCtx	*_service;
-	OCIAuthInfo	*_auth;
-	OCIStmt		*_stmt;
-	OCIStmt		*_cursor;
-	OCIBind		*_cursor_bind;
-	OCISubscription	*_subscr;
-	OCIColl		*_table_changes;
-	OCIColl		*_row_changes;
 };
 
 } /* namespace::vos */

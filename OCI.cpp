@@ -138,6 +138,7 @@ int OCI::check(void *handle, int type)
 		break;
 	case OCI_NO_DATA:
 		errmsg = (char *)_oci_errmsg[E_OCI_NO_DATA];
+		return _stat;
 		break;
 	case OCI_ERROR:
 		if (handle) {
@@ -699,7 +700,7 @@ int OCI::stmt_execute(const char *stmt)
 	}
 
 	_stat = OCIStmtExecute(_service, _stmt, _err, i, 0, 0, 0,
-				OCI_COMMIT_ON_SUCCESS);
+				OCI_DEFAULT | OCI_COMMIT_ON_SUCCESS);
 	s = check_err();
 	if (s < 0) {
 		return s;
@@ -763,7 +764,6 @@ void OCI::stmt_release()
 	}
 
 	release_buffer();
-	_value_i = 0;
 }
 
 /**
@@ -826,7 +826,7 @@ void OCI::stmt_new_value(const int pos, const int type)
 			return;
 		}
 
-		memset(_v + _value_i, 0,
+		memset(_v + _value_i + 1, 0,
 			Buffer::DFLT_SIZE * sizeof(OCIValue *));
 	}
 
@@ -901,6 +901,10 @@ void OCI::stmt_bind(const int pos, const int type)
 {
 	stmt_new_value(pos, type);
 
+	if (LIBVOS_DEBUG) {
+		printf("[OCI] bind type(%d) at '%d'\n", type, pos);
+	}
+
 	_stat = OCIBindByPos(_stmt, &_v[pos]->_bind, _err, pos, _v[pos]->_v,
 				_v[pos]->_l - 1, SQLT_CHR, 0, 0, 0, 0, 0,
 				OCI_DEFAULT);
@@ -921,8 +925,7 @@ void OCI::stmt_define(const int pos, const int type)
 	stmt_new_value(pos, type);
 
 	if (LIBVOS_DEBUG) {
-		fprintf(stderr, "[OCI] define type(%d) at '%d'\n", type,
-			pos);
+		fprintf(stderr, "[OCI] define type(%d) at '%d'\n", type, pos);
 	}
 
 	_stat = OCIDefineByPos(_stmt, &_v[pos]->_define, _err, pos,
@@ -1230,6 +1233,7 @@ void OCI::release_buffer()
 		delete _v[i];
 		_v[i] = 0;
 	}
+	_value_i = 0;
 }
 
 } /* namespace::vos */
