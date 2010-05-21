@@ -8,11 +8,7 @@
 
 namespace vos {
 
-int Dir::DEF_LS_SIZE = 64;
-
 Dir::Dir() :
-	_i(0),
-	_l(0),
 	_depth(0),
 	_name(),
 	_ls(NULL)
@@ -20,71 +16,10 @@ Dir::Dir() :
 
 Dir::~Dir()
 {
-	reset();
 	if (_ls) {
-		free(_ls);
+		delete _ls;
+		_ls = NULL;
 	}
-}
-
-/**
- * @method	: Dir::init
- * @param	:
- *	> path	: path to the root directory.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: initialize Dir object.
- */
-int Dir::init()
-{
-	register int s = 0;
-
-	if (_ls) {
-		reset();
-	} else {
-		s = resize();
-	}
-
-	return s;
-}
-
-/**
- * @method	: Dir::resize
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: resize array of DirNode object.
- */
-int Dir::resize()
-{
-	_l = _l + DEF_LS_SIZE;
-
-	_ls = (DirNode **) realloc(_ls, _l * sizeof(DirNode *));
-	if (!_ls) {
-		_l = _l - DEF_LS_SIZE;
-		return -1;
-	}
-
-	memset(_ls + _i, 0, DEF_LS_SIZE * sizeof(DirNode *));
-
-	return 0;
-}
-
-/**
- * @method	: Dir::reset
- * @desc	: release all DirNode object.
- */
-void Dir::reset()
-{
-	if (_ls) {
-		for (; _i >= 0; _i--) {
-			if (_ls[_i]) {
-				delete _ls[_i];
-				_ls[_i] = NULL;
-			}
-		}
-	}
-	_i = 0;
 }
 
 /**
@@ -102,10 +37,7 @@ void Dir::reset()
 int Dir::open(const char *path, int depth)
 {
 	int	s;
-	int	c;
-	int	rpath_len;
 	char	rpath[PATH_MAX];
-	Buffer	ppath;
 
 	if (!path) {
 		return 0;
@@ -114,89 +46,34 @@ int Dir::open(const char *path, int depth)
 	_depth = depth;
 	realpath(path, rpath);
 
-	rpath_len = strlen(rpath);
-	if (rpath_len <= 0) {
-		return -1;
+	s = _name.copy_raw(rpath);
+	if (s < 0) {
+		return 0;
 	}
 
-	s = init();
+	s = DirNode::INIT(&_ls, rpath, rpath);
 	if (s < 0) {
 		return -1;
 	}
 
-	s = DirNode::INIT(&_ls[_i], rpath, rpath, 0);
-	if (s < 0) {
-		return -1;
-	}
-	_i++;
-
-	s = get_list(rpath, 0);
+	/* 1st pass: scan normal directory or any symlink of directory that 
+	 * does not have the same root path */
+	s = get_list(_ls, rpath);
 	if (s < 0) {
 		return s;
 	}
 
-	/* 1st pass: scan normal directory or any symlink of directory that 
-	 * does not have the same root path
-	 */
-	for (c = 1; c < _i; c++) {
-		if (!_ls[c]->is_dir()) {
-			continue;
-		}
-		if (!_ls[c]->_linkname.is_empty()) {
-			s = strncmp(rpath, _ls[c]->_linkname._v, rpath_len);
-			if (s == 0) {
-				/* check in second pass */
-				continue;
-			}
-		}
-
-		ppath.reset();
-		ppath.append_raw(rpath);
-
-		s = get_parent_path(&ppath, _ls[c]);
-		if (s < 0) {
-			goto err;
-		} else if (s > 0) {
-			break;
-		}
-
-		_ls[c]->_cid = _i;
-
-		s = get_list(ppath._v, c);
-		if (s < 0) {
-			break;
-		}
-		if (s == 0) {
-			_ls[c]->_cid = 0;
-		}
-	}
-	/* 2nd pass: scan symlink of directory that has the same root path,
-	 * and set the child-index.
-	 */
-	for (c = 1; c < _i; c++) {
-		if (!_ls[c]->is_dir()) {
-			continue;
-		}
-		if (_ls[c]->_cid != 0) {
-			continue;
-		}
-		if (!_ls[c]->_linkname.is_empty()) {
-			s = get_node_index(&_ls[c]->_linkname, rpath
-						, rpath_len);
-			if (s < 0) {
-				goto err;
-			}
-			_ls[c]->_cid = _ls[s]->_cid;
-		}
+	/* 2nd pass: scan symlink of directory that has the same root path */
+	s = get_symlink(_ls->_child);
+	if (s < 0) {
+		return s;
 	}
 
 	if (LIBVOS_DEBUG) {
 		dump();
 	}
 
-	s = _name.copy_raw(rpath);
-err:
-	return s;
+	return 0;
 }
 
 /**
@@ -220,8 +97,8 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
 	if (depth == _depth) {
 		return depth;
 	}
-	if (ls && ls->_pid) {
-		s = get_parent_path(path, _ls[ls->_pid], depth + 1);
+	if (ls && ls->_parent != _ls) {
+		s = get_parent_path(path, ls->_parent, depth + 1);
 		if (s < 0) {
 			return -1;
 		}
@@ -246,20 +123,21 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
 /**
  * @method	: Dir::get_list
  * @param	:
+ *	> list	: parent node, pointer to DirNode object.
  *	> path	: a directory path to scan for list of node.
- *	> pid	: parent id of 'path' in array of node.
  * @return	:
  *	< >=0	: success, number of child in this node.
  *	< -1	: fail.
  * @desc	: get list of all files in directory.
  */
-int Dir::get_list(const char *path, long pid)
+int Dir::get_list(DirNode* list, const char* path)
 {
 	int		s	= 0;
 	int		n	= 0;
 	Buffer		rpath;
-	DIR		*dir	= NULL;
-	struct dirent	*dent	= NULL;
+	DIR*		dir	= NULL;
+	struct dirent*	dent	= NULL;
+	DirNode*	node	= NULL;
 
 	if (LIBVOS_DEBUG) {
 		printf("[LIBVOS::DIR] scanning '%s' ...\n", path);
@@ -278,11 +156,11 @@ int Dir::get_list(const char *path, long pid)
 		if (!dent) {
 			break;
 		}
-		s = strcmp(dent->d_name, ".");
+		s = strncmp(dent->d_name, ".", 1);
 		if (s == 0) {
 			continue;
 		}
-		s = strcmp(dent->d_name, "..");
+		s = strncmp(dent->d_name, "..", 2);
 		if (s == 0) {
 			continue;
 		}
@@ -299,17 +177,33 @@ int Dir::get_list(const char *path, long pid)
 
 		rpath.append_raw(dent->d_name);
 
-		s = DirNode::INIT(&_ls[_i], rpath._v, dent->d_name, _i);
+		s = DirNode::INIT(&node, rpath._v, dent->d_name);
 		if (s < 0) {
 			break;
 		}
 
-		_ls[_i]->_pid = pid;
-		_i++;
-		n++;
-		if (_i >= _l) {
-			resize();
+		if (node->is_dir()) {
+			if (node->_linkname.is_empty()) {
+				s = get_list(node, rpath._v);
+				if (s < 0) {
+					return s;
+				}
+			} else {
+				s = strncmp(node->_linkname._v, _name._v
+						, _name._i);
+				if (s != 0) {
+					s = get_list(node, node->_linkname._v);
+					if (s < 0) {
+						return s;
+					}
+				}
+			}
 		}
+
+		node->_parent	= list;
+		list->_child	= DirNode::INSERT(list->_child, node);
+		node		= NULL;
+		n++;
 	} while (dent);
 
 	closedir(dir);
@@ -317,26 +211,32 @@ int Dir::get_list(const char *path, long pid)
 	return n;
 }
 
-/**
- * @method	: Dir::insert
- * @param	:
- *	> node	: pointer to DirNode object.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: insert 'node' to the array of DirNode '_ls'.
- */
-int Dir::insert(DirNode *node)
+int Dir::get_symlink(DirNode *list)
 {
-	register int s = 0;
+	int s;
 
-	_ls[_i] = node;
-	_i++;
-	if (_i >= _l) {
-		s = resize();
+	for (; list; list = list->_next) {
+		if (!list->is_dir()) {
+			continue;
+		}
+		if (list->_child) {
+			s = get_symlink(list->_child);
+			if (s < 0) {
+				return s;
+			}
+		} else if (list->_linkname.is_empty()) {
+			continue;
+		} else {
+			list->_link = get_node(&list->_linkname, _name._v
+						, _name._i);
+			if (!list->_link) {
+				printf("[DIR] cannot get link to '%s'\n"
+					, list->_linkname._v);
+				return -1;
+			}
+		}
 	}
-
-	return s;
+	return 0;
 }
 
 /**
@@ -345,8 +245,8 @@ int Dir::insert(DirNode *node)
  */
 void Dir::dump()
 {
-	for (int c = 0; c < _i; c++) {
-		_ls[c]->dump();
+	if (_ls) {
+		_ls->dump();
 	}
 }
 
@@ -357,9 +257,8 @@ void Dir::dump()
  *	> root		: the root directory of Dir object.
  *	> root_len	: length of 'root'.
  * @return		:
- *	< >=0		: success.
- *	< -1		: fail, path is not in the 'root' directory.
- *	< -2		: fail, path not found.
+ *	< DirNode*	: pointer to DirNode object of 'path'.
+ *	< NULL		: fail.
  * @desc		:
  *
  * case example,
@@ -376,31 +275,31 @@ void Dir::dump()
  * This function also can be used to get node index of any 'path', as long as
  * they were in the same 'root'.
  */
-int Dir::get_node_index(Buffer* path, const char* root, int root_len)
+DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 {
 	int		s;
 	int		i;
-	int		cur_id;
 	Buffer		dir;
 	int		len	= path->_i;
 	const char*	name	= path->_v;
+	DirNode*	p	= _ls;
+	DirNode*	c	= NULL;
 
 	if (!path || !root) {
-		return -1;
+		return NULL;
 	}
 	if (root_len <= 0) {
 		root_len = strlen(root);
 	}
 	s = strncmp(path->_v, root, root_len);
 	if (s != 0) {
-		return -1;
+		return NULL;
 	}
 	if (LIBVOS_DEBUG) {
 		printf("[LIBVOS::DIR] get link child : %s\n", name);
 	}
 
-	cur_id	= 0;
-	i	= len - root_len;
+	i = len - root_len;
 
 	for (i = root_len; i <= len; i++) {
 		if (i < len && name[i] != '/') {
@@ -416,16 +315,16 @@ int Dir::get_node_index(Buffer* path, const char* root, int root_len)
 		}
 		if (dir.like_raw("..") == 0) {
 			dir.reset();
-			cur_id = _ls[cur_id]->_pid;
+			p = p->_parent;
 			continue;
 		}
-		for (s = _ls[cur_id]->_cid; cur_id == _ls[s]->_pid; s++) {
-			if (!_ls[s]->is_dir()) {
+		for (c = p->_child; c; c = c->_next) {
+			if (!c->is_dir()) {
 				continue;
 			}
-			if (dir.cmp(&_ls[s]->_name) == 0) {
+			if (dir.cmp(&c->_name) == 0) {
 				dir.reset();
-				cur_id = s;
+				p = c;
 				break;
 			}
 		}
@@ -434,10 +333,10 @@ int Dir::get_node_index(Buffer* path, const char* root, int root_len)
 		}
 
 		fprintf(stderr, "[LIBVOS::DIR] invalid path : %s\n" , name);
-		return -2;
+		return NULL;
 	}
 
-	return cur_id;
+	return p;
 }
 
 /**

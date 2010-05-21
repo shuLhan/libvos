@@ -15,21 +15,19 @@ namespace vos {
 
 class DirNode {
 public:
-	DirNode(long id = 0);
+	DirNode();
 	virtual ~DirNode();
 
 	int get_stat(const char *rpath, const char *path = NULL);
 	int is_dir();
 	int is_link();
-	virtual void dump();
+	virtual void dump(int space = 0);
 
 	static int INIT(DirNode** node, const char* rpath
-			, const char* path, long id);
+			, const char* path);
 	static int GET_LINK_NAME(Buffer* linkname, const char* path);
+	static DirNode* INSERT(DirNode* list, DirNode* node);
 
-	long		_id;
-	long		_pid;
-	long		_cid;
 	int		_mode;
 	int		_uid;
 	int		_gid;
@@ -37,6 +35,10 @@ public:
 	long		_mtime;
 	Buffer		_name;
 	Buffer		_linkname;
+	DirNode		*_next;
+	DirNode		*_child;
+	DirNode		*_link;
+	DirNode		*_parent;
 private:
 	DirNode(const DirNode&);
 	void operator=(const DirNode &);

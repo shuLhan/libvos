@@ -8,21 +8,33 @@
 
 namespace vos {
 
-DirNode::DirNode(long id) :
-	_id(id),
-	_pid(0),
-	_cid(0),
+DirNode::DirNode() :
 	_mode(0),
 	_uid(0),
 	_gid(0),
 	_size(0),
 	_mtime(0),
 	_name(),
-	_linkname()
+	_linkname(),
+	_next(NULL),
+	_child(NULL),
+	_link(NULL),
+	_parent(this)
 {}
 
 DirNode::~DirNode()
-{}
+{
+	if (_next) {
+		delete _next;
+		_next = NULL;
+	}
+	if (_child) {
+		delete _child;
+		_child = NULL;
+	}
+	_link	= NULL;
+	_parent	= NULL;
+}
 
 /**
  * @method		: DirNode::get_stat
@@ -105,16 +117,28 @@ int DirNode::is_link()
  * @method	: DirNode::dump
  * @desc	: dump content of DirNode object.
  */
-void DirNode::dump()
+void DirNode::dump(int space)
 {
-	if (is_dir()) {
-		printf("d ");
-	} else {
-		printf("- ");
+	for (int i = 0; i < space; i++) {
+		putchar(' ');
 	}
-	printf("|%8ld|%8ld|%8ld|%5d|%5d|%5d|%12ld|%ld|%s|%s\n",
-		_id, _pid, _cid, _mode, _uid, _gid, _size, _mtime
-		, _name._v ? _name._v : "", _linkname._v ? _linkname._v : "");
+	if (is_dir()) {
+		printf("> d ");
+	} else {
+		printf("> - ");
+	}
+	printf("|%5d|%5d|%5d|%12ld|%ld|%s|%s\n", _mode, _uid, _gid, _size
+		, _mtime , _name._v ? _name._v : ""
+		, _linkname._v ? _linkname._v : "");
+	if (_link) {
+		printf(" => %s\n", _link->_name._v);
+	}
+	if (_child) {
+		_child->dump(space + 2);
+	}
+	if (_next) {
+		_next->dump(space);
+	}
 }
 
 /**
@@ -132,10 +156,9 @@ void DirNode::dump()
  *	'rpath' is a full path of node, i.e.: '../../node', when 'path' is
  *	only contain 'node'.
  */
-int DirNode::INIT(DirNode **node, const char *rpath, const char *path,
-			long id)
+int DirNode::INIT(DirNode **node, const char *rpath, const char *path)
 {
-	(*node) = new DirNode(id);
+	(*node) = new DirNode();
 	if (!(*node)) {
 		return -1;
 	}
@@ -175,6 +198,52 @@ int DirNode::GET_LINK_NAME(Buffer* linkname, const char* path)
 	linkname->_l = linkname->_i;
 
 	return 0;
+}
+
+/**
+ * @method		: Dir::insert
+ * @param		:
+ *	> list		: head of list.
+ *	> node		: a new node.
+ * @return		:
+ *	< DirNode*	: a new head of list.
+ * @desc		:
+ * insert 'node' to the list of DirNode, sort by node name.
+ */
+DirNode* DirNode::INSERT(DirNode* list, DirNode* node)
+{
+	if (!node) {
+		return list;
+	}
+	if (!list) {
+		return node;
+	}
+
+	int		s;
+	DirNode*	last	= NULL;
+	DirNode*	p	= list;
+
+	while (p) {
+		s = p->_name.like(&node->_name);
+		if (s > 0) {
+			if (!last) {
+				node->_next = list;
+				return node;
+			}
+			node->_next = last->_next;
+			last->_next = node;
+			return list;
+		}
+		last = p;
+		p = p->_next;
+	}
+	if (!last) {
+		list = node;
+	} else {
+		last->_next = node;
+	}
+
+	return list;
 }
 
 } /* namespace::vos */

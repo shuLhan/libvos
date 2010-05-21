@@ -31,29 +31,21 @@ public:
 	Dir();
 	~Dir();
 
-	int init();
-	void reset();
 	int open(const char *path, int depth = 1);
 	int get_parent_path(Buffer *path, DirNode *ls, int depth = 1);
-	int get_node_index(Buffer* path, const char* root, int root_len);
-	int get_list(const char *path, long pid);
-	int insert(DirNode *node);
+	int get_list(DirNode* list, const char *path);
+	int get_symlink(DirNode* list);
+	DirNode* get_node(Buffer* path, const char* root, int root_len);
 	void dump();
 
 	static int CREATE(const char *path, mode_t mode = DEF_CREATE_MODE);
 
-	long	_i;
-	long	_l;
 	int	_depth;
 	Buffer	_name;
-	DirNode	**_ls;
+	DirNode	*_ls;
 private:
 	Dir(const Dir&);
 	void operator=(const Dir&);
-
-	int resize();
-
-	static int DEF_LS_SIZE;
 };
 
 } /* namespace::vos */
