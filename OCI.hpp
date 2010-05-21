@@ -25,19 +25,12 @@ enum _oci_errcode {
 	E_OCI_CONT
 };
 
-enum _oci_conn_status {
-	OCI_STT_DISCONNECT	= 0,
-	OCI_STT_CONNECTED,
-	OCI_STT_LOGGED_IN
-};
-
 /**
  * @class			: OCI
  * @attr			:
  *	- PORT			: static, default Oracle database server.
  *	- DFLT_SIZE		: static, default buffer size for '_v'.
  *	- _stat			: status of OCI call.
- *	- _cs			: OCI client connection status.
  *	- _env_mode		: OCI environment mode.
  *	- _table_changes_n	: number of table changed after receiving
  *				notification.
@@ -110,6 +103,8 @@ public:
 	int cursor_define(const int pos, const int type = OCI_T_VARCHAR);
 	int cursor_fetch();
 	void cursor_release();
+
+	void release_buffer();
 
 	/* bind specific handle */
 	inline void stmt_bind_number(const int pos) {
@@ -210,30 +205,10 @@ public:
 				unsigned int *rowid_len);
 
 	int		_stat;
-	int		_cs;
 	int		_env_mode;
 	int		_table_changes_n;
 	int		_row_changes_n;
 	OCIValue	**_v;
-private:
-	OCI(const OCI&);
-	void operator=(const OCI&);
-
-	int check(void *handle, int type);
-	inline int check_env() {
-		return check(_env, OCI_HTYPE_ENV);
-	}
-	inline int check_err() {
-		return check(_err, OCI_HTYPE_ERROR);
-	}
-
-	static int	_spool_min;
-	static int	_spool_max;
-	static int	_spool_inc;
-	static int	_stmt_cache_size;
-	static int	_spool_name_len;
-	static char	*_spool_name;
-	static Buffer	_spool_conn_name;
 
 	int		_value_i;
 	int		_value_sz;
@@ -251,6 +226,27 @@ private:
 	OCISubscription	*_subscr;
 	OCIColl		*_table_changes;
 	OCIColl		*_row_changes;
+
+private:
+	OCI(const OCI&);
+	void operator=(const OCI&);
+
+	int check(void *handle, int type);
+
+	inline int check_env() {
+		return check(_env, OCI_HTYPE_ENV);
+	}
+	inline int check_err() {
+		return check(_err, OCI_HTYPE_ERROR);
+	}
+
+	static int	_spool_min;
+	static int	_spool_max;
+	static int	_spool_inc;
+	static int	_stmt_cache_size;
+	static int	_spool_name_len;
+	static char	*_spool_name;
+	static Buffer	_spool_conn_name;
 };
 
 } /* namespace::vos */

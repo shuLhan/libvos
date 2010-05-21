@@ -22,7 +22,16 @@ OCIValue::OCIValue() : Buffer(),
 {}
 
 OCIValue::~OCIValue()
-{}
+{
+	if (_define) {
+		OCIHandleFree(_define, OCI_HTYPE_DEFINE);
+		_define = NULL;
+	}
+	if (_bind) {
+		OCIHandleFree(_bind, OCI_HTYPE_BIND);
+		_bind = NULL;
+	}
+}
 
 /**
  * @method	: OCIValue::init

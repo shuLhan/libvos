@@ -666,12 +666,13 @@ int File::IS_EXIST(const char *path, int acc_mode)
 /**
  * @method		: File::BASENAME
  * @param		:
- *	> name		: return value, the last directory of 'path'.
+ *	> name		: return value, the last node of 'path'.
  *	> path		: a path to directory or file.
  * @return		:
  *	< 0		: success.
  *	< <0		: fail.
- * @desc		: get the basename, last directory, of path.
+ * @desc		:
+ * get the basename, last node, of path, it could be a file or directory.
  */
 int File::BASENAME(Buffer *name, const char *path)
 {
@@ -679,40 +680,81 @@ int File::BASENAME(Buffer *name, const char *path)
 	register int	len;
 	register int	p;
 
-	if (!name)
+	if (!name) {
 		return -1;
+	}
+
+	name->reset();
 
 	if (!path) {
 		s = name->appendc('.');
 		if (s < 0)
 			return s;
 	} else {
-		if (path[0] != '/') {
-			s = name->copy_raw(path);
+		len = strlen(path);
+		if (path[0] == '/' && len == 1) {
+			s = name->appendc('/');
 			if (s < 0)
 				return s;
 		} else {
-			len = strlen(path);
-			if (path[0] == '/' && len == 1) {
-				s = name->copy_raw(path);
-				if (s < 0)
-					return s;
-			} else {
-				p = len - 1;
-				if (path[p] == '/')
-					--len;
-
-				do {
-					--p;
-				} while (path[p] != '/');
-
+			p = len - 1;
+			while (p > 0 && path[p] == '/') {
+				--len;
+				--p;
+			}
+			while (p > 0 && path[p] != '/') {
+				--p;
+			}
+			if (path[p] == '/' && path[p + 1] != '/') {
 				++p;
-				s = name->copy_raw(&path[p], len - p);
-				if (s < 0)
-					return s;
+			}
+			s = name->copy_raw(&path[p], len - p);
+			if (s < 0) {
+				return s;
 			}
 		}
 	}
+	return 0;
+}
+
+/**
+ * @method	: File::COPY
+ * @param	:
+ *	> src	: a path to source file to copy.
+ *	> dst	: a path to destination file.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	:
+ * copy file 'src' to 'dst', create a new file if 'dst' is not exist, or
+ * overwrite 'dst' if already exist.
+ */
+int File::COPY(const char *src, const char *dst)
+{
+	register int	s;
+	File		from;
+	File		to;
+
+	s = from.open_ro(src);
+	if (s < 0) {
+		return s;
+	}
+
+	s = to.open_wo(dst);
+	if (s < 0) {
+		return s;
+	}
+
+	s = from.read();
+	while (s > 0) {
+		s = to.write(&from);
+		if (s < 0) {
+			return s;
+		}
+
+		s = from.read();
+	}
+
 	return 0;
 }
 

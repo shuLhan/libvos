@@ -752,6 +752,10 @@ int Buffer::to_int()
 
 long Buffer::to_lint()
 {
+	if (!_v) {
+		return 0;
+	}
+
 	long v;
 
 	v = strtol(_v, NULL, 0);
