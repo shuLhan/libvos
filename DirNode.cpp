@@ -115,6 +115,8 @@ int DirNode::is_link()
 
 /**
  * @method	: DirNode::dump
+ * @param	:
+ *	> space	: number of space before print content of object.
  * @desc	: dump content of DirNode object.
  */
 void DirNode::dump(int space)
@@ -244,6 +246,44 @@ DirNode* DirNode::INSERT(DirNode* list, DirNode* node)
 	}
 
 	return list;
+}
+
+/**
+ * @method	: DirNode::REMOVE_CHILD_BY_NAME
+ * @param	:
+ *	> list	: pointer to DirNode object, which child will be searched and
+ *		removed.
+ *	> name	: name of DirNode object that will be removed.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail, DirNode object with name is 'name' is not found.
+ * @desc	:
+ * remove child node with name is 'name' from child node of 'list'.
+ */
+int DirNode::REMOVE_CHILD_BY_NAME(DirNode* list, const char* name)
+{
+	DirNode* last	= NULL;
+	DirNode* p	= list->_child;
+
+	while (p) {
+		if (p->_name.like_raw(name) == 0) {
+			if (!last) {
+				list->_child = p->_next;
+			} else {
+				last->_next = p->_next;
+			}
+
+			p->_next = NULL;
+			delete p;
+
+			return 0;
+		}
+
+		last	= p;
+		p	= p->_next;
+	}
+
+	return -1;
 }
 
 } /* namespace::vos */

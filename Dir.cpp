@@ -156,11 +156,11 @@ int Dir::get_list(DirNode* list, const char* path)
 		if (!dent) {
 			break;
 		}
-		s = strncmp(dent->d_name, ".", 1);
+		s = strcmp(dent->d_name, ".");
 		if (s == 0) {
 			continue;
 		}
-		s = strncmp(dent->d_name, "..", 2);
+		s = strcmp(dent->d_name, "..");
 		if (s == 0) {
 			continue;
 		}
@@ -211,6 +211,16 @@ int Dir::get_list(DirNode* list, const char* path)
 	return n;
 }
 
+/**
+ * @method	: Dir::get_symlink
+ * @param	:
+ *	> list	: list of DirNode objects to search and set the link.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail.
+ * @desc	:
+ * set '_link' pointer in DirNode object to point to the real DirNode object.
+ */
 int Dir::get_symlink(DirNode *list)
 {
 	int s;
@@ -230,8 +240,8 @@ int Dir::get_symlink(DirNode *list)
 			list->_link = get_node(&list->_linkname, _name._v
 						, _name._i);
 			if (!list->_link) {
-				printf("[DIR] cannot get link to '%s'\n"
-					, list->_linkname._v);
+				fprintf(stderr
+, "[LIBVOS::DIR] cannot get link to '%s'\n", list->_linkname._v);
 				return -1;
 			}
 		}
@@ -332,7 +342,8 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 			continue;
 		}
 
-		fprintf(stderr, "[LIBVOS::DIR] invalid path : %s\n" , name);
+		fprintf(stderr, "[LIBVOS::DIR] invalid path   : %s\n" , name);
+		fprintf(stderr, "              directory name : %s\n", dir._v);
 		return NULL;
 	}
 

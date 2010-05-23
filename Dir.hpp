@@ -17,11 +17,9 @@ namespace vos {
 /**
  * @class		: Dir
  * @attr		:
- *	- _i		: number of DirNode object in '_ls'.
- *	- _l		: lenght of '_ls' array.
  *	- _depth	: maximum depth of child directory to scan for.
  *	- _name		: the first name of directory to scan.
- *	- _ls		: array of DirNode objects.
+ *	- _ls		: linked list of DirNode objects.
  * @desc		:
  * a module for handling task involving directory (listing,
  * creating, and removing directory).
