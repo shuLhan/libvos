@@ -73,6 +73,8 @@ public:
 	int prepend(Buffer* bfr);
 	int prepend_raw(const char* bfr, int len = 0);
 
+	int subc(int from, int to);
+
 	int copy(const Buffer *bfr);
 	int copy_raw(const char *bfr, int len = 0);
 	int set(const Buffer *bfr, const Buffer *dflt);

@@ -249,6 +249,32 @@ DirNode* DirNode::INSERT(DirNode* list, DirNode* node)
 }
 
 /**
+ * @method	: DirNode::INSERT_CHILD
+ * @param	:
+ *	> list	: pointer to DirNode object.
+ *	> rpath	: real path of node from root diretory.
+ *	> name	: name of node.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	: create and insert a new node into child of 'list'.
+ */
+int DirNode::INSERT_CHILD(DirNode* list, const char* rpath, const char* name)
+{
+	int		s;
+	DirNode*	node = NULL;
+
+	s = INIT(&node, rpath, name);
+	if (s < 0) {
+		return -1;
+	}
+	node->_parent	= list;
+	list->_child	= INSERT(list->_child, node);
+
+	return 0;
+}
+
+/**
  * @method	: DirNode::REMOVE_CHILD_BY_NAME
  * @param	:
  *	> list	: pointer to DirNode object, which child will be searched and

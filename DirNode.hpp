@@ -48,6 +48,8 @@ public:
 	static int GET_LINK_NAME(Buffer* linkname, const char* path);
 
 	static DirNode* INSERT(DirNode* list, DirNode* node);
+	static int INSERT_CHILD(DirNode* list, const char* rpath
+				, const char* name);
 	static int REMOVE_CHILD_BY_NAME(DirNode* list, const char* name);
 
 	int		_mode;

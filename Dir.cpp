@@ -289,7 +289,7 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 {
 	int		s;
 	int		i;
-	Buffer		dir;
+	Buffer		node;
 	int		len	= path->_i;
 	const char*	name	= path->_v;
 	DirNode*	p	= _ls;
@@ -313,37 +313,34 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 
 	for (i = root_len; i <= len; i++) {
 		if (i < len && name[i] != '/') {
-			dir.appendc(name[i]);
+			node.appendc(name[i]);
 			continue;
 		}
-		if (dir.is_empty()) {
+		if (node.is_empty()) {
 			continue;
 		}
-		if (dir.like_raw(".") == 0) {
-			dir.reset();
+		if (node.like_raw(".") == 0) {
+			node.reset();
 			continue;
 		}
-		if (dir.like_raw("..") == 0) {
-			dir.reset();
+		if (node.like_raw("..") == 0) {
+			node.reset();
 			p = p->_parent;
 			continue;
 		}
 		for (c = p->_child; c; c = c->_next) {
-			if (!c->is_dir()) {
-				continue;
-			}
-			if (dir.cmp(&c->_name) == 0) {
-				dir.reset();
+			if (node.cmp(&c->_name) == 0) {
+				node.reset();
 				p = c;
 				break;
 			}
 		}
-		if (dir.is_empty()) {
+		if (node.is_empty()) {
 			continue;
 		}
 
-		fprintf(stderr, "[LIBVOS::DIR] invalid path   : %s\n" , name);
-		fprintf(stderr, "              directory name : %s\n", dir._v);
+		fprintf(stderr, "[LIBVOS::DIR] invalid path : %s\n", name);
+		fprintf(stderr, "              node name    : %s\n", node._v);
 		return NULL;
 	}
 
