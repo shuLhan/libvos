@@ -43,7 +43,10 @@ TARGET_OBJS	=						\
 			${LIBVOS_BLD_D}/Resolver.oo		\
 			${LIBVOS_BLD_D}/SockAddr.oo		\
 			${LIBVOS_BLD_D}/Socket.oo		\
-			${LIBVOS_BLD_D}/Writer.oo
+			${LIBVOS_BLD_D}/Writer.oo		\
+			${LIBVOS_BLD_D}/FTPD.oo			\
+			${LIBVOS_BLD_D}/FTPClient.oo		\
+			${LIBVOS_BLD_D}/FTPCmd.oo
 
 #
 # with OCI library
