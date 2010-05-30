@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2010 kilabit.org
+ * Author:
+ *	- m.shulhan (ms@kilabit.org)
+ */
+
 #ifndef _LIBVOS_FTP_COMMAND_HPP
 #define	_LIBVOS_FTP_COMMAND_HPP	1
 

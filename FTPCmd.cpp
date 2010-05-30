@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2010 kilabit.org
+ * Author:
+ *	- m.shulhan (ms@kilabit.org)
+ */
+
 #include "FTPCmd.hpp"
 
 namespace vos {
@@ -7,10 +13,12 @@ const char *_FTP_cmd[N_FTP_CMD] = {
 	"USER",	/* USER	username		*/
 	"PASS",	/* PASS	password		*/
 	"SYST", /* SYST				*/
+	"TYPE",	/* TYPE	[A|I]			*/
+	"MODE",	/* MODE [S]			*/
+	"STRU", /* STRU [F]			*/
 	"CWD" ,	/* CWD	directory		*/
 	"CDUP",	/* CDUP				*/
 	"PASV",	/* PASV				*/
-	"TYPE",	/* TYPE	[A|I]			*/
 	"RETR",	/* RETR	/path/to/filename	*/
 	"STOR",	/* STOR	/path/to/filename	*/
 	"LIST",	/* LIST	[directory]		*/

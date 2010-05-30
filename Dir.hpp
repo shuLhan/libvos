@@ -30,6 +30,7 @@ public:
 	~Dir();
 
 	int open(const char *path, int depth = 1);
+	void close();
 	int get_parent_path(Buffer *path, DirNode *ls, int depth = 1);
 	int get_list(DirNode* list, const char *path);
 	int get_symlink(DirNode* list);

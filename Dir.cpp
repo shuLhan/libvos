@@ -77,6 +77,20 @@ int Dir::open(const char *path, int depth)
 }
 
 /**
+ * @method	: Dir::close
+ * @desc	: reset and clear all attributes.
+ */
+void Dir::close()
+{
+	_depth = 0;
+	_name.reset();
+	if (_ls) {
+		delete _ls;
+		_ls = NULL;
+	}
+}
+
+/**
  * @method	: Dir::get_parent_path
  * @param	:
  *	< path	: return value, a string of path.

@@ -10,6 +10,7 @@
 #include <signal.h>
 #include "Dir.hpp"
 #include "FTPClient.hpp"
+#include "FTPUser.hpp"
 
 namespace vos {
 
@@ -30,6 +31,7 @@ enum _FTP_reply_code {
 ,	CODE_250
 ,	CODE_257
 ,	CODE_331
+,	CODE_332
 ,	CODE_350
 ,	CODE_421
 ,	CODE_425
@@ -69,6 +71,9 @@ public:
 		, const int port = FTPD_DEF_PORT
 		, const char* path = FTPD_DEF_PATH
 		, const int auth_mode = AUTH_NOLOGIN);
+	int add_user(const char* name, const char* pass);
+	int set_path(const char* path);
+	void set_default_callback();
 	int set_callback(const int type, void (*callback)(FTPD*, FTPClient*));
 	int run();
 	void client_process();
@@ -84,6 +89,7 @@ public:
 	fd_set		_fds_all;
 	fd_set		_fds_read;
 	FTPClient*	_all_client;
+	FTPUser*	_users;
 
 	void (*_fcb[N_FTP_CMD])(FTPD*, FTPClient*);
 

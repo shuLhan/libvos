@@ -21,6 +21,7 @@ const char* _FTP_reply_msg[N_REPLY_CODE] =
 ,	"250 Requested file action okay, completed.\r\n"
 ,	"257 \"%s\"\r\n"
 ,	"331 User name okay, need password.\r\n"
+,	"332 Need account for login.\r\n"
 ,	"350 Requested file action pending further information.\r\n"
 ,	"421 Service not available, closing control connection.\r\n"
 ,	"425 Can't open data connection.\r\n"
@@ -54,6 +55,7 @@ FTPD::FTPD() :
 ,	_fds_all()
 ,	_fds_read()
 ,	_all_client(NULL)
+,	_users(NULL)
 {}
 
 FTPD::~FTPD()
@@ -67,6 +69,9 @@ FTPD::~FTPD()
 		delete _all_client;
 
 		_all_client = next;
+	}
+	if (_users) {
+		delete _users;
 	}
 }
 
@@ -90,13 +95,12 @@ int FTPD::init(const char* address, const int port, const char* path
 	_ftpd_		= this;
 	_auth_mode	= auth_mode;
 
-	s = _dir.open(path, -1);
-	if (s < 0) {
-		return s;
+	if (path) {
+		s = set_path(path);
+		if (s < 0) {
+			return s;
+		}
 	}
-
-	_path.copy(&_dir._name);
-	_dir._ls->_name.copy_raw("/");
 
 	s = create_tcp();
 	if (s < 0) {
@@ -114,6 +118,73 @@ int FTPD::init(const char* address, const int port, const char* path
 
 	memset(_fcb, 0, N_FTP_CMD * sizeof(_fcb[0]));
 
+	return 0;
+}
+
+/**
+ * @method	: FTPD::add_user
+ * @param	:
+ *	> name	: a name for new user.
+ *	> pass	: a string for authentication user when login.
+ * @return	:
+ *	< 1	: fail, user 'name' already exist.
+ *	< 0	: success.
+ *	< -1	: fail, system error.
+ * @desc	: add new user that can login to this server.
+ */
+int FTPD::add_user(const char* name, const char* pass)
+{
+	int		s;
+	FTPUser*	user	= NULL;
+
+	s = FTPUser::INIT(&user, name, pass);
+	if (s < 0) {
+		return s;
+	}
+
+	s = FTPUser::ADD(&_users, user);
+	if (s < 0) {
+		return 1;
+	}
+
+	return 0;
+}
+
+/**
+ * @method	: FTPD::set_path
+ * @param	:
+ *	> path	: path to directory to be served.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	: set and scan directory pointed by 'path' as the root
+ * directory served to client.
+ */
+int FTPD::set_path(const char* path)
+{
+	int s;
+
+	if (_dir._ls) {
+		_dir.close();
+	}
+
+	s = _dir.open(path, -1);
+	if (s < 0) {
+		return s;
+	}
+
+	_path.copy(&_dir._name);
+	_dir._ls->_name.copy_raw("/");
+
+	return 0;
+}
+
+/**
+ * @method	: FTPD::set_default_callback
+ * @desc	: set callback for each command on this FTP server.
+ */
+void FTPD::set_default_callback()
+{
 	set_callback(FTP_ACCEPT, &on_accept);
 	set_callback(FTP_CMD_USER, &on_cmd_USER);
 	set_callback(FTP_CMD_PASS, &on_cmd_PASS);
@@ -139,8 +210,6 @@ int FTPD::init(const char* address, const int port, const char* path
 	set_callback(FTP_CMD_MKD, &on_cmd_MKD);
 
 	set_callback(FTP_CMD_QUIT, &on_cmd_QUIT);
-
-	return 0;
 }
 
 /**
@@ -434,35 +503,54 @@ void FTPD::on_accept(FTPD* s, FTPClient* c)
  *	> clt	: pointer to FTPClient object.
  * @desc	: called when user send USER command.
  */
-void FTPD::on_cmd_USER(FTPD* srv, FTPClient* clt)
+void FTPD::on_cmd_USER(FTPD* s, FTPClient* c)
 {
-	if (!srv || !clt) {
+	int x;
+
+	if (!s || !c) {
 		return;
 	}
-	if (clt->_conn_stat != FTP_STT_CONNECTED) {
+	if (c->_conn_stat != FTP_STT_CONNECTED) {
 		return;
 	}
-	if (srv->_auth_mode == AUTH_NOLOGIN) {
-		clt->_s		= CODE_230;
-		clt->_conn_stat	= FTP_STT_LOGGED_IN;
+	if (s->_auth_mode == AUTH_NOLOGIN) {
+		c->_s		= CODE_230;
+		c->_conn_stat	= FTP_STT_LOGGED_IN;
+		goto out;
+	}
+
+	x = FTPUser::IS_NAME_EXIST(s->_users, &c->_cmnd._parm);
+	if (!x) {
+		c->_s = CODE_332;
 	} else {
-		clt->_s		= CODE_331;
+		c->_s = CODE_331;
 	}
-	clt->_rmsg	= _FTP_reply_msg[clt->_s];
-	clt->reply();
+out:
+	c->_rmsg	= _FTP_reply_msg[c->_s];
+	c->reply();
 }
 
 void FTPD::on_cmd_PASS(FTPD* s, FTPClient* c)
 {
+	int x;
+
 	if (!s || !c) {
 		return;
 	}
 	if (c->_cmnd_last._code != FTP_CMD_USER) {
-		c->_s		= CODE_503; 
+		c->_s		= CODE_503;
+		goto out;
+	}
+
+	x = FTPUser::IS_EXIST(s->_users, &c->_cmnd_last._parm
+				, &c->_cmnd._parm);
+	if (!x) {
+		c->_s		= CODE_530;
 	} else {
 		c->_s		= CODE_230;
 		c->_conn_stat	= FTP_STT_LOGGED_IN;
 	}
+out:
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -665,7 +753,13 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 				, node->_mode, node->_uid, node->_gid
 				, node->_size, node->_mtime, node->_name._v);
 	} else {
-		node = node->_child;
+		if (node->_child) {
+			node = node->_child;
+		} else {
+			if (node->_link) {
+				node = node->_link->_child;
+			}
+		}
 		while (node) {
 			pasv_c->aprint("%d\t%d\t%d\t%ld\t%ld\t%s\r\n"
 					, node->_mode, node->_uid, node->_gid
@@ -724,8 +818,14 @@ void FTPD::on_cmd_NLST(FTPD* s, FTPClient* c)
 	if (!node->is_dir()) {
 		pasv_c->append(&node->_name);
 		pasv_c->append_raw("\r\n");
-	} else {
-		node = node->_child;
+	} else {	
+		if (node->_child) {
+			node = node->_child;
+		} else {
+			if (node->_link) {
+				node = node->_link->_child;
+			}
+		}
 		while (node) {
 			pasv_c->append(&node->_name);
 			pasv_c->append_raw("\r\n");
