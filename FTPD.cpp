@@ -29,6 +29,7 @@ const char* _FTP_reply_msg[N_REPLY_CODE] =
 ,	"501 Syntax error in parameters or arguments.\r\n"
 ,	"502 Command not implemented.\r\n"
 ,	"503 Bad sequence of commands.\r\n"
+,	"530 Not logged in.\r\n"
 ,	"550 Requested action not taken: %s.\r\n"
 ,	"553 Requested action not taken: %s.\r\n"
 };
@@ -36,14 +37,16 @@ const char* _FTP_reply_msg[N_REPLY_CODE] =
 const char* _FTP_add_reply_msg[N_ADD_REPLY_MSG] =
 {
 	"File or directory is not exist."
-,	"Type is always in binary."
+,	"TYPE is always in B[I]NARY / [I]MAGE."
+,	"MODE is always in [S]TREAM."
+,	"STRU is always in [F]ILE."
 };
 
 static FTPD* _ftpd_ = NULL;
 
 FTPD::FTPD() :
 	_running(0)
-,	_mode(MODE_SIMPLE)
+,	_auth_mode(AUTH_NOLOGIN)
 ,	_fds_max(0)
 ,	_pasv_port_next(FTPD_DEF_PASV_PORT)
 ,	_path()
@@ -80,12 +83,12 @@ FTPD::~FTPD()
  * @desc		: initialize FTP server environment.
  */
 int FTPD::init(const char* address, const int port, const char* path
-		, const int mode)
+		, const int auth_mode)
 {
 	int s;
 
-	_ftpd_	= this;
-	_mode	= mode;
+	_ftpd_		= this;
+	_auth_mode	= auth_mode;
 
 	s = _dir.open(path, -1);
 	if (s < 0) {
@@ -116,22 +119,25 @@ int FTPD::init(const char* address, const int port, const char* path
 	set_callback(FTP_CMD_PASS, &on_cmd_PASS);
 	set_callback(FTP_CMD_SYST, &on_cmd_SYST);
 	set_callback(FTP_CMD_TYPE, &on_cmd_TYPE);
+	set_callback(FTP_CMD_MODE, &on_cmd_MODE);
+	set_callback(FTP_CMD_STRU, &on_cmd_MODE);
+
 	set_callback(FTP_CMD_CWD, &on_cmd_CWD);
 	set_callback(FTP_CMD_CDUP, &on_cmd_CDUP);
+	set_callback(FTP_CMD_PWD, &on_cmd_PWD);
 
 	set_callback(FTP_CMD_PASV, &on_cmd_PASV);
 	set_callback(FTP_CMD_LIST, &on_cmd_LIST);
 	set_callback(FTP_CMD_NLST, &on_cmd_NLST);
 	set_callback(FTP_CMD_RETR, &on_cmd_RETR);
 	set_callback(FTP_CMD_STOR, &on_cmd_STOR);
-	set_callback(FTP_CMD_DELE, &on_cmd_DELE);
 
+	set_callback(FTP_CMD_DELE, &on_cmd_DELE);
 	set_callback(FTP_CMD_RNFR, &on_cmd_RNFR);
 	set_callback(FTP_CMD_RNTO, &on_cmd_RNTO);
-
 	set_callback(FTP_CMD_RMD, &on_cmd_RMD);
 	set_callback(FTP_CMD_MKD, &on_cmd_MKD);
-	set_callback(FTP_CMD_PWD, &on_cmd_PWD);
+
 	set_callback(FTP_CMD_QUIT, &on_cmd_QUIT);
 
 	return 0;
@@ -274,7 +280,15 @@ void FTPD::client_process()
 		} else {
 			c->_cmnd.dump();
 
-			if (_fcb[c->_cmnd._code] != NULL) {
+			if (_auth_mode == AUTH_LOGIN
+			&&  c->_conn_stat != FTP_STT_LOGGED_IN
+			&& (c->_cmnd._code != FTP_CMD_USER
+			&&  c->_cmnd._code != FTP_CMD_PASS
+			&&  c->_cmnd._code != FTP_CMD_QUIT
+			&&  c->_cmnd._code != FTP_CMD_SYST)) {
+				c->reply_raw(CODE_530
+					, _FTP_reply_msg[CODE_530], NULL);
+			} else if (_fcb[c->_cmnd._code] != NULL) {
 				_fcb[c->_cmnd._code](this, c);
 			} else {
 				on_cmd_unknown(c);
@@ -428,7 +442,7 @@ void FTPD::on_cmd_USER(FTPD* srv, FTPClient* clt)
 	if (clt->_conn_stat != FTP_STT_CONNECTED) {
 		return;
 	}
-	if (srv->_mode == MODE_SIMPLE) {
+	if (srv->_auth_mode == AUTH_NOLOGIN) {
 		clt->_s		= CODE_230;
 		clt->_conn_stat	= FTP_STT_LOGGED_IN;
 	} else {
@@ -466,8 +480,26 @@ void FTPD::on_cmd_TYPE(FTPD* s, FTPClient* c)
 	if (!s || !c) {
 		return;
 	}
-	c->reply_raw(CODE_220, _FTP_reply_msg[CODE_220]
-			, _FTP_add_reply_msg[TYPE_IS_ALWAYS_BIN]);
+	c->reply_raw(CODE_200, _FTP_reply_msg[CODE_200]
+			, _FTP_add_reply_msg[TYPE_ALWAYS_BIN]);
+}
+
+void FTPD::on_cmd_MODE(FTPD* s, FTPClient* c)
+{
+	if (!s || !c) {
+		return;
+	}
+	c->reply_raw(CODE_200, _FTP_reply_msg[CODE_200]
+			, _FTP_add_reply_msg[MODE_ALWAYS_STREAM]);
+}
+
+void FTPD::on_cmd_STRU(FTPD* s, FTPClient* c)
+{
+	if (!s || !c) {
+		return;
+	}
+	c->reply_raw(CODE_200, _FTP_reply_msg[CODE_200]
+			, _FTP_add_reply_msg[STRU_ALWAYS_FILE]);
 }
 
 void FTPD::on_cmd_CWD(FTPD* s, FTPClient* c)
@@ -510,6 +542,14 @@ void FTPD::on_cmd_CDUP(FTPD* s, FTPClient* c)
 	c->_wd.reset();
 	s->_dir.get_parent_path(&c->_wd, c->_wd_node);
 	c->reply_raw(CODE_250, _FTP_reply_msg[CODE_250], NULL);
+}
+
+void FTPD::on_cmd_PWD(FTPD* s, FTPClient* c)
+{
+	if (!s || !c) {
+		return;
+	}
+	c->reply_raw(CODE_257, _FTP_reply_msg[CODE_257], c->_wd._v);
 }
 
 void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
@@ -718,14 +758,14 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPClient* c)
 	DirNode*	list		= NULL;
 	Socket*		pasv_c		= NULL;
 
-	n = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &node_name);
-	if (n < 0) {
-		c->_s = CODE_501;
+	if (!c->_psrv || !c->_pclt) {
+		c->_s = CODE_425;
 		goto out;
 	}
 
-	if (!c->_psrv || !c->_pclt) {
-		c->_s = CODE_425;
+	n = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &node_name);
+	if (n < 0) {
+		c->_s = CODE_501;
 		goto out;
 	}
 
@@ -769,14 +809,14 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPClient* c)
 	DirNode*	list		= NULL;
 	Socket*		pasv_c		= NULL;
 
-	x = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &node_name);
-	if (x < 0) {
-		c->_s = CODE_501;
+	if (!c->_psrv || !c->_pclt) {
+		c->_s = CODE_425;
 		goto out;
 	}
 
-	if (!c->_psrv || !c->_pclt) {
-		c->_s = CODE_425;
+	x = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &node_name);
+	if (x < 0) {
+		c->_s = CODE_501;
 		goto out;
 	}
 
@@ -1017,14 +1057,6 @@ void FTPD::on_cmd_MKD(FTPD* s, FTPClient* c)
 out:
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
-}
-
-void FTPD::on_cmd_PWD(FTPD* s, FTPClient* c)
-{
-	if (!s || !c) {
-		return;
-	}
-	c->reply_raw(CODE_257, _FTP_reply_msg[CODE_257], c->_wd._v);
 }
 
 void FTPD::on_cmd_QUIT(FTPD* s, FTPClient* c)

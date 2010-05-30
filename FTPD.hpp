@@ -38,6 +38,7 @@ enum _FTP_reply_code {
 ,	CODE_501
 ,	CODE_502
 ,	CODE_503
+,	CODE_530
 ,	CODE_550
 ,	CODE_553
 ,	N_REPLY_CODE
@@ -46,14 +47,16 @@ extern const char* _FTP_reply_msg[N_REPLY_CODE];
 
 enum _FTP_add_reply_msg {
 	NODE_NOT_FOUND = 0
-,	TYPE_IS_ALWAYS_BIN
+,	TYPE_ALWAYS_BIN
+,	MODE_ALWAYS_STREAM
+,	STRU_ALWAYS_FILE
 ,	N_ADD_REPLY_MSG
 };
 extern const char* _FTP_add_reply_msg[N_ADD_REPLY_MSG];
 
-enum _FTP_mode {
-	MODE_SIMPLE = 0
-,	MODE_AUTH
+enum _FTP_ {
+	AUTH_NOLOGIN = 0
+,	AUTH_LOGIN
 ,	N_FTP_MODE
 };
 
@@ -65,7 +68,7 @@ public:
 	int init(const char* address = FTPD_DEF_ADDRESS
 		, const int port = FTPD_DEF_PORT
 		, const char* path = FTPD_DEF_PATH
-		, const int mode = MODE_SIMPLE);
+		, const int auth_mode = AUTH_NOLOGIN);
 	int set_callback(const int type, void (*callback)(FTPD*, FTPClient*));
 	int run();
 	void client_process();
@@ -73,7 +76,7 @@ public:
 	void client_del(FTPClient *c);
 
 	int		_running;
-	int		_mode;
+	int		_auth_mode;
 	int		_fds_max;
 	int		_pasv_port_next;
 	Buffer		_path;
@@ -94,22 +97,25 @@ public:
 	static void on_cmd_PASS(FTPD* server, FTPClient* client);
 	static void on_cmd_SYST(FTPD* server, FTPClient* client);
 	static void on_cmd_TYPE(FTPD* server, FTPClient* client);
+	static void on_cmd_MODE(FTPD* server, FTPClient* client);
+	static void on_cmd_STRU(FTPD* server, FTPClient* client);
+	
 	static void on_cmd_CWD(FTPD* server, FTPClient* client);
 	static void on_cmd_CDUP(FTPD* server, FTPClient* client);
+	static void on_cmd_PWD(FTPD* server, FTPClient* client);
 
 	static void on_cmd_PASV(FTPD* server, FTPClient* client);
 	static void on_cmd_LIST(FTPD* server, FTPClient* client);
 	static void on_cmd_NLST(FTPD* server, FTPClient* client);
 	static void on_cmd_RETR(FTPD* server, FTPClient* client);
 	static void on_cmd_STOR(FTPD* server, FTPClient* client);
-	static void on_cmd_DELE(FTPD* server, FTPClient* client);
 
+	static void on_cmd_DELE(FTPD* server, FTPClient* client);
 	static void on_cmd_RNFR(FTPD* server, FTPClient* client);
 	static void on_cmd_RNTO(FTPD* server, FTPClient* client);
-
 	static void on_cmd_RMD(FTPD* server, FTPClient* client);
 	static void on_cmd_MKD(FTPD* server, FTPClient* client);
-	static void on_cmd_PWD(FTPD* server, FTPClient* client);
+
 	static void on_cmd_QUIT(FTPD* server, FTPClient* client);
 	static void on_cmd_unknown(FTPClient* client);
 private:
