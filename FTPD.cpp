@@ -12,6 +12,8 @@ const char* _FTP_reply_msg[N_REPLY_CODE] =
 {
 	"150 File status okay; about to open data connection.\r\n"
 ,	"200 Command okay.%s\r\n"
+,	"211-features.\r\n SIZE\r\n MDTM\r\n211 end\r\n"
+,	"213 %s\r\n"
 ,	"215 UNIX Type: L8\r\n"
 ,	"220 Service ready for new user.\r\n"
 ,	"221 Service closing control connection.\r\n"
@@ -192,6 +194,9 @@ void FTPD::set_default_callback()
 	set_callback(FTP_CMD_TYPE, &on_cmd_TYPE);
 	set_callback(FTP_CMD_MODE, &on_cmd_MODE);
 	set_callback(FTP_CMD_STRU, &on_cmd_MODE);
+	set_callback(FTP_CMD_FEAT, &on_cmd_FEAT);
+	set_callback(FTP_CMD_SIZE, &on_cmd_SIZE);
+	set_callback(FTP_CMD_MDTM, &on_cmd_MDTM);
 
 	set_callback(FTP_CMD_CWD, &on_cmd_CWD);
 	set_callback(FTP_CMD_CDUP, &on_cmd_CDUP);
@@ -590,13 +595,82 @@ void FTPD::on_cmd_STRU(FTPD* s, FTPClient* c)
 			, _FTP_add_reply_msg[STRU_ALWAYS_FILE]);
 }
 
+void FTPD::on_cmd_FEAT(FTPD* s, FTPClient* c)
+{
+	if (!s || !c) {
+		return;
+	}
+	c->reply_raw(CODE_211, _FTP_reply_msg[CODE_211], NULL);
+}
+
+void FTPD::on_cmd_SIZE(FTPD* s, FTPClient* c)
+{
+	if (!s || !c) {
+		return;
+	}
+
+	Buffer		size;
+	Buffer		cwd;
+	Buffer*		parm		= &c->_cmnd._parm;
+	DirNode*	node		= NULL;
+
+	if (parm->_v[0] == '/') {
+		cwd.concat(s->_path._v, parm->_v, NULL);
+	} else {
+		cwd.concat(s->_path._v, c->_wd._v, "/", parm->_v, NULL);
+	}
+
+	node = s->_dir.get_node(&cwd, s->_path._v, s->_path._i);
+	if (!node) {
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
+	} else {
+		c->_s		= CODE_213;
+		size.appendi(node->_size);
+		c->_rmsg_plus	= size._v;
+	}
+
+	c->_rmsg = _FTP_reply_msg[c->_s];
+	c->reply();
+}
+
+void FTPD::on_cmd_MDTM(FTPD* s, FTPClient* c)
+{
+	if (!s || !c) {
+		return;
+	}
+
+	Buffer		size;
+	Buffer		cwd;
+	Buffer*		parm		= &c->_cmnd._parm;
+	DirNode*	node		= NULL;
+
+	if (parm->_v[0] == '/') {
+		cwd.concat(s->_path._v, parm->_v, NULL);
+	} else {
+		cwd.concat(s->_path._v, c->_wd._v, "/", parm->_v, NULL);
+	}
+
+	node = s->_dir.get_node(&cwd, s->_path._v, s->_path._i);
+	if (!node) {
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
+	} else {
+		c->_s		= CODE_213;
+		size.appendi(node->_mtime);
+		c->_rmsg_plus	= size._v;
+	}
+
+	c->_rmsg = _FTP_reply_msg[c->_s];
+	c->reply();
+}
+
 void FTPD::on_cmd_CWD(FTPD* s, FTPClient* c)
 {
 	if (!s || !c) {
 		return;
 	}
 
-	Buffer		dir;
 	Buffer		cwd;
 	Buffer*		parm		= &c->_cmnd._parm;
 	DirNode*	node		= NULL;

@@ -16,6 +16,9 @@ const char *_FTP_cmd[N_FTP_CMD] = {
 	"TYPE",	/* TYPE	[A|I]			*/
 	"MODE",	/* MODE [S]			*/
 	"STRU", /* STRU [F]			*/
+	"FEAT", /* FEAT				*/
+	"SIZE", /* SIZE /path/			*/
+	"MDTM",	/* MDTM /path/			*/
 	"CWD" ,	/* CWD	directory		*/
 	"CDUP",	/* CDUP				*/
 	"PASV",	/* PASV				*/

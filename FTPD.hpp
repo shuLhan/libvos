@@ -22,6 +22,8 @@ namespace vos {
 enum _FTP_reply_code {
 	CODE_150 = 0
 ,	CODE_200
+,	CODE_211
+,	CODE_213
 ,	CODE_215
 ,	CODE_220
 ,	CODE_221
@@ -105,6 +107,9 @@ public:
 	static void on_cmd_TYPE(FTPD* server, FTPClient* client);
 	static void on_cmd_MODE(FTPD* server, FTPClient* client);
 	static void on_cmd_STRU(FTPD* server, FTPClient* client);
+	static void on_cmd_FEAT(FTPD* server, FTPClient* client);
+	static void on_cmd_SIZE(FTPD* server, FTPClient* client);
+	static void on_cmd_MDTM(FTPD* server, FTPClient* client);
 	
 	static void on_cmd_CWD(FTPD* server, FTPClient* client);
 	static void on_cmd_CDUP(FTPD* server, FTPClient* client);
