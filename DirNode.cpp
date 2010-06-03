@@ -14,9 +14,11 @@ DirNode::DirNode() :
 	_gid(0),
 	_size(0),
 	_mtime(0),
+	_ctime(0),
 	_name(),
 	_linkname(),
 	_next(NULL),
+	_prev(NULL),
 	_child(NULL),
 	_link(NULL),
 	_parent(this)
@@ -32,31 +34,32 @@ DirNode::~DirNode()
 		delete _child;
 		_child = NULL;
 	}
+	_prev	= NULL;
 	_link	= NULL;
 	_parent	= NULL;
 }
 
 /**
- * @method		: DirNode::get_stat
+ * @method		: DirNode::get_attr
  * @param		:
  *	> rpath		: a full path, from current directory.
- *	> path		: the basename of 'rpath'.
+ *	> name		: the basename of 'rpath'.
  * @return		:
  *	< 0		: success.
  *	< -1		: fail.
  * @desc		: get 'path' attribute.
  */
-int DirNode::get_stat(const char *rpath, const char *path)
+int DirNode::get_attr(const char *rpath, const char *name)
 {
-	if (!rpath && !path) {
+	if (!rpath && !name) {
 		return 0;
 	}
 
 	register int	s;
 	struct stat	st;
 
-	if (path) {
-		_name.copy_raw(path);
+	if (name) {
+		_name.copy_raw(name);
 	} else {
 		_name.copy_raw(rpath);
 	}
@@ -85,6 +88,7 @@ int DirNode::get_stat(const char *rpath, const char *path)
 	_gid	= st.st_gid;
 	_size	= st.st_size;
 	_mtime	= st.st_mtime;
+	_ctime	= st.st_ctime;
 
 	return 0;
 }
@@ -114,9 +118,89 @@ int DirNode::is_link()
 }
 
 /**
+ * @method	: DirNode::update_attr
+ * @param	:
+ *	> node	: pointer to DirNode object that will be updated.
+ *	> rpath	: a path that of 'node' in file system.
+ * @return	:
+ *	< 1	: success, stat changed.
+ *	< 0	: success, stat does not change.
+ *	< -1	: fail.
+ * @desc	: update node attributes.
+ */
+int DirNode::update_attr(DirNode* node, const char* rpath)
+{
+	register int	s = 0;
+	struct stat	st;
+
+	if (node->_linkname.is_empty()) {
+		s = lstat(rpath, &st);
+	} else {
+		s = lstat(node->_linkname._v, &st);
+	}
+	if (s < 0) {
+		return -1;
+	}
+
+	if (st.st_mtime != node->_mtime) {
+		s		= 1;
+		node->_size	= st.st_size;
+		node->_mtime	= st.st_mtime;
+	}
+	if (st.st_ctime != node->_ctime) {
+		s		= 1;
+		node->_mode	= st.st_mode;
+		node->_uid	= st.st_uid;
+		node->_gid	= st.st_gid;
+		node->_ctime	= st.st_ctime;
+	}
+
+	return s;
+}
+
+/**
+ * @method	: DirNode::update_child_attr
+ * @param	:
+ *	> node	: return value, pointer to child node.
+ *	> rpath	: a full path name that need to be updated.
+ *	> name	: name of the last node, basename, of 'rpath'.
+ * @return	:
+ *	< 1	: success, child stat change.
+ *	< 0	: success, but child stat does not change.
+ *	< -1	: fail. child with _name is 'name' not found.
+ *	< -2	: fail, system error.
+ * @desc	: update attributes of child node with 'name', if change.
+ */
+int DirNode::update_child_attr(DirNode** node, const char* rpath
+				, const char* name)
+{
+	register int	s;
+	DirNode*	p = _child;
+
+	while (p) {
+		s = p->_name.cmp_raw(name);
+		if (s == 0) {
+			break;
+		}
+		p = p->_next;
+	}
+	if (!p) {
+		return -1;
+	}
+
+	(*node)	= p;
+	s	= update_attr(p, rpath);
+	if (s < 0) {
+		return -2;
+	}
+
+	return s;
+}
+
+/**
  * @method	: DirNode::dump
  * @param	:
- *	> space	: number of space before print content of object.
+ *	> space	: formating, number of space before printing content of object.
  * @desc	: dump content of DirNode object.
  */
 void DirNode::dump(int space)
@@ -129,9 +213,9 @@ void DirNode::dump(int space)
 	} else {
 		printf("> - ");
 	}
-	printf("|%5d|%5d|%5d|%12ld|%ld|%s|%s\n", _mode, _uid, _gid, _size
-		, _mtime , _name._v ? _name._v : ""
-		, _linkname._v ? _linkname._v : "");
+	printf("|%5d|%5d|%5d|%12ld|%ld|%ld|%s|%s|%s", _mode, _uid, _gid, _size
+		, _mtime, _ctime, _name._v ? _name._v : ""
+		, _linkname._v ? _linkname._v : "", ctime(&_mtime));
 	if (_link) {
 		printf(" => %s\n", _link->_name._v);
 	}
@@ -165,7 +249,7 @@ int DirNode::INIT(DirNode **node, const char *rpath, const char *path)
 		return -1;
 	}
 
-	return (*node)->get_stat(rpath, path);
+	return (*node)->get_attr(rpath, path);
 }
 
 /**
@@ -185,7 +269,7 @@ int DirNode::GET_LINK_NAME(Buffer* linkname, const char* path)
 		return -1;
 	}
 	if (LIBVOS_DEBUG) {
-		printf("[LIBVOS::DIR] get link name: '%s'\n", path);
+		printf("[LIBVOS::DirNode_] get link name: '%s'\n", path);
 	}
 	if (! linkname->is_empty()) {
 		free(linkname->_v);
@@ -207,45 +291,43 @@ int DirNode::GET_LINK_NAME(Buffer* linkname, const char* path)
  * @param		:
  *	> list		: head of list.
  *	> node		: a new node.
- * @return		:
- *	< DirNode*	: a new head of list.
  * @desc		:
  * insert 'node' to the list of DirNode, sort by node name.
  */
-DirNode* DirNode::INSERT(DirNode* list, DirNode* node)
+void DirNode::INSERT(DirNode** list, DirNode* node)
 {
 	if (!node) {
-		return list;
+		return;
 	}
-	if (!list) {
-		return node;
+	if (!(*list)) {
+		(*list) = node;
+		return;
 	}
 
 	int		s;
 	DirNode*	last	= NULL;
-	DirNode*	p	= list;
+	DirNode*	p	= (*list);
 
 	while (p) {
 		s = p->_name.like(&node->_name);
 		if (s > 0) {
-			if (!last) {
-				node->_next = list;
-				return node;
-			}
-			node->_next = last->_next;
-			last->_next = node;
-			return list;
+			break;
 		}
-		last = p;
-		p = p->_next;
+		last	= p;
+		p	= p->_next;
 	}
 	if (!last) {
-		list = node;
+		node->_next	= (*list);
+		(*list)->_prev	= node;
+		(*list)		= node;
 	} else {
+		if (p) {
+			p->_prev = node;
+		}
+		node->_next = p;
+		node->_prev = last;
 		last->_next = node;
 	}
-
-	return list;
 }
 
 /**
@@ -268,10 +350,32 @@ int DirNode::INSERT_CHILD(DirNode* list, const char* rpath, const char* name)
 	if (s < 0) {
 		return -1;
 	}
-	node->_parent	= list;
-	list->_child	= INSERT(list->_child, node);
+	node->_parent = list;
+	INSERT(&list->_child, node);
 
 	return 0;
+}
+
+void DirNode::UNLINK(DirNode** list, DirNode* node)
+{
+	if (!node) {
+		return;
+	}
+
+	DirNode* next = node->_next;
+	DirNode* prev = node->_prev;
+
+	if ((*list) == node) {
+		(*list) = next;
+	} else if (prev) {
+		prev->_next = next;
+	}
+	if (next) {
+		next->_prev = prev;
+	}
+
+	node->_next = NULL;
+	node->_prev = NULL;
 }
 
 /**
@@ -288,27 +392,17 @@ int DirNode::INSERT_CHILD(DirNode* list, const char* rpath, const char* name)
  */
 int DirNode::REMOVE_CHILD_BY_NAME(DirNode* list, const char* name)
 {
-	DirNode* last	= NULL;
-	DirNode* p	= list->_child;
+	DirNode* p = list->_child;
 
 	while (p) {
-		if (p->_name.like_raw(name) == 0) {
-			if (!last) {
-				list->_child = p->_next;
-			} else {
-				last->_next = p->_next;
-			}
-
-			p->_next = NULL;
+		if (p->_name.cmp_raw(name) == 0) {
+			UNLINK(&list->_child, p);
 			delete p;
-
 			return 0;
 		}
 
-		last	= p;
-		p	= p->_next;
+		p = p->_next;
 	}
-
 	return -1;
 }
 

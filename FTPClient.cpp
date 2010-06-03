@@ -42,7 +42,11 @@ void FTPClient::reset()
 
 void FTPClient::reply()
 {
-	printf("[FTPD] reply : %s %s\n", _rmsg, _rmsg_plus);
+	if (LIBVOS_DEBUG) {
+		printf("[LIBVOS::FTPClien] reply    : %s", _rmsg);
+		printf("                   add. msg : %s\n"
+			, _rmsg_plus ? _rmsg_plus : "-");
+	}
 
 	_sock->reset();
 	_sock->writes(_rmsg, _rmsg_plus);

@@ -154,7 +154,7 @@ int Dir::get_list(DirNode* list, const char* path)
 	DirNode*	node	= NULL;
 
 	if (LIBVOS_DEBUG) {
-		printf("[LIBVOS::DIR] scanning '%s' ...\n", path);
+		printf("[LIBVOS::Dir_____] scanning '%s' ...\n", path);
 	}
 
 	dir = opendir(path);
@@ -179,7 +179,7 @@ int Dir::get_list(DirNode* list, const char* path)
 			continue;
 		}
 		if (LIBVOS_DEBUG) {
-			printf("[LIBVOS::DIR] checking '%s'\n", dent->d_name);
+			printf("[LIBVOS::Dir_____] checking '%s'\n", dent->d_name);
 		}
 
 		rpath.reset();
@@ -214,9 +214,9 @@ int Dir::get_list(DirNode* list, const char* path)
 			}
 		}
 
-		node->_parent	= list;
-		list->_child	= DirNode::INSERT(list->_child, node);
-		node		= NULL;
+		node->_parent = list;
+		DirNode::INSERT(&list->_child, node);
+		node = NULL;
 		n++;
 	} while (dent);
 
@@ -255,7 +255,7 @@ int Dir::get_symlink(DirNode *list)
 						, _name._i);
 			if (!list->_link) {
 				fprintf(stderr
-, "[LIBVOS::DIR] cannot get link to '%s'\n", list->_linkname._v);
+, "[LIBVOS::DIR_____] cannot get link to '%s'\n", list->_linkname._v);
 				return -1;
 			}
 		}
@@ -275,7 +275,7 @@ void Dir::dump()
 }
 
 /**
- * @method		: Dir::get_link_child
+ * @method		: Dir::get_node
  * @param		:
  *	> path		: path to directory.
  *	> root		: the root directory of Dir object.
@@ -292,9 +292,9 @@ void Dir::dump()
  *	...
  *	node | linkname | /root/dir/real/path/to/dir
  *
- * 'path' is a symbolic link to 'x', so, instead of create list of directory
- * 'path' again, we just point the child-index of 'path' to the same value of
- * child-index in directory 'x'.
+ * 'path' is a symbolic link to 'x', so, instead of creating list of directory
+ * 'path' again, we just point the _link of 'path' node to the same value of
+ * child pointer in directory 'x'.
  *
  * This function also can be used to get node index of any 'path', as long as
  * they were in the same 'root'.
@@ -320,7 +320,7 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 		return NULL;
 	}
 	if (LIBVOS_DEBUG) {
-		printf("[LIBVOS::DIR] get link child : %s\n", name);
+		printf("[LIBVOS::Dir_____] get link child : %s\n", name);
 	}
 
 	i = len - root_len;
@@ -353,12 +353,149 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 			continue;
 		}
 
-		fprintf(stderr, "[LIBVOS::DIR] invalid path : %s\n", name);
-		fprintf(stderr, "              node name    : %s\n", node._v);
+		fprintf(stderr, "[LIBVOS::Dir_____] invalid path : %s\n", name);
+		fprintf(stderr, "                  node name    : %s\n", node._v);
 		return NULL;
 	}
 
 	return p;
+}
+
+/**
+ * @method	: Dir:refresh_by_path
+ * @param	:
+ *	> path	: path to be refreshed, path must in the same root.
+ * @return	:
+ *	< >0	: number of change (new node, mod node) in the path.
+ *	< -1	: fail, path is not in the same root.
+ *	< -2	: fail, system error.
+ * @desc	:
+ *	check for a new, deleted or modified node in the 'path'.
+ */
+int Dir::refresh_by_path(Buffer* path)
+{
+	int		n = 0;
+	int		s;
+	Buffer		rpath;
+	DIR*		dir	= NULL;
+	struct dirent*	dent	= NULL;
+	DirNode*	list	= NULL;
+	DirNode*	cnode	= NULL;
+	DirNode*	childs	= NULL;
+
+	if (!path) {
+		return 0;
+	}
+
+	list = get_node(path, _name._v, _name._i);
+	if (!list) {
+		return -1;
+	}
+
+	printf("[LIBVOS::Dir_____] refreshing '%s' ...\n", path->_v);
+
+	if (! list->is_dir()) {
+		s = list->update_attr(list, path->_v);
+		if (s < 0) {
+			s = -2;
+		}
+		return s;
+	}
+
+	dir = opendir(path->_v);
+	if (!dir) {
+		if (errno == EACCES) {
+			return 0;
+		}
+		return -2;
+	}
+
+	do {
+		dent = readdir(dir);
+		if (!dent) {
+			break;
+		}
+		s = strcmp(dent->d_name, ".");
+		if (s == 0) {
+			continue;
+		}
+		s = strcmp(dent->d_name, "..");
+		if (s == 0) {
+			continue;
+		}
+		if (LIBVOS_DEBUG) {
+			printf("[LIBVOS::Dir_____] checking '%s'\n", dent->d_name);
+		}
+
+		rpath.reset();
+		rpath.append(path);
+
+		if (rpath._v[rpath._i - 1] != '/') {
+			rpath.appendc('/');
+		}
+
+		rpath.append_raw(dent->d_name);
+
+		s = list->update_child_attr(&cnode, rpath._v, dent->d_name);
+		if (s >= 0) {
+			if (s == 1) {
+				n++;
+			}
+			if (!cnode) {
+				fprintf(stderr, "[LIBVOS::Dir_____] Child node empty!");
+				return -2;
+			}
+
+			DirNode::UNLINK(&list->_child, cnode);
+			DirNode::INSERT(&childs, cnode);
+		} else if (s == -1) {
+			s = DirNode::INIT(&cnode, rpath._v, dent->d_name);
+			if (s < 0) {
+				break;
+			}
+
+			if (cnode->is_dir()) {
+				if (cnode->_linkname.is_empty()) {
+					s = get_list(cnode, rpath._v);
+					if (s < 0) {
+						return s;
+					}
+				} else {
+					s = strncmp(cnode->_linkname._v
+							, _name._v, _name._i);
+					if (s != 0) {
+						s = get_list(cnode
+							, cnode->_linkname._v);
+						if (s < 0) {
+							return s;
+						}
+					}
+				}
+			}
+
+			cnode->_parent = list;
+			DirNode::INSERT(&childs, cnode);
+			cnode = NULL;
+			n++;
+		} else if (s == -2) {
+			return s;
+		}
+		cnode = NULL;
+	} while (dent);
+
+	if (list->_child) {
+		list->_child->dump();
+		delete list->_child;
+	}
+	list->_child = childs;
+
+	closedir(dir);
+
+	if (LIBVOS_DEBUG) {
+		printf("[LIBVOS::Dir_____] number of node changed : %d\n", n);
+	}
+
+	return n;
 }
 
 /**
@@ -375,7 +512,7 @@ int Dir::CREATE(const char *path, mode_t mode)
 	register int s = 0;
 
 	if (LIBVOS_DEBUG) {
-		printf("[DIR] create: %s\n", path);
+		printf("[LIBVOS::Dir_____] create: %s\n", path);
 	}
 
 	s = mkdir(path, mode);
@@ -402,7 +539,7 @@ int Dir::CREATES(const char* path, mode_t mode)
 		return 0;
 	}
 	if (LIBVOS_DEBUG) {
-		printf("[DIR] create recursive: %s\n", path);
+		printf("[LIBVOS::Dir_____] create recursive: %s\n", path);
 	}
 
 	int s = 0;

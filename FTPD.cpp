@@ -249,7 +249,9 @@ int FTPD::set_callback(const int type, void (*callback)(FTPD*,FTPClient*))
 static void EXIT(int signum)
 {
 	if (signum == SIGINT || signum == SIGQUIT) {
-		printf("[FTPD] exit\n");
+		if (LIBVOS_DEBUG) {
+			printf("[LIBVOS::FTPD____] exit\n");
+		}
 		if (_ftpd_) {
 			_ftpd_->_running = 0;
 		}
@@ -275,7 +277,9 @@ int FTPD::run()
 	signal(SIGQUIT, &EXIT);
 
 	while (_running) {
-		printf("[FTPD] waiting for client\n");
+		if (LIBVOS_DEBUG) {
+			printf("[LIBVOS::FTPD____] waiting for client\n\n");
+		}
 
 		_fds_read = _fds_all;
 		s = select(_fds_max, &_fds_read, NULL, NULL, NULL);
@@ -352,7 +356,9 @@ void FTPD::client_process()
 		if (s < 0) {
 			on_cmd_unknown(c);
 		} else {
-			c->_cmnd.dump();
+			if (LIBVOS_DEBUG) {
+				c->_cmnd.dump();
+			}
 
 			if (_auth_mode == AUTH_LOGIN
 			&&  c->_conn_stat != FTP_STT_LOGGED_IN
@@ -400,7 +406,9 @@ void FTPD::client_add(FTPClient* c)
  */
 void FTPD::client_del(FTPClient* c)
 {
-	printf("[FTPD] client '%d' quit.\n", c->_sock->_d);
+	if (LIBVOS_DEBUG) {
+		printf("[LIBVOS::FTPD____] client '%d' quit.\n", c->_sock->_d);
+	}
 
 	FD_CLR(c->_sock->_d, &_fds_all);
 
@@ -478,8 +486,10 @@ int FTPD::get_path_node(FTPD* s, FTPClient* c, Buffer* cmd_path
 	dirname->copy_raw(&path._v[i], path._i - i);
 	rpath->append(dirname);
 
-	printf("[FTPD] get_path_node.realpath: %s\n", rpath->_v);
-	printf("       get_path_node.dirname : %s\n", dirname->_v);
+	if (LIBVOS_DEBUG) {
+		printf("[LIBVOS::FTPD____] get_path_node.realpath: %s\n", rpath->_v);
+		printf("                   get_path_node.dirname : %s\n", dirname->_v);
+	}
 
 	return 0;
 }
@@ -692,7 +702,9 @@ void FTPD::on_cmd_CWD(FTPD* s, FTPClient* c)
 		c->_wd.reset();
 		s->_dir.get_parent_path(&c->_wd, node);
 
-		printf("[FTPD] CWD : %s\n", c->_wd._v);
+		if (LIBVOS_DEBUG) {
+			printf("[LIBVOS::FTPD____] CWD : %s\n", c->_wd._v);
+		}
 	}
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
@@ -727,7 +739,9 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
 	Socket*		pasv_sock	= NULL;
 
 	if (!c->_sock) {
-		fprintf(stderr, "[FTPD] on_cmd_PASV: client socket null!\n");
+		if (LIBVOS_DEBUG) {
+			printf("[LIBVOS::FTPD____] on_cmd_PASV: client socket null!\n");
+		}
 		return;
 	}
 
@@ -774,7 +788,9 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
 		s->_fds_max = pasv_sock->_d + 1;
 	}
 
-	printf(" PASV: %s\n", pasv_addr._v);
+	if (LIBVOS_DEBUG) {
+		printf("[LIBVOS::FTPD____] PASV: %s\n", pasv_addr._v);
+	}
 
 	c->_s		= CODE_227;
 	c->_rmsg	= _FTP_reply_msg[c->_s];
@@ -795,6 +811,7 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 		return;
 	}
 
+	int		x;
 	Buffer		path;
 	Buffer*		cmd_path	= &c->_cmnd._parm;
 	DirNode*	node		= NULL;
@@ -804,10 +821,18 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 		c->_s = CODE_425;
 		goto out;
 	}
+
 	if (cmd_path->_v[0] == '/') {
 		path.concat(s->_path._v, cmd_path->_v, NULL);
 	} else {
 		path.concat(s->_path._v, c->_wd._v, "/", cmd_path->_v, NULL);
+	}
+
+	x = s->_dir.refresh_by_path(&path);
+	if (x < 0) {
+		c->_s		= CODE_450;
+		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
+		goto out;
 	}
 
 	node = s->_dir.get_node(&path, s->_path._v, s->_path._i);
@@ -861,6 +886,7 @@ void FTPD::on_cmd_NLST(FTPD* s, FTPClient* c)
 		return;
 	}
 
+	int		x;
 	Buffer		path;
 	Buffer*		cmd_path	= &c->_cmnd._parm;
 	DirNode*	node		= NULL;
@@ -875,6 +901,13 @@ void FTPD::on_cmd_NLST(FTPD* s, FTPClient* c)
 		path.concat(s->_path._v, cmd_path->_v, NULL);
 	} else {
 		path.concat(s->_path._v, c->_wd._v, "/", cmd_path->_v, NULL);
+	}
+
+	x = s->_dir.refresh_by_path(&path);
+	if (x < 0) {
+		c->_s		= CODE_450;
+		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
+		goto out;
 	}
 
 	node = s->_dir.get_node(&path, s->_path._v, s->_path._i);
@@ -1076,8 +1109,6 @@ void FTPD::on_cmd_RNFR(FTPD* s, FTPClient* c)
 		path.concat(s->_path._v, c->_wd._v, "/", cmd_path->_v, NULL);
 	}
 
-	printf(" RNFR: %s\n", path._v);
-
 	node = s->_dir.get_node(&path, s->_path._v, s->_path._i);
 	if (!node) {
 		c->_s		= CODE_550;
@@ -1143,8 +1174,10 @@ void FTPD::on_cmd_RNTO(FTPD* s, FTPClient* c)
 		to.append(&name_from);
 	}
 
-	printf("[FTPD] RENAME from : %s\n", from._v);
-	printf("[FTPD]        to   : %s\n", to._v);
+	if (LIBVOS_DEBUG) {
+		printf("[LIBVOS::FTPD____] RENAME from : %s\n", from._v);
+		printf("                          to   : %s\n", to._v);
+	}
 
 	x = rename(from._v, to._v);
 	if (x < 0) {

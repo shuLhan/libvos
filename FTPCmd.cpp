@@ -82,7 +82,7 @@ int FTPCmd::get(Buffer* c)
 		}
 	}
 	if (!_code) {
-		fprintf(stderr, "[FTPCmd] Unknown command: %s\n", cmd._v);
+		fprintf(stderr, "[LIBVOS::FTPCmd__] Unknown command: %s\n", cmd._v);
 		return -1;
 	}
 
@@ -97,8 +97,8 @@ void FTPCmd::set(FTPCmd *cmd)
 
 void FTPCmd::dump()
 {
-	printf("[FTPCmd] command   : %s\n", _FTP_cmd[_code]);
-	printf("[FTPCmd] parameter : %s\n", _parm._v);
+	printf("[LIBVOS::FTPCmd__] command   : %s\n", _FTP_cmd[_code]);
+	printf("                   parameter : %s\n", _parm._v);
 }
 
 } /* namespace::vos */

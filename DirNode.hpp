@@ -8,6 +8,7 @@
 #define	_LIBVOS_DIRNODE_HPP	1
 
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 #include "Buffer.hpp"
 
@@ -38,18 +39,22 @@ public:
 	DirNode();
 	virtual ~DirNode();
 
-	int get_stat(const char *rpath, const char *path = NULL);
+	int get_attr(const char *rpath, const char *name = NULL);
 	int is_dir();
 	int is_link();
+	int update_attr(DirNode* node, const char* rpath);
+	int update_child_attr(DirNode** node, const char* rpath
+				, const char* name);
 	void dump(int space = 0);
 
 	static int INIT(DirNode** node, const char* rpath
 			, const char* path);
 	static int GET_LINK_NAME(Buffer* linkname, const char* path);
 
-	static DirNode* INSERT(DirNode* list, DirNode* node);
+	static void INSERT(DirNode** list, DirNode* node);
 	static int INSERT_CHILD(DirNode* list, const char* rpath
 				, const char* name);
+	static void UNLINK(DirNode** list, DirNode* node);
 	static int REMOVE_CHILD_BY_NAME(DirNode* list, const char* name);
 
 	int		_mode;
@@ -57,12 +62,14 @@ public:
 	int		_gid;
 	long		_size;
 	long		_mtime;
+	long		_ctime;
 	Buffer		_name;
 	Buffer		_linkname;
-	DirNode		*_next;
-	DirNode		*_child;
-	DirNode		*_link;
-	DirNode		*_parent;
+	DirNode*	_next;
+	DirNode*	_prev;
+	DirNode*	_child;
+	DirNode*	_link;
+	DirNode*	_parent;
 private:
 	DirNode(const DirNode&);
 	void operator=(const DirNode &);
