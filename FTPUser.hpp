@@ -11,6 +11,14 @@
 
 namespace vos {
 
+/**
+ * @class	: FTPUser
+ * @attr	:
+ *	- _name	: name of user.
+ *	- _pass	: string to identified user name at login.
+ *	- _next	: pointer to the next FTPUser in the list.
+ * @desc	: This class handling each user account on FTP server.
+ */
 class FTPUser {
 public:
 	FTPUser();

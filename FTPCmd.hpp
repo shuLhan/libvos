@@ -41,6 +41,13 @@ enum _FTP_cmd_idx {
 };
 extern const char* _FTP_cmd[N_FTP_CMD];
 
+/**
+ * @class	: FTPCmd
+ * @attr	:
+ *	- _code	: command code.
+ *	- _parm	: command parameter.
+ * @desc	: This class contain command code and parameter.
+ */
 class FTPCmd {
 public:
 	FTPCmd();

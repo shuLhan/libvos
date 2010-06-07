@@ -11,7 +11,7 @@ namespace vos {
 const char* _FTP_reply_msg[N_REPLY_CODE] =
 {
 	"150 File status okay; about to open data connection.\r\n"
-,	"200 Command okay.%s\r\n"
+,	"200 Command okay. %s\r\n"
 ,	"211-features.\r\n SIZE\r\n MDTM\r\n211 end\r\n"
 ,	"213 %s\r\n"
 ,	"215 UNIX Type: L8\r\n"
@@ -23,7 +23,6 @@ const char* _FTP_reply_msg[N_REPLY_CODE] =
 ,	"250 Requested file action okay, completed.\r\n"
 ,	"257 \"%s\"\r\n"
 ,	"331 User name okay, need password.\r\n"
-,	"332 Need account for login.\r\n"
 ,	"350 Requested file action pending further information.\r\n"
 ,	"421 Service not available, closing control connection.\r\n"
 ,	"425 Can't open data connection.\r\n"
@@ -33,8 +32,8 @@ const char* _FTP_reply_msg[N_REPLY_CODE] =
 ,	"502 Command not implemented.\r\n"
 ,	"503 Bad sequence of commands.\r\n"
 ,	"530 Not logged in.\r\n"
-,	"550 Requested action not taken: %s.\r\n"
-,	"553 Requested action not taken: %s.\r\n"
+,	"550 Requested action not taken: %s\r\n"
+,	"553 Requested action not taken: %s\r\n"
 };
 
 const char* _FTP_add_reply_msg[N_ADD_REPLY_MSG] =
@@ -51,7 +50,6 @@ FTPD::FTPD() :
 	_running(0)
 ,	_auth_mode(AUTH_NOLOGIN)
 ,	_fds_max(0)
-,	_pasv_port_next(FTPD_DEF_PASV_PORT)
 ,	_path()
 ,	_dir()
 ,	_fds_all()
@@ -68,6 +66,7 @@ FTPD::~FTPD()
 		next = _all_client->_next;
 
 		_all_client->_next = NULL;
+		_all_client->reply_raw(CODE_421, _FTP_reply_msg[CODE_421], 0);
 		delete _all_client;
 
 		_all_client = next;
@@ -80,10 +79,14 @@ FTPD::~FTPD()
 /**
  * @method		: FTPD::init
  * @param		:
- *	> address	: address to listen for client connection.
- *	> port		: port to liste for clien connection.
- *	> path		: path to be served to client.
- *	> mode		: is it anonymous server or authentication server.
+ *	> address	: Address to listen for client connection.
+ *                        Default is "0.0.0.0".
+ *	> port		: Port to listen for clien connection.
+ *                        Default is 21.
+ *	> path		: Path to be served to client.
+ *                        Default to empty or NULL.
+ *	> mode		: Is it anonymous server or authentication server.
+ *                        Default to no authentication, all user name allowed.
  * @return		:
  *	< 0		: success.
  *	< -1		: fail.
@@ -93,6 +96,8 @@ int FTPD::init(const char* address, const int port, const char* path
 		, const int auth_mode)
 {
 	int s;
+
+	srand(time(0));
 
 	_ftpd_		= this;
 	_auth_mode	= auth_mode;
@@ -306,6 +311,9 @@ int FTPD::run()
 	}
 	s = 0;
 err:
+	if (errno == EINTR) {
+		s = 0;
+	}
 	if (s) {
 		perror(NULL);
 	}
@@ -536,12 +544,12 @@ void FTPD::on_cmd_USER(FTPD* s, FTPClient* c)
 
 	x = FTPUser::IS_NAME_EXIST(s->_users, &c->_cmnd._parm);
 	if (!x) {
-		c->_s = CODE_332;
+		c->_s = CODE_530;
 	} else {
 		c->_s = CODE_331;
 	}
 out:
-	c->_rmsg	= _FTP_reply_msg[c->_s];
+	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
 
@@ -553,14 +561,14 @@ void FTPD::on_cmd_PASS(FTPD* s, FTPClient* c)
 		return;
 	}
 	if (c->_cmnd_last._code != FTP_CMD_USER) {
-		c->_s		= CODE_503;
+		c->_s = CODE_503;
 		goto out;
 	}
 
 	x = FTPUser::IS_EXIST(s->_users, &c->_cmnd_last._parm
 				, &c->_cmnd._parm);
 	if (!x) {
-		c->_s		= CODE_530;
+		c->_s = CODE_530;
 	} else {
 		c->_s		= CODE_230;
 		c->_conn_stat	= FTP_STT_LOGGED_IN;
@@ -624,6 +632,11 @@ void FTPD::on_cmd_SIZE(FTPD* s, FTPClient* c)
 	Buffer*		parm		= &c->_cmnd._parm;
 	DirNode*	node		= NULL;
 
+	if (parm->is_empty()) {
+		c->_s = CODE_501;
+		goto out;
+	}
+
 	if (parm->_v[0] == '/') {
 		cwd.concat(s->_path._v, parm->_v, NULL);
 	} else {
@@ -639,7 +652,7 @@ void FTPD::on_cmd_SIZE(FTPD* s, FTPClient* c)
 		size.appendi(node->_size);
 		c->_rmsg_plus	= size._v;
 	}
-
+out:
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -650,10 +663,17 @@ void FTPD::on_cmd_MDTM(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	Buffer		size;
+	Buffer		tm;
 	Buffer		cwd;
+	struct tm	gmt;
 	Buffer*		parm		= &c->_cmnd._parm;
 	DirNode*	node		= NULL;
+	struct tm*	pgmt		= NULL;
+
+	if (parm->is_empty()) {
+		c->_s = CODE_501;
+		goto out;
+	}
 
 	if (parm->_v[0] == '/') {
 		cwd.concat(s->_path._v, parm->_v, NULL);
@@ -666,11 +686,20 @@ void FTPD::on_cmd_MDTM(FTPD* s, FTPClient* c)
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
 	} else {
-		c->_s		= CODE_213;
-		size.appendi(node->_mtime);
-		c->_rmsg_plus	= size._v;
-	}
+		pgmt = gmtime_r(&node->_mtime, &gmt);
+		if (!pgmt) {
+			c->_s = CODE_451;
+			goto out;
+		}
 
+		tm.aprint("%d%02d%02d%02d%02d%02d"
+				, 1900 + gmt.tm_year, gmt.tm_mon, gmt.tm_mday
+				, gmt.tm_hour, gmt.tm_min, gmt.tm_sec);
+
+		c->_s		= CODE_213;
+		c->_rmsg_plus	= tm._v;
+	}
+out:
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -682,8 +711,13 @@ void FTPD::on_cmd_CWD(FTPD* s, FTPClient* c)
 	}
 
 	Buffer		cwd;
-	Buffer*		parm		= &c->_cmnd._parm;
-	DirNode*	node		= NULL;
+	Buffer*		parm	= &c->_cmnd._parm;
+	DirNode*	node	= NULL;
+
+	if (parm->is_empty()) {
+		c->_s = CODE_501;
+		goto out;
+	}
 
 	if (parm->_v[0] == '/') {
 		cwd.concat(s->_path._v, parm->_v, NULL);
@@ -706,6 +740,7 @@ void FTPD::on_cmd_CWD(FTPD* s, FTPClient* c)
 			printf("[LIBVOS::FTPD____] CWD : %s\n", c->_wd._v);
 		}
 	}
+out:
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -726,6 +761,11 @@ void FTPD::on_cmd_PWD(FTPD* s, FTPClient* c)
 	c->reply_raw(CODE_257, _FTP_reply_msg[CODE_257], c->_wd._v);
 }
 
+int FTPD::GET_PASV_PORT()
+{
+	return ((rand() % 64511) + 1025);
+}
+
 void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
 {
 	if (!s || !c) {
@@ -734,7 +774,7 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
 
 	int		p1;
 	int		p2;
-	int		pasv_port	= s->_pasv_port_next;
+	int		pasv_port	= GET_PASV_PORT();
 	Buffer		pasv_addr;
 	Socket*		pasv_sock	= NULL;
 
@@ -747,7 +787,7 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
 
 	pasv_sock = new Socket();
 	if (!pasv_sock) {
-		return;
+		goto err;
 	}
 
 	c->_s = pasv_sock->create_tcp();
@@ -763,12 +803,8 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
 			if (errno != EADDRINUSE) {
 				goto err;
 			}
-			pasv_port++;
-			if (pasv_port > 65536) {
-				pasv_port = FTPD_DEF_PASV_PORT;
-			}
+			pasv_port = GET_PASV_PORT();
 		}
-		s->_pasv_port_next = pasv_port + 1;
 	} while (c->_s != 0);
 
 	c->_s = pasv_addr.subc('.', ',');
@@ -793,8 +829,8 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
 	}
 
 	c->_s		= CODE_227;
-	c->_rmsg	= _FTP_reply_msg[c->_s];
 	c->_rmsg_plus	= pasv_addr._v;
+	c->_rmsg	= _FTP_reply_msg[c->_s];
 	c->reply();
 
 	return;
@@ -802,7 +838,9 @@ err:
 	if (pasv_sock) {
 		delete pasv_sock;
 	}
-	c->_s = -1;
+	c->_s		= 451;
+	c->_rmsg	= _FTP_reply_msg[c->_s];
+	c->reply();
 }
 
 void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
@@ -813,9 +851,11 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 
 	int		x;
 	Buffer		path;
+	struct tm	gmt;
 	Buffer*		cmd_path	= &c->_cmnd._parm;
 	DirNode*	node		= NULL;
 	Socket*		pasv_c		= NULL;
+	struct tm*	pgmt		= NULL;
 
 	if (!c->_psrv || !c->_pclt) {
 		c->_s = CODE_425;
@@ -848,22 +888,41 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 	c->reply_raw(CODE_150, _FTP_reply_msg[CODE_150], NULL);
 
 	if (!node->is_dir()) {
-		pasv_c->aprint("%d\t%d\t%d\t%ld\t%ld\t%s\r\n"
-				, node->_mode, node->_uid, node->_gid
-				, node->_size, node->_mtime, node->_name._v);
+		pgmt = gmtime_r(&node->_mtime, &gmt);
+		if (pgmt) {
+			pasv_c->aprint("%d\t%d\t%d\t%ld\t"
+					, node->_mode
+					, node->_uid, node->_gid
+					, node->_size);
+
+			pasv_c->aprint("%d-%02d-%02d %02d:%02d\t"
+					, 1900 + gmt.tm_year
+					, gmt.tm_mon, gmt.tm_mday
+					, gmt.tm_hour, gmt.tm_min);
+			pasv_c->append(&node->_name);
+			pasv_c->append_raw("\r\n");
+		}
 	} else {
-		if (node->_child) {
-			node = node->_child;
+		if (node->_link) {
+			node = node->_link->_child;
 		} else {
-			if (node->_link) {
-				node = node->_link->_child;
-			}
+			node = node->_child;
 		}
 		while (node) {
-			pasv_c->aprint("%d\t%d\t%d\t%ld\t%ld\t%s\r\n"
-					, node->_mode, node->_uid, node->_gid
-					, node->_size, node->_mtime
-					, node->_name._v);
+			pgmt = gmtime_r(&node->_mtime, &gmt);
+			if (pgmt) {
+				pasv_c->aprint("%d\t%d\t%d\t%ld\t"
+					, node->_mode
+					, node->_uid, node->_gid
+					, node->_size);
+
+				pasv_c->aprint("%d-%02d-%02d %02d:%02d\t"
+						, 1900 + gmt.tm_year
+						, gmt.tm_mon, gmt.tm_mday
+						, gmt.tm_hour, gmt.tm_min);
+				pasv_c->append(&node->_name);
+				pasv_c->append_raw("\r\n");
+			}
 			node = node->_next;
 		}
 	}
@@ -925,13 +984,11 @@ void FTPD::on_cmd_NLST(FTPD* s, FTPClient* c)
 	if (!node->is_dir()) {
 		pasv_c->append(&node->_name);
 		pasv_c->append_raw("\r\n");
-	} else {	
-		if (node->_child) {
-			node = node->_child;
+	} else {
+		if (node->_link) {
+			node = node->_link->_child;
 		} else {
-			if (node->_link) {
-				node = node->_link->_child;
-			}
+			node = node->_child;
 		}
 		while (node) {
 			pasv_c->append(&node->_name);
@@ -959,10 +1016,11 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPClient* c)
 	}
 
 	int		n;
-	Buffer		rpath;
+	Buffer		path;
 	Buffer		node_name;
 	File		file;
-	DirNode*	list		= NULL;
+	Buffer*		cmd_parm	= &c->_cmnd._parm;
+	DirNode*	node		= NULL;
 	Socket*		pasv_c		= NULL;
 
 	if (!c->_psrv || !c->_pclt) {
@@ -970,13 +1028,30 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPClient* c)
 		goto out;
 	}
 
-	n = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &node_name);
-	if (n < 0) {
+	if (cmd_parm->is_empty()) {
 		c->_s = CODE_501;
 		goto out;
 	}
 
-	n = file.open_ro(rpath._v);
+	if (cmd_parm->_v[0] == '/') {
+		path.concat(s->_path._v, cmd_parm->_v, NULL);
+	} else {
+		path.concat(s->_path._v, c->_wd._v, "/", cmd_parm->_v, NULL);
+	}
+
+	node = s->_dir.get_node(&path, s->_path._v, s->_path._i);
+	if (!node) {
+		c->_s		= CODE_450;
+		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
+		goto out;
+	}
+
+	if (node->is_dir()) {
+		on_cmd_LIST(s, c);
+		return;
+	}
+
+	n = file.open_ro(path._v);
 	if (n < 0) {
 		c->_s = CODE_451;
 		goto out;
@@ -1018,6 +1093,11 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPClient* c)
 
 	if (!c->_psrv || !c->_pclt) {
 		c->_s = CODE_425;
+		goto out;
+	}
+
+	if (c->_cmnd._parm.is_empty()) {
+		c->_s = CODE_501;
 		goto out;
 	}
 
@@ -1072,6 +1152,11 @@ void FTPD::on_cmd_DELE(FTPD* s, FTPClient* c)
 	Buffer		dirname;
 	DirNode*	list = NULL;
 
+	if (c->_cmnd._parm.is_empty()) {
+		c->_s = CODE_501;
+		goto out;
+	}
+
 	x = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &dirname);
 	if (x != 0) {
 		c->_s = CODE_501;
@@ -1103,6 +1188,11 @@ void FTPD::on_cmd_RNFR(FTPD* s, FTPClient* c)
 	Buffer*		cmd_path = &c->_cmnd._parm;
 	DirNode*	node = NULL;
 
+	if (cmd_path->is_empty()) {
+		c->_s = CODE_501;
+		goto out;
+	}
+
 	if (cmd_path->_v[0] == '/') {
 		path.concat(s->_path._v, cmd_path->_v, NULL);
 	} else {
@@ -1116,6 +1206,7 @@ void FTPD::on_cmd_RNFR(FTPD* s, FTPClient* c)
 	} else {
 		c->_s = CODE_350;
 	}
+out:
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -1136,6 +1227,11 @@ void FTPD::on_cmd_RNTO(FTPD* s, FTPClient* c)
 	DirNode*	node		= NULL;
 	DirNode*	node_from	= NULL;
 	DirNode*	node_to		= NULL;
+
+	if (c->_cmnd._parm.is_empty()) {
+		c->_s = CODE_501;
+		goto out;
+	}
 
 	if (c->_cmnd_last._code != FTP_CMD_RNFR) {
 		c->_s = CODE_503;
@@ -1208,9 +1304,14 @@ void FTPD::on_cmd_RMD(FTPD* s, FTPClient* c)
 	Buffer		dirname;
 	DirNode*	list = NULL;
 
+	if (c->_cmnd._parm.is_empty()) {
+		c->_s = CODE_501;
+		goto out;
+	}
+
 	x = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &dirname);
 	if (x != 0) {
-		c->_s = CODE_501;
+		c->_s = CODE_550;
 		goto out;
 	}
 
@@ -1240,9 +1341,14 @@ void FTPD::on_cmd_MKD(FTPD* s, FTPClient* c)
 	Buffer		dirname;
 	DirNode*	list		= NULL;
 
+	if (c->_cmnd._parm.is_empty()) {
+		c->_s = CODE_501;
+		goto out;
+	}
+
 	x = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &dirname);
 	if (x != 0) {
-		c->_s = CODE_501;
+		c->_s = CODE_550;
 		goto out;
 	}
 

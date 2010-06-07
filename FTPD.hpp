@@ -16,8 +16,8 @@ namespace vos {
 
 #define	FTPD_DEF_ADDRESS	"0.0.0.0"
 #define	FTPD_DEF_PORT		21
-#define	FTPD_DEF_PATH		NULL
-#define	FTPD_DEF_PASV_PORT	5000
+#define	FTPD_DEF_PATH		"./"
+
 
 enum _FTP_reply_code {
 	CODE_150 = 0
@@ -33,7 +33,6 @@ enum _FTP_reply_code {
 ,	CODE_250
 ,	CODE_257
 ,	CODE_331
-,	CODE_332
 ,	CODE_350
 ,	CODE_421
 ,	CODE_425
@@ -64,6 +63,24 @@ enum _FTP_ {
 ,	N_FTP_MODE
 };
 
+/**
+ * @class		: FTPD
+ * @attr		:
+ *	- _running	: flag for checking if server still running.
+ *	- _auth_mode	: authentication mode, login or without login.
+ *	- _fds_max	: maximum file descriptor, used by 'select()'.
+ *	- _path		: the real path to directory that the server serve to
+ *                        the networks.
+ *	- _dir		: Dir object, contain cache of all files in 'path'.
+ *	- _fds_all	: all file descriptor in the server, used by
+ *                        'select()'.
+ *	- _fds_read	: the change descriptor, file descriptor that has the
+ *                        change flag on after 'select()'.
+ *	- _all_client	: list of all server client.
+ *	- _users	: list of all server account.
+ * @desc		:
+ * A simple FTP server module for serving a file system to the network.
+ */
 class FTPD : public Socket {
 public:
 	FTPD();
@@ -85,7 +102,6 @@ public:
 	int		_running;
 	int		_auth_mode;
 	int		_fds_max;
-	int		_pasv_port_next;
 	Buffer		_path;
 	Dir		_dir;
 	fd_set		_fds_all;
@@ -115,6 +131,7 @@ public:
 	static void on_cmd_CDUP(FTPD* server, FTPClient* client);
 	static void on_cmd_PWD(FTPD* server, FTPClient* client);
 
+	static int GET_PASV_PORT();
 	static void on_cmd_PASV(FTPD* server, FTPClient* client);
 	static void on_cmd_LIST(FTPD* server, FTPClient* client);
 	static void on_cmd_NLST(FTPD* server, FTPClient* client);

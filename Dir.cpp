@@ -354,7 +354,7 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 		}
 
 		fprintf(stderr, "[LIBVOS::Dir_____] invalid path : %s\n", name);
-		fprintf(stderr, "                  node name    : %s\n", node._v);
+		fprintf(stderr, "                   node name    : %s\n", node._v);
 		return NULL;
 	}
 
@@ -392,7 +392,9 @@ int Dir::refresh_by_path(Buffer* path)
 		return -1;
 	}
 
-	printf("[LIBVOS::Dir_____] refreshing '%s' ...\n", path->_v);
+	if (LIBVOS_DEBUG) {
+		printf("[LIBVOS::Dir_____] refreshing '%s' ...\n", path->_v);
+	}
 
 	if (! list->is_dir()) {
 		s = list->update_attr(list, path->_v);
