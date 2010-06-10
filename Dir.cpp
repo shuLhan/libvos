@@ -126,7 +126,7 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
 	if (ls->_name.cmp_raw("/") != 0) {
 		path->append(&ls->_name);
 
-		if (path->_v[path->_i - 1] != '/') {
+		if (ls->is_dir() && path->_v[path->_i - 1] != '/') {
 			path->appendc('/');
 		}
 	}
@@ -486,7 +486,9 @@ int Dir::refresh_by_path(Buffer* path)
 	} while (dent);
 
 	if (list->_child) {
-		list->_child->dump();
+		if (LIBVOS_DEBUG) {
+			list->_child->dump();
+		}
 		delete list->_child;
 	}
 	list->_child = childs;

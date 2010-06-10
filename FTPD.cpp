@@ -39,9 +39,27 @@ const char* _FTP_reply_msg[N_REPLY_CODE] =
 const char* _FTP_add_reply_msg[N_ADD_REPLY_MSG] =
 {
 	"File or directory is not exist."
+,	"Node is directory."
+,	"Node is not directory."
 ,	"TYPE is always in B[I]NARY / [I]MAGE."
 ,	"MODE is always in [S]TREAM."
 ,	"STRU is always in [F]ILE."
+};
+
+const char* _FTP_month[12] =
+{
+	"Jan"
+,	"Feb"
+,	"Mar"
+,	"Apr"
+,	"May"
+,	"Jun"
+,	"Jul"
+,	"Aug"
+,	"Sep"
+,	"Oct"
+,	"Nov"
+,	"Dec"
 };
 
 static FTPD* _ftpd_ = NULL;
@@ -66,7 +84,6 @@ FTPD::~FTPD()
 		next = _all_client->_next;
 
 		_all_client->_next = NULL;
-		_all_client->reply_raw(CODE_421, _FTP_reply_msg[CODE_421], 0);
 		delete _all_client;
 
 		_all_client = next;
@@ -352,12 +369,14 @@ void FTPD::client_process()
 
 		c->reset();
 
-		s = csock->read();
-		if (s <= 0) {
-			if (s == 0) {
-				client_del(c);
+		if (csock) {
+			s = csock->read();
+			if (s <= 0) {
+				if (s == 0) {
+					client_del(c);
+				}
+				goto next;
 			}
-			goto next;
 		}
 
 		s = c->_cmnd.get(csock);
@@ -416,6 +435,10 @@ void FTPD::client_del(FTPClient* c)
 {
 	if (LIBVOS_DEBUG) {
 		printf("[LIBVOS::FTPD____] client '%d' quit.\n", c->_sock->_d);
+	}
+
+	if (_fds_max - 1 == c->_sock->_d) {
+		_fds_max = _fds_max - 1;
 	}
 
 	FD_CLR(c->_sock->_d, &_fds_all);
@@ -729,6 +752,9 @@ void FTPD::on_cmd_CWD(FTPD* s, FTPClient* c)
 	if (!node) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
+	} else if (!node->is_dir()) {
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
 	} else {
 		c->_s		= CODE_250;
 		c->_wd_node	= node;
@@ -829,8 +855,8 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
 	}
 
 	c->_s		= CODE_227;
-	c->_rmsg_plus	= pasv_addr._v;
 	c->_rmsg	= _FTP_reply_msg[c->_s];
+	c->_rmsg_plus	= pasv_addr._v;
 	c->reply();
 
 	return;
@@ -841,6 +867,64 @@ err:
 	c->_s		= 451;
 	c->_rmsg	= _FTP_reply_msg[c->_s];
 	c->reply();
+}
+
+/**
+ * @param	:
+ *	> bfr	: return value, buffer where the string will be written.
+ *	> node	: pointer to DirNode object.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	: convert 'perm' to string, i.e.: ('drwxr-x-rx').
+ */
+static int get_node_perm(Buffer* bfr, DirNode* node)
+{
+	if (!bfr) {
+		return -1;
+	}
+
+	int i = bfr->_i;
+
+	bfr->append_raw("----------");
+
+	if (!node) {
+		return 0;
+	} else if (! node->_linkname.is_empty()) {
+		memcpy(&bfr->_v[i], "lrwxrwxrwx", 10);
+	} else {
+		if (S_ISDIR(node->_mode)) {
+			bfr->_v[i] = 'd';
+		} i++;
+		if (node->_mode & S_IRUSR) {
+			bfr->_v[i] = 'r';
+		} i++;
+		if (node->_mode & S_IWUSR) {
+			bfr->_v[i] = 'w';
+		} i++;
+		if (node->_mode & S_IXUSR) {
+			bfr->_v[i] = 'x';
+		} i++;
+		if (node->_mode & S_IRGRP) {
+			bfr->_v[i] = 'r';
+		} i++;
+		if (node->_mode & S_IWGRP) {
+			bfr->_v[i] = 'w';
+		} i++;
+		if (node->_mode & S_IXGRP) {
+			bfr->_v[i] = 'x';
+		} i++;
+		if (node->_mode & S_IROTH) {
+			bfr->_v[i] = 'r';
+		} i++;
+		if (node->_mode & S_IWOTH) {
+			bfr->_v[i] = 'w';
+		} i++;
+		if (node->_mode & S_IXOTH) {
+			bfr->_v[i] = 'x';
+		} i++;
+	}
+	return 0;
 }
 
 void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
@@ -890,15 +974,16 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 	if (!node->is_dir()) {
 		pgmt = gmtime_r(&node->_mtime, &gmt);
 		if (pgmt) {
-			pasv_c->aprint("%d\t%d\t%d\t%ld\t"
-					, node->_mode
-					, node->_uid, node->_gid
+			get_node_perm(pasv_c, node);
+
+			pasv_c->aprint(" 1 %d %d %13ld", node->_uid, node->_gid
 					, node->_size);
 
-			pasv_c->aprint("%d-%02d-%02d %02d:%02d\t"
-					, 1900 + gmt.tm_year
-					, gmt.tm_mon, gmt.tm_mday
+			pasv_c->aprint(" %s %2d %02d:%02d "
+					, _FTP_month[gmt.tm_mon]
+					, gmt.tm_mday
 					, gmt.tm_hour, gmt.tm_min);
+
 			pasv_c->append(&node->_name);
 			pasv_c->append_raw("\r\n");
 		}
@@ -911,15 +996,16 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 		while (node) {
 			pgmt = gmtime_r(&node->_mtime, &gmt);
 			if (pgmt) {
-				pasv_c->aprint("%d\t%d\t%d\t%ld\t"
-					, node->_mode
-					, node->_uid, node->_gid
-					, node->_size);
+				get_node_perm(pasv_c, node);
 
-				pasv_c->aprint("%d-%02d-%02d %02d:%02d\t"
-						, 1900 + gmt.tm_year
-						, gmt.tm_mon, gmt.tm_mday
+				pasv_c->aprint(" 1 %d %d %13ld", node->_uid
+						, node->_gid, node->_size);
+
+				pasv_c->aprint(" %s %2d %02d:%02d "
+						, _FTP_month[gmt.tm_mon]
+						, gmt.tm_mday
 						, gmt.tm_hour, gmt.tm_min);
+
 				pasv_c->append(&node->_name);
 				pasv_c->append_raw("\r\n");
 			}
@@ -928,14 +1014,15 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 	}
 	pasv_c->send_raw(0);
 
+	c->_s = CODE_226;
+out:
 	if (c->_psrv) {
 		delete c->_psrv;
 		c->_psrv = NULL;
+		c->_pclt = NULL;
 	}
 
-	c->_s		= CODE_226;
-out:
-	c->_rmsg	= _FTP_reply_msg[c->_s];
+	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
 
@@ -998,13 +1085,14 @@ void FTPD::on_cmd_NLST(FTPD* s, FTPClient* c)
 	}
 	pasv_c->send_raw(0);
 
+	c->_s = CODE_226;
+out:
 	if (c->_psrv) {
 		delete c->_psrv;
 		c->_psrv = NULL;
+		c->_pclt = NULL;
 	}
 
-	c->_s = CODE_226;
-out:
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -1047,9 +1135,14 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPClient* c)
 	}
 
 	if (node->is_dir()) {
-		on_cmd_LIST(s, c);
-		return;
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_IS_DIR];
+		goto out;
 	}
+
+	path.reset();
+	path.append(&s->_path);
+	s->_dir.get_parent_path(&path, node);
 
 	n = file.open_ro(path._v);
 	if (n < 0) {
@@ -1067,13 +1160,15 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPClient* c)
 		pasv_c->write(&file);
 		n = file.read();
 	}
-	if (c->_psrv) {
-		delete c->_psrv;
-		c->_psrv = NULL;
-	}
 
 	c->_s = CODE_226;
 out:
+	if (c->_psrv) {
+		delete c->_psrv;
+		c->_psrv = NULL;
+		c->_pclt = NULL;
+	}
+
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -1123,11 +1218,6 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPClient* c)
 		x = pasv_c->read();
 	}
 
-	if (c->_psrv) {
-		delete c->_psrv;
-		c->_psrv = NULL;
-	}
-
 	x = DirNode::INSERT_CHILD(list, rpath._v, node_name._v);
 	if (x < 0) {
 		c->_s		= CODE_550;
@@ -1137,6 +1227,12 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPClient* c)
 
 	c->_s = CODE_226;
 out:
+	if (c->_psrv) {
+		delete c->_psrv;
+		c->_psrv = NULL;
+		c->_pclt = NULL;
+	}
+
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }

@@ -982,6 +982,11 @@ int Buffer::VSNPRINTF(char *bfr, int len, const char *fmt, va_list args)
 			*p++;
 		}
 next:
+		if (isdigit(*p)) {
+			flag |= FL_WIDTH;
+			flen = strtol(p, &p, 10);
+		}
+
 		if (*p == 'h') {
 			flag |= FL_SHORT;
 			*p++;
@@ -993,10 +998,6 @@ next:
 			*p++;
 		}
 
-		if (isdigit(*p)) {
-			flag |= FL_WIDTH;
-			flen = strtol(p, &p, 10);
-		}
 		if (!*p)
 			break;
 

@@ -646,7 +646,8 @@ Socket * Socket::ADD_CLIENT(Socket *list, Socket *client)
 	while (p->_next)
 		p = p->_next;
 
-	p->_next = client;
+	p->_next	= client;
+	client->_prev	= p;
 
 	return list;
 }

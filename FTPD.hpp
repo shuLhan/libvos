@@ -50,6 +50,8 @@ extern const char* _FTP_reply_msg[N_REPLY_CODE];
 
 enum _FTP_add_reply_msg {
 	NODE_NOT_FOUND = 0
+,	NODE_IS_DIR
+,	NODE_IS_NOT_DIR
 ,	TYPE_ALWAYS_BIN
 ,	MODE_ALWAYS_STREAM
 ,	STRU_ALWAYS_FILE
@@ -62,6 +64,8 @@ enum _FTP_ {
 ,	AUTH_LOGIN
 ,	N_FTP_MODE
 };
+
+extern const char* _FTP_month[12];
 
 /**
  * @class		: FTPD
