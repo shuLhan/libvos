@@ -748,8 +748,9 @@ void FTPD::on_cmd_MDTM(FTPD* s, FTPClient* c)
 			c->_s = CODE_451;
 		} else {
 			tm.aprint("%d%02d%02d%02d%02d%02d"
-				, 1900 + gmt.tm_year, gmt.tm_mon, gmt.tm_mday
-				, gmt.tm_hour, gmt.tm_min, gmt.tm_sec);
+				, 1900 + gmt.tm_year, gmt.tm_mon + 1
+				, gmt.tm_mday , gmt.tm_hour, gmt.tm_min
+				, gmt.tm_sec);
 
 			c->_s		= CODE_213;
 			c->_rmsg_plus	= tm._v;
@@ -946,6 +947,22 @@ static int get_node_perm(Buffer* bfr, DirNode* node)
 	return 0;
 }
 
+/**
+ * @return	:
+ *	< 0	: no, file time is modified in the last six months.
+ *	< 1	: yes, file time is older than six months.
+ */
+static int is_old(struct tm* cur_tm, struct tm* node_tm)
+{
+	if (cur_tm->tm_year > node_tm->tm_year) {
+		return 1;
+	}
+	if (cur_tm->tm_mon > (node_tm->tm_mon + 6)) {
+		return 1;
+	}
+	return 0;
+}
+
 void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 {
 	if (!s || !c) {
@@ -953,10 +970,12 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 	}
 
 	int		x;
-	struct tm	gmt;
+	time_t		cur_t;
+	struct tm	cur_tm;
+	struct tm	node_tm;
 	DirNode*	node		= NULL;
 	Socket*		pasv_c		= NULL;
-	struct tm*	pgmt		= NULL;
+	struct tm*	time_p		= NULL;
 
 	if (!c->_psrv || !c->_pclt) {
 		c->_s = CODE_425;
@@ -978,26 +997,40 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 	pasv_c = c->_pclt;
 	pasv_c->reset();
 
+	cur_t	= time(NULL);
+	time_p	= localtime_r(&cur_t, &cur_tm);
+	if (! time_p) {
+		c->_s		= CODE_451;
+		c->_rmsg_plus	= strerror(errno);
+		goto out;
+	}
+
 	c->reply_raw(CODE_150, _FTP_reply_msg[CODE_150], NULL);
 
 	node = c->_path_node;
-
 	if (!node->is_dir()) {
-		pgmt = gmtime_r(&node->_mtime, &gmt);
-		if (pgmt) {
-			get_node_perm(pasv_c, node);
-
-			pasv_c->aprint(" 1 %d %d %13ld", node->_uid, node->_gid
-					, node->_size);
-
-			pasv_c->aprint(" %s %2d %02d:%02d "
-					, _FTP_month[gmt.tm_mon]
-					, gmt.tm_mday
-					, gmt.tm_hour, gmt.tm_min);
-
-			pasv_c->append(&node->_name);
-			pasv_c->append_raw("\r\n");
+		time_p = localtime_r(&node->_mtime, &node_tm);
+		if (!time_p) {
+			c->_s		= CODE_451;
+			c->_rmsg_plus	= strerror(errno);
+			goto out;
 		}
+
+		get_node_perm(pasv_c, node);
+
+		pasv_c->aprint(" 1 %d %d %13ld %s %2d "
+				, node->_uid, node->_gid, node->_size
+				, _FTP_month[node_tm.tm_mon], node_tm.tm_mday);
+
+		if (is_old(&cur_tm, &node_tm)) {
+			pasv_c->aprint("%d ", 1900 + node_tm.tm_year);
+		} else {
+			pasv_c->aprint("%02d:%02d ", node_tm.tm_hour
+					, node_tm.tm_min);
+		}
+
+		pasv_c->append(&node->_name);
+		pasv_c->append_raw("\r\n");
 	} else {
 		if (node->_link) {
 			node = node->_link->_child;
@@ -1005,21 +1038,30 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 			node = node->_child;
 		}
 		while (node) {
-			pgmt = gmtime_r(&node->_mtime, &gmt);
-			if (pgmt) {
-				get_node_perm(pasv_c, node);
-
-				pasv_c->aprint(" 1 %d %d %13ld", node->_uid
-						, node->_gid, node->_size);
-
-				pasv_c->aprint(" %s %2d %02d:%02d "
-						, _FTP_month[gmt.tm_mon]
-						, gmt.tm_mday
-						, gmt.tm_hour, gmt.tm_min);
-
-				pasv_c->append(&node->_name);
-				pasv_c->append_raw("\r\n");
+			time_p = localtime_r(&node->_mtime, &node_tm);
+			if (!time_p) {
+				c->_s		= CODE_451;
+				c->_rmsg_plus	= strerror(errno);
+				goto out;
 			}
+
+			get_node_perm(pasv_c, node);
+
+			pasv_c->aprint(" 1 %d %d %13ld %s %2d "
+					, node->_uid, node->_gid, node->_size
+					, _FTP_month[node_tm.tm_mon]
+					, node_tm.tm_mday);
+
+			if (is_old(&cur_tm, &node_tm)) {
+				pasv_c->aprint("%d ", 1900 + node_tm.tm_year);
+			} else {
+				pasv_c->aprint("%02d:%02d ", node_tm.tm_hour
+						, node_tm.tm_min);
+			}
+
+			pasv_c->append(&node->_name);
+			pasv_c->append_raw("\r\n");
+
 			node = node->_next;
 		}
 	}

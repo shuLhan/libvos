@@ -26,8 +26,17 @@ enum _ftp_stat {
  *	- _conn_stat	: status of client connection (see _ftp_stat).
  *	- _cmnd		: current command.
  *	- _cmnd_last	: last command.
+ *	- _wd		: current working directory.
+ *	- _wd_node	: pointer to DirNode object, of working directory.
+ *	- _path		: path of command parameter.
+ *	- _path_base	: basename of path.
+ *	- _path_real	: real path of command parameter.
+ *	- _path_node	: pointer to DirNode object of '_path'.
+ *	- _sock		: pointer to client command channel.
  *	- _psrv		: pointer to PASV server connection.
  *	- _pclt		: pointer to PASV client connection.
+ *	- _rmsg		: pointer to client reply message.
+ *	- _rmsg_plus	: pointer to additional reply message.
  *	- _next		: pointer to the next FTP client.
  *	- _last		: pointer to the last FTP client.
  * @desc		:
