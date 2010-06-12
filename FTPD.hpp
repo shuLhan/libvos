@@ -115,10 +115,8 @@ public:
 
 	void (*_fcb[N_FTP_CMD])(FTPD*, FTPClient*);
 
-	static int get_path_node(FTPD* server, FTPClient* c
-				, Buffer* cmd_path
-				, DirNode** node, Buffer* rpath
-				, Buffer* dirname);
+	static int client_get_path(FTPD* s, FTPClient* c, int check_parm = 1);
+	static int client_get_parent_path(FTPD* s, FTPClient* c);
 
 	static void on_accept(FTPD* server, FTPClient* client);
 	static void on_cmd_USER(FTPD* server, FTPClient* client);

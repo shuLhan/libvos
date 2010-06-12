@@ -453,6 +453,72 @@ void FTPD::client_del(FTPClient* c)
 }
 
 /**
+ * @method	: FTPD::client_get_path
+ * @parm	:
+ *	> s	: FTPD object.
+ *	> c	: FTPClient object.
+ * @return	:
+ *	< 0	: success, path is found.
+ *	< >0	: fail, path not found.
+ * @desc	: process command parameter path.
+ */
+int FTPD::client_get_path(FTPD* s, FTPClient* c, int check_parm)
+{
+	int	x;
+	Buffer* cmd_parm = &c->_cmnd._parm;
+
+	c->_s = 0;
+	c->_path.reset();
+	c->_path_base.reset();
+	c->_path_real.reset();
+
+	if (check_parm && cmd_parm->is_empty()) {
+		c->_s = CODE_501;
+		goto out;
+	}
+
+	if (cmd_parm->_v[0] == '/') {
+		c->_path_real.concat(s->_path._v, cmd_parm->_v, NULL);
+	} else {
+		c->_path_real.concat(s->_path._v, c->_wd._v, "/", cmd_parm->_v
+					, NULL);
+	}
+
+	c->_path_node = s->_dir.get_node(&c->_path_real, s->_path._v
+					, s->_path._i);
+	if (!c->_path_node) {
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
+		goto out;
+	}
+
+	x = s->_dir.get_parent_path(&c->_path, c->_path_node);
+	if (x < 0) {
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= strerror(errno);
+		goto out;
+	}
+
+	c->_path_real.reset();
+	c->_path_real.append(&s->_path);
+	c->_path_real.append(&c->_path);
+
+	x = File::BASENAME(&c->_path_base, c->_path._v);
+	if (x < 0) {
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= strerror(errno);
+	}
+
+	if (LIBVOS_DEBUG) {
+		printf("[LIBVOS::FTPD____] path      : %s\n", c->_path._v);
+		printf("[LIBVOS::FTPD____] path real : %s\n", c->_path_real._v);
+		printf("[LIBVOS::FTPD____] path base : %s\n", c->_path_base._v);
+	}
+out:
+	return c->_s;
+}
+
+/**
  * @param		:
  *	> server	: pointer to server socket, FTPD object.
  *	> cmd_path	: path to be looking for node (minus last-node).
@@ -460,8 +526,8 @@ void FTPD::client_del(FTPClient* c)
  *	> rpath		: return value, real-path of 'cmd_path' in the system.
  *	> dirname	: return value, last-node name in 'cmd_path'.
  * @return		:
- *	< 0		: success.
- *	< -1		: fail.
+ *	> 0		: success, path is found.
+ *	> >0		: fail, path is not found.
  * @desc		:
  *
  * get pointer to DirNode object that point to 'cmd_path' minus last-node.
@@ -470,59 +536,59 @@ void FTPD::client_del(FTPClient* c)
  * and 'node' will point to DirNode object to path '/a/b' and 'dirname' will
  * contain only 'c'.
  */
-int FTPD::get_path_node(FTPD* s, FTPClient* c, Buffer* cmd_path
-			, DirNode** node, Buffer* rpath, Buffer* dirname)
+int FTPD::client_get_parent_path(FTPD* s, FTPClient* c)
 {
-	if (!cmd_path || (cmd_path && cmd_path->is_empty())) {
-		return CODE_501;
-	}
+	int	i	= 0;
+	int	tmp_i	= 0;
+	Buffer*	cmd_path = &c->_cmnd._parm;
 
-	int	i;
-	int	tmp_i;
-	Buffer	path;
+	c->_s = 0;
+	c->_path.reset();
+	c->_path_base.reset();
+	c->_path_real.reset();
+
+	if (cmd_path->is_empty()) {
+		c->_s = CODE_501;
+		goto out;
+	}
 
 	if (cmd_path->_v[0] == '/') {
-		path.concat(s->_path._v, cmd_path->_v, NULL);
+		c->_path.concat(s->_path._v, cmd_path->_v, NULL);
 	} else {
-		path.concat(s->_path._v, c->_wd._v, "/", cmd_path->_v, NULL);
+		c->_path.concat(s->_path._v, c->_wd._v, "/", cmd_path->_v
+				, NULL);
 	}
 
-	i = path._i;
-	while (i >= 0 && path._v[i] == '/') {
-		i--;
-	}
-	while (i >= 0 && path._v[i] != '/') {
-		i--;
-	}
-	if (i < 0) {
-		return -1;
+	tmp_i = c->_path._i;
+	if (c->_path._v[tmp_i - 1] != '/') {
+		File::BASENAME(&c->_path_base, c->_path._v);
+		i		= c->_path._i - c->_path_base._i;
+		c->_path._v[i]	= '\0';
+		c->_path._i	= i;
 	}
 
-	path._v[i]	= '\0';
-	tmp_i		= path._i;
-	path._i		= i;
-
-	(*node) = s->_dir.get_node(&path, s->_path._v, s->_path._i);
-	if (!(*node)) {
-		return -1;
+	c->_path_node = s->_dir.get_node(&c->_path, s->_path._v, s->_path._i);
+	if (! c->_path_node) {
+		goto out;
 	}
 
-	path._v[i]	= '/';
-	path._i		= tmp_i;
+	if (i) {
+		c->_path._v[i]	= '/';
+		c->_path._i	= tmp_i;
+	}
 
-	rpath->append(&s->_path);
-	s->_dir.get_parent_path(rpath, (*node));
-
-	i++;
-	dirname->copy_raw(&path._v[i], path._i - i);
-	rpath->append(dirname);
+	c->_path_real.append(&s->_path);
+	s->_dir.get_parent_path(&c->_path_real, c->_path_node);
+	c->_path_real.append(&c->_path_base);
 
 	if (LIBVOS_DEBUG) {
-		printf("[LIBVOS::FTPD____] get_path_node.realpath: %s\n", rpath->_v);
-		printf("                   get_path_node.dirname : %s\n", dirname->_v);
+		printf(	"[LIBVOS::FTPD____] parent path      : %s\n"\
+			"                   parent real path : %s\n"\
+			"                   base name        : %s\n"
+			, c->_path._v, c->_path_real._v, c->_path_base._v);
 	}
-
-	return 0;
+out:
+	return c->_s;
 }
 
 /**
@@ -650,32 +716,16 @@ void FTPD::on_cmd_SIZE(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	Buffer		size;
-	Buffer		cwd;
-	Buffer*		parm		= &c->_cmnd._parm;
-	DirNode*	node		= NULL;
+	Buffer size;
 
-	if (parm->is_empty()) {
-		c->_s = CODE_501;
-		goto out;
-	}
+	client_get_path(s, c);
 
-	if (parm->_v[0] == '/') {
-		cwd.concat(s->_path._v, parm->_v, NULL);
-	} else {
-		cwd.concat(s->_path._v, c->_wd._v, "/", parm->_v, NULL);
-	}
-
-	node = s->_dir.get_node(&cwd, s->_path._v, s->_path._i);
-	if (!node) {
-		c->_s		= CODE_550;
-		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
-	} else {
-		c->_s		= CODE_213;
-		size.appendi(node->_size);
+	if (0 == c->_s) {
+		size.appendi(c->_path_node->_size);
 		c->_rmsg_plus	= size._v;
+		c->_s		= CODE_213;
 	}
-out:
+
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -687,42 +737,25 @@ void FTPD::on_cmd_MDTM(FTPD* s, FTPClient* c)
 	}
 
 	Buffer		tm;
-	Buffer		cwd;
 	struct tm	gmt;
-	Buffer*		parm		= &c->_cmnd._parm;
-	DirNode*	node		= NULL;
 	struct tm*	pgmt		= NULL;
 
-	if (parm->is_empty()) {
-		c->_s = CODE_501;
-		goto out;
-	}
+	client_get_path(s, c);
 
-	if (parm->_v[0] == '/') {
-		cwd.concat(s->_path._v, parm->_v, NULL);
-	} else {
-		cwd.concat(s->_path._v, c->_wd._v, "/", parm->_v, NULL);
-	}
-
-	node = s->_dir.get_node(&cwd, s->_path._v, s->_path._i);
-	if (!node) {
-		c->_s		= CODE_550;
-		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
-	} else {
-		pgmt = gmtime_r(&node->_mtime, &gmt);
+	if (0 == c->_s) {
+		pgmt = gmtime_r(&c->_path_node->_mtime, &gmt);
 		if (!pgmt) {
 			c->_s = CODE_451;
-			goto out;
-		}
-
-		tm.aprint("%d%02d%02d%02d%02d%02d"
+		} else {
+			tm.aprint("%d%02d%02d%02d%02d%02d"
 				, 1900 + gmt.tm_year, gmt.tm_mon, gmt.tm_mday
 				, gmt.tm_hour, gmt.tm_min, gmt.tm_sec);
 
-		c->_s		= CODE_213;
-		c->_rmsg_plus	= tm._v;
+			c->_s		= CODE_213;
+			c->_rmsg_plus	= tm._v;
+		}
 	}
-out:
+
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -733,40 +766,26 @@ void FTPD::on_cmd_CWD(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	Buffer		cwd;
-	Buffer*		parm	= &c->_cmnd._parm;
-	DirNode*	node	= NULL;
+	client_get_path(s, c);
 
-	if (parm->is_empty()) {
-		c->_s = CODE_501;
-		goto out;
-	}
+	if (0 == c->_s) {
+		if (!c->_path_node->is_dir()) {
+			c->_s		= CODE_550;
+			c->_rmsg_plus	= _FTP_add_reply_msg[NODE_IS_NOT_DIR];
+		} else {
+			c->_s		= CODE_250;
+			c->_wd_node	= c->_path_node;
+			c->_path_node	= NULL;
 
-	if (parm->_v[0] == '/') {
-		cwd.concat(s->_path._v, parm->_v, NULL);
-	} else {
-		cwd.concat(s->_path._v, c->_wd._v, "/", parm->_v, NULL);
-	}
+			c->_wd.copy(&c->_path);
 
-	node = s->_dir.get_node(&cwd, s->_path._v, s->_path._i);
-	if (!node) {
-		c->_s		= CODE_550;
-		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
-	} else if (!node->is_dir()) {
-		c->_s		= CODE_550;
-		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
-	} else {
-		c->_s		= CODE_250;
-		c->_wd_node	= node;
-
-		c->_wd.reset();
-		s->_dir.get_parent_path(&c->_wd, node);
-
-		if (LIBVOS_DEBUG) {
-			printf("[LIBVOS::FTPD____] CWD : %s\n", c->_wd._v);
+			if (LIBVOS_DEBUG) {
+				printf("[LIBVOS::FTPD____] CWD : %s\n"
+					, c->_wd._v);
+			}
 		}
 	}
-out:
+
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -934,9 +953,7 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 	}
 
 	int		x;
-	Buffer		path;
 	struct tm	gmt;
-	Buffer*		cmd_path	= &c->_cmnd._parm;
 	DirNode*	node		= NULL;
 	Socket*		pasv_c		= NULL;
 	struct tm*	pgmt		= NULL;
@@ -946,21 +963,13 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 		goto out;
 	}
 
-	if (cmd_path->_v[0] == '/') {
-		path.concat(s->_path._v, cmd_path->_v, NULL);
-	} else {
-		path.concat(s->_path._v, c->_wd._v, "/", cmd_path->_v, NULL);
-	}
-
-	x = s->_dir.refresh_by_path(&path);
-	if (x < 0) {
-		c->_s		= CODE_450;
-		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
+	client_get_path(s, c, 0);
+	if (c->_s) {
 		goto out;
 	}
 
-	node = s->_dir.get_node(&path, s->_path._v, s->_path._i);
-	if (!node) {
+	x = s->_dir.refresh_by_path(&c->_path_real);
+	if (x < 0) {
 		c->_s		= CODE_450;
 		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
 		goto out;
@@ -970,6 +979,8 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 	pasv_c->reset();
 
 	c->reply_raw(CODE_150, _FTP_reply_msg[CODE_150], NULL);
+
+	node = c->_path_node;
 
 	if (!node->is_dir()) {
 		pgmt = gmtime_r(&node->_mtime, &gmt);
@@ -1033,8 +1044,6 @@ void FTPD::on_cmd_NLST(FTPD* s, FTPClient* c)
 	}
 
 	int		x;
-	Buffer		path;
-	Buffer*		cmd_path	= &c->_cmnd._parm;
 	DirNode*	node		= NULL;
 	Socket*		pasv_c		= NULL;
 
@@ -1043,21 +1052,13 @@ void FTPD::on_cmd_NLST(FTPD* s, FTPClient* c)
 		goto out;
 	}
 
-	if (cmd_path->_v[0] == '/') {
-		path.concat(s->_path._v, cmd_path->_v, NULL);
-	} else {
-		path.concat(s->_path._v, c->_wd._v, "/", cmd_path->_v, NULL);
-	}
-
-	x = s->_dir.refresh_by_path(&path);
-	if (x < 0) {
-		c->_s		= CODE_450;
-		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
+	client_get_path(s, c, 0);
+	if (c->_s) {
 		goto out;
 	}
 
-	node = s->_dir.get_node(&path, s->_path._v, s->_path._i);
-	if (!node) {
+	x = s->_dir.refresh_by_path(&c->_path_real);
+	if (x < 0) {
 		c->_s		= CODE_450;
 		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
 		goto out;
@@ -1067,6 +1068,8 @@ void FTPD::on_cmd_NLST(FTPD* s, FTPClient* c)
 	pasv_c->reset();
 
 	c->reply_raw(CODE_150, _FTP_reply_msg[CODE_150], NULL);
+
+	node = c->_path_node;
 
 	if (!node->is_dir()) {
 		pasv_c->append(&node->_name);
@@ -1103,12 +1106,8 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	int		n;
-	Buffer		path;
-	Buffer		node_name;
+	int		x;
 	File		file;
-	Buffer*		cmd_parm	= &c->_cmnd._parm;
-	DirNode*	node		= NULL;
 	Socket*		pasv_c		= NULL;
 
 	if (!c->_psrv || !c->_pclt) {
@@ -1116,36 +1115,19 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPClient* c)
 		goto out;
 	}
 
-	if (cmd_parm->is_empty()) {
-		c->_s = CODE_501;
+	client_get_path(s, c);
+	if (c->_s) {
 		goto out;
 	}
 
-	if (cmd_parm->_v[0] == '/') {
-		path.concat(s->_path._v, cmd_parm->_v, NULL);
-	} else {
-		path.concat(s->_path._v, c->_wd._v, "/", cmd_parm->_v, NULL);
-	}
-
-	node = s->_dir.get_node(&path, s->_path._v, s->_path._i);
-	if (!node) {
-		c->_s		= CODE_450;
-		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
-		goto out;
-	}
-
-	if (node->is_dir()) {
+	if (c->_path_node->is_dir()) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_IS_DIR];
 		goto out;
 	}
 
-	path.reset();
-	path.append(&s->_path);
-	s->_dir.get_parent_path(&path, node);
-
-	n = file.open_ro(path._v);
-	if (n < 0) {
+	x = file.open_ro(c->_path_real._v);
+	if (x < 0) {
 		c->_s = CODE_451;
 		goto out;
 	}
@@ -1155,10 +1137,10 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPClient* c)
 
 	c->reply_raw(CODE_150, _FTP_reply_msg[CODE_150], NULL);
 
-	n = file.read();
-	while (n > 0) {
+	x = file.read();
+	while (x > 0) {
 		pasv_c->write(&file);
-		n = file.read();
+		x = file.read();
 	}
 
 	c->_s = CODE_226;
@@ -1180,10 +1162,7 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPClient* c)
 	}
 
 	int		x;
-	Buffer		rpath;
-	Buffer		node_name;
 	File		file;
-	DirNode*	list		= NULL;
 	Socket*		pasv_c		= NULL;
 
 	if (!c->_psrv || !c->_pclt) {
@@ -1191,18 +1170,12 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPClient* c)
 		goto out;
 	}
 
-	if (c->_cmnd._parm.is_empty()) {
-		c->_s = CODE_501;
+	client_get_parent_path(s, c);
+	if (c->_s) {
 		goto out;
 	}
 
-	x = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &node_name);
-	if (x < 0) {
-		c->_s = CODE_501;
-		goto out;
-	}
-
-	x = file.open_wo(rpath._v);
+	x = file.open_wo(c->_path_real._v);
 	if (x < 0) {
 		c->_s = CODE_451;
 		goto out;
@@ -1218,7 +1191,8 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPClient* c)
 		x = pasv_c->read();
 	}
 
-	x = DirNode::INSERT_CHILD(list, rpath._v, node_name._v);
+	x = DirNode::INSERT_CHILD(c->_path_node, c->_path_real._v
+				, c->_path_base._v);
 	if (x < 0) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= strerror(errno);
@@ -1243,32 +1217,28 @@ void FTPD::on_cmd_DELE(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	int		x;
-	Buffer		rpath;
-	Buffer		dirname;
-	DirNode*	list = NULL;
+	int x;
 
-	if (c->_cmnd._parm.is_empty()) {
-		c->_s = CODE_501;
+	client_get_path(s, c);
+	if (c->_s) {
 		goto out;
 	}
 
-	x = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &dirname);
-	if (x != 0) {
-		c->_s = CODE_501;
-		goto out;
-	}
-
-	x = unlink(rpath._v);
+	x = unlink(c->_path_real._v);
 	if (x < 0) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= strerror(errno);
 		goto out;
 	}
 
-	DirNode::REMOVE_CHILD_BY_NAME(list, dirname._v);
-
-	c->_s = CODE_250;
+	x = DirNode::REMOVE_CHILD_BY_NAME(c->_path_node->_parent
+					, c->_path_base._v);
+	if (x < 0) {
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= strerror(errno);
+	} else {
+		c->_s = CODE_250;
+	}
 out:
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
@@ -1280,29 +1250,11 @@ void FTPD::on_cmd_RNFR(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	Buffer		path;
-	Buffer*		cmd_path = &c->_cmnd._parm;
-	DirNode*	node = NULL;
-
-	if (cmd_path->is_empty()) {
-		c->_s = CODE_501;
-		goto out;
-	}
-
-	if (cmd_path->_v[0] == '/') {
-		path.concat(s->_path._v, cmd_path->_v, NULL);
-	} else {
-		path.concat(s->_path._v, c->_wd._v, "/", cmd_path->_v, NULL);
-	}
-
-	node = s->_dir.get_node(&path, s->_path._v, s->_path._i);
-	if (!node) {
-		c->_s		= CODE_550;
-		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
-	} else {
+	client_get_path(s, c);
+	if (0 == c->_s) {
 		c->_s = CODE_350;
 	}
-out:
+
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
 }
@@ -1315,14 +1267,11 @@ void FTPD::on_cmd_RNTO(FTPD* s, FTPClient* c)
 
 	int		x;
 	Buffer		path;
-	Buffer		from;
 	Buffer		to;
-	Buffer		name_from;
-	Buffer		name_to;
+	Buffer		from;
+	Buffer		from_base;
+	DirNode*	from_node	= NULL;
 	Buffer*		last_parm	= &c->_cmnd_last._parm;
-	DirNode*	node		= NULL;
-	DirNode*	node_from	= NULL;
-	DirNode*	node_to		= NULL;
 
 	if (c->_cmnd._parm.is_empty()) {
 		c->_s = CODE_501;
@@ -1341,47 +1290,61 @@ void FTPD::on_cmd_RNTO(FTPD* s, FTPClient* c)
 		path.concat(s->_path._v, c->_wd._v, "/", last_parm->_v, NULL);
 	}
 
-	node = s->_dir.get_node(&path, s->_path._v, s->_path._i);
-	if (!node) {
+	from_node = s->_dir.get_node(&path, s->_path._v, s->_path._i);
+	if (!from_node
+	|| from_node->_parent == NULL
+	|| from_node->_parent == from_node) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
 		goto out;
 	}
 
-	x = get_path_node(s, c, last_parm, &node_from, &from, &name_from);
-	if (x != 0) {
-		c->_s = CODE_501;
+	from.append(&s->_path);
+	x = s->_dir.get_parent_path(&from, from_node);
+	if (x < 0) {
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
+		goto out;
+	}
+
+	x = File::BASENAME(&from_base, from._v);
+	if (x < 0) {
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
 		goto out;
 	}
 
 	/* get 'to' path */
-	x = get_path_node(s, c, &c->_cmnd._parm, &node_to, &to, &name_to);
+	x = client_get_parent_path(s, c);
 	if (x != 0) {
 		c->_s = CODE_501;
 		goto out;
 	}
 
-	if (name_to.is_empty()) {
-		to.appendc('/');
-		to.append(&name_from);
+	if (c->_path_base.is_empty()) {
+		c->_path_real.appendc('/');
+		c->_path_real.append(&from_base);
 	}
 
 	if (LIBVOS_DEBUG) {
-		printf("[LIBVOS::FTPD____] RENAME from : %s\n", from._v);
-		printf("                          to   : %s\n", to._v);
+		printf(	"[LIBVOS::FTPD____] RENAME from : %s\n" \
+			"                          to   : %s\n"
+			, from._v, c->_path_real._v);
 	}
 
-	x = rename(from._v, to._v);
+	x = rename(from._v, c->_path_real._v);
 	if (x < 0) {
 		c->_s		= CODE_553;
 		c->_rmsg_plus	= strerror(errno);
 	} else {
 		c->_s = CODE_250;
-		if (! name_to.is_empty()) {
-			node->_name.copy(&name_to);
+		if (c->_path_base.is_empty()) {
+			DirNode::REMOVE_CHILD_BY_NAME(from_node->_parent
+							, from_base._v);
+			DirNode::INSERT_CHILD(c->_path_node, c->_path_real._v
+						, from_base._v);
 		} else {
-			DirNode::REMOVE_CHILD_BY_NAME(node_from, name_from._v);
-			DirNode::INSERT_CHILD(node_to, to._v, name_from._v);
+			from_node->_name.copy(&c->_path_base);
 		}
 	}
 out:
@@ -1395,32 +1358,28 @@ void FTPD::on_cmd_RMD(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	int		x;
-	Buffer		rpath;
-	Buffer		dirname;
-	DirNode*	list = NULL;
+	int x;
 
-	if (c->_cmnd._parm.is_empty()) {
-		c->_s = CODE_501;
+	client_get_path(s, c);
+	if (c->_s) {
 		goto out;
 	}
 
-	x = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &dirname);
-	if (x != 0) {
-		c->_s = CODE_550;
-		goto out;
-	}
-
-	x = rmdir(rpath._v);
+	x = rmdir(c->_path_real._v);
 	if (x < 0) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= strerror(errno);
 		goto out;
 	}
 
-	DirNode::REMOVE_CHILD_BY_NAME(list, dirname._v);
-
-	c->_s = CODE_250;
+	x = DirNode::REMOVE_CHILD_BY_NAME(c->_path_node->_parent
+					, c->_path_base._v);
+	if (x < 0) {
+		c->_s		= CODE_550;
+		c->_rmsg_plus	= strerror(errno);
+	} else {
+		c->_s = CODE_250;
+	}
 out:
 	c->_rmsg = _FTP_reply_msg[c->_s];
 	c->reply();
@@ -1432,36 +1391,33 @@ void FTPD::on_cmd_MKD(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	int		x;
-	Buffer		rpath;
-	Buffer		dirname;
-	DirNode*	list		= NULL;
+	int x;
 
 	if (c->_cmnd._parm.is_empty()) {
 		c->_s = CODE_501;
 		goto out;
 	}
 
-	x = get_path_node(s, c, &c->_cmnd._parm, &list, &rpath, &dirname);
-	if (x != 0) {
-		c->_s = CODE_550;
+	client_get_parent_path(s, c);
+	if (c->_s) {
 		goto out;
 	}
 
-	x = Dir::CREATE(rpath._v);
+	x = Dir::CREATE(c->_path_real._v);
 	if (x < 0) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= strerror(errno);
 		goto out;
 	}
 
-	x = DirNode::INSERT_CHILD(list, rpath._v, dirname._v);
+	x = DirNode::INSERT_CHILD(c->_path_node, c->_path_real._v
+				, c->_path_base._v);
 	if (x < 0) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= strerror(errno);
 	} else {
 		c->_s		= CODE_257;
-		c->_rmsg_plus	= (const char*) rpath._v;
+		c->_rmsg_plus	= (const char*) c->_path_real._v;
 	}
 out:
 	c->_rmsg = _FTP_reply_msg[c->_s];

@@ -353,8 +353,11 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 			continue;
 		}
 
-		fprintf(stderr, "[LIBVOS::Dir_____] invalid path : %s\n", name);
-		fprintf(stderr, "                   node name    : %s\n", node._v);
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr, "[LIBVOS::Dir_____] invalid path: %s\n"
+					"                   node name   : %s\n"
+				, name, node._v);
+		}
 		return NULL;
 	}
 

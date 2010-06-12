@@ -48,6 +48,10 @@ public:
 	FTPCmd		_cmnd_last;
 	Buffer		_wd;
 	DirNode*	_wd_node;
+	Buffer		_path;
+	Buffer		_path_base;
+	Buffer		_path_real;
+	DirNode*	_path_node;
 	Socket*		_sock;
 	Socket*		_psrv;
 	Socket*		_pclt;
