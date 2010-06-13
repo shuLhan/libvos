@@ -399,11 +399,8 @@ int Dir::refresh_by_path(Buffer* path)
 		printf("[LIBVOS::Dir_____] refreshing '%s' ...\n", path->_v);
 	}
 
-	if (! list->is_dir()) {
-		s = list->update_attr(list, path->_v);
-		if (s < 0) {
-			s = -2;
-		}
+	s = list->update_attr(list, path->_v);
+	if (s <= 0 || !list->is_dir()) {
 		return s;
 	}
 

@@ -14,6 +14,12 @@
 
 namespace vos {
 
+enum _DirNode_upstat {
+	_MTIME_CHANGED	= 1
+,	_CTIME_CHANGED	= 2
+,	_MCTIME_CHANGED	= 3
+};
+
 /**
  * @class		: DirNode
  * @attr		:
@@ -21,7 +27,8 @@ namespace vos {
  *	- _uid		: user id of node in file system.
  *	- _gid		: groud id of node in file system.
  *	- _size		: size of node.
- *	- _mtime	: modification time of node.
+ *	- _mtime	: last modification to the contents of the file.
+ *	- _ctime	: last modification to the attributes of the file.
  *	- _name		: name of node.
  *	- _linkname	: a real path if node is symlink.
  *	- _next		: pointer to the next node in the same directory.

@@ -123,7 +123,9 @@ int DirNode::is_link()
  *	> node	: pointer to DirNode object that will be updated.
  *	> rpath	: a path that of 'node' in file system.
  * @return	:
- *	< 1	: success, stat changed.
+ *	< 3	: success, _mtime and _ctime changed.
+ *	< 2	: success, _ctime changed
+ *	< 1	: success, _mtime changed.
  *	< 0	: success, stat does not change.
  *	< -1	: fail.
  * @desc	: update node attributes.
@@ -143,12 +145,12 @@ int DirNode::update_attr(DirNode* node, const char* rpath)
 	}
 
 	if (st.st_mtime != node->_mtime) {
-		s		= 1;
+		s		|= _MTIME_CHANGED;
 		node->_size	= st.st_size;
 		node->_mtime	= st.st_mtime;
 	}
 	if (st.st_ctime != node->_ctime) {
-		s		= 1;
+		s		|= _CTIME_CHANGED;
 		node->_mode	= st.st_mode;
 		node->_uid	= st.st_uid;
 		node->_gid	= st.st_gid;
