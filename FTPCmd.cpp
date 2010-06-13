@@ -36,69 +36,75 @@ const char *_FTP_cmd[N_FTP_CMD] = {
 };
 
 FTPCmd::FTPCmd() :
-	_code(0),
-	_parm()
+	_code(0)
+,	_name()
+,	_parm()
+,	_callback(NULL)
+,	_next(NULL)
+,	_last(this)
+
 {}
 
 FTPCmd::~FTPCmd()
-{}
-
-/**
- * @return	:
- *	< > 0	: success, reply code.
- *	< -1	: fail.
- */
-int FTPCmd::get(Buffer* c)
 {
-	if (!c) {
-		return -1;
+	if (_next) {
+		delete _next;
 	}
+	reset();
+}
 
-	int	s;
-	Buffer	cmd;
-
-	s = 0;
-	while (s < c->_i && !isspace(c->_v[s])) {
-		s++;
-	}
-	if (s == 0) {
-		return -1;
-	}
-
-	cmd.copy_raw(&c->_v[0], s);
-
-	s++;
-	_parm.reset();
-	if (s < c->_i) {
-		_parm.copy_raw(&c->_v[s], c->_i - s);
-		_parm.trim();
-	}
-
+void FTPCmd::reset()
+{
 	_code = 0;
-	for (s = 0; s < N_FTP_CMD; s++) {
-		if (cmd.like_raw(_FTP_cmd[s]) == 0) {
-			_code = s;
-			break;
-		}
-	}
-	if (!_code) {
-		fprintf(stderr, "[LIBVOS::FTPCmd__] Unknown command: %s\n", cmd._v);
-		return -1;
-	}
-
-	return _code;
+	_name.reset();
+	_parm.reset();
+	_callback = 0;
 }
 
 void FTPCmd::set(FTPCmd *cmd)
 {
 	_code = cmd->_code;
+	_name.copy(&cmd->_name);
 	_parm.copy(&cmd->_parm);
+	_callback = cmd->_callback;
 }
 
 void FTPCmd::dump()
 {
-	printf("[LIBVOS::FTPCmd__] command   : %s\n", _FTP_cmd[_code]);
+	printf("[LIBVOS::FTPCmd__] command   : %s\n", _name._v);
 	printf("                   parameter : %s\n", _parm._v);
+}
+
+/**
+ * @param		:
+ *	> name		: name of new command.
+ * @return		: pointer to function.
+ *	< !NULL		: success, pointer to new FTPCmd.
+ *	< NULL		: fail.
+ */
+FTPCmd* FTPCmd::INIT(const int code, const char* name
+			, void (*callback)(const void*, const void*))
+{
+	FTPCmd* cmd = new FTPCmd();
+	if (cmd) {
+		cmd->_code	= code;
+		cmd->_callback	= callback;
+		cmd->_name.copy_raw(name);
+	}
+	return cmd;
+}
+
+void FTPCmd::ADD(FTPCmd** cmds, FTPCmd* cmd_new)
+{
+	if (!cmd_new) {
+		return;
+	}
+	if (!(*cmds)) {
+		(*cmds) = cmd_new;
+	} else {
+		(*cmds)->_last->_next = cmd_new;
+	}
+	(*cmds)->_last = cmd_new;
 }
 
 } /* namespace::vos */

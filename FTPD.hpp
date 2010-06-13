@@ -95,13 +95,18 @@ public:
 		, const char* path = FTPD_DEF_PATH
 		, const int auth_mode = AUTH_NOLOGIN);
 	int add_user(const char* name, const char* pass);
+	int add_command(const int code, const char* cmd_name
+			, void (*callback)(FTPD*, FTPClient*));
 	int set_path(const char* path);
 	void set_default_callback();
 	int set_callback(const int type, void (*callback)(FTPD*, FTPClient*));
 	int run();
 	void client_process();
+	int client_get_command(Socket* c, FTPCmd* ftp_cmd);
 	void client_add(FTPClient* c);
 	void client_del(FTPClient *c);
+	int client_get_path(FTPClient* c, int check_parm = 1);
+	int client_get_parent_path(FTPClient* c);
 
 	int		_running;
 	int		_auth_mode;
@@ -112,13 +117,9 @@ public:
 	fd_set		_fds_read;
 	FTPClient*	_all_client;
 	FTPUser*	_users;
+	FTPCmd*		_cmds;
 
-	void (*_fcb[N_FTP_CMD])(FTPD*, FTPClient*);
 
-	static int client_get_path(FTPD* s, FTPClient* c, int check_parm = 1);
-	static int client_get_parent_path(FTPD* s, FTPClient* c);
-
-	static void on_accept(FTPD* server, FTPClient* client);
 	static void on_cmd_USER(FTPD* server, FTPClient* client);
 	static void on_cmd_PASS(FTPD* server, FTPClient* client);
 	static void on_cmd_SYST(FTPD* server, FTPClient* client);

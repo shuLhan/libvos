@@ -74,6 +74,7 @@ FTPD::FTPD() :
 ,	_fds_read()
 ,	_all_client(NULL)
 ,	_users(NULL)
+,	_cmds(NULL)
 {}
 
 FTPD::~FTPD()
@@ -90,6 +91,11 @@ FTPD::~FTPD()
 	}
 	if (_users) {
 		delete _users;
+		_users = NULL;
+	}
+	if (_cmds) {
+		delete _cmds;
+		_cmds = NULL;
 	}
 }
 
@@ -140,8 +146,6 @@ int FTPD::init(const char* address, const int port, const char* path
 	FD_ZERO(&_fds_read);
 	FD_SET(_d, &_fds_all);
 
-	memset(_fcb, 0, N_FTP_CMD * sizeof(_fcb[0]));
-
 	return 0;
 }
 
@@ -175,6 +179,36 @@ int FTPD::add_user(const char* name, const char* pass)
 }
 
 /**
+ * @method		: FTPD::add_command
+ * @param		:
+ *	> code		: command number code.
+ *	> name		: command name.
+ *	> callback	: command callback.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
+ */
+int FTPD::add_command(const int code, const char* name
+			, void (*callback)(FTPD*, FTPClient*))
+{
+	if (!name || !callback) {
+		return -1;
+	}
+
+	FTPCmd* cmd = NULL;
+
+	cmd = FTPCmd::INIT(code, name
+			, (void (*)(const void*, const void*)) callback);
+	if (!cmd) {
+		return -1;
+	}
+
+	FTPCmd::ADD(&_cmds, cmd);
+
+	return 0;
+}
+
+/**
  * @method	: FTPD::set_path
  * @param	:
  *	> path	: path to directory to be served.
@@ -189,6 +223,10 @@ int FTPD::set_path(const char* path)
 	int s;
 
 	if (_dir._ls) {
+		s = _dir._name.cmp_raw(path);
+		if (s == 0) {
+			return 0;
+		}
 		_dir.close();
 	}
 
@@ -209,7 +247,6 @@ int FTPD::set_path(const char* path)
  */
 void FTPD::set_default_callback()
 {
-	set_callback(FTP_ACCEPT, &on_accept);
 	set_callback(FTP_CMD_USER, &on_cmd_USER);
 	set_callback(FTP_CMD_PASS, &on_cmd_PASS);
 	set_callback(FTP_CMD_SYST, &on_cmd_SYST);
@@ -251,13 +288,14 @@ void FTPD::set_default_callback()
  *	callback function is called after server accepting a new client or
  *	receiving any command from client.
  */
-int FTPD::set_callback(const int type, void (*callback)(FTPD*,FTPClient*))
+int FTPD::set_callback(const int type
+			, void (*callback)(FTPD* ftpd, FTPClient* ftpc))
 {
 	if (type < 0 || type >= N_FTP_CMD) {
 		return -1;
 	}
 
-	_fcb[type] = (*callback);
+	add_command(type, _FTP_cmd[type] , callback);
 
 	return 0;
 }
@@ -289,8 +327,8 @@ static void EXIT(int signum)
 int FTPD::run()
 {
 	int		s;
-	Socket*		sock		= NULL;
-	FTPClient*	my_client	= NULL;
+	Socket*		sock	= NULL;
+	FTPClient*	c	= NULL;
 
 	_fds_max	= _d + 1;
 	_running	= 1;
@@ -317,9 +355,9 @@ int FTPD::run()
 		if (FD_ISSET(_d, &_fds_read)) {
 			sock = accept_conn();
 			if (sock) {
-				my_client = new FTPClient(sock);
-				if (my_client) {
-					client_add(my_client);
+				c = new FTPClient(sock);
+				if (c) {
+					client_add(c);
 				}
 			}
 		} else {
@@ -379,7 +417,7 @@ void FTPD::client_process()
 			}
 		}
 
-		s = c->_cmnd.get(csock);
+		s = client_get_command(csock, &c->_cmnd);
 		if (s < 0) {
 			on_cmd_unknown(c);
 		} else {
@@ -395,8 +433,8 @@ void FTPD::client_process()
 			&&  c->_cmnd._code != FTP_CMD_SYST)) {
 				c->reply_raw(CODE_530
 					, _FTP_reply_msg[CODE_530], NULL);
-			} else if (_fcb[c->_cmnd._code] != NULL) {
-				_fcb[c->_cmnd._code](this, c);
+			} else if (c->_cmnd._callback != NULL) {
+				c->_cmnd._callback(this, c);
 			} else {
 				on_cmd_unknown(c);
 			}
@@ -404,6 +442,54 @@ void FTPD::client_process()
 next:
 		c = cnext;
 	}
+}
+
+/**
+ * @return	:
+ *	< > 0	: success, reply code.
+ *	< -1	: fail.
+ */
+int FTPD::client_get_command(Socket* c, FTPCmd* ftp_cmd)
+{
+	if (!c || !ftp_cmd) {
+		return -1;
+	}
+
+	int	s;
+	FTPCmd*	cmd_p = _cmds;
+
+	ftp_cmd->reset();
+
+	s = 0;
+	while (s < c->_i && !isspace(c->_v[s])) {
+		s++;
+	}
+	if (s == 0) {
+		return -1;
+	}
+
+	ftp_cmd->_name.copy_raw(&c->_v[0], s);
+
+	s++;
+	if (s < c->_i) {
+		ftp_cmd->_parm.copy_raw(&c->_v[s], c->_i - s);
+		ftp_cmd->_parm.trim();
+	}
+
+	while (cmd_p) {
+		s = ftp_cmd->_name.like(&cmd_p->_name);
+		if (s == 0) {
+			ftp_cmd->_code = cmd_p->_code;
+			ftp_cmd->_callback = cmd_p->_callback;
+			return ftp_cmd->_code;
+		}
+		cmd_p = cmd_p->_next;
+	}
+
+	fprintf(stderr, "[LIBVOS::FTPCmd__] Unknown command: %s\n"
+		, ftp_cmd->_name._v);
+
+	return -1;
 }
 
 /**
@@ -420,9 +506,10 @@ void FTPD::client_add(FTPClient* c)
 	if (c->_sock->_d >= _fds_max) {
 		_fds_max = c->_sock->_d + 1;
 	}
-	if (_fcb[FTP_ACCEPT]) {
-		_fcb[FTP_ACCEPT](this, c);
-	}
+
+	c->_conn_stat = FTP_STT_CONNECTED;
+	c->_wd.copy_raw("/");
+	c->reply_raw(CODE_220, _FTP_reply_msg[CODE_220], NULL);
 }
 
 /**
@@ -455,14 +542,13 @@ void FTPD::client_del(FTPClient* c)
 /**
  * @method	: FTPD::client_get_path
  * @parm	:
- *	> s	: FTPD object.
  *	> c	: FTPClient object.
  * @return	:
  *	< 0	: success, path is found.
  *	< >0	: fail, path not found.
  * @desc	: process command parameter path.
  */
-int FTPD::client_get_path(FTPD* s, FTPClient* c, int check_parm)
+int FTPD::client_get_path(FTPClient* c, int check_parm)
 {
 	int	x;
 	Buffer* cmd_parm = &c->_cmnd._parm;
@@ -478,21 +564,20 @@ int FTPD::client_get_path(FTPD* s, FTPClient* c, int check_parm)
 	}
 
 	if (cmd_parm->_v[0] == '/') {
-		c->_path_real.concat(s->_path._v, cmd_parm->_v, NULL);
+		c->_path_real.concat(_path._v, cmd_parm->_v, NULL);
 	} else {
-		c->_path_real.concat(s->_path._v, c->_wd._v, "/", cmd_parm->_v
+		c->_path_real.concat(_path._v, c->_wd._v, "/", cmd_parm->_v
 					, NULL);
 	}
 
-	c->_path_node = s->_dir.get_node(&c->_path_real, s->_path._v
-					, s->_path._i);
+	c->_path_node = _dir.get_node(&c->_path_real, _path._v, _path._i);
 	if (!c->_path_node) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
 		goto out;
 	}
 
-	x = s->_dir.get_parent_path(&c->_path, c->_path_node);
+	x = _dir.get_parent_path(&c->_path, c->_path_node);
 	if (x < 0) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= strerror(errno);
@@ -500,7 +585,7 @@ int FTPD::client_get_path(FTPD* s, FTPClient* c, int check_parm)
 	}
 
 	c->_path_real.reset();
-	c->_path_real.append(&s->_path);
+	c->_path_real.append(&_path);
 	c->_path_real.append(&c->_path);
 
 	x = File::BASENAME(&c->_path_base, c->_path._v);
@@ -519,16 +604,13 @@ out:
 }
 
 /**
- * @param		:
- *	> server	: pointer to server socket, FTPD object.
- *	> cmd_path	: path to be looking for node (minus last-node).
- *	> node		: return value, pointer to DirNode object.
- *	> rpath		: return value, real-path of 'cmd_path' in the system.
- *	> dirname	: return value, last-node name in 'cmd_path'.
- * @return		:
- *	> 0		: success, path is found.
- *	> >0		: fail, path is not found.
- * @desc		:
+ * @method	: FTPD::client_get_parent_path
+ * @param	:
+ *	> c	: pointer to FTPClient object.
+ * @return	:
+ *	> 0	: success, path is found.
+ *	> >0	: fail, path is not found.
+ * @desc	:
  *
  * get pointer to DirNode object that point to 'cmd_path' minus last-node.
  *
@@ -536,7 +618,7 @@ out:
  * and 'node' will point to DirNode object to path '/a/b' and 'dirname' will
  * contain only 'c'.
  */
-int FTPD::client_get_parent_path(FTPD* s, FTPClient* c)
+int FTPD::client_get_parent_path(FTPClient* c)
 {
 	int	i	= 0;
 	int	tmp_i	= 0;
@@ -553,9 +635,9 @@ int FTPD::client_get_parent_path(FTPD* s, FTPClient* c)
 	}
 
 	if (cmd_path->_v[0] == '/') {
-		c->_path.concat(s->_path._v, cmd_path->_v, NULL);
+		c->_path.concat(_path._v, cmd_path->_v, NULL);
 	} else {
-		c->_path.concat(s->_path._v, c->_wd._v, "/", cmd_path->_v
+		c->_path.concat(_path._v, c->_wd._v, "/", cmd_path->_v
 				, NULL);
 	}
 
@@ -567,7 +649,7 @@ int FTPD::client_get_parent_path(FTPD* s, FTPClient* c)
 		c->_path._i	= i;
 	}
 
-	c->_path_node = s->_dir.get_node(&c->_path, s->_path._v, s->_path._i);
+	c->_path_node = _dir.get_node(&c->_path, _path._v, _path._i);
 	if (! c->_path_node) {
 		goto out;
 	}
@@ -577,8 +659,8 @@ int FTPD::client_get_parent_path(FTPD* s, FTPClient* c)
 		c->_path._i	= tmp_i;
 	}
 
-	c->_path_real.append(&s->_path);
-	s->_dir.get_parent_path(&c->_path_real, c->_path_node);
+	c->_path_real.append(&_path);
+	_dir.get_parent_path(&c->_path_real, c->_path_node);
 	c->_path_real.append(&c->_path_base);
 
 	if (LIBVOS_DEBUG) {
@@ -589,23 +671,6 @@ int FTPD::client_get_parent_path(FTPD* s, FTPClient* c)
 	}
 out:
 	return c->_s;
-}
-
-/**
- * @method	: FTPD::on_accept
- * @param	:
- *	> svr	: pointer to FTPD object.
- *	> clt	: pointer to FTPClient object.
- * @desc	: called after server accepting new client connection.
- */
-void FTPD::on_accept(FTPD* s, FTPClient* c)
-{
-	if (!s || !c) {
-		return;
-	}
-	c->_conn_stat = FTP_STT_CONNECTED;
-	c->_wd.copy_raw("/");
-	c->reply_raw(CODE_220, _FTP_reply_msg[CODE_220], NULL);
 }
 
 /**
@@ -718,7 +783,7 @@ void FTPD::on_cmd_SIZE(FTPD* s, FTPClient* c)
 
 	Buffer size;
 
-	client_get_path(s, c);
+	s->client_get_path(c);
 
 	if (0 == c->_s) {
 		size.appendi(c->_path_node->_size);
@@ -740,7 +805,7 @@ void FTPD::on_cmd_MDTM(FTPD* s, FTPClient* c)
 	struct tm	gmt;
 	struct tm*	pgmt		= NULL;
 
-	client_get_path(s, c);
+	s->client_get_path(c);
 
 	if (0 == c->_s) {
 		pgmt = gmtime_r(&c->_path_node->_mtime, &gmt);
@@ -767,7 +832,7 @@ void FTPD::on_cmd_CWD(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	client_get_path(s, c);
+	s->client_get_path(c);
 
 	if (0 == c->_s) {
 		if (!c->_path_node->is_dir()) {
@@ -982,7 +1047,7 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 		goto out;
 	}
 
-	client_get_path(s, c, 0);
+	s->client_get_path(c, 0);
 	if (c->_s) {
 		goto out;
 	}
@@ -1094,7 +1159,7 @@ void FTPD::on_cmd_NLST(FTPD* s, FTPClient* c)
 		goto out;
 	}
 
-	client_get_path(s, c, 0);
+	s->client_get_path(c, 0);
 	if (c->_s) {
 		goto out;
 	}
@@ -1157,7 +1222,7 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPClient* c)
 		goto out;
 	}
 
-	client_get_path(s, c);
+	s->client_get_path(c);
 	if (c->_s) {
 		goto out;
 	}
@@ -1212,7 +1277,7 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPClient* c)
 		goto out;
 	}
 
-	client_get_parent_path(s, c);
+	s->client_get_parent_path(c);
 	if (c->_s) {
 		goto out;
 	}
@@ -1261,7 +1326,7 @@ void FTPD::on_cmd_DELE(FTPD* s, FTPClient* c)
 
 	int x;
 
-	client_get_path(s, c);
+	s->client_get_path(c);
 	if (c->_s) {
 		goto out;
 	}
@@ -1292,7 +1357,7 @@ void FTPD::on_cmd_RNFR(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	client_get_path(s, c);
+	s->client_get_path(c);
 	if (0 == c->_s) {
 		c->_s = CODE_350;
 	}
@@ -1357,9 +1422,8 @@ void FTPD::on_cmd_RNTO(FTPD* s, FTPClient* c)
 	}
 
 	/* get 'to' path */
-	x = client_get_parent_path(s, c);
-	if (x != 0) {
-		c->_s = CODE_501;
+	s->client_get_parent_path(c);
+	if (c->_s) {
 		goto out;
 	}
 
@@ -1402,7 +1466,7 @@ void FTPD::on_cmd_RMD(FTPD* s, FTPClient* c)
 
 	int x;
 
-	client_get_path(s, c);
+	s->client_get_path(c);
 	if (c->_s) {
 		goto out;
 	}
@@ -1440,7 +1504,7 @@ void FTPD::on_cmd_MKD(FTPD* s, FTPClient* c)
 		goto out;
 	}
 
-	client_get_parent_path(s, c);
+	s->client_get_parent_path(c);
 	if (c->_s) {
 		goto out;
 	}

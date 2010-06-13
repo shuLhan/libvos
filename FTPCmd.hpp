@@ -53,12 +53,20 @@ public:
 	FTPCmd();
 	~FTPCmd();
 
-	int get(Buffer* c);
+	void reset();
 	void set(FTPCmd *cmd);
 	void dump();
 
 	int	_code;
+	Buffer	_name;
 	Buffer	_parm;
+	void	(*_callback)(const void* FTPD_p, const void* FTPClient_p);
+	FTPCmd*	_next;
+	FTPCmd*	_last;
+
+	static FTPCmd* INIT(const int code, const char* name
+				, void (*callback)(const void*, const void*));
+	static void ADD(FTPCmd** cmds, FTPCmd* cmd_new);
 private:
 	FTPCmd(const FTPCmd&);
 	void operator=(const FTPCmd&);
