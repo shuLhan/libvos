@@ -9,6 +9,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <utime.h>
 #include "Buffer.hpp"
 
 using vos::Buffer;
@@ -90,6 +91,7 @@ public:
 	static int IS_EXIST(const char *path, int acc_mode = O_RDWR);
 	static int BASENAME(Buffer *name, const char *path);
 	static int COPY(const char *src, const char *dst);
+	static int TOUCH(const char* file);
 
 	static unsigned int DFLT_BUFFER_SIZE;
 

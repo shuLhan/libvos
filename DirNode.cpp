@@ -94,6 +94,18 @@ int DirNode::get_attr(const char *rpath, const char *name)
 }
 
 /**
+ * @method	: DirNode::is_file
+ * @return	:
+ *	< 1	: true, DirNode object is a regular file.
+ *	< 0	: false, DirNode object is NOT a regular file.
+ * @desc	: check if DirNode object is a regular file or not.
+ */
+int DirNode::is_file()
+{
+	return S_ISREG(_mode);
+}
+
+/**
  * @method	: DirNode::is_dir
  * @return	:
  *	< 1	: true, DirNode object is a directory.

@@ -84,7 +84,6 @@ OCI::~OCI()
 		_env = 0;
 	}
 
-	release_buffer();
 	if (_v) {
 		free(_v);
 		_v = 0;
@@ -761,9 +760,8 @@ void OCI::stmt_release()
 		_stat = OCIStmtRelease(_stmt, _err, NULL, 0, OCI_DEFAULT);
 		check_err();
 		_stmt = 0;
+		release_buffer();
 	}
-
-	release_buffer();
 }
 
 /**
@@ -1223,6 +1221,9 @@ int OCI::get_row_change_id(void *rowd, char **rowid, unsigned int *rowid_len)
 
 void OCI::release_buffer()
 {
+	if (!_v) {
+		return;
+	}
 	for (int i = 0; i <= _value_i; i++) {
 		if (!_v[i]) {
 			continue;

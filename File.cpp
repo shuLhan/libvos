@@ -758,4 +758,34 @@ int File::COPY(const char *src, const char *dst)
 	return 0;
 }
 
+/**
+ * @method		: File::TOUCH
+ * @param		:
+ *	> filename	: path to a file name to create or update.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
+ * @desc		:
+ * touch a 'filename', create 'filename' if it not exist or update
+ * access and modification time if it already exist.
+ */
+int File::TOUCH(const char* filename)
+{
+	int s;
+
+	s = utime(filename, NULL);
+	if (s < 0) {
+		if (errno == ENOENT) {
+			s = ::open(filename, FILE_OPEN_WA, S_IRUSR | S_IWUSR);
+			if (s < 0) {
+				return s;
+			}
+			::close(s);
+			s = 0;
+		}
+	}
+
+	return s;
+}
+
 } /* namespace::vos */

@@ -49,6 +49,7 @@ public:
 	int get_attr(const char *rpath, const char *name = NULL);
 	int is_dir();
 	int is_link();
+	int is_file();
 	int update_attr(DirNode* node, const char* rpath);
 	int update_child_attr(DirNode** node, const char* rpath
 				, const char* name);

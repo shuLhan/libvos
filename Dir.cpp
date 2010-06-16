@@ -91,6 +91,50 @@ void Dir::close()
 }
 
 /**
+ * @method	: Dir::find
+ * @param	:
+ *	> dir	: directory to be search for.
+ *	> name	: name of file.
+ *	> depth	: maximum number of child directory to looking for 'name'.
+ * @return	:
+ *	< NULL	: not found.
+ *	< !NULL	: found.
+ * @desc	: search file with name is 'name' recursively in list of node.
+ */
+DirNode* Dir::find(DirNode* dir, const char* name, int depth)
+{
+	int		s;
+	DirNode*	ls = NULL;
+	DirNode*	node = NULL;
+
+	if (depth == 0) {
+		return NULL;
+	}
+
+	if (LIBVOS_DEBUG) {
+		printf("[LIBVOS::Dir_____] scanning '%s'\n", dir->_name._v);
+	}
+
+	ls = dir->_child;
+
+	while (ls) {
+		s = ls->_name.cmp_raw(name);
+		if (s == 0) {
+			return ls;
+		}
+		if (ls->is_dir()) {
+			node = find(ls, name, depth - 1);
+			if (node) {
+				return node;
+			}
+		}
+		ls = ls->_next;
+	}
+
+	return NULL;
+}
+
+/**
  * @method	: Dir::get_parent_path
  * @param	:
  *	< path	: return value, a string of path.
@@ -374,6 +418,7 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
  *	< -2	: fail, system error.
  * @desc	:
  *	check for a new, deleted or modified node in the 'path'.
+ *	Use '_name' path if 'path' value is NULL.
  */
 int Dir::refresh_by_path(Buffer* path)
 {
@@ -387,7 +432,7 @@ int Dir::refresh_by_path(Buffer* path)
 	DirNode*	childs	= NULL;
 
 	if (!path) {
-		return 0;
+		path = &_name;
 	}
 
 	list = get_node(path, _name._v, _name._i);
@@ -551,17 +596,14 @@ int Dir::CREATES(const char* path, mode_t mode)
 	int len = strlen(path);
 	Buffer d;
 
-	while (path[i] == '/') {
-		i++;
-	}
 	while (i < len) {
 		if (path[i] == '/') {
+			d.appendc(path[i]);
+
 			s = CREATE(d._v, mode);
 			if (s < 0 && errno != EEXIST) {
 				goto err;
 			}
-
-			d.appendc(path[i]);
 
 			do {
 				i++;
