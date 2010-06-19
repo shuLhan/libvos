@@ -161,7 +161,7 @@ int File::read()
 	if (_status == O_WRONLY)
 		return 0;
 
-	_i = ::read(_d, &_v[0], _l);
+	_i = (int) ::read(_d, &_v[0], _l);
 	if (_i < 0)
 		return -1;
 
@@ -197,7 +197,7 @@ int File::readn(int n)
 	}
 	_i = 0;
 	while (n > 0) {
-		s = ::read(_d, &_v[_i], n);
+		s = (int) ::read(_d, &_v[_i], n);
 		if (s < 0) {
 			if (s == EAGAIN || s == EWOULDBLOCK)
 				break;
@@ -261,7 +261,7 @@ int File::refill(int read_min)
 		}
 	}
 
-	_i = ::read(_d, &_v[move_len], len);
+	_i = (int) ::read(_d, &_v[move_len], len);
 	if (_i < 0) {
 		return -1;
 	}
@@ -313,7 +313,7 @@ int File::get_line(Buffer **line)
 
 			_i = _p;
 			while (len > 0) {
-				s = ::read(_d, &_v[_i], len);
+				s = (int) ::read(_d, &_v[_i], len);
 				if (s < 0) {
 					return -1;
 				}
@@ -390,7 +390,7 @@ int File::write_raw(const char *bfr, int len)
 		return 0;
 	}
 	if (!len) {
-		len = strlen(bfr);
+		len = (int) strlen(bfr);
 		if (!len)
 			return 0;
 	}
@@ -402,7 +402,7 @@ int File::write_raw(const char *bfr, int len)
 			return s;
 
 		while (len > 0) {
-			s = ::write(_d, &bfr[x], len);
+			s = (int) ::write(_d, &bfr[x], len);
 			if (s < 0)
 				return -1;
 
@@ -515,7 +515,7 @@ int File::flush()
 		return 0;
 
 	while (_i > 0) {
-		s = ::write(_d, &_v[x], _i);
+		s = (int) ::write(_d, &_v[x], _i);
 		if (s < 0)
 			return -1;
 
@@ -691,7 +691,7 @@ int File::BASENAME(Buffer *name, const char *path)
 		if (s < 0)
 			return s;
 	} else {
-		len = strlen(path);
+		len = (int) strlen(path);
 		if (path[0] == '/' && len == 1) {
 			s = name->appendc('/');
 			if (s < 0)

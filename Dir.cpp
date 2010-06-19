@@ -357,7 +357,7 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 		return NULL;
 	}
 	if (root_len <= 0) {
-		root_len = strlen(root);
+		root_len = (int) strlen(root);
 	}
 	s = strncmp(path->_v, root, root_len);
 	if (s != 0) {
@@ -593,7 +593,7 @@ int Dir::CREATES(const char* path, mode_t mode)
 
 	int s = 0;
 	int i = 0;
-	int len = strlen(path);
+	int len = (int) strlen(path);
 	Buffer d;
 
 	while (i < len) {

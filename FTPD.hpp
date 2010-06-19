@@ -8,7 +8,6 @@
 #define	_LIBVOS_FTP_DAEMON_HPP	1
 
 #include <signal.h>
-#include "Dir.hpp"
 #include "FTPClient.hpp"
 #include "FTPUser.hpp"
 

@@ -171,7 +171,7 @@ int Socket::bind(const char *address, const int port)
 	if (!address) {
 		address = ADDR_WILCARD;
 	} else {
-		s = strlen(address);
+		s = (int) strlen(address);
 		if (0 == s) {
 			address = ADDR_WILCARD;
 		}
@@ -546,7 +546,7 @@ int Socket::send_raw(const char *bfr, int len)
 
 	if (bfr) {
 		if (len <= 0) {
-			len = strlen(bfr);
+			len = (int) strlen(bfr);
 		}
 		s = write_raw(bfr, len);
 		if (s < 0) {
@@ -567,11 +567,11 @@ int Socket::send_raw(const char *bfr, int len)
  *	< <0	: fail.
  * @desc	: send 'bfr' to 'addr' using datagram protocol.
  */
-int Socket::send_udp(struct sockaddr_in *addr, Buffer *bfr)
+long int Socket::send_udp(struct sockaddr_in *addr, Buffer *bfr)
 {
-	register int n_send;
+	register long int n_send;
 
-	n_send = ::sendto(_d, bfr->_v, bfr->_i, 0, (struct sockaddr *) addr,
+	n_send = (int) ::sendto(_d, bfr->_v, bfr->_i, 0, (struct sockaddr *) addr,
 				SockAddr::IN_SIZE);
 
 	return n_send;
@@ -588,10 +588,10 @@ int Socket::send_udp(struct sockaddr_in *addr, Buffer *bfr)
  * @desc	:
  *	send 'bfr' with length is 'len' to 'addr' using datagram protocol.
  */
-int Socket::send_udp_raw(struct sockaddr_in *addr, const char *bfr,
+long int Socket::send_udp_raw(struct sockaddr_in *addr, const char *bfr,
 				const int len)
 {
-	register int n_send;
+	register long int n_send;
 
 	if (!addr)
 		return 0;
@@ -617,11 +617,11 @@ int Socket::send_udp_raw(struct sockaddr_in *addr, const char *bfr,
  *	received data from end point using datagram protocl and save the end
  *	point address to 'addr'.
  */
-int Socket::recv_udp(struct sockaddr_in *addr)
+long int Socket::recv_udp(struct sockaddr_in *addr)
 {
 	socklen_t addr_len = SockAddr::IN_SIZE;
 
-	_i = ::recvfrom(_d, _v, _l, 0, (struct sockaddr *) addr, &addr_len);
+	_i = (int) ::recvfrom(_d, _v, _l, 0, (struct sockaddr *) addr, &addr_len);
 	_v[_i] = '\0';
 
 	return _i;

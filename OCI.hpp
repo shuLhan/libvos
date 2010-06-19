@@ -76,8 +76,8 @@ public:
 	int connect(const char *hostname, const char *service_name,
 			int port = OCI_DEF_PORT);
 
-	int create_session(const char *conn, unsigned int conn_len = 0);
-	int create_session_pool(const char *conn, unsigned int conn_len = 0);
+	int create_session(const char *conn, int conn_len = 0);
+	int create_session_pool(const char *conn, int conn_len = 0);
 
 	int login(const char *username, const char *password,
 			const char *conn = NULL);

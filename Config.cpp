@@ -235,9 +235,9 @@ const char* Config::get(const char *key)
  * @return	:
  *	< int	: a value, converted from string to number.
  */
-int Config::get_number(const char *head, const char *key, const int dflt)
+long int Config::get_number(const char *head, const char *key, const int dflt)
 {
-	int		n;
+	long int	n;
 	const char	*v = get(head, key, NULL);
 
 	if (!v) {
@@ -249,12 +249,12 @@ int Config::get_number(const char *head, const char *key, const int dflt)
 	return n;
 }
 
-int Config::get_number(const char *head, const char *key)
+long int Config::get_number(const char *head, const char *key)
 {
 	return get_number(head, key, 0);
 }
 
-int Config::get_number(const char *key)
+long int Config::get_number(const char *key)
 {
 	return get_number(CONFIG_ROOT, key, 0);
 }
@@ -359,7 +359,7 @@ inline int Config::parsing()
 	int	line_i	= 0;
 	int	i	= 0;
 	int	i_str	= 0;
-	int	l	= get_size();
+	int	l	= (int) get_size();
 	int	_e_row	= 1;
 	int	_e_col	= 0;
 	Buffer	b;

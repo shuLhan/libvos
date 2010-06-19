@@ -200,7 +200,7 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in *sin, const char *addr,
 	memset(sin, 0, SockAddr::IN_SIZE);
 
 	sin->sin_family	= AF_INET;
-	sin->sin_port	= htons(port);
+	sin->sin_port	= htons((uint16_t) port);
 
 	if (IS_IPV4(addr)) {
 		s = inet_pton(AF_INET, addr, &sin->sin_addr);
@@ -254,7 +254,7 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6 *sin6, const char *addr,
 	memset(sin6, 0, SockAddr::IN6_SIZE);
 
 	sin6->sin6_family	= AF_INET6;
-	sin6->sin6_port		= htons(port);
+	sin6->sin6_port		= htons((uint16_t) port);
 
 	buf = (char *) strchr(addr, ':');
 	if (buf) {

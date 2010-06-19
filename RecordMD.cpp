@@ -151,7 +151,7 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 	int		i		= 0;
 	int		todo		= MD_START;
 	int		todo_next	= 0;
-	int		len		= strlen(meta);
+	int		len		= (int) strlen(meta);
 	Buffer		v;
 	RecordMD	*md		= NULL;
 
@@ -349,7 +349,7 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 					goto err;
 			}
 
-			md->_start_p = strtol(v._v, 0, 0);
+			md->_start_p = (int) strtol(v._v, 0, 0);
 			v.reset();
 
 			todo		= MD_META_SEP;
@@ -365,7 +365,7 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 						goto err;
 				}
 
-				md->_end_p = strtol(v._v, 0, 0);
+				md->_end_p = (int) strtol(v._v, 0, 0);
 				v.reset();
 			} else if (meta[i] == '\'') {
 				++i;
@@ -494,7 +494,7 @@ int RecordMD::INIT_FROM_FILE(RecordMD **o, const char *fmeta)
 		return s;
 	}
 
-	s = f.resize(f.get_size());
+	s = f.resize((int) f.get_size());
 	if (s < 0) {
 		return s;
 	}

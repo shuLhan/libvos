@@ -79,7 +79,7 @@ int Buffer::init_raw(const char *bfr, const int len)
 		return copy_raw(bfr, len);
 	}
 	if (bfr) {
-		_i = _l = len ? len : strlen(bfr);
+		_i = _l = len ? len : (int) strlen(bfr);
 		if (0 == _l)
 			return 0;
 
@@ -341,7 +341,7 @@ int Buffer::append_raw(const char *bfr, int len)
 	if (!bfr)
 		return 0;
 	if (!len) {
-		len = strlen(bfr);
+		len = (int) strlen(bfr);
 		if (len <= 0)
 			return 0;
 	}
@@ -381,7 +381,7 @@ int Buffer::concat(const char *bfr, ...)
 	va_start(al, bfr);
 	p = bfr;
 	while (p) {
-		len = strlen(p);
+		len = (int) strlen(p);
 		if (len > 0) {
 			s = resize(_i + len);
 			if (s < 0)
@@ -523,7 +523,7 @@ int Buffer::prepend_raw(const char* bfr, int len)
 		return 0;
 	}
 	if (len <= 0) {
-		len = strlen(bfr);
+		len = (int) strlen(bfr);
 	}
 
 	int s;
@@ -554,7 +554,7 @@ int Buffer::subc(int from, int to)
 
 	for (; i < _i; i++) {
 		if (_v[i] == from) {
-			_v[i] = to;
+			_v[i] = (char) to;
 			n++;
 		}
 	}
@@ -595,7 +595,7 @@ int Buffer::copy_raw(const char *bfr, int len)
 		return 0;
 	}
 	if (!len) {
-		len = strlen(bfr);
+		len = (int) strlen(bfr);
 		if (!len)
 			return 0;
 	}
@@ -984,7 +984,7 @@ int Buffer::VSNPRINTF(char *bfr, int len, const char *fmt, va_list args)
 next:
 		if (isdigit(*p)) {
 			flag |= FL_WIDTH;
-			flen = strtol(p, &p, 10);
+			flen = (int) strtol(p, &p, 10);
 		}
 
 		if (*p == 'h') {
@@ -1003,7 +1003,7 @@ next:
 
 		switch (*p) {
 		case 'c':
-			s = o.appendc(va_arg(args, int));
+			s = o.appendc((char) va_arg(args, int));
 			if (s < 0)
 				return s;
 			break;
@@ -1141,7 +1141,7 @@ int Buffer::TRIM(char *bfr, int len)
 	if (! bfr)
 		return 0;
 	if (! len) {
-		len = strlen(bfr);
+		len = (int) strlen(bfr);
 		if (! len)
 			return 0;
 	}

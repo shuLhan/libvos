@@ -24,7 +24,7 @@ Resolver::Resolver() :
 	_udp(),
 	_servers(NULL)
 {
-	srand(time(NULL));
+	srand((unsigned int) time(NULL));
 }
 
 /**
@@ -172,7 +172,7 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 		(*query)->reset(vos::DNSQ_DO_ALL);
 	}
 
-	(*query)->_id		= htons(rand() % 65536);
+	(*query)->_id		= htons((uint16_t) (rand() % 65536));
 	(*query)->_flag		= htons(HDR_IS_QUERY | OPCODE_QUERY | RTYPE_RD);
 	(*query)->_n_qry	= htons(1);
 	(*query)->_n_ans	= htons(0);
@@ -203,7 +203,7 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 				if (len > q->_l)
 					q->resize(len);
 
-				q->_v[q->_i] = label._i;
+				q->_v[q->_i] = (char) label._i;
 				q->_i++;
 				q->append(&label);
 			}
@@ -219,7 +219,7 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 		if (len > q->_l)
 			q->resize(len);
 
-		q->_v[q->_i] = label._i;
+		q->_v[q->_i] = (char) label._i;
 		q->_i++;
 		q->append(&label);
 	}
@@ -278,7 +278,7 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 			printf(">> querying %s... ", server->_addr->_v);
 		}
 
-		s = _udp.send_udp(server->_in, question->_bfr);
+		s = (int) _udp.send_udp(server->_in, question->_bfr);
 		if (s < 0) {
 			server = server->_next;
 			continue;
@@ -479,7 +479,7 @@ int Resolver::send_query(DNSQuery *question, DNSQuery *answer)
  *	< <0	: fail.
  * @desc	: send data 'bfr' to 'addr' using UDP protocol.
  */
-int Resolver::send_udp(struct sockaddr_in *addr, Buffer *bfr)
+long int Resolver::send_udp(struct sockaddr_in *addr, Buffer *bfr)
 {
 	return _udp.send_udp(addr, bfr);
 }
@@ -495,7 +495,7 @@ int Resolver::send_udp(struct sockaddr_in *addr, Buffer *bfr)
  *	< <0	: fail.
  * @desc	: send data 'bfr' to 'addr' using UDP protocol.
  */
-int Resolver::send_udp_raw(struct sockaddr_in *addr, const char *bfr,
+long int Resolver::send_udp_raw(struct sockaddr_in *addr, const char *bfr,
 				const int len)
 {
 	return _udp.send_udp_raw(addr, bfr, len);

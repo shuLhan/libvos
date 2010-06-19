@@ -64,7 +64,7 @@ inline int Reader::refill_buffer(const int read_min)
 		}
 	}
 
-	_i = ::read(_d, &_v[move_len], len);
+	_i = (int) ::read(_d, &_v[move_len], len);
 	if (_i < 0) {
 		return -1;
 	}
@@ -252,7 +252,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 					s = _v[startp];
 					_v[startp] = '\0';
 					r->append_raw(&_v[chop_bgn], len);
-					_v[startp] = s;
+					_v[startp] = (char) s;
 				}
 
 				++startp;
@@ -304,7 +304,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 					s = _v[startp];
 					_v[startp] = '\0';
 					r->append_raw(&_v[chop_bgn], len);
-					_v[startp] = s;
+					_v[startp] = (char) s;
 				}
 
 				++startp;
@@ -337,7 +337,7 @@ int Reader::read(Record *r, RecordMD *rmd)
 					s = _v[startp];
 					_v[startp] = '\0';
 					r->append_raw(&_v[chop_bgn], len);
-					_v[startp] = s;
+					_v[startp] = (char) s;
 				}
 			}
 		}

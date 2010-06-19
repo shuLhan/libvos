@@ -61,10 +61,10 @@ public:
 	int send(Buffer *bfr);
 	int send_raw(const char *bfr, int len = 0);
 
-	int send_udp(struct sockaddr_in *addr, Buffer *bfr);
-	int send_udp_raw(struct sockaddr_in *addr, const char *bfr,
+	long int send_udp(struct sockaddr_in *addr, Buffer *bfr);
+	long int send_udp_raw(struct sockaddr_in *addr, const char *bfr,
 				const int len);
-	int recv_udp(struct sockaddr_in *addr);
+	long int recv_udp(struct sockaddr_in *addr);
 
 	static Socket * ADD_CLIENT(Socket *list, Socket *client);
 

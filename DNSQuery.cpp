@@ -430,7 +430,7 @@ void DNSQuery::remove_rr_aut()
 	if (!_rr_aut_p)
 		return;
 
-	_bfr->_i		= _rr_aut_p - _bfr->_v;
+	_bfr->_i		= (int)(_rr_aut_p - _bfr->_v);
 	if (_bfr->_i < 0) {
 		_bfr->_i	= 0;
 	}
@@ -465,7 +465,7 @@ void DNSQuery::remove_rr_add()
 	if (!_rr_add_p)
 		return;
 
-	_bfr->_i		= _rr_add_p - _bfr->_v;
+	_bfr->_i		= (int)(_rr_add_p - _bfr->_v);
 	if (_bfr->_i < 0) {
 		_bfr->_i	= 0;
 	}
@@ -494,7 +494,7 @@ void DNSQuery::remove_rr_add()
  */
 void DNSQuery::set_id(const int id)
 {
-	_id = htons(id);
+	_id = htons((uint16_t) id);
 
 	if (!_bfr)
 		return;
@@ -520,7 +520,7 @@ void DNSQuery::set_tcp_size(int size)
 	if (_bfr_type != BUFFER_IS_TCP)
 		return;
 
-	size = htons(size);
+	size = htons((uint16_t) size);
 	memset(_bfr->_v, '\0', DNS_TCP_HDR_SIZE);
 	memcpy(_bfr->_v, &size, DNS_TCP_HDR_SIZE);
 }

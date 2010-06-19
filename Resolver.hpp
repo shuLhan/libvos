@@ -8,7 +8,6 @@
 #define	_LIBVOS_RESOLVER_HPP	1
 
 #include <time.h>
-#include "SockAddr.hpp"
 #include "DNSQuery.hpp"
 
 using vos::DNSQuery;
@@ -51,8 +50,8 @@ public:
 	int send_query_udp(DNSQuery *question, DNSQuery *answer);
 	int send_query_tcp(DNSQuery *question, DNSQuery *answer);
 	int send_query(DNSQuery *question, DNSQuery *answer);
-	int send_udp(struct sockaddr_in *addr, Buffer *bfr);
-	int send_udp_raw(struct sockaddr_in *addr, const char *bfr,
+	long int send_udp(struct sockaddr_in *addr, Buffer *bfr);
+	long int send_udp_raw(struct sockaddr_in *addr, const char *bfr,
 				const int len);
 
 	static unsigned int PORT;

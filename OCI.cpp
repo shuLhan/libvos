@@ -220,7 +220,7 @@ int OCI::connect(const char *hostname, const char *service_name, int port)
 	return s;
 }
 
-int OCI::create_session(const char *conn, unsigned int conn_len)
+int OCI::create_session(const char *conn, int conn_len)
 {
 	register int s = 0;
 
@@ -232,7 +232,7 @@ int OCI::create_session(const char *conn, unsigned int conn_len)
 	}
 
 	if (!conn_len) {
-		conn_len = strlen(conn);
+		conn_len = (int) strlen(conn);
 	}
 
 	_stat = OCIServerAttach(_server, _err, (text *) conn, conn_len,
@@ -279,7 +279,7 @@ int OCI::create_session(const char *conn, unsigned int conn_len)
  *	string 'conn' with format: '//hostname:port/service-name'.
  */
 
-int OCI::create_session_pool(const char *conn, unsigned int conn_len)
+int OCI::create_session_pool(const char *conn, int conn_len)
 {
 	if (!conn) {
 		return -1;
@@ -314,7 +314,7 @@ int OCI::create_session_pool(const char *conn, unsigned int conn_len)
 	}
 
 	if (0 == conn_len) {
-		conn_len = strlen(conn);
+		conn_len = (int) strlen(conn);
 	}
 
 	_stat = OCISessionPoolCreate(_env, _err, _spool, (OraText **) &_spool_name,
@@ -374,15 +374,17 @@ int OCI::login(const char *username, const char *password, const char *conn)
 		return -1;
 	}
 
-	_stat = OCIAttrSet(_auth, OCI_HTYPE_AUTHINFO, (void *) username,
-			strlen(username), OCI_ATTR_USERNAME, _err);
+	_stat = OCIAttrSet(_auth, OCI_HTYPE_AUTHINFO, (void *) username
+			, (unsigned int) strlen(username), OCI_ATTR_USERNAME
+			, _err);
 	s = check_err();
 	if (s < 0) {
 		return -1;
 	}
 
-	_stat = OCIAttrSet(_auth, OCI_HTYPE_AUTHINFO, (void *) password,
-			strlen(password), OCI_ATTR_PASSWORD, _err);
+	_stat = OCIAttrSet(_auth, OCI_HTYPE_AUTHINFO, (void *) password
+			, (unsigned int) strlen(password), OCI_ATTR_PASSWORD
+			, _err);
 	s = check_err();
 	if (s < 0) {
 		return -1;
@@ -392,9 +394,9 @@ int OCI::login(const char *username, const char *password, const char *conn)
 		fprintf(stderr, "[OCI] get session\n");
 	}
 
-	_stat = OCISessionGet(_env, _err, &_service, _auth,
-				(OraText *) conn, strlen(conn),
-				NULL, 0, NULL, NULL, NULL, OCI_DEFAULT);
+	_stat = OCISessionGet(_env, _err, &_service, _auth, (OraText *) conn
+				, (unsigned int) strlen(conn), NULL, 0, NULL
+				, NULL, NULL, OCI_DEFAULT);
 	s = check_err();
 	if (s < 0) {
 		return -1;
@@ -419,18 +421,18 @@ int OCI::login_new_session(const char *username, const char *password,
 	}
 
 	/* set user name */
-	_stat = OCIAttrSet(_session, OCI_HTYPE_SESSION,
-				(text *) username, strlen(username),
-				OCI_ATTR_USERNAME, _err);
+	_stat = OCIAttrSet(_session, OCI_HTYPE_SESSION, (text *) username
+				, (unsigned int) strlen(username)
+				, OCI_ATTR_USERNAME, _err);
 	s = check_err();
 	if (s != 0) {
 		return -1;
 	}
 
 	/* set user password */
-	_stat = OCIAttrSet(_session, OCI_HTYPE_SESSION,
-			(text *) password, strlen(password),
-			OCI_ATTR_PASSWORD, _err);
+	_stat = OCIAttrSet(_session, OCI_HTYPE_SESSION, (text *) password
+				, (unsigned int) strlen(password)
+				, OCI_ATTR_PASSWORD, _err);
 	s = check_err();
 	if (s != 0) {
 		return -1;
@@ -486,8 +488,9 @@ int OCI::stmt_describe(const char *stmt)
 		return s;
 	}
 
-	_stat = OCIStmtPrepare(_stmt, _err, (OraText *) stmt, strlen(stmt),
-				OCI_NTV_SYNTAX, OCI_DEFAULT);
+	_stat = OCIStmtPrepare(_stmt, _err, (OraText *) stmt
+				, (unsigned int) strlen(stmt)
+				, OCI_NTV_SYNTAX, OCI_DEFAULT);
 	s = check_err();
 	if (s < 0) {
 		return s;
@@ -574,9 +577,9 @@ int OCI::stmt_prepare(const char *stmt)
 			stmt);
 	}
 
-	_stat = OCIStmtPrepare2(_service, &_stmt, _err, (const OraText *) stmt,
-				strlen(stmt), 0, 0, OCI_NTV_SYNTAX,
-				OCI_DEFAULT);
+	_stat = OCIStmtPrepare2(_service, &_stmt, _err, (const OraText *) stmt
+				, (unsigned int) strlen(stmt), 0, 0
+				, OCI_NTV_SYNTAX, OCI_DEFAULT);
 	s = check_err();
 
 	return s;

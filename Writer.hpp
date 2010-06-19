@@ -7,7 +7,6 @@
 #ifndef _LIBVOS_WRITER_HPP
 #define	_LIBVOS_WRITER_HPP	1
 
-#include "File.hpp"
 #include "Record.hpp"
 #include "RecordMD.hpp"
 

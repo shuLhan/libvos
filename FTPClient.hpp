@@ -7,7 +7,8 @@
 #ifndef _LIBVOS_FTP_CLIENT_HPP
 #define	_LIBVOS_FTP_CLIENT_HPP	1
 
-#include "DirNode.hpp"
+#include "Dir.hpp"
+#include "Socket.hpp"
 #include "FTPCmd.hpp"
 
 namespace vos {

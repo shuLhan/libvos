@@ -58,7 +58,7 @@ int Writer::write(Record *cols, RecordMD *rmd)
 		}
 
 		if (rmd->_left_q) {
-			s = _line.appendc(rmd->_left_q);
+			s = _line.appendc((char) rmd->_left_q);
 			if (s < 0)
 				return s;
 		}
@@ -101,12 +101,12 @@ int Writer::write(Record *cols, RecordMD *rmd)
 			}
 		}
 		if (rmd->_right_q) {
-			s = _line.appendc(rmd->_right_q);
+			s = _line.appendc((char) rmd->_right_q);
 			if (s < 0)
 				return s;
 		}
 		if (rmd->_sep) {
-			s = _line.appendc(rmd->_sep);
+			s = _line.appendc((char) rmd->_sep);
 			if (s < 0)
 				return s;
 		}
@@ -115,7 +115,7 @@ int Writer::write(Record *cols, RecordMD *rmd)
 		rmd	= rmd->_next;
 	}
 
-	_line.appendc(_eol);
+	_line.appendc((char) _eol);
 
 	len = _i + _line._i;
 	if (len > _l) {

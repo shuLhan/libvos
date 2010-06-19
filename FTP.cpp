@@ -361,7 +361,7 @@ int FTP::parsing_pasv_reply(Buffer *addr, int *port)
 	char		*p = _v;
 
 	/* get reply code : 227 */ 
-	s = strtol(_v, &p, 0);
+	s = (int) strtol(_v, &p, 0);
 	if (LIBVOS_DEBUG) {
 		printf("[FTP] ftp pasv reply code : %d\n", s);
 	}
@@ -389,10 +389,10 @@ int FTP::parsing_pasv_reply(Buffer *addr, int *port)
 	++p;
 
 	/* get port */
-	s	= strtol(p, &p, 0);
+	s	= (int) strtol(p, &p, 0);
 	*port	= s * 256;
 	++p;
-	s	= strtol(p, 0, 0);
+	s	= (int) strtol(p, 0, 0);
 	*port	+= s;
 
 	if (LIBVOS_DEBUG) {

@@ -49,9 +49,9 @@ public:
 	const char* get(const char *head, const char *key);
 	const char* get(const char *key);
 
-	int get_number(const char *head, const char *key, const int dflt);
-	int get_number(const char *head, const char *key);
-	int get_number(const char *key);
+	long int get_number(const char *head, const char *key, const int dflt);
+	long int get_number(const char *head, const char *key);
+	long int get_number(const char *key);
 
 	int set(const char *head, const char *key, const char *value);
 	void add(const char *head, const char *key, const char *value);

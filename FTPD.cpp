@@ -120,7 +120,7 @@ int FTPD::init(const char* address, const int port, const char* path
 {
 	int s;
 
-	srand(time(0));
+	srand((unsigned int) time(0));
 
 	_ftpd_		= this;
 	_auth_mode	= auth_mode;
