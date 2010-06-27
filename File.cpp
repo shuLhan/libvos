@@ -220,7 +220,7 @@ int File::readn(int n)
  * @param		:
  *	> read_min	: minimum length of buffer to fill, default to '0'.
  * @return		:
- *	< >= 0		: success.
+ *	< >=0		: success.
  *	< -1		: fail.
  * @desc		: Refill buffer with new data.
  *
@@ -726,8 +726,11 @@ int File::BASENAME(Buffer *name, const char *path)
  *	< 0	: success.
  *	< -1	: fail.
  * @desc	:
+ *
  * copy file 'src' to 'dst', create a new file if 'dst' is not exist, or
  * overwrite 'dst' if already exist.
+ *
+ * NOTE: use 'rename()' system call for easy and fast move.
  */
 int File::COPY(const char *src, const char *dst)
 {

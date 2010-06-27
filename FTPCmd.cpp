@@ -53,6 +53,10 @@ FTPCmd::~FTPCmd()
 	reset();
 }
 
+/**
+ * @method	: FTPCmd::reset
+ * @desc	: reset all attribute.
+ */
 void FTPCmd::reset()
 {
 	_code = 0;
@@ -61,6 +65,12 @@ void FTPCmd::reset()
 	_callback = 0;
 }
 
+/**
+ * @method	: FTPCmd::set
+ * @param	:
+ *	> cmd	: pointer to FTPCmd object.
+ * @desc	: set content of this object using data from 'cmd' object.
+ */
 void FTPCmd::set(FTPCmd *cmd)
 {
 	_code = cmd->_code;
@@ -69,6 +79,10 @@ void FTPCmd::set(FTPCmd *cmd)
 	_callback = cmd->_callback;
 }
 
+/**
+ * @method	: FTPCmd::dump
+ * @desc	: Dump content of FTPCmd object.
+ */
 void FTPCmd::dump()
 {
 	printf("[LIBVOS::FTPCmd__] command   : %s\n", _name._v);
@@ -76,11 +90,13 @@ void FTPCmd::dump()
 }
 
 /**
+ * @method		: FTPCmd::INIT
  * @param		:
  *	> name		: name of new command.
  * @return		: pointer to function.
- *	< !NULL		: success, pointer to new FTPCmd.
+ *	< !NULL		: success, pointer to new FTPCmd object.
  *	< NULL		: fail.
+ * @desc		: Create and initialize a new FTPCmd object.
  */
 FTPCmd* FTPCmd::INIT(const int code, const char* name
 			, void (*callback)(const void*, const void*))
@@ -94,6 +110,13 @@ FTPCmd* FTPCmd::INIT(const int code, const char* name
 	return cmd;
 }
 
+/**
+ * @method		: FTPCmd::ADD
+ * @param		:
+ *	> cmds		: pointer to list of FTPCmd object.
+ *	> cmd_new	: pointer to FTPCmd object.
+ * @desc		: Add new command 'cmd_new' to list of command 'cmds'.
+ */
 void FTPCmd::ADD(FTPCmd** cmds, FTPCmd* cmd_new)
 {
 	if (!cmd_new) {

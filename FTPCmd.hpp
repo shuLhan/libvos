@@ -42,11 +42,16 @@ enum _FTP_cmd_idx {
 extern const char* _FTP_cmd[N_FTP_CMD];
 
 /**
- * @class	: FTPCmd
- * @attr	:
- *	- _code	: command code.
- *	- _parm	: command parameter.
- * @desc	: This class contain command code and parameter.
+ * @class		: FTPCmd
+ * @attr		:
+ *	- _code		: command code.
+ *	- _name		: command name.
+ *	- _parm		: command parameter.
+ *	- _callback	: pointer to function callback.
+ *	- _next		: pointer to the next FTPCmd object.
+ *	- _prev		: pointer to the previos FTPCmd object.
+ * @desc		:
+ * This class contain command code and parameter.
  */
 class FTPCmd {
 public:

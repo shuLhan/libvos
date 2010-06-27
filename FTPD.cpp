@@ -445,9 +445,15 @@ next:
 }
 
 /**
- * @return	:
- *	< > 0	: success, reply code.
- *	< -1	: fail.
+ * @method		: FTPD::client_get_command
+ * @param		:
+ *	> c		: pointer to client Socket object.
+ *	> ftp_cmd	: return value, pointer to FTPCmd object to be filled.
+ * @return		:
+ *	< >0		: success, reply code.
+ *	< -1		: fail.
+ * @desc		:
+ * retrieve command name and parameter from client connection.
  */
 int FTPD::client_get_command(Socket* c, FTPCmd* ftp_cmd)
 {
@@ -541,7 +547,7 @@ void FTPD::client_del(FTPClient* c)
 
 /**
  * @method	: FTPD::client_get_path
- * @parm	:
+ * @param	:
  *	> c	: FTPClient object.
  * @return	:
  *	< 0	: success, path is found.
@@ -955,6 +961,7 @@ err:
 }
 
 /**
+ * @method	: get_node_perm
  * @param	:
  *	> bfr	: return value, buffer where the string will be written.
  *	> node	: pointer to DirNode object.
@@ -1013,9 +1020,13 @@ static int get_node_perm(Buffer* bfr, DirNode* node)
 }
 
 /**
- * @return	:
- *	< 0	: no, file time is modified in the last six months.
- *	< 1	: yes, file time is older than six months.
+ * @method		: is_old
+ * @param		:
+ *	> cur_tm	: current time.
+ *	> node_tm	: node time.
+ * @return		:
+ *	< 0		: no, file time is modified in the last six months.
+ *	< 1		: yes, file time is older than six months.
  */
 static int is_old(struct tm* cur_tm, struct tm* node_tm)
 {

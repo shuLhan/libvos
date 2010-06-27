@@ -16,30 +16,33 @@ ifndef CXXFLAGS
 CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os
 endif
 CXXFLAGS_DEBUG	= $(CXXFLAGS_GLOBAL) \
-		-Wall -Wextra -Weffc++ -Werror -Wconversion -g -O0
-
+			-Wall -Wextra -Weffc++ -Werror -Wconversion -g -O0
+CXXFLAGS_ADD	=
 LDFLAGS		= -lpthread
+LDFLAGS_ADD	=
 
-do_compile	=						\
-			echo "[C] $@";				\
-			$(CXX) $(CXXFLAGS) -c $< -o $@
-do_build	=						\
-			echo "[B] $@";				\
-			$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@
+do_compile=\
+	echo "[C] $@";\
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-do_install	=						\
-			echo "[I] installing $(1) => $(2)";	\
-			rm -f $(2) 2&> /dev/null;		\
-			cp -f $(1) $(2);
-do_link		=						\
-			echo "[S] linking $(1) => $(2)";	\
-			rm -f $(2) 2&> /dev/null;		\
-			ln -s $(1) $(2);
+do_build=\
+	echo "[B] $@";\
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@
 
-do_mkdir	=						\
-			echo "[M] mkdir $(1)";			\
-			mkdir -p $1
+do_install=\
+	echo "[I] installing $(1) => $(2)";\
+	rm -f $(2) 2&> /dev/null;\
+	cp -f $(1) $(2);
 
-do_rmdir	=						\
-			echo "[R] remove dir $(1)";		\
-			rm -rf $(1)
+do_link=\
+	echo "[S] linking $(1) => $(2)";\
+	rm -f $(2) 2&> /dev/null;\
+	ln -s $(1) $(2)
+
+do_mkdir=\
+	echo "[M] mkdir $(1)";\
+	mkdir -p $(1)
+
+do_rmdir=\
+	echo "[R] remove dir $(1)";\
+	rm -rf $(1)

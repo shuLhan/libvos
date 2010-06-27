@@ -93,16 +93,16 @@ public:
 	void dump();
 	void dump_hex();
 
+	int	_i;
+	int	_l;
+	char	*_v;
+
 	static int INIT(Buffer **o, const Buffer *bfr);
 	static int INIT_RAW(Buffer **o, const char *bfr);
 	static int INIT_SIZE(Buffer **o, const int size);
 	static int VSNPRINTF(char *bfr, int len, const char *fmt,
 				va_list args);
 	static int TRIM(char *bfr, int len);
-
-	int		_i;
-	int		_l;
-	char		*_v;
 
 	static int	DFLT_SIZE;
 	static int	CHAR_SIZE;

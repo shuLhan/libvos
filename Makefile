@@ -19,14 +19,9 @@ endif
 include $(LIBVOS_SRC_D)/Makefile.common
 
 CXXFLAGS_ADD	+= -I$(LIBVOS_SRC_D)
-
-# link needed for FTP and OCI on Solaris system.
-ifeq ($(SYS),SunOS)
-LDFLAGS		+= -lsocket -lnsl
-endif
-
 LIBVOS_BLD_D	= $(LIBVOS_SRC_D)/build
-
+PRE_TARGET	= $(LIBVOS_BLD_D)
+TARGET		=
 TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/libvos.oo		\
 			$(LIBVOS_BLD_D)/Buffer.oo		\
@@ -59,37 +54,42 @@ TARGET_OBJS	+=	$(LIBVOS_BLD_D)/OCIValue.oo	\
 			$(LIBVOS_BLD_D)/OCI.oo
 
 CXXFLAGS_ADD	+=	-I$(ORACLE_HOME)/include -I$(ORACLE_HOME)/rdbms/public
-LDFLAGS		+=	-L$(ORACLE_HOME)/lib -lclntsh
+LDFLAGS_ADD	+=	-L$(ORACLE_HOME)/lib -lclntsh
 endif
 
-PRE_TARGET	= $(LIBVOS_BLD_D)
-TARGET		=
+# link needed for FTP and OCI on Solaris system.
+ifeq ($(SYS),SunOS)
+LDFLAGS_ADD	+= -lsocket -lnsl
+endif
+
 
 .PHONY: all libvos-all libvos-all-32 libvos-all-64 libvos-debug libvos-clean
 
 libvos-all: CXXFLAGS+=$(CXXFLAGS_ADD)
+libvos-all: LDFLAGS+=$(LDFLAGS_ADD)
 libvos-all: $$(PRE_TARGET) $$(TARGET_OBJS) $$(TARGET)
 
 libvos-all-32: CXXFLAGS_ADD+=-m32
-libvos-all-32: LDFLAGS+=-m32
 libvos-all-32: libvos-all
 
 libvos-all-64: CXXFLAGS_ADD+=-m64
-libvos-all-64: LDFLAGS+=-m64
 libvos-all-64: libvos-all
 
 libvos-debug: CXXFLAGS=$(CXXFLAGS_DEBUG) $(CXXFLAGS_ADD)
+libvos-debug: LDFLAGS+=$(LDFLAGS_ADD)
 libvos-debug: $$(PRE_TARGET) $$(TARGET_OBJS) $$(TARGET)
 
-libvos-debug-32: CXXFLAGS=$(CXXFLAGS_DEBUG) -m32
+libvos-debug-32: CXXFLAGS_ADD+=$(CXXFLAGS_DEBUG) -m32
 libvos-debug-32: libvos-debug
 
-libvos-debug-64: CXXFLAGS=$(CXXFLAGS_DEBUG) -m64
+libvos-debug-64: CXXFLAGS_ADD+=$(CXXFLAGS_DEBUG) -m64
 libvos-debug-64: libvos-debug
 
+libvos-clean:
+	@$(call do_rmdir,$(LIBVOS_BLD_D))
 
 $(LIBVOS_BLD_D):
-	@mkdir -p $@
+	@$(call do_mkdir,$@)
 
 $(LIBVOS_BLD_D)/Buffer.oo	: $(LIBVOS_BLD_D)/libvos.oo
 
@@ -123,6 +123,3 @@ $(LIBVOS_BLD_D)/Writer.oo	: $(LIBVOS_BLD_D)/Record.oo
 
 $(LIBVOS_BLD_D)/%.oo: $(LIBVOS_SRC_D)/%.cpp $(LIBVOS_SRC_D)/%.hpp
 	@$(do_compile)
-
-libvos-clean:
-	@$(call do_rmdir,$(LIBVOS_BLD_D))
