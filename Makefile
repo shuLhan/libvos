@@ -1,6 +1,6 @@
 #!/usr/bin/make
 ##
-# Copyright (C) 2009 kilabit.org
+# Copyright (C) 2010 kilabit.org
 # Author:
 #	- m.shulhan (ms@kilabit.org)
 ##
@@ -93,6 +93,7 @@ $(LIBVOS_BLD_D):
 
 $(LIBVOS_BLD_D)/Buffer.oo	: $(LIBVOS_BLD_D)/libvos.oo
 
+$(LIBVOS_BLD_D)/FTPClient.oo	\
 $(LIBVOS_BLD_D)/Dir.oo		\
 $(LIBVOS_BLD_D)/DirNode.oo	\
 $(LIBVOS_BLD_D)/Record.oo	\
@@ -111,6 +112,8 @@ $(LIBVOS_BLD_D)/Socket.oo	: $(LIBVOS_BLD_D)/File.oo
 
 $(LIBVOS_BLD_D)/DNSQuery.oo	: $(LIBVOS_BLD_D)/DNS_rr.oo
 
+$(LIBVOS_BLD_D)/FTPCmd.oo	\
+$(LIBVOS_BLD_D)/FTPD.oo		\
 $(LIBVOS_BLD_D)/FTP.oo		\
 $(LIBVOS_BLD_D)/Resolver.oo	: $(LIBVOS_BLD_D)/Socket.oo
 
@@ -120,6 +123,7 @@ $(LIBVOS_BLD_D)/Writer.oo	: $(LIBVOS_BLD_D)/RecordMD.oo
 $(LIBVOS_BLD_D)/Reader.oo	\
 $(LIBVOS_BLD_D)/Writer.oo	: $(LIBVOS_BLD_D)/Record.oo
 
+$(LIBVOS_BLD_D)/FTPUser.oo	: $(LIBVOS_BLD_D)/Dir.oo
 
 $(LIBVOS_BLD_D)/%.oo: $(LIBVOS_SRC_D)/%.cpp $(LIBVOS_SRC_D)/%.hpp
 	@$(do_compile)

@@ -82,7 +82,7 @@ int Socket::init(const int bfr_size)
 	if (s)
 		return s;
 
-	s = Buffer::init_size(bfr_size);
+	s = Buffer::resize(bfr_size);
 	if (s < 0)
 		return s;
 

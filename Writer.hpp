@@ -25,7 +25,6 @@ public:
 	Writer();
 	~Writer();
 
-	int init();
 	int write(Record *cols, RecordMD *rmd);
 	int writes(Record *rows, RecordMD *rmd);
 

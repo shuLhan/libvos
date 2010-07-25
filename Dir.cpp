@@ -9,9 +9,9 @@
 namespace vos {
 
 Dir::Dir() :
-	_depth(0),
-	_name(),
-	_ls(NULL)
+	_depth(0)
+,	_name()
+,	_ls(NULL)
 {}
 
 Dir::~Dir()
@@ -37,13 +37,14 @@ Dir::~Dir()
 int Dir::open(const char *path, int depth)
 {
 	int	s;
-	char	rpath[PATH_MAX];
+	char	rpath[PATH_MAX + 1];
 
 	if (!path) {
 		return 0;
 	}
 
 	_depth = depth;
+
 	realpath(path, rpath);
 
 	s = _name.copy_raw(rpath);
@@ -112,7 +113,7 @@ DirNode* Dir::find(DirNode* dir, const char* name, int depth)
 	}
 
 	if (LIBVOS_DEBUG) {
-		printf("[LIBVOS::Dir_____] scanning '%s'\n", dir->_name._v);
+		printf("[LIBVOS::Dir_____] scanning '%s'\n", dir->_name.v());
 	}
 
 	ls = dir->_child;
@@ -299,23 +300,12 @@ int Dir::get_symlink(DirNode *list)
 						, _name._i);
 			if (!list->_link) {
 				fprintf(stderr
-, "[LIBVOS::DIR_____] cannot get link to '%s'\n", list->_linkname._v);
+, "[LIBVOS::DIR_____] cannot get link to '%s'\n", list->_linkname.v());
 				return -1;
 			}
 		}
 	}
 	return 0;
-}
-
-/**
- * @method	: Dir::dump
- * @desc	: dump content of Dir object.
- */
-void Dir::dump()
-{
-	if (_ls) {
-		_ls->dump();
-	}
 }
 
 /**
@@ -400,7 +390,7 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 		if (LIBVOS_DEBUG) {
 			fprintf(stderr, "[LIBVOS::Dir_____] invalid path: %s\n"
 					"                   node name   : %s\n"
-				, name, node._v);
+				, name, node.v());
 		}
 		return NULL;
 	}
@@ -435,21 +425,28 @@ int Dir::refresh_by_path(Buffer* path)
 		path = &_name;
 	}
 
-	list = get_node(path, _name._v, _name._i);
+	s = rpath.resize(PATH_MAX + 1);
+	if (s < 0) {
+		return -2;
+	}
+
+	realpath(path->_v, rpath._v);
+
+	list = get_node(&rpath, _name._v, _name._i);
 	if (!list) {
 		return -1;
 	}
 
 	if (LIBVOS_DEBUG) {
-		printf("[LIBVOS::Dir_____] refreshing '%s' ...\n", path->_v);
+		printf("[LIBVOS::Dir_____] refreshing '%s' ...\n", path->v());
 	}
 
-	s = list->update_attr(list, path->_v);
+	s = list->update_attr(list, rpath._v);
 	if (s <= 0 || !list->is_dir()) {
 		return s;
 	}
 
-	dir = opendir(path->_v);
+	dir = opendir(rpath._v);
 	if (!dir) {
 		if (errno == EACCES) {
 			return 0;
@@ -548,15 +545,27 @@ int Dir::refresh_by_path(Buffer* path)
 }
 
 /**
+ * @method	: Dir::dump
+ * @desc	: dump content of Dir object.
+ */
+void Dir::dump()
+{
+	if (_ls) {
+		_ls->dump();
+	}
+}
+
+/**
  * @method	: Dir::CREATE
  * @param	:
  *	> path	: a path to directory.
+ *	> perm	: the file permission bits of the new directory.
  * @return	:
  *	< 0	: success.
  *	< -1	: fail.
  * @desc	: create a new directory 'path'.
  */
-int Dir::CREATE(const char *path, mode_t mode)
+int Dir::CREATE(const char *path, mode_t perm)
 {
 	register int s = 0;
 
@@ -564,7 +573,7 @@ int Dir::CREATE(const char *path, mode_t mode)
 		printf("[LIBVOS::Dir_____] create: %s\n", path);
 	}
 
-	s = mkdir(path, mode);
+	s = mkdir(path, perm);
 
 	return s;
 }
@@ -573,7 +582,7 @@ int Dir::CREATE(const char *path, mode_t mode)
  * @method	: Dir::CREATES
  * @param	:
  *	> path	: a path to directory name.
- *	> mode	: the file permission bits of the new directory.
+ *	> perm	: the file permission bits of the new directory.
  * @return	:
  *	< 0	: success.
  *	< -1	: fail.
@@ -582,7 +591,7 @@ int Dir::CREATE(const char *path, mode_t mode)
  *	if 'path' is 'a/b/c', then create directory 'a', 'a/b', and then
  *	'a/b/c'.
  */
-int Dir::CREATES(const char* path, mode_t mode)
+int Dir::CREATES(const char* path, mode_t perm)
 {
 	if (!path) {
 		return 0;
@@ -600,7 +609,7 @@ int Dir::CREATES(const char* path, mode_t mode)
 		if (path[i] == '/') {
 			d.appendc(path[i]);
 
-			s = CREATE(d._v, mode);
+			s = CREATE(d._v, perm);
 			if (s < 0 && errno != EEXIST) {
 				goto err;
 			}
@@ -615,7 +624,7 @@ int Dir::CREATES(const char* path, mode_t mode)
 	}
 	i--;
 	if (path[i] != '/' && path[i] != '.') {
-		s = CREATE(d._v, mode);
+		s = CREATE(d._v, perm);
 		if (s < 0 && errno != EEXIST) {
 			goto err;
 		}

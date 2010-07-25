@@ -982,7 +982,7 @@ static int get_node_perm(Buffer* bfr, DirNode* node)
 
 	if (!node) {
 		return 0;
-	} else if (! node->_linkname.is_empty()) {
+	} else if (node->_linkname._i) {
 		memcpy(&bfr->_v[i], "lrwxrwxrwx", 10);
 	} else {
 		if (S_ISDIR(node->_mode)) {

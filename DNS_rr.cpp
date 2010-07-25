@@ -42,15 +42,7 @@ DNS_rr::~DNS_rr()
  */
 int DNS_rr::init()
 {
-	register int s;
-
-	s = _name.init(NULL);
-	if (s < 0)
-		return s;
-
-	s = _data.init_size(DNS_RDATA_MAX_SIZE);
-
-	return s;
+	return _data.resize(DNS_RDATA_MAX_SIZE);
 }
 
 /**
@@ -79,8 +71,9 @@ void DNS_rr::dump()
 
 	printf(" name|type|class|TTL|length|MX preference|data\n");
 	while (p) {
-		printf(" %s|%d|%d|%d|%d|%d|%s\n", p->_name._v, p->_type,
-			p->_class, p->_ttl, p->_len, p->_mx_pref, p->_data._v);
+		printf(" %s|%d|%d|%d|%d|%d|%s\n", p->_name.v(), p->_type
+			, p->_class, p->_ttl, p->_len, p->_mx_pref
+			, p->_data.v());
 
 		p = p->_next;
 	}

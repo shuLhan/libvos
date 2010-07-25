@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -17,7 +17,8 @@ Dlogger::Dlogger() :
 	_lock(),
 	_tmp(),
 	_time_s(0),
-	_time()
+	_time(),
+	_s(0)
 {
 	pthread_mutex_init(&_lock, NULL);
 
@@ -43,13 +44,18 @@ Dlogger::~Dlogger()
  *	< <0		: fail.
  * @desc		: start the log daemon on the file 'logfile'.
  */
-int Dlogger::open(const char *logfile)
+int Dlogger::open(const char* logfile)
 {
-	close();
-
 	if (logfile) {
-		File::init();
-		return open_wa(logfile);
+		register int s;
+
+		close();
+
+		s = open_wa(logfile);
+		if (s < 0) {
+			_d = STDERR_FILENO;
+		}
+		return s;
 	}
 	return 0;
 }
@@ -85,6 +91,31 @@ inline void Dlogger::add_timestamp()
 }
 
 /**
+ * @method		: Dlogger::_w
+ * @param		:
+ *	> stream	: File stream.
+ *	> fmt		: format of messages.
+ * @desc		: The generic method of writing a log messages.
+ */
+void Dlogger::_w(FILE* stream, const char* fmt)
+{
+	add_timestamp();
+	_s = _tmp.vprint(fmt, _args);
+	if (_s <= 0) {
+		_tmp.reset();
+		return;
+	}
+
+	if (_d != STDERR_FILENO || !stream) {
+		_s = write(&_tmp);
+	}
+	if (stream) {
+		fprintf(stream, "%s", _tmp._v);
+	}
+	_tmp.reset();
+}
+
+/**
  * @method	: Dlogger::er
  * @param	:
  *	> fmt	: formatted string output.
@@ -94,62 +125,17 @@ inline void Dlogger::add_timestamp()
  *	< <0	: fail.
  * @desc	: write message to standard error and log file.
  */
-int Dlogger::er(const char *fmt, ...)
+int Dlogger::er(const char* fmt, ...)
 {
-	register int	s;
-	va_list		args;
+	do { _s = pthread_mutex_trylock(&_lock); } while (_s != 0);
 
-	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
-
-	va_start(args, fmt);
-
-	add_timestamp();
-	_tmp.vprint(fmt, args);
-
-	if (_d != STDERR_FILENO) {
-		s = write(&_tmp);
-	}
-	fprintf(stderr, "%s", _tmp._v);
-
-	_tmp.reset();
-	va_end(args);
+	va_start(_args, fmt);
+	_w(stderr, fmt);
+	va_end(_args);
 
 	pthread_mutex_unlock(&_lock);
 
-	return s;
-}
-
-/**
- * @method	: Dlogger::er_b
- * @param	:
- *	> bfr	: pointer to Buffer object.
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
- * @desc	: append Buffer content to standard error and log file.
- */
-int Dlogger::er_b(Buffer *bfr)
-{
-	if (!bfr) {
-		return 0;
-	}
-	if (bfr->_i <= 0) {
-		return 0;
-	}
-
-	int s;
-
-	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
-
-	add_timestamp();
-	if (_d != STDERR_FILENO) {
-		s = write(bfr);
-	}
-	fprintf(stderr, "%s", bfr->_v);
-
-	pthread_mutex_unlock(&_lock);
-
-	return s;
+	return _s;
 }
 
 /**
@@ -162,32 +148,18 @@ int Dlogger::er_b(Buffer *bfr)
  *	< <0	: fail.
  * @desc	: write message to standard output and log file.
  */
-int Dlogger::out(const char *fmt, ...)
+int Dlogger::out(const char* fmt, ...)
 {
-	register int	s;
-	va_list		args;
+	do { _s = pthread_mutex_trylock(&_lock); } while (_s != 0);
 
-	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
-
-	va_start(args, fmt);
-
-	add_timestamp();
-	_tmp.vprint(fmt, args);
-
-	if (_d != STDERR_FILENO) {
-		s = write(&_tmp);
-	}
-	fprintf(stdout, "%s", _tmp._v);
-
-	_tmp.reset();
-	va_end(args);
+	va_start(_args, fmt);
+	_w(stdout, fmt);
+	va_end(_args);
 
 	pthread_mutex_unlock(&_lock);
 
-	return s;
+	return _s;
 }
-
-
 
 /**
  * @method	: Dlogger::it
@@ -199,23 +171,17 @@ int Dlogger::out(const char *fmt, ...)
  *	< <0	: fail.
  * @desc	: write message to log file only.
  */
-int Dlogger::it(const char *fmt, ...)
+int Dlogger::it(const char* fmt, ...)
 {
-	register int	s;
-	va_list		args;
+	do { _s = pthread_mutex_trylock(&_lock); } while (_s != 0);
 
-	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
-
-	va_start(args, fmt);
-	add_timestamp();
-	_tmp.vprint(fmt, args);
-	s = write(&_tmp);
-	_tmp.reset();
-	va_end(args);
+	va_start(_args, fmt);
+	_w(0, fmt);
+	va_end(_args);
 
 	pthread_mutex_unlock(&_lock);
 
-	return s;
+	return _s;
 }
 
 } /* namespace::vos */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -24,22 +24,25 @@ public:
 	Dlogger();
 	~Dlogger();
 
-	int open(const char *logfile);
+	int open(const char* logfile);
 	void close();
 	void add_timestamp();
 
-	int er(const char *fmt, ...);
-	int er_b(Buffer *bfr);
-	int out(const char *fmt, ...);
-	int it(const char *fmt, ...);
+	int er(const char* fmt, ...);
+	int out(const char* fmt, ...);
+	int it(const char* fmt, ...);
 private:
 	Dlogger(const Dlogger&);
-	void operator=(const Buffer&);
+	void operator=(const Dlogger&);
+
+	void _w(FILE* stream, const char* fmt);
 
 	pthread_mutex_t	_lock;
 	Buffer		_tmp;
 	time_t		_time_s;
 	struct tm	_time;
+	int		_s;
+	va_list		_args;
 };
 
 } /* namespace::vos */

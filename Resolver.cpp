@@ -124,10 +124,10 @@ int Resolver::add_server(char *server_list)
 			}
 			SockAddr::ADD(&_servers, saddr);
 
-			*server_list++;
+			server_list++;
 			addr = server_list;
 		} else {
-			*server_list++;
+			server_list++;
 		}
 	}
 	s = SockAddr::INIT(&saddr, addr, PORT);
@@ -158,10 +158,6 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 
 	if (!qname)
 		return 0;
-
-	s = label.init(NULL);
-	if (s < 0)
-		return s;
 
 	if (!(*query)) {
 		s = DNSQuery::INIT(query, NULL, BUFFER_IS_UDP);
@@ -211,7 +207,7 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 		} else {
 			label.appendc(*qname);
 		}
-		*qname++;
+		qname++;
 	}
 
 	if (label._i) {

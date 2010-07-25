@@ -24,18 +24,6 @@ Writer::~Writer()
 {}
 
 /**
- * @method	: Writer::init
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
- * @desc	: initialize Writer object.
- */
-int Writer::init()
-{
-	return _line.init(NULL);
-}
-
-/**
  * @method	: Writer::write
  * @param	:
  *	> cols	: record buffer, in list of column.

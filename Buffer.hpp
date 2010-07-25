@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -18,13 +18,6 @@
 #include "libvos.hpp"
 
 namespace vos {
-
-enum _number_base {
-	NUM_BASE_8	= 8,
-	NUM_BASE_10	= 10,
-	NUM_BASE_16	= 16,
-	NUM_DFLT_BASE	= 10
-};
 
 /**
  * @class		: Buffer
@@ -50,56 +43,60 @@ public:
 	Buffer();
 	virtual ~Buffer();
 
-	int init(const Buffer *bfr);
-	int init_raw(const char *bfr, const int len);
-	int init_size(const int size);
-
 	int resize(const int len);
 	void reset();
 	void trim();
 
-	int appendc(const char c);
-	int appendi(long int i, int base = NUM_BASE_10);
-	int appendui(long unsigned int i, int base = NUM_BASE_10);
-	int appendd(double d);
-	int append(const Buffer *bfr);
-	int append_raw(const char *bfr, int len = 0);
-	int concat(const char *bfr, ...);
-	int aprint(const char *fmt, ...);
-	int vprint(const char *fmt, va_list args);
+	int copy(const Buffer* bfr);
+	int copy_raw(const char* bfr, int len = 0);
 
+	int set(const Buffer* bfr, const Buffer* dflt);
+	int set_raw(const char* bfr, const char* dflt);
+
+	int move_to(Buffer** bfr);
 	int shiftr(const int nbyte, int c = 0);
+
+	int appendc(const char c);
+	int appendi(long int i, int base = 10);
+	int appendui(long unsigned int i, int base = 10);
+	int appendd(double d);
+	int append(const Buffer* bfr);
+	int append_raw(const char* bfr, int len = 0);
+	int concat(const char* bfr, ...);
+	int aprint(const char* fmt, ...);
+	int vprint(const char* fmt, va_list args);
 
 	int prepend(Buffer* bfr);
 	int prepend_raw(const char* bfr, int len = 0);
 
 	int subc(int from, int to);
 
-	int copy(const Buffer *bfr);
-	int copy_raw(const char *bfr, int len = 0);
-	int set(const Buffer *bfr, const Buffer *dflt);
-	int set_raw(const char *bfr, const char *dflt);
-	int move_to(Buffer **bfr);
+	int cmp(const Buffer* bfr);
+	int cmp_raw(const char* bfr, int len = 0);
+	int like(const Buffer* bfr);
+	int like_raw(const char* bfr, int len = 0);
 
-	int cmp(const Buffer *bfr);
-	int cmp_raw(const char *bfr);
-	int like(const Buffer *bfr);
-	int like_raw(const char *bfr);
+	long int to_lint();
 
-	int to_int();
-	long to_lint();
-
-	int is_empty();
 	void dump();
 	void dump_hex();
 
+	inline const char* v()
+	{
+		return (_v ? _v : "\0");
+	}
+	inline int is_empty()
+	{
+		return !_i;
+	}
+
 	int	_i;
 	int	_l;
-	char	*_v;
+	char*	_v;
 
-	static int INIT(Buffer **o, const Buffer *bfr);
-	static int INIT_RAW(Buffer **o, const char *bfr);
-	static int INIT_SIZE(Buffer **o, const int size);
+	static int INIT(Buffer** o, const Buffer* bfr);
+	static int INIT_RAW(Buffer** o, const char* bfr);
+	static int INIT_SIZE(Buffer** o, const int size);
 	static int VSNPRINTF(char *bfr, int len, const char *fmt,
 				va_list args);
 	static int TRIM(char *bfr, int len);

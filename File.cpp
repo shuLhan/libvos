@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -8,45 +8,27 @@
 
 namespace vos {
 
-const char *__eol[N_EOL_MODE] = {
+const char* __eol[N_EOL_MODE] = {
 	"\n",
 	"\r\n"
 };
 
-unsigned int File::DFLT_BUFFER_SIZE = 8192;
+unsigned int File::DFLT_SIZE = 8192;
 
-File::File() : Buffer(),
+File::File(const unsigned int bfr_size) : Buffer(),
 	_d(0),
 	_p(0),
 	_status(FILE_OPEN_NO),
 	_eol(__eol[EOL_NIX][0]),
 	_eols(__eol[EOL_NIX]),
 	_name()
-{}
+{
+	Buffer::resize(bfr_size);
+}
 
 File::~File()
 {
 	close();
-}
-
-/**
- * @method		: File::init
- * @param		:
- *	> bfr_size	: size of File buffer, default to DFLT_BUFFER_SIZE.
- * @return		:
- *	< 0		: success.
- *	< <0		: fail.
- * @desc		: initialize File object with specific buffer size.
- */
-int File::init(const int bfr_size)
-{
-	register int s;
-
-	s = Buffer::init_size(bfr_size);
-	if (s == 0)
-		s = _name.init_size(Buffer::DFLT_SIZE);
-
-	return s;
 }
 
 /**
@@ -62,7 +44,7 @@ int File::init(const int bfr_size)
  * @desc	:
  *	the generic method to open file with specific mode and permission.
  */
-int File::_open(const char *path, const int mode, const int perm)
+int File::_open(const char* path, const int mode, const int perm)
 {
 	register int s;
 
@@ -70,9 +52,10 @@ int File::_open(const char *path, const int mode, const int perm)
 		return -1;
 	}
 	if (!_v) {
-		s = File::init();
-		if (s < 0)
+		s = resize(DFLT_SIZE);
+		if (s < 0) {
 			return s;
+		}
 	}
 
 	_d = ::open(path, mode, perm);
@@ -82,8 +65,9 @@ int File::_open(const char *path, const int mode, const int perm)
 	}
 
 	s = _name.copy_raw(path);
-	if (s < 0)
+	if (s < 0) {
 		return s;
+	}
 
 	_status = (mode & (O_RDONLY | O_WRONLY | O_RDWR));
 
@@ -101,7 +85,7 @@ int File::_open(const char *path, const int mode, const int perm)
  * @desc	:
  *	open file for read and write, create a file if it is not exist.
  */
-int File::open(const char *path)
+int File::open(const char* path)
 {
 	return _open(path, FILE_OPEN_RW);
 }
@@ -115,7 +99,7 @@ int File::open(const char *path)
  *	< <0	: fail, error at opening file.
  * @desc	: open file for read only.
  */
-int File::open_ro(const char *path)
+int File::open_ro(const char* path)
 {
 	return _open(path, FILE_OPEN_R);
 }
@@ -129,7 +113,7 @@ int File::open_ro(const char *path)
  *	< <0	: fail, error at opening file.
  * @desc	: open file for write only.
  */
-int File::open_wo(const char *path)
+int File::open_wo(const char* path)
 {
 	return _open(path, FILE_OPEN_W);
 }
@@ -143,9 +127,56 @@ int File::open_wo(const char *path)
  *	< <0	: fail.
  * @desc	: open file for write and append.
  */
-int File::open_wa(const char *path)
+int File::open_wa(const char* path)
 {
 	return _open(path, FILE_OPEN_WA);
+}
+
+/**
+ * @method	: File::get_size
+ * @return	:
+ *	< >0	: size of file.
+ *	< 0	: if file is empty.
+ *	< <0	: fail, error at seek.
+ * @desc	: get current size of file.
+ */
+off_t File::get_size()
+{
+	register off_t s;
+	register off_t cur;
+	register off_t size;
+
+	cur = lseek(_d, 0, SEEK_CUR);
+	if (cur < 0) {
+		return -1;
+	}
+	s = lseek(_d, 0, SEEK_SET);
+	if (s < 0) {
+		return -1;
+	}
+	size = lseek(_d, 0, SEEK_END);
+	if (size < 0) {
+		return -1;
+	}
+	cur = lseek(_d, cur, SEEK_SET);
+	if (cur < 0) {
+		return -1;
+	}
+	return size;
+}
+
+/**
+ * @method	: File::set_eol
+ * @param	:
+ *	> mode	: mode of end of line: Unix or DOS.
+ * @desc	: set end of line mode for this current File object.
+ */
+void File::set_eol(const int mode)
+{
+	if (mode == EOL_NIX || mode == EOL_DOS) {
+		_eol	= __eol[mode][0];
+		_eols	= __eol[mode];
+	}
 }
 
 /**
@@ -158,12 +189,14 @@ int File::open_wa(const char *path)
  */
 int File::read()
 {
-	if (_status == O_WRONLY)
+	if (_status == O_WRONLY) {
 		return 0;
+	}
 
 	_i = (int) ::read(_d, &_v[0], _l);
-	if (_i < 0)
+	if (_i < 0) {
 		return -1;
+	}
 
 	_p	= 0;
 	_v[_i]	= '\0';
@@ -185,26 +218,30 @@ int File::read()
  */
 int File::readn(int n)
 {
-	register int s;
-
-	if (_status == O_WRONLY)
+	if (_status == O_WRONLY) {
 		return 0;
+	}
+
+	register int s;
 
 	if (n > _l) {
 		s = resize(n);
-		if (s != 0)
+		if (s != 0) {
 			return s; 
+		}
 	}
 	_i = 0;
 	while (n > 0) {
 		s = (int) ::read(_d, &_v[_i], n);
 		if (s < 0) {
-			if (s == EAGAIN || s == EWOULDBLOCK)
+			if (s == EAGAIN || s == EWOULDBLOCK) {
 				break;
+			}
 			return -1;
 		}
-		if (s == 0)
+		if (s == 0) {
 			break;
+		}
 		_i += s;
 		n -= s;
 	}
@@ -230,6 +267,10 @@ int File::readn(int n)
  */
 int File::refill(int read_min)
 {
+	if (_status == O_WRONLY) {
+		return 0;
+	}
+
 	register int move_len	= 0;
 	register int len	= 0;
 
@@ -244,7 +285,8 @@ int File::refill(int read_min)
 	len = move_len + read_min;
 	if (len > _l) {
 		if (LIBVOS_DEBUG) {
-			printf("\n read resize: from %d to %d\n", _l, len);
+			printf("[VOS::FILE] read resize: from %d to %d\n"
+				, _l, len);
 		}
 		resize(len);
 		len -= move_len;
@@ -253,8 +295,8 @@ int File::refill(int read_min)
 		if (len <= 0) {
 			len = _l * 2;
 			if (LIBVOS_DEBUG) {
-				printf("\n read resize: from %d to %d\n",
-					_l, len);
+				printf("[VOS::FILE] read resize: from %d to %d\n"
+					, _l, len);
 			}
 			resize(len);
 			len -= move_len;
@@ -287,16 +329,21 @@ int File::refill(int read_min)
  *	- this operation will change contents of file buffer.
  *	- this operation return a string without a new line character.
  */
-int File::get_line(Buffer **line)
+int File::get_line(Buffer* line)
 {
+	if (_status == O_WRONLY || !line) {
+		return 0;
+	}
+
 	register int s;
 	register int start;
 	register int len;
 
 	if (_i == 0) {
 		s = File::read();
-		if (s <= 0)
+		if (s <= 0) {
 			return s;
+		}
 	}
 
 	start = _p;
@@ -317,34 +364,37 @@ int File::get_line(Buffer **line)
 				if (s < 0) {
 					return -1;
 				}
-				if (s == 0)
+				if (s == 0) {
 					break;
+				}
 				_i	+= s;
 				len	-= s;
 			}
 
 			start	= 0;
 			_v[_i]	= '\0';
-			if (_i == 0)
+			if (_i == 0) {
 				break;
+			}
 		} else {
 			++_p;
 		}
 	}
 
 	len = _p - start;
-	if (len == 0)
+	if (len == 0) {
+		if (_p < _i) {
+			line->reset();
+			_p++;
+			return 1;
+		}
 		return 0;
-
-	if (!(*line)) {
-		s = Buffer::INIT_SIZE(line, len + 1);
-		if (s < 0)
-			return s;
 	}
 
-	s = (*line)->copy_raw(&_v[start], len);
-	if (s < 0)
+	s = line->copy_raw(&_v[start], len);
+	if (s < 0) {
 		return s;
+	}
 
 	_p++;
 
@@ -360,11 +410,11 @@ int File::get_line(Buffer **line)
  *	< <0	: fail, error at writing to descriptor.
  * @desc	: append buffer 'bfr' to File buffer for writing.
  */
-int File::write(const Buffer *bfr)
+int File::write(const Buffer* bfr)
 {
-	if (!bfr)
+	if (_status == O_RDONLY || !bfr) {
 		return 0;
-
+	}
 	return write_raw(bfr->_v, bfr->_i);
 }
 
@@ -378,34 +428,32 @@ int File::write(const Buffer *bfr)
  *	< <0	: fail, error at writing to descriptor.
  * @desc	: append buffer 'bfr' to File buffer for writing.
  */
-int File::write_raw(const char *bfr, int len)
+int File::write_raw(const char* bfr, int len)
 {
-	register int x = 0;
-	register int s;
-
-	if (_status == O_RDONLY || ! bfr) {
-		return 0;
-	}
-	if (!bfr) {
+	if (_status == O_RDONLY || !bfr) {
 		return 0;
 	}
 	if (!len) {
 		len = (int) strlen(bfr);
-		if (!len)
+		if (!len) {
 			return 0;
+		}
 	}
+
+	register int x = 0;
+	register int s;
 
 	/* direct write */
 	if (len >= _l) {
 		s = flush();
-		if (s < 0)
+		if (s < 0) {
 			return s;
-
+		}
 		while (len > 0) {
 			s = (int) ::write(_d, &bfr[x], len);
-			if (s < 0)
+			if (s < 0) {
 				return -1;
-
+			}
 			x	+= s;
 			len	-= s;
 		}
@@ -413,12 +461,14 @@ int File::write_raw(const char *bfr, int len)
 	} else {
 		if (_l < (_i + len)) {
 			s = flush();
-			if (s < 0)
+			if (s < 0) {
 				return s;
+			}
 		}
 		s = append_raw(bfr, len);
-		if (s < 0)
+		if (s < 0) {
 			return s;
+		}
 	}
 
 	return len;
@@ -435,17 +485,19 @@ int File::write_raw(const char *bfr, int len)
  *	< <0	: fail.
  * @desc	: write buffer of formatted string to file.
  */
-int File::writef(const char *fmt, va_list args)
+int File::writef(const char* fmt, va_list args)
 {
+	if (_status == O_RDONLY || !fmt) {
+		return 0;
+	}
+
 	register int	s;
 	Buffer		b;
 
-	if (_status == O_RDONLY || ! fmt)
-		return 0;
-
 	s = b.vprint(fmt, args);
-	if (s < 0)
+	if (s < 0) {
 		return s;
+	}
 
 	return write_raw(b._v, b._i);
 }
@@ -459,11 +511,13 @@ int File::writef(const char *fmt, va_list args)
  *	< >=0	: success, return number of bytes written to file.
  *	< <0	: fail.
  * @desc	: write buffer of formatted string to file.
- *
- *	NOTE: arguments must end with NULL.
  */
-int File::writes(const char *fmt, ...)
+int File::writes(const char* fmt, ...)
 {
+	if (_status == O_RDONLY || !fmt) {
+		return 0;
+	}
+
 	register int	s;
 	Buffer		b;
 	va_list		al;
@@ -486,12 +540,17 @@ int File::writes(const char *fmt, ...)
  */
 int File::writec(const char c)
 {
+	if (_status == O_RDONLY) {
+		return 0;
+	}
+
 	register int s;
 
 	if (_i + 1 >= _l) {
 		s = flush();
-		if (s < 0)
+		if (s < 0) {
 			return s;
+		}
 	}
 
 	_v[_i++] = c;
@@ -508,22 +567,24 @@ int File::writec(const char c)
  */
 int File::flush()
 {
+	if (_status == O_RDONLY) {
+		reset();
+		return 0;
+	}
+
 	register int x = 0;
 	register int s;
 
-	if (_status == O_RDONLY)
-		return 0;
-
 	while (_i > 0) {
 		s = (int) ::write(_d, &_v[x], _i);
-		if (s < 0)
+		if (s < 0) {
 			return -1;
-
+		}
 		x	+= s;
 		_i	-= s;
 	}
-
 	_i = x;
+
 	reset();
 
 	return x;
@@ -537,8 +598,11 @@ void File::close()
 {
 	flush();
 	_name.reset();
-	if (_d && _d != STDOUT_FILENO && _d != STDERR_FILENO)
+
+	if (_d && (_d != STDOUT_FILENO && _d != STDERR_FILENO)) {
 		::close(_d);
+	}
+
 	_status = FILE_OPEN_NO;
 	_d	= 0;
 }
@@ -550,56 +614,9 @@ void File::close()
 void File::dump()
 {
 	printf("[FILE-%d]\n", _d);
-	printf("\t name     : %s\n", _name._v);
+	printf("\t name     : %s\n", _name.v());
 	printf("\t contents :\n"
-		"\t>>\n%s\n<<\n", _v);
-}
-
-/**
- * @method	: File::get_size
- * @return	:
- *	< >0	: size of file.
- *	< 0	: if file is empty.
- *	< <0	: fail, error at seek.
- * @desc	: get current size of file.
- */
-off_t File::get_size()
-{
-	register off_t s;
-	register off_t cur;
-	register off_t size;
-
-	cur = lseek(_d, 0, SEEK_CUR);
-	if (cur < 0)
-		return -1;
-
-	s = lseek(_d, 0, SEEK_SET);
-	if (s < 0)
-		return -1;
-
-	size = lseek(_d, 0, SEEK_END);
-	if (size < 0)
-		return -1;
-
-	cur = lseek(_d, cur, SEEK_SET);
-	if (cur < 0)
-		return -1;
-
-	return size;
-}
-
-/**
- * @method	: File::set_eol
- * @param	:
- *	> mode	: mode of end of line: Unix or DOS.
- * @desc	: set end of line mode for this current File object.
- */
-void File::set_eol(const int mode)
-{
-	if (mode == EOL_NIX || mode == EOL_DOS) {
-		_eol	= __eol[mode][0];
-		_eols	= __eol[mode];
-	}
+		"\t>>\n%s\n<<\n", v());
 }
 
 /**
@@ -611,21 +628,24 @@ void File::set_eol(const int mode)
  *	< 0	: if file is empty, or file is not exist.
  * @desc	: get the size of file.
  */
-off_t File::GET_SIZE(const char *path)
+off_t File::GET_SIZE(const char* path)
 {
+	if (!path) {
+		return 0;
+	}
+
 	register int fd;
 	register off_t size;
 
-	if (!path)
-		return 0;
-
 	fd = ::open(path, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
 		return 0;
+	}
 
 	size = ::lseek(fd, 0, SEEK_END);
-	if (size < 0)
+	if (size < 0) {
 		size = 0;
+	}
 
 	::close(fd);
 
@@ -647,16 +667,18 @@ off_t File::GET_SIZE(const char *path)
  *	check if 'path' is exist in file system and user had a permission to
  *	access it.
  */
-int File::IS_EXIST(const char *path, int acc_mode)
+int File::IS_EXIST(const char* path, int acc_mode)
 {
+	if (!path) {
+		return 0;
+	}
+
 	register int fd;
 
-	if (!path)
-		return 0;
-
 	fd = ::open(path, acc_mode);
-	if (fd < 0)
+	if (fd < 0) {
 		return 0;
+	}
 
 	::close(fd);
 
@@ -674,28 +696,30 @@ int File::IS_EXIST(const char *path, int acc_mode)
  * @desc		:
  * get the basename, last node, of path, it could be a file or directory.
  */
-int File::BASENAME(Buffer *name, const char *path)
+int File::BASENAME(Buffer* name, const char* path)
 {
-	register int	s;
-	register int	len;
-	register int	p;
-
 	if (!name) {
 		return -1;
 	}
+
+	register int	s;
+	register int	len;
+	register int	p;
 
 	name->reset();
 
 	if (!path) {
 		s = name->appendc('.');
-		if (s < 0)
+		if (s < 0) {
 			return s;
+		}
 	} else {
 		len = (int) strlen(path);
 		if (path[0] == '/' && len == 1) {
 			s = name->appendc('/');
-			if (s < 0)
+			if (s < 0) {
 				return s;
+			}
 		} else {
 			p = len - 1;
 			while (p > 0 && path[p] == '/') {
@@ -732,8 +756,12 @@ int File::BASENAME(Buffer *name, const char *path)
  *
  * NOTE: use 'rename()' system call for easy and fast move.
  */
-int File::COPY(const char *src, const char *dst)
+int File::COPY(const char* src, const char* dst)
 {
+	if (!src || !dst) {
+		return -1;
+	}
+
 	register int	s;
 	File		from;
 	File		to;
@@ -774,6 +802,10 @@ int File::COPY(const char *src, const char *dst)
  */
 int File::TOUCH(const char* filename)
 {
+	if (!filename) {
+		return -1;
+	}
+
 	int s;
 
 	s = utime(filename, NULL);

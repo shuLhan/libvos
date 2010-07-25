@@ -155,8 +155,6 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 	Buffer		v;
 	RecordMD	*md		= NULL;
 
-	v.init(NULL);
-
 	while (todo != MD_DONE) {
 		while (i < len && isspace(meta[i])) {
 			++i;
@@ -349,7 +347,7 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 					goto err;
 			}
 
-			md->_start_p = (int) strtol(v._v, 0, 0);
+			md->_start_p = (int) strtol(v.v(), 0, 0);
 			v.reset();
 
 			todo		= MD_META_SEP;
@@ -365,7 +363,7 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 						goto err;
 				}
 
-				md->_end_p = (int) strtol(v._v, 0, 0);
+				md->_end_p = (int) strtol(v.v(), 0, 0);
 				v.reset();
 			} else if (meta[i] == '\'') {
 				++i;

@@ -32,6 +32,7 @@ enum _DirNode_upstat {
  *	- _name		: name of node.
  *	- _linkname	: a real path if node is symlink.
  *	- _next		: pointer to the next node in the same directory.
+ *	- _prev		: pointer to the previous node in the same directory.
  *	- _child	: pointer to child node if this node is directory.
  *	- _link		: pointer to the real node object if this node is
  *			  symbolic link to directory.
@@ -46,17 +47,26 @@ public:
 	DirNode();
 	virtual ~DirNode();
 
-	int get_attr(const char *rpath, const char *name = NULL);
-	int is_dir();
-	int is_link();
-	int is_file();
+	int get_attr(const char* rpath, const char* name = NULL);
 	int update_attr(DirNode* node, const char* rpath);
 	int update_child_attr(DirNode** node, const char* rpath
 				, const char* name);
 	void dump(int space = 0);
 
-	static int INIT(DirNode** node, const char* rpath
-			, const char* path);
+	inline int is_dir()
+	{
+		return S_ISDIR(_mode);
+	}
+	inline int is_link()
+	{
+		return S_ISLNK(_mode);
+	}
+	inline int is_file()
+	{
+		return S_ISREG(_mode);
+	}
+
+	static int INIT(DirNode** node, const char* rpath, const char* path);
 	static int GET_LINK_NAME(Buffer* linkname, const char* path);
 
 	static void INSERT(DirNode** list, DirNode* node);

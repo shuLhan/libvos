@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -12,13 +12,13 @@ namespace vos {
  * @method	: ConfigData::ConfigData
  * @desc	: ConfigData constructor, initializing all attributes.
  */
-ConfigData::ConfigData() :
-	_t(0),
-	_value(NULL),
-	_next_head(NULL),
-	_last_head(this),
-	_next_key(NULL),
-	_last_key(this)
+ConfigData::ConfigData() : Buffer()
+,	_t(0)
+,	_value(NULL)
+,	_next_head(NULL)
+,	_last_head(this)
+,	_next_key(NULL)
+,	_last_key(this)
 {}
 
 /**
@@ -28,13 +28,19 @@ ConfigData::ConfigData() :
 ConfigData::~ConfigData()
 {
 	if (CONFIG_T_KEY == _t) {
-		if (_value)
+		if (_value) {
 			delete _value;
+			_value = NULL;
+		}
 	}
-	if (_next_head)
+	if (_next_head) {
 		delete _next_head;
-	if (_next_key)
+		_next_head = NULL;
+	}
+	if (_next_key) {
 		delete _next_key;
+		_next_key = NULL;
+	}
 }
 
 /**
@@ -42,15 +48,16 @@ ConfigData::~ConfigData()
  * @param	:
  *	> type	: type for a new ConfigData object.
  *	> data	: a contents for a ConfigData object.
+ *	> len	: length of 'data', default to 0.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
  * @desc	: initialize ConfigData object.
  */
-int ConfigData::init(const int type, const char *data)
+int ConfigData::init(const int type, const char* data, int len)
 {
 	_t = type;
-	return Buffer::init_raw(data, 0);
+	return Buffer::copy_raw(data, len);
 }
 
 /**
@@ -59,11 +66,11 @@ int ConfigData::init(const int type, const char *data)
  *	> head	: pointer to new ConfigData header object.
  * @desc	: add new header to Config list.
  */
-void ConfigData::add_head(const ConfigData *head)
+void ConfigData::add_head(const ConfigData* head)
 {
 	if (head) {
-		_last_head->_next_head	= (ConfigData *) head;
-		_last_head		= (ConfigData *) head;
+		_last_head->_next_head	= (ConfigData*) head;
+		_last_head		= (ConfigData*) head;
 	}
 }
 
@@ -71,17 +78,22 @@ void ConfigData::add_head(const ConfigData *head)
  * @method	: ConfigData::add_head_raw
  * @param	:
  *	> head	: name of config header.
+ *	> len	: length of string 'head', default to 0.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
  * @desc	: add new header to Config list.
  */
-int ConfigData::add_head_raw(const char *head)
+int ConfigData::add_head_raw(const char* head, int len)
 {
-	register int	s;
-	ConfigData	*h = NULL;
+	if (!head) {
+		return -1;
+	}
 
-	s = ConfigData::INIT(&h, CONFIG_T_HEAD, head);
+	register int	s;
+	ConfigData*	h = NULL;
+
+	s = ConfigData::INIT(&h, CONFIG_T_HEAD, head, len);
 	if (0 == s) {
 		add_head(h);
 	}
@@ -94,11 +106,11 @@ int ConfigData::add_head_raw(const char *head)
  *	> key	: pointer to new ConfigData key object.
  * @desc	: add new key to the last header in Config list.
  */
-void ConfigData::add_key(const ConfigData *key)
+void ConfigData::add_key(const ConfigData* key)
 {
 	if (key) {
-		_last_head->_last_key->_next_key= (ConfigData *) key;
-		_last_head->_last_key		= (ConfigData *) key;
+		_last_head->_last_key->_next_key= (ConfigData*) key;
+		_last_head->_last_key		= (ConfigData*) key;
 	}
 }
 
@@ -106,17 +118,22 @@ void ConfigData::add_key(const ConfigData *key)
  * @method	: ConfigData::add_key_raw
  * @param	:
  *	> key	: a name of the key.
+ *	> len	: length of string 'key', default to 0.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
  * @desc	: add new key to the last header in Config list.
  */
-int ConfigData::add_key_raw(const char *key)
+int ConfigData::add_key_raw(const char* key, int len)
 {
-	register int	s;
-	ConfigData	*k = NULL;
+	if (!key) {
+		return -1;
+	}
 
-	s = ConfigData::INIT(&k, CONFIG_T_KEY, key);
+	register int	s;
+	ConfigData*	k = NULL;
+
+	s = ConfigData::INIT(&k, CONFIG_T_KEY, key, len);
 	if (0 == s) {
 		add_key(k);
 	}
@@ -130,38 +147,20 @@ int ConfigData::add_key_raw(const char *key)
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
- * @desc	: add value to the last key in the last header in Config list.
+ * @desc	: Add value to the last key in the last header in Config list.
  */
-int ConfigData::add_value(const ConfigData *value)
+int ConfigData::add_value(const ConfigData* value)
 {
-	if (!value)
-		return 0;
-
-	if ((CONFIG_T_KEY == _last_head->_last_key->_t)
-	&&  NULL == _last_head->_last_key->_value) {
-		_last_head->_last_key->_value = (ConfigData *) value;
-	} else {
-		int		s;
-		int		i = 0;
-		Buffer		key;
-		ConfigData	*k = _last_head->_next_key;
-
-		s = key.init_raw(CONFIGDATA_KEY_FMT, 0);
-		if (s < 0)
-			return s;
-
-		while (k) {
-			++i;
-			k = k->_next_key;
-		}
-
-		s = key.appendi(i);
-		if (s < 0)
-			return s;
-
-		add_key_raw(key._v);
-		add_value(value);
+	if (!value) {
+		return -1;
 	}
+	if (CONFIG_T_KEY != _last_head->_last_key->_t) {
+		return -1;
+	}
+	if (_last_head->_last_key->_value != NULL) {
+		return -1;
+	}
+	_last_head->_last_key->_value = (ConfigData *) value;
 	return 0;
 }
 
@@ -169,17 +168,18 @@ int ConfigData::add_value(const ConfigData *value)
  * @method	: ConfigData::add_value_raw
  * @param	:
  *	> value : a string value for key.
+ *	> len	: length of string 'value', default to 0.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
  * @desc	: add value to the last key in the last header in Config list.
  */
-int ConfigData::add_value_raw(const char *value)
+int ConfigData::add_value_raw(const char* value, int len)
 {
 	register int	s;
-	ConfigData	*v = NULL;
+	ConfigData*	v = NULL;
 
-	s = ConfigData::INIT(&v, CONFIG_T_VALUE, value);
+	s = ConfigData::INIT(&v, CONFIG_T_VALUE, value, len);
 	if (0 == s) {
 		s = add_value(v);
 	}
@@ -193,7 +193,7 @@ int ConfigData::add_value_raw(const char *value)
  * @desc	: add a non-key and non-header object, i.e: comment, to Config
  *                list.
  */
-void ConfigData::add_misc(const ConfigData *misc)
+void ConfigData::add_misc(const ConfigData* misc)
 {
 	if (misc) {
 		_last_head->_last_key->_next_key= (ConfigData *) (misc);
@@ -203,18 +203,25 @@ void ConfigData::add_misc(const ConfigData *misc)
 
 /**
  * @method	: ConfigData::add_misc_raw
+ * @param	:
+ *	> misc	: string.
+ *	> len	: length of string 'misc', default to 0.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
  * @desc	: add a non-key and non-header object, i.e: comment, to Config
  *                list.
  */
-int ConfigData::add_misc_raw(const char *misc)
+int ConfigData::add_misc_raw(const char* misc, int len)
 {
-	register int	s;
-	ConfigData	*m = NULL;
+	if (!misc) {
+		return -1;
+	}
 
-	s = ConfigData::INIT(&m, CONFIG_T_MISC, misc);
+	register int	s;
+	ConfigData*	m = NULL;
+
+	s = ConfigData::INIT(&m, CONFIG_T_MISC, misc, len);
 	if (0 == s) {
 		add_misc(m);
 	}
@@ -238,10 +245,10 @@ void ConfigData::dump()
 		k = h->_next_key;
 		while (k) {
 			if (CONFIG_T_KEY == k->_t) {
-				printf("\t%s = %s\n", k->_v,
-					k->_value ? k->_value->_v : "");
+				printf("\t%s = %s\n", k->v(),
+					k->_value ? k->_value->v() : "\0");
 			} else {
-				printf("%s\n", k->_v);
+				printf("%s\n", k->v());
 			}
 
 			k = k->_next_key;
@@ -258,18 +265,20 @@ void ConfigData::dump()
  *	> o	: return value, pointer to unallocated ConfigData object.
  *	> type	: type for a new ConfigData object.
  *	> data	: content for a new ConfigData object.
+ *	> len	: length of string 'data'.
  * @return	:
  *	< 0	: success.
  *	< <0	: fail.
  * @desc	: create and initialize a new ConfigData object.
  */
-int ConfigData::INIT(ConfigData **o, const int type, const char *data)
+int ConfigData::INIT(ConfigData** o, const int type, const char* data
+			, int len)
 {
 	register int s = -1;
 
 	(*o) = new ConfigData();
 	if ((*o)) {
-		s = (*o)->init(type, data);
+		s = (*o)->init(type, data, len);
 		if (s < 0) {
 			delete (*o);
 			(*o) = NULL;

@@ -48,7 +48,7 @@ int OCIValue::init(const int pos, const int type, const int len)
 {
 	_p = pos;
 	_t = type;
-	return init_size(len);
+	return resize(len);
 }
 
 /**

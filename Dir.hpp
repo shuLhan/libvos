@@ -12,12 +12,12 @@
 
 namespace vos {
 
-#define	DEF_CREATE_MODE	(S_IRWXU | S_IRGRP | S_IXGRP)
+#define	DEF_DIR_PERM	(S_IRWXU | S_IRGRP | S_IXGRP)
 
 /**
  * @class		: Dir
  * @attr		:
- *	- _depth	: maximum depth of child directory to scan for.
+ *	- _depth	: maximum depth of child directory to scan.
  *	- _name		: the first name of directory to scan.
  *	- _ls		: linked list of DirNode objects.
  * @desc		:
@@ -42,12 +42,12 @@ public:
 	int refresh_by_path(Buffer* path);
 	void dump();
 
-	static int CREATE(const char *path, mode_t mode = DEF_CREATE_MODE);
-	static int CREATES(const char* path, mode_t mode = DEF_CREATE_MODE);
+	static int CREATE(const char *path, mode_t perm = DEF_DIR_PERM);
+	static int CREATES(const char* path, mode_t perm = DEF_DIR_PERM);
 
-	int	_depth;
-	Buffer	_name;
-	DirNode	*_ls;
+	int		_depth;
+	Buffer		_name;
+	DirNode*	_ls;
 private:
 	Dir(const Dir&);
 	void operator=(const Dir&);

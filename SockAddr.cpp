@@ -47,7 +47,7 @@ void SockAddr::dump()
 
 	while (p) {
 		printf(" address : %s\n", p->_addr
-					? p->_addr->_v
+					? p->_addr->v()
 					: "\0");
 		p = p->_next;
 	}
@@ -154,7 +154,7 @@ int SockAddr::IS_IPV4(const char *str)
 		} else {
 			return 0;
 		}
-		*str++;
+		str++;
 	}
 	if (dot != 3 || n == 0 || n > 4)  {
 		return 0;

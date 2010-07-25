@@ -61,10 +61,7 @@ int DNSQuery::init(const Buffer *bfr)
 {
 	register int s;
 
-	s = _name.init(NULL);
-	if (0 == s) {
-		s = Buffer::INIT(&_bfr, bfr);
-	}
+	s = Buffer::INIT(&_bfr, bfr);
 
 	return s;
 }
@@ -116,8 +113,9 @@ int DNSQuery::extract()
 
 	reset(DNSQ_DO_EXCEPT_BUFFER);
 
-	if (_bfr->is_empty())
+	if (_bfr->is_empty()) {
 		return 0;
+	}
 
 	bfr_org	= (unsigned char *) _bfr->_v;
 	p	= bfr_org;
@@ -351,7 +349,7 @@ int DNSQuery::extract_rr(DNS_rr **rr, const unsigned char *bfr_org,
 
 	default:
 		fprintf(stderr, "[DNSQUERY] %s: Record type '%d' is not handle yet!\n",
-			_name._v, prr->_type);
+			_name.v(), prr->_type);
 		delete prr;
 		(*rr) = NULL;
 		return -1;
@@ -396,7 +394,7 @@ int DNSQuery::read_label(Buffer *label, const unsigned char *bfr_org,
 				ret = 2;
 		} else if (len == 0) {
 			len = *p;
-			*p++;
+			p++;
 
 			if (ret) {
 				label->appendc('.');
@@ -406,7 +404,7 @@ int DNSQuery::read_label(Buffer *label, const unsigned char *bfr_org,
 		} else {
 			label->appendc(*p);
 			--len;
-			*p++;
+			p++;
 		}
 	}
 
@@ -602,7 +600,7 @@ void DNSQuery::dump(const int do_type)
 	printf("; QUESTION section\n");
 	printf(" type            : %d\n", _type);
 	printf(" class           : %d\n", _class);
-	printf(" name            : %s\n", _name._v);
+	printf(" name            : %s\n", _name.v());
 
 	if (_rr_ans) {
 		printf("; ANSWER section\n");

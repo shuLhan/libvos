@@ -335,7 +335,7 @@ int FTP::get_reply(const int timeout)
 	case 551: /* request action aborted; page type unknown */
 	case 552: /* requested file action aborted. exceeded storage allocation */
 	case 553: /* requested action not taken, file name not allowed */
-		fprintf(stderr, "[FTP] server message: %s", _v);
+		fprintf(stderr, "[FTP] server message: %s", v());
 		return -1;
 	default:
 		fprintf(stderr, "[FTP-ERROR] unknown reply code %d!", _reply);
@@ -396,7 +396,7 @@ int FTP::parsing_pasv_reply(Buffer *addr, int *port)
 	*port	+= s;
 
 	if (LIBVOS_DEBUG) {
-		printf("[FTP] pasv '%s:%d'\n", addr->_v, *port);
+		printf("[FTP] pasv '%s:%d'\n", addr->v(), *port);
 	}
 
 	return 0;
@@ -426,14 +426,6 @@ int FTP::do_pasv(const int cmd, const char *parm, const char *out)
 	Buffer	addr;
 	File	fout;
 	FTP	pasv;
-
-	s = addr.init(NULL);
-	if (s < 0)
-		return s;
-
-	s = fout.init();
-	if (s < 0)
-		return s;
 
 	s = send_cmd(FTP_CMD_PASV, NULL);
 	if (s < 0)
@@ -494,10 +486,6 @@ int FTP::do_put(const char *path)
 
 	if (!path)
 		return 0;
-
-	s = addr.init(NULL);
-	if (s < 0)
-		return s;
 
 	s = fput.open_ro(path);
 	if (s < 0)
