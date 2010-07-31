@@ -69,7 +69,7 @@ OCIValue* OCIValue::INIT(const int pos, const int type, const int len)
 
 	if (o) {
 		s = o->init(pos, type, len);
-		if (s) {
+		if (s < 0) {
 			delete o;
 			o = NULL;
 		}

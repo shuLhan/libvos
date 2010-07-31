@@ -1016,15 +1016,15 @@ void OCI::cursor_release()
  *	< 0	: fail.
  * @desc	: get a value of result set at column 'pos' as string.
  */
-char * OCI::get_value(const int pos)
+const char* OCI::get_value(const int pos)
 {
-	if (pos > _value_i || !_v[pos])
-		return 0;
-
-	if (_v[pos]->_p != pos)
-		return 0;
-
-	return _v[pos]->_v;
+	if (pos > _value_i || !_v[pos]) {
+		return "\0";
+	}
+	if (_v[pos]->_p != pos) {
+		return "\0";
+	}
+	return _v[pos]->v();
 }
 
 /**
