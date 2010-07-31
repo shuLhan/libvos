@@ -1,0 +1,124 @@
+html {
+	background	: #EFEFEF;
+	font-family	: serif;
+	margin		: 0 auto 0 auto;
+	width		: 216mm;
+}
+
+body {
+	background	: white;
+	border		: 1px solid silver;
+	padding		: 14mm;
+}
+
+h1, h2, h3, h4 {
+	border-top	: 1px solid black;
+	padding-top	: 8px;
+}
+
+pre {
+	border		: 1px solid silver;
+	padding		: 8px;
+}
+
+ul, ol {
+	margin		: 1em auto 1em auto;
+}
+
+table, tr {
+	border		: 1px solid silver;
+	width		: 100%;
+}
+
+th, td {
+	padding		: 8px;
+}
+
+/*
+ * class goes here.
+ */
+.break {
+	page-break-before	: always;
+}
+
+.title {
+	margin-top	: 20%;
+	text-align	: center;
+	font-weight	: bolder;
+	font-size	: xx-large;
+}
+
+.author {
+	text-align	: center;
+}
+
+.caption {
+	text-align	: center;
+	font-size	: 12;
+	font-style	: italic;
+	margin		: -1em 0 2em 0;
+}
+
+.toc {
+	padding		: 1em;
+	border-top	: 1px dashed silver;
+	border-bottom	: 1px dashed silver;
+}
+
+/*
+ * make variables
+ */
+table.makevar {
+	border-collapse	: collapse;
+	margin		: 1em;
+}
+table.makevar tr {
+	vertical-align	: top;
+}
+table.makevar tr th {
+	font-size	: 12;
+	width		: 12em;
+	text-align	: right;
+	background	: #EFEFEF;
+}
+table.makevar td {
+}
+table.makevar > tbody > tr:nth-child(1) > td:nth-child(3) {
+	font-family	: monospace;
+}
+
+/*
+ * style for class variables
+ */
+table.class-var {
+	border-collapse	: collapse;
+}
+table.class-var th {
+	background	: #EFEFEF;
+}
+table.class-var > tbody > tr > td:nth-child(1) {
+	font-family	: monospace;
+}
+table.class-var > tbody > tr > td:nth-child(2) {
+	font-family	: monospace;
+}
+
+
+/*
+ * style for class methods.
+ */
+table.class-method {
+	border-collapse	: collapse;
+}
+table.class-method tr {
+	vertical-align	: top;
+}
+table.class-method tr th {
+	width		: 12em;
+	font-size	: 12;
+	text-align	: right;
+	background	: #EFEFEF;
+}
+table.class-method > tbody > tr:nth-child(1) > td:nth-child(2) {
+	font-family	: monospace;
+}

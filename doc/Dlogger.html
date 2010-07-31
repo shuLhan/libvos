@@ -1,0 +1,231 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1>Log Module</h1>
+
+<ul class="toc">
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#Dlogger::Dlogger"> Dlogger::Dlogger </a></li>
+	<li><a href="#Dlogger::~Dlogger"> Dlogger::~Dlogger </a></li>
+	<li><a href="#Dlogger::open"> Dlogger::open </a></li>
+	<li><a href="#Dlogger::close"> Dlogger::close </a></li>
+	<li><a href="#Dlogger::add_timestamp"> Dlogger::add_timestamp </a></li>
+	<li><a href="#Dlogger::er"> Dlogger::er </a></li>
+	<li><a href="#Dlogger::out"> Dlogger::out </a></li>
+	<li><a href="#Dlogger::it"> Dlogger::it </a></li>
+	</ul>
+</ul>
+
+<p>
+Dlogger is a module for writing formatted string to a file or standard
+error, or both.  What make Dlogger module different with normal File module
+is it have time-stamp added at the beginning of each line,
+</p>
+
+<pre>
+[YEAR.MONTH.DAY HOUR:MINUTE:SECOND] log output
+</pre>
+
+<p>
+If Dlogger object is not initialized, by calling <tt>open()</tt> method, all
+log output will be printed to standard error.
+</p>
+
+
+<h2><a name="class_method">Class Methods</a></h2>
+
+<h3><a name="Dlogger::Dlogger"><tt> Dlogger::Dlogger </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Dlogger() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Dlogger constructor. </td>
+</tr>
+</table>
+
+<h3><a name="Dlogger::~Dlogger"><tt> Dlogger::~Dlogger </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~Dlogger() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Dlogger destructor. </td>
+</tr>
+</table>
+
+<h3><a name="Dlogger::open"><tt> Dlogger::open </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int open(const char* logfile) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>logfile</tt></td>
+	<td>:</td>
+	<td> a log filename, with or without leading path. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Open <tt>logfile</tt> as default output for log messages.</td>
+</tr>
+</table>
+
+<h3><a name="Dlogger::close"><tt> Dlogger::close </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void close() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Close log file, and revert the log output back to
+standard error.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Dlogger::add_timestamp"><tt> Dlogger::add_timestamp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void add_timestamp() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">
+Add time-stamp to log output.  Time-stamp format:
+<pre>
+[YEAR.MONTH.DAY HOUR:MINUTE:SECOND]
+</pre>
+This function is useful if you want to write your own log module.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Dlogger::er"><tt> Dlogger::er </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int er(const char* fmt, ...) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>fmt</tt></td>
+		<td>:</td>
+		<td> formatted string output. </td>
+	</tr><tr>
+		<td><tt> ... </tt></td>
+		<td>:</td>
+		<td> one or more arguments for output format. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Write log message to standard error and to log file.
+If log file is not set than just send it to standard error only.</td>
+</tr>
+</table>
+
+<h3><a name="Dlogger::out"><tt> Dlogger::out </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int out(const char* fmt, ...) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>fmt</tt></td>
+		<td>:</td>
+		<td> formatted string output. </td>
+	</tr><tr>
+		<td><tt> ... </tt></td>
+		<td>:</td>
+		<td> one or more arguments for output format. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Write log message to standard output and log file. </td>
+</tr>
+</table>
+
+<h3><a name="Dlogger::it"><tt> Dlogger::it </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int it(const char* fmt, ...) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>fmt</tt></td>
+		<td>:</td>
+		<td> formatted string output. </td>
+	</tr><tr>
+		<td><tt> ... </tt></td>
+		<td>:</td>
+		<td> one or more arguments for output format. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Write log message to log file only. </td>
+</tr>
+</table>
+
+</body>
+</html>

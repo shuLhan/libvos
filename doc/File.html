@@ -1,0 +1,848 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<h1>File Module</h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#File::File"> File::File </a></li>
+	<li><a href="#File::~File"> File::~File </a></li>
+	<li><a href="#File::_open"> File::_open </a></li>
+	<li><a href="#File::open"> File::open </a></li>
+	<li><a href="#File::open_ro"> File::open_ro </a></li>
+	<li><a href="#File::open_wo"> File::open_wo </a></li>
+	<li><a href="#File::open_wa"> File::open_wa </a></li>
+	<li><a href="#File::get_size"> File::get_size </a></li>
+	<li><a href="#File::set_eol"> File::set_eol </a></li>
+	<li><a href="#File::read"> File::read </a></li>
+	<li><a href="#File::readn"> File::readn </a></li>
+	<li><a href="#File::refill"> File::refill </a></li>
+	<li><a href="#File::get_line"> File::get_line </a></li>
+	<li><a href="#File::write"> File::write </a></li>
+	<li><a href="#File::write_raw"> File::write_raw </a></li>
+	<li><a href="#File::writef"> File::writef </a></li>
+	<li><a href="#File::writes"> File::writes </a></li>
+	<li><a href="#File::writec"> File::writec </a></li>
+	<li><a href="#File::flush"> File::flush </a></li>
+	<li><a href="#File::close"> File::close </a></li>
+	<li><a href="#File::GET_SIZE"> File::GET_SIZE </a></li>
+	<li><a href="#File::IS_EXIST"> File::IS_EXIST </a></li>
+	<li><a href="#File::BASENAME"> File::BASENAME </a></li>
+	<li><a href="#File::COPY"> File::COPY </a></li>
+	<li><a href="#File::TOUCH"> File::TOUCH </a></li>
+	</ul>
+</ul>
+
+<p>
+File module is a module for working with file, reading and writing.  Just
+like Buffer module, <tt>_l</tt> in File represent the length of buffer
+<tt>_v</tt>, and <tt>_i</tt> represent the length of data in the buffer,
+so <tt>_i &lt;= _l</tt>.
+</p>
+<p>
+To walk through buffer, or for marking the position that you have already
+checked or processed in buffer use <tt>_p</tt>. So, <tt>_p &lt;= _i &lt;=
+_l</tt>.  Variable <tt>_p</tt> is also used to mark the end of line when
+using <tt>get_line()</tt> method.
+</p>
+<p>
+<pre>
+           +----+----+----+----+----+----+----+----+----+----+----+
+        _v | b  | u  | f  | f  | e  | r  | \0 | \0 | \0 | \0 | \0 | 
+           +----+----+----+----+----+----+----+----+----+----+----+
+                       _p                  _i                  _l
+</pre>
+</p>
+<p class="caption">Illustration of File object in computer memory.</p>
+
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr>
+<tr>
+	<td>int</td>
+	<td>_d</td>
+	<td>File descriptor.</td>
+</tr>
+<tr>
+	<td>int</td>
+	<td>_p</td>
+	<td>File buffer iterator.</td>
+</tr>
+<tr>
+	<td>int</td>
+	<td>_status</td>
+	<td> File open status. Possible value,
+		<ul>
+		<li><tt>-1</tt>, If file is not opened. </li>
+		<li><tt>O_RDONLY</tt>, If file is opened as read only.</li>
+		<li><tt>O_WRONLY</tt>, If file is opened as write only.</li>
+		<li><tt>O_RDWR</tt>, If file is opened as read and write.</li>
+		</ul>
+	</td>
+</tr>
+<tr>
+	<td>int</td>
+	<td>_eol</td>
+	<td>File end of line as a character, default to Unix mode:
+	'<tt>\n</tt>'.
+	</td>
+</tr>
+<tr>
+	<td>const char*</td>
+	<td>_eols</td>
+	<td> File end of line as a sequences of character. </td>
+</tr>
+<tr>
+	<td>Buffer</td>
+	<td>_name</td>
+	<td>File name, with or without path.</td>
+</tr>
+<tr>
+	<td>static unsigned int </td>
+	<td>DFLT_SIZE</td>
+	<td>Default buffer size, 8192 bytes.</td>
+</tr>
+</table>
+
+
+<h2><a name="class_method">Class Methods</a></h2>
+
+<h3><a name="File::File"><tt> File::File </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> File(const unsigned int size = DFLT_SIZE)</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>size</tt></td>
+	<td>:</td>
+	<td> size for File buffer. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> File constructor. </td>
+</tr>
+</table>
+
+<h3><a name="File::~File"><tt>File::~File</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~File() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> File destructor. </td>
+</tr>
+</table>
+
+<h3><a name="File::_open"><tt> File::_open </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int _open(const char* path, const int mode,
+const int perm = S_IRUSR | S_IWUSR)</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td>path to a file name.</td>
+	</tr><tr>
+		<td><tt> mode </tt></td>
+		<td>:</td>
+		<td>mode for opened file. (read only, write only, or read
+		write).</td>
+	</tr><tr>
+		<td><tt> perm </tt></td>
+		<td>:</td>
+		<td>permission for a new file, default to <tt>0600</tt>
+(read-write for user only).</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td>success.</td>
+	</tr><tr>
+		<td><tt> &lt;0 </tt></td>
+		<td>:</td>
+		<td>fail, or '<tt>path</tt>' is nil.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">
+	The generic method to open file with specific mode and permission.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::open"><tt> File::open </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int open(const char* path) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> path </tt></td>
+	<td> : </td>
+	<td> path to a file name.
+	</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td>success.</td>
+	</tr><tr>
+		<td><tt> &lt;0 </tt></td>
+		<td>:</td>
+		<td>fail, or '<tt>path</tt>' is nil.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">
+	Open file for read and write, create a file if it is not exist.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::open_ro"><tt> File::open_ro </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int open_ro(const char* path) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> path </tt></td>
+	<td>:</td>
+	<td> path to a file name.
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td>success.</td>
+	</tr><tr>
+		<td><tt> &lt;0 </tt></td>
+		<td>:</td>
+		<td>fail, or '<tt>path</tt>' is nil.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Open <tt>path</tt> for read only. </td>
+</tr>
+</table>
+
+<h3><a name="File::open_wo"><tt> File::open_wo </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int open_wo(const char* path) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>path</tt></td>
+	<td> : </td>
+	<td> path to a file name.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td>success.</td>
+	</tr><tr>
+		<td><tt> &lt;0 </tt></td>
+		<td>:</td>
+		<td>fail, or '<tt>path</tt>' is nil.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Open <tt>path</tt> for write only.  If file is not
+exist it will be created, if file is already exist, content of file of will
+be truncated.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::open_wa"><tt> File::open_wa </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int open_wa(const char* path) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>path</tt></td>
+	<td> : </td>
+	<td> path to a file name.
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td>success.</td>
+	</tr><tr>
+		<td><tt> &lt;0 </tt></td>
+		<td>:</td>
+		<td>fail, or '<tt>path</tt>' is nil.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Open <tt>path</tt> for write only and in append
+mode.  Old data in file will not be replaced, new data will be appended to
+the end of file.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::get_size"><tt> File::get_size </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> off_t get_size() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>&gt;=0</tt></td>
+		<td>:</td>
+		<td> success, current size of file.
+		</td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get the current size of file.</td>
+</tr>
+</table>
+
+<h3><a name="File::set_eol"><tt> File::set_eol </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void set_eol(const int mode) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>mode</td></td>
+	<td>:</td>
+	<td>mode of end of line,
+		<ul>
+		<li><tt>EOL_NIX</tt>, for Unix mode.</li>
+		<li><tt>EOL_DOS</tt>, for DOS or Windows mode.</li>
+		</ul>
+	</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set the end of line mode for this current File
+object.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::read"><tt> File::read </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int read() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt>&gt;0</tt></td>
+		<td>:</td>
+		<td>success, return number of bytes readed.</td>
+	</tr><tr>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td>success, end of file reached, or file is not opened for
+read</td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td> : </td>
+		<td> fail, error at reading file descriptor.
+		</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Read content of file and saved it to buffer.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::readn"><tt> File::readn </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int readn(int n) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> n </tt></td>
+	<td>:</td>
+	<td> number of bytes to be read from descriptor. </td>
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt>&gt;0</tt></td>
+		<td>:</td>
+		<td>success, return number of bytes readed.</td>
+	</tr><tr>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td>success, end of file reached, or file is not opened for
+read</td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td> : </td>
+		<td> fail, error at reading file descriptor.
+		</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Read <tt>n</tt> bytes of characters from file,
+automatically increase buffer if <tt>n</tt> is greater than File buffer size.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::refill"><tt> File::refill </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int refill(int read_min = 0) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>read_min</tt></td>
+	<td>:</td>
+	<td> minimum length of buffer to fill, default to <tt>0</tt></td>
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt>&gt;0</td>
+		<td>:</td>
+		<td>success, return number of bytes readed.</td>
+	</tr><tr>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td>success, end of file reached, or file is not opened for
+read</td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td> : </td>
+		<td> fail, error at reading file descriptor.
+		</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">
+	<p>
+	Refill method depend on the value of <tt>_p</tt>.
+All data from position of <tt>_p</tt> until <tt>_i</tt> will be moved to
+the beginning of buffer and will not be replaced, new data will be filled in
+position after <tt>_i - _p)</tt>.
+</p>
+
+
+<p><pre>
+before:
+   +----+----+----+----+----+----+----+----+----+----+----+----+
+_v | b  | u  | f  | f  | e  | r  | \0 | \0 | \0 | \0 | \0 | \0 |
+   +----+----+----+----+----+----+----+----+----+----+----+----+
+               _p                  _i                       _l
+
+after:
+   +----+----+----+----+----+----+----+----+----+----+----+----+
+_v | f  | f  | e  | r  | n  | e  | w  | d  | a  | t  | a  | \0 |
+   +----+----+----+----+----+----+----+----+----+----+----+----+
+     _p                                                      _i
+                                                             _l
+</pre></p>
+<p class="caption">Illustration on how refill works.</p>
+<p>
+From the illustration above you can see that data from <tt>_p</tt> to
+<tt>_i</tt> is moved to the beginning of buffer, and all buffer after
+index <tt>_i</tt> is filled with new data from file.
+</p>
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::get_line"><tt> File::get_line </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int get_line(Buffer* line) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>line</tt></td>
+	<td>:</td>
+	<td> output, pointer to Buffer object.</td>
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt>1</tt></td>
+		<td>:</td>
+		<td> success, one line readed. </td>
+	</tr><tr>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> success, end of file. </td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td>:</td>
+		<td> fail.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get one line at a time from buffer.
+<ul>
+<li> This operation depends on <tt>_p</tt> and will change contents <tt>_p</tt> index.</li>
+<li> This operation return a string without a new line character. </li>
+</td>
+</tr>
+</table>
+
+<h3><a name="File::write"><tt> File::write </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int write(const Buffer* bfr) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> bfr </tt></td>
+	<td> : </td>
+	<td> Buffer object to be write to file. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>&gt;=0</tt></td>
+		<td>:</td>
+		<td> success, number of bytes appended to File buffer. </td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append buffer <tt>bfr</tt> to File buffer for
+writing.</td>
+</tr>
+</table>
+
+<h3><a name="File::write_raw"><tt> File::write_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int write_raw(const char* bfr, int len = 0) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>bfr</tt></td>
+		<td>:</td>
+		<td> pointer to raw buffer. </td>
+	</tr><tr>
+		<td><tt>len</tt></td>
+		<td>:</td>
+		<td> length of <tt>bfr</tt>, default to <tt>0</tt>.
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>&gt;=0</tt></td>
+		<td>:</td>
+		<td> success, number of bytes appended to File buffer. </td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append buffer <tt>bfr</tt> to File buffer for
+writing.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::writef"><tt> File::writef </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int writef(const char* fmt, va_list args) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>fmt</tt></td>
+		<td>:</td>
+		<td> formatted string. </td>
+	</tr><tr>
+		<td><tt>args</tt></td>
+		<td>:</td>
+		<td> list of arguments for formatted string. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>&gt;=0</tt></td>
+		<td>:</td>
+		<td> success, number of bytes appended to File buffer. </td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Write formatted string <tt>bfr</tt> to file.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::writes"><tt> File::writes </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int writes(const char* fmt, ...) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>fmt</tt></td>
+		<td>:</td>
+		<td> formatted string. </td>
+	</tr><tr>
+		<td><tt> ... </tt></td>
+		<td>:</td>
+		<td> parameter for value in formatted string. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>&gt;=0</tt></td>
+		<td>:</td>
+		<td> success, number of bytes appended to File buffer. </td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Write formatted string <tt>fmt</tt> to file. </td>
+</tr>
+</table>
+
+<h3><a name="File::writec"><tt> File::writec </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int writec(const char c) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>c</tt></td>
+	<td>:</td>
+	<td> a character that will be appended to file. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>1</tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td>:</td>
+		<td> fail. </td>
+
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Write one character, <tt>c</tt>, to file.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::flush"><tt> File::flush </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int flush() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>&gt;=0</tt></td>
+		<td>:</td>
+		<td> success, size of buffer flushed to the system, in bytes. </td>
+	</tr><tr>
+		<td><tt>&lt; 0</tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Flush buffer cache; write all File buffer to disk.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::close"><tt> File::close</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void close() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Close file descriptor. </td>
+</tr>
+</table>
+
+<h3><a name="File::GET_SIZE"><tt> File::GET_SIZE </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static off_t GET_SIZE(const char* path) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>path</tt></td>
+	<td>:</td>
+	<td> a path to file. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> &gt; 0 </td>
+		<td>:</td>
+		<td> success, size of file <tt>path</tt>.
+	</tr><tr>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> if file is empty or <tt>path</tt> is not exist. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get the current size of file in <tt>path</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::IS_EXIST"><tt> File::IS_EXIST </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int IS_EXIST(const char* path, int acc_mode =
+O_RDWR) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> path </tt></td>
+		<td> : </td>
+		<td> path to a directory or file. </td>
+	</tr><tr>
+		<td><tt> acc_mode </tt></td>
+		<td>:</td>
+		<td> access mode.
+			<ul>
+			<li><tt>O_RDONLY</tt>, read only access.</li>
+			<li><tt>O_WRONLY</tt>, write only access.</li>
+			<li><tt>O_RDWR</tt>, read and write access.</li>
+			</ul>
+		</td>
+</tr><tr>
+	<th rowspan="2"> Return Value</th>
+		<td><tt>1</tt></td>
+		<td>:</td>
+		<td> if <tt>path</tt> is exist and accessible by user. </td>
+	</tr><tr>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> if <tt>path</tt> is not exist or user does not have
+permission to access it.
+		</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Check if <tt>path</tt> is exist in file system and
+user had a permission to acesss it.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::BASENAME"><tt> File::BASENAME </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int BASENAME(Buffer* name, const char* path) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>name</tt></td>
+		<td>:</td>
+		<td> return value, the last node of <tt>path</tt>. </td>
+	</tr><tr>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td> a path to directory or file. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get the basename, last node of <tt>path</tt>, it
+could be a file or directory.</td>
+</tr>
+</table>
+
+<h3><a name="File::COPY"><tt> File::COPY </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int COPY(const char* src, const char* dst) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>src</tt></td>
+		<td>:</td>
+		<td> a path to source file to copy. </td>
+	</tr><tr>
+		<td><tt>dst</tt></td>
+		<td>:</td>
+		<td> a path to destination file. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Copy file <tt>src</tt> to <tt>dst</tt>, create a new
+file if <tt>dst</tt> is not exist, or overwrite <tt>dst</tt> if it already
+exist. <b>NOTE:</b> use <tt>rename()</tt> system call for easy and fast move
+of file in file system.
+	</td>
+</tr>
+</table>
+
+<h3><a name="File::TOUCH"><tt> File::TOUCH </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int TOUCH(const char* file) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>file</tt></td>
+	<td> : </td>
+	<td> a path to a file. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Touch a <tt>file</tt>, create <tt>file</tt> if it
+not exist or update access and modification time if it already exist.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

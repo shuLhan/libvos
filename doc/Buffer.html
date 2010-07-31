@@ -1,0 +1,1153 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<h1>Buffer Module</h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#Buffer::Buffer"> Buffer::Buffer </a></li>
+	<li><a href="#Buffer::~Buffer"> Buffer::~Buffer </a></li>
+	<li><a href="#Buffer::resize"> Buffer::resize </a></li>
+	<li><a href="#Buffer::reset"> Buffer::reset </a></li>
+	<li><a href="#Buffer::trim"> Buffer::trim </a></li>
+	<li><a href="#Buffer::copy"> Buffer::copy </a></li>
+	<li><a href="#Buffer::copy_raw"> Buffer::copy_raw </a></li>
+	<li><a href="#Buffer::set"> Buffer::set </a></li>
+	<li><a href="#Buffer::set_raw"> Buffer::set_raw </a></li>
+	<li><a href="#Buffer::move_to"> Buffer::move_to </a></li>
+	<li><a href="#Buffer::shiftr"> Buffer::shiftr </a></li>
+	<li><a href="#Buffer::appendc"> Buffer::appendc </a></li>
+	<li><a href="#Buffer::appendi"> Buffer::appendi </a></li>
+	<li><a href="#Buffer::appendui"> Buffer::appendui </a></li>
+	<li><a href="#Buffer::appendd"> Buffer::appendd </a></li>
+	<li><a href="#Buffer::append"> Buffer::append </a></li>
+	<li><a href="#Buffer::append_raw"> Buffer::append_raw </a></li>
+	<li><a href="#Buffer::concat"> Buffer::concat </a></li>
+	<li><a href="#Buffer::aprint"> Buffer::aprint </a></li>
+	<li><a href="#Buffer::vprint"> Buffer::vprint </a></li>
+	<li><a href="#Buffer::prepend"> Buffer::prepend </a></li>
+	<li><a href="#Buffer::prepend_raw"> Buffer::prepend_raw </a></li>
+	<li><a href="#Buffer::subc"> Buffer::subc </a></li>
+	<li><a href="#Buffer::cmp"> Buffer::cmp </a></li>
+	<li><a href="#Buffer::cmp_raw"> Buffer::cmp_raw </a></li>
+	<li><a href="#Buffer::like"> Buffer::like </a></li>
+	<li><a href="#Buffer::like_raw"> Buffer::like_raw </a></li>
+	<li><a href="#Buffer::to_lint"> Buffer::to_lint </a></li>
+	<li><a href="#Buffer::dump"> Buffer::dump </a></li>
+	<li><a href="#Buffer::dump_hex"> Buffer::dump_hex </a></li>
+	<li><a href="#Buffer::v"> Buffer::v </a></li>
+	<li><a href="#Buffer::is_empty"> Buffer::is_empty </a></li>
+	<li><a href="#Buffer::INIT"> Buffer::INIT </a></li>
+	<li><a href="#Buffer::INIT_RAW"> Buffer::INIT_RAW </a></li>
+	<li><a href="#Buffer::INIT_SIZE"> Buffer::INIT_SIZE </a></li>
+	<li><a href="#Buffer::VSNPRINTF"> Buffer::VSNPRINTF </a></li>
+	<li><a href="#Buffer::TRIM"> Buffer::TRIM </a></li>
+	</ul>
+</ul>
+
+<p>
+Buffer module is the base module almost for all others modules in libvos
+library. Buffer module is represented by Buffer class. Buffer class can be
+used for storing string or binary data.
+</p>
+<p><pre>
+        +----+----+----+----+----+----+----+----+----+----+----+
+     _v | b  | u  | f  | f  | e  | r  | \0 | \0 | \0 | \0 | \0 | 
+        +----+----+----+----+----+----+----+----+----+----+----+
+                                        _i                  _l
+</pre></p>
+<p class="caption">
+Illustration of Buffer object in computer memory.
+</p>
+<p>
+Buffer object can be used as pointer to a raw string, by setting <tt>_l</tt>
+to <tt>0</tt> and later set <tt>_v</tt> point to array of character, and you
+can using <tt>_i</tt> to count the length of <tt>_v</tt>.
+</p>
+<p>
+If you set <tt>_l</tt> to value other than zero, Buffer destructor will
+destroy any data in <tt>_v</tt>.
+</p>
+
+
+<h2><a name="class_var">Class Variables</a></h2>
+<!-- template
+<tr>
+	<td></td>
+	<td></td>
+	<td></td>
+</tr>
+-->
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr>
+<tr>
+	<td> char* </td>
+	<td> _v </td>
+	<td>Array of bytes, pointer to the raw buffer.</td>
+</tr>
+<tr>
+	<td> int </td>
+	<td> _l </td>
+	<td>Current size of buffer or length of allocated array <tt>_v</tt>
+in memory.</td>
+</tr>
+<tr>
+	<td> int </td>
+	<td> _i </td>
+	<td>Index of buffer.  Number of allocate array that has already been
+used. Value of <tt>_i</tt> always less than <tt>_l</tt>, and will affect how
+the method operate on <tt>_v</tt> later.
+</td>
+</tr>
+<tr>
+	<td> static int </td>
+	<td> DFLT_SIZE </td>
+	<td>Default buffer size for (re)allocating a raw buffer, or growing
+factor of <tt>_l</tt> when <tt>_i</tt> is reached the same value with
+<tt>_l</tt>.</td>
+</tr>
+<tr>
+	<td> static int </td>
+	<td> CHAR_SIZE </td>
+	<td>Size of each block of <tt>_v</tt>, default to 8-bit in 32-bit and
+64-bit machine.</td>
+</tr>
+</table>
+
+
+<h2><a name="class_method">Class Methods</a></h2>
+
+<!-- template
+<h3><a name=""><tt></tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"></td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"></td>
+</tr>
+</table>
+-->
+
+<h3><a name="Buffer::Buffer"><tt>Buffer::Buffer</tt></a></h3>
+
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Buffer() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">Buffer constructor.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::~Buffer"><tt>Buffer::~Buffer</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td> virtual ~Buffer() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td>Buffer destructor.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::resize"><tt>Buffer::resize</tt></a></h3>
+<table class="class-method">
+<tr> 
+	<th>Code</th>
+	<td colspan=3"> int resize(const int len) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>len</tt></td><td>:</td>
+	<td>the new length for buffer.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt>&lt;0</tt></td>
+		<td>:</td>
+		<td> fail.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">
+Change the allocated size of buffer to <tt>size</tt>. Keep the current buffer
+size if <tt>size</tt> is less than current length of allocated data
+(<tt>size &lt;= _l</tt>).</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::reset"><tt>Buffer::reset</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td> void reset() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td>Reset Buffer object, keep an already allocated buffer and start
+index from zero again.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::trim"><tt>Buffer::trim</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td> void trim() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td>Remove leading and trailing white-space in buffer.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::copy"><tt>Buffer::copy</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int copy(const Buffer* bfr) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>bfr</tt></td>
+	<td>:</td>
+	<td>A pointer to Buffer object.</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">Copy the content of Buffer object <tt>bfr</tt>.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::copy_raw"><tt>Buffer::copy_raw</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th> Code </th>
+	<td colspan="3">
+	int copy_raw(const char* bfr, int len = 0)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> bfr </tt></td>
+		<td>:</td>
+		<td> Pointer to raw buffer.</td>
+	</tr><tr>
+		<td><tt> len </tt></td>
+		<td>:</td>
+		<td> optional, length of raw buffer <tt>bfr</tt> to be
+copied, default to <tt>0</tt>.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr>
+<tr>
+	<th>Description</th>
+	<td colspan="3"> Copy the content of raw buffer. </td>
+</tr>
+</table>
+
+<h3><a name="Buffer::set"><tt> Buffer::set </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">int set(const Buffer* bfr, const Buffer* dflt)</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>bfr</tt></td>
+		<td>:</td>
+		<td> pointer to Buffer object.</td>
+	</tr><tr>
+		<td><tt>dflt</tt></td>
+		<td>:</td>
+		<td>default value to be copied to buffer if <tt>bfr</tt> is empty.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set contents of Buffer to <tt>bfr</tt>. This method
+is similar with <tt>copy()</tt> function but with additional parameter
+<tt>dflt</tt>. if <tt>bfr</tt> is nil then <tt>dflt</tt> value will be used.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::set_raw"><tt> Buffer::set_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int set_raw(const char* bfr, const char* dflt) </td>
+</tr><tr>
+	<th rowspan="2"> Parameter </th>
+		<td> bfr </td>
+		<td> :   </td>
+		<td> a pointer to raw buffer. </td>
+	</tr><tr>
+		<td>len</td>
+		<td> : </td>
+		<td> default value to be copied to buffer if 'bfr' is empty. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set buffer to <tt>bfr</tt> or to <tt>dflt</tt> if <tt>bfr</tt>
+is nil.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::move_to"><tt> Buffer::move_to </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th> Code</th>
+	<td colspan="3"> int move_to(Buffer** bfr) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>bfr</tt></td>
+	<td>:</td>
+	<td> pointer to Buffer object. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td>fail.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Move content of this Buffer object to another Buffer
+object, <tt>bfr</tt>, leave current object to be an empty Buffer object.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::shiftr"><tt> Buffer::shiftr</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int shiftr(const int nbyte, int c = 0) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> nbyte </tt></td>
+		<td>:</td>
+		<td> number of bytes, to be shifted to the right.</td>
+	</tr><tr>
+		<td><tt> c </tt></td>
+		<td> : </td>
+		<td> fill the new empty space in the left with the value of <tt>c</tt>. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Move contents of buffer <tt>n</tt> bytes to the
+right.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::appendc"><tt> Buffer::appendc </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int appendc(const char c) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> c </tt></td>
+	<td>:</td>
+	<td> a character to be added to buffer. </td> 
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append one character to buffer. </td>
+</tr>
+</table>
+
+<h3><a name="Buffer::appendi"><tt> Buffer::appendi </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int appendi(long int i, int base = 10) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> i </tt></td>
+		<td>:</td>
+		<td> a number to be appended to buffer.</td>
+	</tr><tr>
+		<td><tt> base </tt></td>
+		<td>:</td>
+		<td> base number, default to 10. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append an integer <tt>i</tt> as a string to buffer.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::appendui"><tt> Buffer::appendui </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int appendui(long unsigned int i, int base = 10) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> i </tt></td>
+		<td>:</td>
+		<td> a number to be appended to buffer. </td>
+	</tr><tr>
+		<td><tt> base </tt></td>
+		<td>:</td>
+		<td> base number, default to 10. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append an unsigned integer <tt>i</tt> to buffer.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::appendd"><tt> Buffer::appendd </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int appendd(double d) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> d </tt></td>
+	<td>:</td>
+	<td> float or double number.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of bytes appended.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append a float number to buffer.  Maximum digit in
+fraction is six digits. </td>
+</tr>
+</table>
+
+<h3><a name="Buffer::append"><tt> Buffer::append </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int append(const Buffer* bfr) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> bfr </tt></td>
+	<td>:</td>
+	<td> pointer to Buffer object.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of bytes appended. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append a content of Buffer object <tt>bfr</tt> to
+buffer.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::append_raw"><tt> Buffer::append_raw</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int append_raw(const char* bfr, int len = 0) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> bfr </tt></td>
+		<td>:</td>
+		<td> pointer to raw buffer.</td>
+	</tr><tr>
+		<td><tt>len</tt></td>
+		<td>:</td>
+		<td> optional, length of <tt>bfr</tt>, default to <tt>0</tt>.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt>&gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of bytes appended. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">
+Append a raw buffer <tt>bfr</tt> to buffer.  If <tt>bfr</tt> is nil and len
+is greater than zero, than this method will behaving like <tt>resize()</tt>
+method, resizing the buffer to <tt>len</tt>.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::concat"><tt> Buffer::concat </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int concat(const char *bfr, ...) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> bfr </tt>
+		<td>:</td>
+		<td> pointer to raw buffer.</td>
+	</tr><tr>
+		<td><tt> ... </tt></td>
+		<td>:</td>
+		<td> others raw buffer. The last parameter must be
+<tt>NULL</tt>.
+		</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append several raw buffer to buffer.
+<b>NOTE:</b> the last parameter must be NULL.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::aprint"><tt> Buffer::aprint </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int aprint(const char *fmt, ...) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> fmt </tt></td>
+		<td>:</td>
+		<td> formatted string.</td>
+	</tr><tr>
+		<td><tt> ... </tt></td>
+		<td>:</td>
+		<td> format string parameter. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of bytes appended. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append a formatted string to buffer. </td>
+</tr>
+</table>
+
+<h3><a name="Buffer::vprint"><tt> Buffer::vprint </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int vprint(const char *fmt, va_list args) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> fmt </tt></td>
+		<td>:</td>
+		<td> formatted string. </td>
+	</tr><tr>
+		<td><tt> args </tt></td>
+		<td>: </td>
+		<td> list of arguments for <tt>fmt</tt>.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of bytes appended. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append a formatted string to buffer. </td>
+</tr>
+</table>
+
+<h3><a name="Buffer::prepend"><tt> Buffer::prepend </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int prepend(Buffer* bfr) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> bfr </tt></td>
+	<td>:</td>
+	<td> pointer to Buffer object.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of bytes added to the beginning of buffer. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add buffer content of <tt> bfr </tt> object to the
+beginning of this Buffer object.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::prepend_raw"><tt> Buffer::prepend_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int prepend_raw(const char* bfr, int len = 0) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> bfr </tt></td>
+		<td> : </td>
+		<td> pointer to raw buffer. </td>
+	</tr><tr>
+		<td><tt> len </tt></td>
+		<td>:</td>
+		<td> length of <tt>bfr</tt>, default to zero if not set. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success, number of bytes added to beginning of buffer. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add raw buffer <tt> bfr </tt> to the beginning of
+Buffer object.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::subc"><tt> Buffer::subc </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int subc(int from, int to) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> from </tt></td>
+		<td>:</td>
+		<td> character to be replaced. </td>
+	</tr><tr>
+		<td><tt> to </tt></td>
+		<td>:</td>
+		<td> character that will replacing <tt>from</tt> character. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td><tt> &gt;=0 </td>
+	<td> : </td>
+	<td> number of character replaced. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Replace each of <tt>from</tt> character in buffer
+with <tt>to</tt> character. </td>
+</tr>
+</table>
+
+<h3><a name="Buffer::cmp"><tt> Buffer::cmp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int cmp(const Buffer* bfr) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> bfr </tt></td>
+	<td>:</td>
+	<td> pointer to Buffer object.</td>
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt>1</tt></td>
+		<td>:</td>
+		<td> if this object buffer greater than <tt>bfr</tt>.</td>
+	</tr><tr>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> if this object buffer equal with <tt>bfr</tt>.</td>
+	</tr><tr>
+		<td><tt>-1</tt></td>
+		<td>:</td>
+		<td> if this object buffer less than <tt>bfr</tt>.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Compare content of this buffer with content on
+<tt>bfr</tt> object. Use <tt>strcmp()</tT> if <tt>len</tt> is zero, or
+<tt>strncmp()</tt> if <tt>len</tt> is not zero. This is a case sensitive
+compare, where <tt>A != a</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::cmp_raw"><tt> Buffer::cmp_raw</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int cmp_raw(const char* bfr, int len = 0) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>bfr</tt></td>
+		<td>:</td>
+		<td> pointer to raw buffer. </td>
+	</tr><tr>
+		<td><tt>len</tt></td>
+		<td>:</td>
+		<td> length of raw buffer <tt>bfr</tt> to be compared, default
+to <tt>0</tt>.
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt>1</tt></td>
+		<td>:</td>
+		<td> if this object buffer greater than <tt>bfr</tt>.</td>
+	</tr><tr>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> if this object buffer equal with <tt>bfr</tt>.</td>
+	</tr><tr>
+		<td><tt>-1</tt></td>
+		<td>:</td>
+		<td> if this object buffer less than <tt>bfr</tt>.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Compare content of this buffer with raw buffer
+<tt>bfr</tt>. Use <tt>strcmp()</tT> if <tt>len</tt> is zero, or
+<tt>strncmp()</tt> if <tt>len</tt> is not zero. This is case sensitive
+compare, where <tt>A != a</tt>.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::like"><tt> Buffer::like </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int like(const Buffer* bfr) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>bfr</tt></td>
+	<td>:</td>
+	<td> pointer to Buffer object. </td>
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt>1</tt></td>
+		<td>:</td>
+		<td> if this object buffer greater than <tt>bfr</tt>.</td>
+	</tr><tr>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> if this object buffer equal with <tt>bfr</tt>.</td>
+	</tr><tr>
+		<td><tt>-1</tt></td>
+		<td>:</td>
+		<td> if this object buffer less than <tt>bfr</tt>.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Use <tt>strcasecmp()</tt> if len is zero, or
+<tt>strncasecmp()</tt> if '<tt>len</tt> is not zero. This is case not
+sensitive compare, where <tt>A == a</tt>.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::like_raw"><tt> Buffer::like_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int like_raw(const char* bfr, int len = 0) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>bfr</tt></td>
+		<td>:</td>
+		<td> pointer to raw buffer. </td>
+	</tr><tr>
+		<td><tt>len</tt></td>
+		<td>:</td>
+		<td> length of raw buffer <tt>bfr</tt> to be compared, default
+		to <tt>0</tt>.
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt>1</tt></td>
+		<td>:</td>
+		<td> if this object buffer greater than <tt>bfr</tt>.</td>
+	</tr><tr>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> if this object buffer equal with <tt>bfr</tt>.</td>
+	</tr><tr>
+		<td><tt>-1</tt></td>
+		<td>:</td>
+		<td> if this object buffer less than <tt>bfr</tt>.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Use <tt>strcasecmp()</tt> if <tt>len</tt> is zero,
+or <tt>strncasecmp()</tt> if <tt>len</tt> is not zero.  This is case not
+sensitive compare, where <tt>A == a</tt>.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::to_lint"><tt> Buffer::to_lint</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> long int to_lint() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td><tt>number</tt></td>
+	<td>:</td>
+	<td> number in long integer. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Convert sequence of digit in buffer into number. </td>
+</tr>
+</table>
+
+<h3><a name="Buffer::dump"><tt> Buffer::dump </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void dump() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Dump buffer contents to standard output. </td>
+</tr>
+</table>
+
+<h3><a name="Buffer::dump_hex"><tt> Buffer::dump_hex </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void dump_hex() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Dump buffer in two column, hexadecimal in the left
+column and printable characters in the right column.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::v"><tt> Buffer::v </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline const char* v() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>const char*</tt></td>
+		<td>:</td>
+		<td>return pointer to raw buffer, <tt>_v</tt>. 	</td>
+	</tr><tr>
+		<td><tt>"\0"</tt></td>
+		<td>:</td>
+		<td>an empty string, if Buffer object is not initialized
+		yet.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">This is safe way of returning value of buffer data.
+If Buffer object is not initialized yet, return an empty string
+(<tt>"\0"</tt>); if Buffer object is already initialized return '<tt>_v</tt>'.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::is_empty"><tt> Buffer::is_empty </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline int is_empty() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt>1</tt></td>
+		<td>:</td>
+		<td> if buffer is empty. </td>
+	</tr><tr>
+		<td><tt>0</tt></td>
+		<td>:</td>
+		<td> if buffer is not empty. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Function to check if buffer is empty or not. Another
+way to do this is by directly checking the '<tt>_i</tt>' value.</td>
+</tr>
+</table>
+
+
+<h3><a name="Buffer::INIT"><tt> Buffer::INIT </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int INIT(Buffer** o, const Buffer* bfr) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>o</tt></td>
+		<td>:</td>
+		<td>output, a new Buffer object.</td>
+	</tr><tr>
+		<td><tt>bfr</tt></td>
+		<td>:</td>
+		<td>pointer to Buffer object, to be copied to new object.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create and initialize a new Buffer object based on
+data on <tt>bfr</tt> object.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::INIT_RAW"><tt> Buffer::INIT_RAW</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int INIT_RAW(Buffer** o, const char* bfr) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>o</tt></td>
+		<td>:</td>
+		<td>output, a new Buffer object.</td>
+	</tr><tr>
+		<td><tt>bfr</tt></td>
+		<td>:</td>
+		<td>pointer to Buffer object, to be copied to new object.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create and initialized a new Buffer object based on
+raw buffer <tt>bfr</tt>.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::INIT_SIZE"><tt> Buffer::INIT_SIZE </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int INIT_SIZE(Buffer** o, const int size) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>o</tt></td>
+		<td>:</td>
+		<td>output, a new Buffer object.</td>
+	</tr><tr>
+		<td><tt>bfr</tt></td>
+		<td>:</td>
+		<td>pointer to Buffer object, to be copied to new object.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create and initialized a new Buffer object with
+buffer size is equal to <tt>size</tt>.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::VSNPRINTF"><tt> Buffer::VSNPRINTF </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int VSNPRINTF(char* bfr, int len, const char*
+fmt, va_list args) </td>
+</tr><tr>
+	<th rowspan="4">Parameter</th>
+		<td><tt>bfr</tt></td>
+		<td>:</td>
+		<td>output, return value as string as in <tt>fmt</tt>.
+	</tr><tr>
+		<td><tt>len</tt></td>
+		<td>:</td>
+		<td>length of format string to be copied to <tt>bfr</tt>.</td>
+	</tr><tr>
+		<td><tt>fmt</tt></td>
+		<td>:</td>
+		<td>format string.</td>
+	</tr><tr>
+		<td><tt>args</tt></td>
+		<td>:</td>
+		<td>list of arguments for <tt>fmt</tt>.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td>success, length of buffer.</td>
+	</tr><tr>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> fail.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create an output of formatted string <tt>fmt</tt>
+and their arguments, <tt>args</tt>, to buffer <tt>bfr</tt>.  User must have
+allocated buffer <tt>bfr</tt> prior calling these function.</td>
+</tr>
+</table>
+
+<h3><a name="Buffer::TRIM"><tt> Buffer::TRIM </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int TRIM(char* bfr, int len) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt>bfr</tt></td>
+		<td>:</td>
+		<td>raw buffer to be trimmed.</td>
+	</tr><tr>
+		<td><tt>len</tt></td>
+		<td>:</td>
+		<td>optional, length of 'bfr'.</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td><tt>&gt;=0</tt></td>
+	<td>:</td>
+	<td> success, length of <tt>bfr</tt> after trimmed left and
+	right. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Remove leading and trailing white-space from buffer
+	<tt>bfr</tt>.</td>
+</tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,723 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<h1>Introduction</h1>
+<ul class="toc">
+	<li><a target="content" href="Introduction.html#moddep"> Module Dependencies</a></li>
+	<li><a target="content" href="Introduction.html#using"> Using libvos</a></li>
+	<ul>
+	<li><a target="content" href="Introduction.html#using_with_make"> Using libvos with (GNU) make</a></li>
+	<li><a target="content" href="Introduction.html#make_var"> libvos Makefile Variables</a></li>
+	<li><a target="content" href="Introduction.html#make_func_var"> libvos Makefile Function Variables</a></li>
+	<li><a target="content" href="Introduction.html#make_target"> libvos Makefile Targets</a></li>
+	<li><a target="content" href="Introduction.html#debugging"> libvos Debugging</a></li>
+	<li><a target="content" href="Introduction.html#make_example"> User Project Makefile Example</a></li>
+	</ul>
+</ul>
+<p>
+libvos is a C++ library. First implementation was intended for reading and
+writing Delimited Separated Value (DSV) data only, but then evolved and have
+more capabilities.
+</p>
+<p>
+libvos contain several modules that can be independent or dependable
+through class inheritance and include pragma.
+</p>
+<p>
+Current modules and features,
+</p>
+<ul>
+<li>
+Buffer module, very easy and simple module for processing sequence of
+byte of data. In example: string or TCP packet.
+</li>
+<li>
+File module, module to talk to local ﬁle system, reading and writing ﬁle.
+</li>
+<li>
+Dir module, module to talk to local ﬁle system, listing and caching directory
+content.
+</li>
+<li>
+Reading and writing Delimited Separated Value (DSV) data.
+</li>
+<li>
+Reading and writing INI ﬁle format.
+</li>
+<li>
+Socket module, talk to network using UDP or TCP socket.
+</li>
+<li>
+FTP module, very easy and simple module to talk to FTP server.
+</li>
+<li>
+OCI module, Minimalist and simple module for sending a query to Oracle
+Database server and receiving query data.
+</li>
+<li>
+FTP server, module for serving ﬁle system or any hierarchy of data to
+networks using FTP.
+</li>
+</ul>
+
+<p class="break"></p>
+
+<h2><a name="moddep">Module Dependencies</a></h2>
+<pre>
+            libvos
+               *
+               |
+     +----* Buffer *--------------------------------------+
+     |         ^                                          |
+     |         |                                          |
+     |       File *---------------------------------+     |
+     |         ^                                    |     |
+     |         |                                    |     |
+  DirNode      +--- Dlogger                         |     |
+     *         |                                    |     |
+     |         |                                    |     |
+    Dir        +--- Config ----* ConfigData --------|-----+
+     *         |                                    |     |
+     |         +--- Reader ----+                    |     |
+     |         |               |                    |     |
+     |         |               +------* RecordMD ---+     |
+     |         |               |                          |
+     |         |               +------* Record -----------+
+     |         |               |                          |
+     |         +--- Writer ----+                          |
+     |         |                                          |
+     |         |  +---* SocketAddr -----------------------+
+     |         |  |                                       |
+     |        Socket *---------+--------+                 |
+     |         ^               |        |                 |
+     |         |       +--* DNSQuery -------* DNS_rr -----+
+     |         |       |                |                 |
+     |         +--- Resolver            |                 |
+     |         |                        |                 |
+     |         |          +-----* FTPClient --* FTPCmd ---+
+     |         |          |                               |
+     |         +---- FTPD +---* FTPUser ------------------+
+     |         |                    |
+     |         +---- FTP            |
+     +------------------------------+
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+<p class="break"></p>
+
+<h2><a name="using">Using libvos</a></h2>
+<p>
+There is two common way to use libvos. First, by copying specific module
+only, and their dependencies, to your project. Second, by using libvos
+Makefile through make <tt>include</tt> directive.
+</p>
+
+<h3><a name="using_with_make"> Using libvos with (GNU) make</a></h3>
+
+libvos Makefile contain several variables that you must use through your
+project Makefile. Below is a list of step by step guide to use libvos
+using GNU make.
+
+<ol>
+<li> Define libvos directory </li>
+<pre>
+	LIBVOS_D=./libvos
+</pre>
+<p>
+Set variable <tt>LIBVOS_D</tt> to point to libvos directory source. The name
+must be exactly as it is written: <tt>LIBVOS_D</tt>.
+</p>
+
+<li> Include libvos Makefile </li>
+<pre>
+	include $(LIBVOS_D)/Makefile
+</pre>
+<p>
+After including libvos Makefile you will have two variable pointing to libvos
+environment directories:
+</p>
+	<ul>
+	<li><tt>LIBVOS_SRC_D</tt>, as libvos source directory, and </li>
+	<li><tt>LIBVOS_BLD_D</tt>, as libvos build directory; </li>
+	</ul>
+<p>
+and three common variable that will affect build process:
+<tt>PRE_TARGET</tt>, <tt>TARGET_OBJS</tt>, and <tt>TARGET</tt>.
+</p>
+
+<li> Set your pre-building target (<tt>PRE_TARGET</tt>) </li>
+<pre>
+	PRE_TARGET += my_build_directory ...
+</pre>
+<p>
+<tt>PRE_TARGET</tt> is a set of target that needed to exist/create/build
+before building <tt>TARGET_OBJS</tt> and <tt>TARGET</tt>. You must add your
+target to <tt>PRE_TARGET</tt> using '</tt>+=</tt>', and be careful by not
+replacing them using '<tt>=</tt>' because libvos already set target on
+<tt>PRE_TARGET</tt> to create libvos build directory.
+</p>
+
+<li> Set your target object (<tt>TARGET_OBJS</tt>) </li>
+<p>
+<tt>TARGET_OBJS</tt> is a set of compilation object, in examples: all
+compiler intermediate file (object files, header files), or any files as
+dependencies for building the <tt>TARGET</tt>.
+</p>
+<pre>
+	TARGET_OBJS =	your_object.oo			\
+			...				\
+			$(LIBVOS_BLD_D)/libvos.oo	\
+			$(LIBVOS_BLD_D)/Buffer.oo
+</pre>
+<p>
+<b>NOTE</b>: You <em>must</em> always add
+'<tt>$(LIBVOS_BLD_D)/libvos.oo</tt>' to <tt>TARGET_OBJS</tt>.
+</p>
+
+<li>Set your target (<tt>TARGET</tt>)</li>
+<pre>
+	TARGET = ... executable ...
+</pre>
+
+<li>Add libvos target to your default target in Makefile</li>
+<pre>
+	all: ... libvos-all ...
+</pre>
+<p>
+If you need a debug environment you can replace or create your own target for
+creating executable with debugging options.
+</p>
+<pre>
+	debug: ... libvos-debug ...
+</pre>
+</ol>
+
+
+<h3><a name="make_var">libvos Makefile Variables</a></h3>
+<!-- template
+<li><tt> </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td></td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> </td>
+</tr>
+</table>
+-->
+<ul>
+<li><tt> SYS </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> uname </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Variable SYS contain your operating system name, retrieved from
+<tt>uname</tt> program.  In example, on openSUSE system the value is
+<tt>linux</tt>, and on Sun Solaris system the value is
+<tt>SunOS</tt>.</td>
+</tr>
+</table>
+
+<li><tt> CXX </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> g++ </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Name of C++ compiler executable. </td>
+</tr>
+</table>
+
+<li><tt> CXXFLAGS_GLOBAL </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> -fno-rtti -fno-exceptions -pipe </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Global compiler flags. </td>
+</tr>
+</table>
+
+<li><tt> CXXFLAGS </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> $(CXXFLAGS_GLOBAL) -Os </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Compiler flag for normal compilation. </td>
+</tr>
+</table>
+
+<li><tt> CXXFLAGS_DEBUG </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> $(CXXFLAGS_GLOBAL) -Wall -Wextra -Weffc++ -Werror -Wconversion -g -O0 </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Compiler flag for debug compilation.</td>
+</tr>
+</table>
+
+<li><tt> CXXFLAGS_ADD </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> -I$(LIBVOS_SRC_D) </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Additional compile flags. If user want to add additional compile
+flag, use this variable using '<tt>+=</tt>'. In example,
+<pre>
+CXXFLAGS_ADD += -pedantic -funroll-loops
+</pre>
+	</td>
+</tr>
+</table>
+
+<li><tt> LDFLAGS </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> -lpthread </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Linker flags. </td>
+</tr>
+</table>
+
+<li><tt> LDFLAGS_ADD </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> - </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> User additional linking flags. </td>
+</tr>
+</table>
+
+<li><tt> LIBVOS_SRC_D </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> $(LIBVOS_D) </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> libvos source directory. </td>
+</tr>
+</table>
+
+<li><tt> LIBVOS_BLD_D </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> $(LIBVOS_SRC_D)/build </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> libvos build directory. </td>
+</tr>
+</table>
+
+<li><tt> PRE_TARGET </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> $(LIBVOS_BLD_D) </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Prerequisite target that needed to be execute/create before
+building <tt>TARGET_OBJS</tt> and <tt>TARGET</tt>.</td>
+</tr>
+</table>
+
+<li><tt> TARGET_OBJS </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> (all libvos modules object) </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> List of object that needed to be build before executing
+<tt>TARGET</tt></td>
+</tr>
+</table>
+
+<li><tt> TARGET </tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> - </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> The final result to be build by this Makefile. </td>
+</tr>
+</table>
+</ul>
+
+
+<h3><a name="make_func_var">libvos Makefile Function Variables</a></h3>
+<p>
+Function variable is a unique variable from make program that use
+<tt>call</tt> function to execute a complex expression. The syntax of
+<tt>call</tt> function,
+</p>
+<pre>
+	$(call variable,param,param,...)
+</pre>
+
+<ul>
+<!-- template
+<li><tt> </tt></li>
+<table class="makevar">
+<tr>
+	<th> Code </th><td>:</td>
+	<td></td>
+</tr>
+<tr">
+	<th> Parameter </th><td>:</td>
+	<td><tt> </tt></td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> </td>
+</tr>
+</table>
+-->
+
+<li><tt>do_compile</tt></li>
+<table class="makevar">
+<tr>
+	<th> Code </th><td>:</td>
+	<td>$(CXX) $(CXXFLAGS) -c $&lt; -o $@</td>
+</tr>
+<tr>
+	<th> Parameter </th><td>:</td>
+	<td><tt>-</tt></td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td>Compile the first prerequisite name (<tt>$&lt;</tt>) to create
+target name (<tt>$@</tt>).</td>
+</tr>
+</table>
+
+<li><tt>do_build</tt></li>
+<table class="makevar">
+<tr>
+	<th> Code </th><td>:</td>
+	<td> $(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@</td>
+</tr>
+<tr>
+	<th> Parameter </th><td>:</td>
+	<td><tt>-</tt></td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td>Build target name (<tt>$@</tt>) using all prerequisites
+(<tt>$^</tt>) as the parameter.</td>
+</tr>
+</table>
+
+<li><tt>do_install</tt></li>
+<table class="makevar">
+<tr>
+	<th> Code </th><td>:</td>
+	<td>
+rm -f $(2) 2&amp;&gt; /dev/null;<br/>
+cp -f $(1) $(2);
+	</td>
+</tr>
+<tr>
+	<th> Parameter </th><td>:</td>
+	<td>
+<tt>$(1)</tt> : source file. <br/>
+<tt>$(2)</tt> : destination directory or file.</td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td>Install or copy <tt>$(1)</tt> to the <tt>$(2)</tt>.</td>
+</tr>
+</table>
+
+<li><tt>do_link</tt></li>
+<table class="makevar">
+<tr>
+	<th> Code </th><td>:</td>
+	<td>
+rm -f $(2) 2&amp;&gt; /dev/null; <br/>
+ln -s $(1) $(2);
+	</td>
+</tr>
+<tr>
+	<th> Parameter </th><td>:</td>
+	<td>
+<tt>$(1)</tt> : original file. <br/>
+<tt>$(2)</tt> : destination directory with or without symbolic
+link name.</td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Create a symbolic link of first-parameter to second-parameter.
+</td>
+</tr>
+</table>
+
+<li><tt>do_mkdir</tt></li>
+<table class="makevar">
+<tr>
+	<th> Code </th><td>:</td>
+	<td> mkdir -p $(1) </td>
+</tr>
+<tr>
+	<th> Parameter </th><td>:</td>
+	<td><tt>$(1)</tt> : path to directory to be created.</td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td>Create directory recursively.</td>
+</tr>
+</table>
+
+<li><tt>do_rmdir</tt></li>
+<table class="makevar">
+<tr>
+	<th> Code </th><td>:</td>
+	<td> rm -rf $(1) </td>
+</tr>
+<tr>
+	<th> Parameter </th><td>:</td>
+	<td><tt>$(1)</tt> : path to directory to be removed (recursively).</td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Remove directory recursively.</td>
+</tr>
+</table>
+</ul>
+
+
+<h3><a name="make_target">libvos Makefile Targets</a></h3>
+
+<ul>
+<!-- template
+<li><tt></tt></li>
+<table>
+<tr class="lefthdr">
+	<th> Default value </th><td>:</td>
+	<td><tt></tt></td>
+</tr>
+<tr class="lefthdr">
+	<th> Description </th><td>:</td>
+	<td> </td>
+</tr>
+</table>
+</li>
+-->
+<li><tt>libvos_all</tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td>
+: CXXFLAGS+=$(CXXFLAGS_ADD) <br/>
+: $$(PRE_TARGET) $$(TARGET_OBJS) $$(TARGET)
+	</td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> The default target. </td>
+</tr>
+</table>
+</li>
+
+<li><tt>libvos-all-32</tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td>
+: CXXFLAGS_ADD+=-m32<br/>
+: libvos-all
+	</td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td>Compile and build target for x86 (32-bit) machine.</td>
+</tr>
+</table>
+</li>
+
+<li><tt>libvos-all-64</tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td>
+: CXXFLAGS_ADD+=-m64 <br/>
+: libvos-all
+	</td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td>Compile and build target for x86_64 (64-bit) machine.</td>
+</tr>
+</table>
+</li>
+
+<li><tt>libvos-debug</tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td>
+: CXXFLAGS=$(CXXFLAGS_DEBUG) $(CXXFLAGS_ADD) <br/>
+: $$(PRE_TARGET) $$(TARGET_OBJS) $$(TARGET)
+	</td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td>Compile and build target with debugging options turned on.</td>
+</tr>
+</table>
+</li>
+
+<li><tt>libvos-debug-32</tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td>
+: CXXFLAGS_ADD+=$(CXXFLAGS_DEBUG) -m32 <br/>
+: libvos-debug
+	</td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Compile and build target for x86 (32-bit) machine with debugging
+options turned on.</td>
+</tr>
+</table>
+</li>
+
+<li><tt>libvos-debug-64</tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td>
+: CXXFLAGS_ADD+=$(CXXFLAGS_DEBUG) -m64 <br/>
+: libvos-debug
+	</td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Compile and build target for x86_64 (64-bit) machine with
+debugging options turned on. </td>
+</tr>
+</table>
+</li>
+
+<li><tt>libvos-clean</tt></li>
+<table class="makevar">
+<tr>
+	<th> Default value </th><td>:</td>
+	<td> $(call do_rmdir,$(LIBVOS_BLD_D)) </td>
+</tr>
+<tr>
+	<th> Description </th><td>:</td>
+	<td> Remove libvos build directory.</td>
+</tr>
+</table>
+</li>
+</ul>
+
+
+<h3><a name="debugging">libvos Debugging</a></h3>
+
+<p>
+There is two mode of debug, internal debug and external debug. Internal debug
+is when you use <tt>libvos-debug</tt> and their variants when compiling your
+program; It is used if you want to debug your program using debugger program,
+like <tt>gdb</tt>. External debug is by setting system environment variable:
+<tt>LIBVOS_DEBUG</tt>, which will print debug messages to standard error
+and/or standard output.
+</p>
+<p>
+After compiling your program you can display a debug output in libvos modules
+using libvos environment variable called <tt>LIBVOS_DEBUG</tt>.
+</p>
+<p>
+<pre>
+	$ export LIBVOS_DEBUG=1
+	$ ./runyourprogram
+</pre>
+</p>
+<p>
+Most of debug output is very raw and not all of it was pretty formatted.
+Unless you want to extent libvos or reporting bug for libvos, this option is
+should not used.
+</p>
+
+
+<h3><a name="make_example">User Project Makefile Example</a></h3>
+<pre>
+SRC_D   =.
+BLD_D   =$(SRC_D)/build
+LIBVOS_D=./libvos
+
+include $(LIBVOS_D)/Makefile
+
+PRE_TARGET      += $(BLD_D)
+
+TARGET_OBJS     =                                       \
+                        your.oo                         \
+                        $(LIBVOS_BLD_D)/libvos.oo       \
+                        $(LIBVOS_BLD_D)/Buffer.oo       \
+                        $(LIBVOS_BLD_D)/File.oo
+
+TARGET          = executable
+
+
+.PHONY: all debug clean distclean
+
+all: libvos-all
+
+debug: libvos-debug
+
+clean:
+        @(call do_rmdir,$(BLD_D))
+
+distclean: clean libvos-clean
+
+$(BLD_D):
+        @$(call do_mkdir,$(BLD_D))
+
+$(TARGET): $(TARGET_OBJS)
+        @$(do_build)
+
+$(BLD_D)/%.oo: $(SRC_D)/%.cpp $(SRC_D)/%.hpp
+        @$(do_compile)
+</pre>
+
+</body>
+</html>

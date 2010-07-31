@@ -1,0 +1,473 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1>Config Module</h1>
+
+<ul class="toc"
+<li><a href="#format"> Format </a></li>
+	<ul>
+	<li><a href="#format::param"> Parameters </a></li>
+	<li><a href="#format::section"> Sections </a></li>
+	<li><a href="#format::comment"> Comments </a></li>
+	</ul>
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#Config::Config"> Config::Config </a></li>
+	<li><a href="#Config::~Config"> Config::~Config </a></li>
+	<li><a href="#Config::load"> Config::load </a></li>
+	<li><a href="#Config::save"> Config::save </a></li>
+	<li><a href="#Config::save_as"> Config::save_as </a></li>
+	<li><a href="#Config::dump"> Config::dump </a></li>
+	<li><a href="#Config::close"> Config::close </a></li>
+	<li><a href="#Config::get"> Config::get </a></li>
+	<li><a href="#Config::get_number"> Config::get_number </a></li>
+	<li><a href="#Config::set"> Config::set </a></li>
+	<li><a href="#Config::add"> Config::add </a></li>
+	<li><a href="#Config::add_comment"> Config::add_comment </a></li>
+	</ul>
+</ul>
+
+<p>
+Config module is a module for reading and writing
+<a href="http://en.wikipedia.org/wiki/INI_file"> INI file format.</a>
+</p>
+<p>
+The INI file format is a de facto standard for configuration files. INI files
+are simple text files with a basic structure.  The name "INI file" comes from
+the filename extension usually used, "<tt>.INI</tt>", that stands for
+"<b>ini</b>tialization". Sometimes files using the INI file format will use
+a different extension, such as "<tt>.CFG</tt>", "<tt>.conf</tt>", or
+"<tt>.TXT</tt>".
+</p>
+
+<h2><a name="format"> Format </a></h2>
+
+<h3><a name="format::param"> Parameters </a></h3>
+<p>
+The basic element contained in an INI file is the <em>parameter</em>.  Every
+parameter has a <em>key</em> and a <em>value</em>, delimited by an equals
+sign (<tt>=</tt>). The <em>key</em> appears to the left of the equals sign.
+</p>
+<p>
+Format of key and value,
+<pre>
+	key=value
+</pre>
+</p>
+
+<p>
+Rule for key in parameter,
+<ul>
+<li> Key is not case sensitive. </li>
+
+<li> Space before beginning of the key and between key and key delimiter
+(<tt>=</tt>) is ignored. In example,
+<pre>
+	this_is_a_key       =value
+another-key=value
+</pre>
+is readed as two keys: "<tt>this_is_a_key</tt>" and "<tt>another-key</tt>".
+</li>
+
+<li>Key is white-space sensitive, in example: "<tt>A b</tt>" is not equal
+with "<tt>Ab</tt>", nor with "<tt>A&nbsp;&nbsp;&nbsp;&nbsp;b</tt>".</li>
+</ul>
+</p>
+
+<p>
+Rule for value in parameter,
+<ul>
+<li> Value end with end of line character.</li>
+<li> Space between key delimiter (<tt>=</tt>) and value is ignored. In
+example,
+<pre>
+key=   text
+</pre>
+will result in value of "<tt>text</tt>" not "<tt>&nbsp;&nbsp;&nbsp;ext</tt>".
+</li>
+</ul>
+</p>
+
+<h3><a name="format::section"> Sections </a></h3>
+<p>
+Parameters may be grouped into arbitrarily named sections. The section name
+appears on a line by itself, in square brackets ([ and ]). All parameters
+after the section declaration are associated with that section. There is no
+explicit "end of section" delimiter; sections end at the next section
+declaration, or the end of the file. Sections may not be nested.
+</p>
+<p>
+Format of section,
+<pre>
+	[section]
+</pre>
+</p>
+
+
+<h3><a name="format::comment"> Comments </a></h3>
+<p>
+Semicolons (<tt>;</tt>) and number sign (<tt>#</tt>) indicate the start of a
+comment. Comments continue to the end of the line. Everything between the
+semicolon and the End of Line is ignored. Any comments must occur on lines by
+themselves.
+</p>
+<p>
+Example of comment format,
+<pre>
+; comment text
+# another line of comment
+</pre>
+</p>
+
+<h2><a name="class_var">Class Variables</a></h2>
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr>
+<tr>
+	<td>ConfigData</td>
+	<td>_data</td>
+	<td>List of config sections, parameters and comments.</td>
+</tr>
+</table>
+
+<h2><a name="class_method">Class Methods</a></h2>
+
+<h3><a name="Config::Config"><tt> Config::Config </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Config() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">Config constructor.</td>
+</tr>
+</table>
+
+<h3><a name="Config::~Config"><tt> Config::~Config </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~Config()</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Config destructor.</td>
+</tr>
+</table>
+
+<h3><a name="Config::load"><tt> Config::load </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int load(const char* ini) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> ini </tt></td>
+	<td> : </td>
+	<td> a path to configuration file. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+	<td><tt> 0 </tt></td>
+	<td>:</td>
+	<td> success.</td>
+</tr>
+<tr>
+	<td><tt> &lt; 0 </tt></td>
+	<td>:</td>
+	<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Open config file and load all key and values.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Config::save"><tt> Config::save </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int save() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+	<td><tt> 0 </tt></td>
+	<td>:</td>
+	<td> success.</td>
+</tr>
+<tr>
+	<td><tt> &lt; 0 </tt></td>
+	<td>:</td>
+	<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Save all sections in file. If filename,
+<tt>_name</tt>, is empty this method will return <tt>-1</tt>. To save to
+another filename use <tt>save_as()</tt> method.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Config::save_as"><tt> Config::save_as </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int save_as(const char* ini, const int mode = CONFIG_SAVE_WOUT_COMMENT) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> ini </tt></td>
+		<td>:</td>
+		<td> an output filename. </td>
+	</tr><tr>
+		<td><tt> mode </tt></td>
+		<td>:</td>
+		<td>  save with or without comment.
+Mode value,
+<ul>
+<li><tt>CONFIG_SAVE_WOUT_COMMENT</tt>, save config without comments. </li>
+<li><tt>CONFIG_SAVE_WITH_COMMENT</tt>, save config with comments. </li>
+</ul>
+		</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+	<td><tt> 0 </tt></td>
+	<td>:</td>
+	<td> success.</td>
+</tr>
+<tr>
+	<td><tt> &lt; 0 </tt></td>
+	<td>:</td>
+	<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Save all config sections in a new filename.</td>
+</tr>
+</table>
+
+<h3><a name="Config::dump"><tt> Config::dump </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void dump() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Dump content of Config object to standard output. </td>
+</tr>
+</table>
+
+<h3><a name="Config::close"><tt> Config::close </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void close() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Close config file and release all data. </td>
+</tr>
+</table>
+
+<h3><a name="Config::get"><tt> Config::get </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> const char* get(const char* head, const char* key
+			, const char* dflt = NULL)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt>head</tt></td>
+		<td>:</td>
+		<td> section name.</td>
+	</tr><tr>
+		<td><tt>key</tt></td>
+		<td>:</td>
+		<td>key name, that will be searched in the section.</td>
+	</tr><tr>
+		<td><tt>dflt</tt></td>
+		<td>:</td>
+		<td> default return value if <tt>head</tT> or <tt>key</tT> is
+not found in config file, default to <tt>NULL</tt>.
+		</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td><tt>value</tt></td>
+	<td>:</td>
+	<td> success, pointer to config value. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get config value based on <tt>head</tt> and
+<tt>key</tt>. If <tt>head</tt> or <tt>key</t> is not found then return
+<tt>dflt</tt> value. <br/>
+Sometimes you will find a INI file without a section header, just
+<em>key</em> and <em>value</em>. You can still read this INI file by using
+"<tt>__CONFIG__</tt>" or <tt>CONFIG_ROOT</tt> in section name. In example,
+<pre>
+	v = get("__CONFIG__", key);
+</pre>
+or,
+<pre>
+	v = get(CONFIG_ROOT, key);
+</pre>
+	</td>
+</tr>
+</table>
+
+<h3><a name="Config::get_number"><tt> Config::get_number </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> long int get_number(const char* head
+			, const char* key
+			, const int dflt = 0)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt>head</tt></td>
+		<td>:</td>
+		<td>section name.</td>
+	</tr><tr>
+		<td><tt>key</tt></td>
+		<td>:</td>
+		<td>key name, that will be searched in the section.</td>
+	</tr><tr>
+		<td><tt>dflt</tt></td>
+		<td>:</td>
+		<td> default return value if <tt>head</tt> or <tt>key</tt> is
+not found in config file, default to <tt>0</tt>.
+		</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td><tt>number</tt></td>
+	<td>:</td>
+	<td> any number with maximum value in unsigned long. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Search for value in section name <tt>head</tt> and
+with key value is <tt>key</tt> and return their value in number.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Config::set"><tt> Config::set </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int set(const char* head, const char* key, const
+char* value) </td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt>head</tt></td>
+		<td>:</td>
+		<td>section name.</td>
+	</tr><tr>
+		<td><tt>key</tt></td>
+		<td>:</td>
+		<td>key name, that will be searched in the section.</td>
+	</tr><tr>
+		<td><tt> value </tt></td>
+		<td>:</td>
+		<td> a new value for the <tt>key</tt>. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+	<td><tt> 0 </tt></td>
+	<td>:</td>
+	<td> success.</td>
+</tr>
+<tr>
+	<td><tt> &lt; 0 </tt></td>
+	<td>:</td>
+	<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set a <tt>key</tt> value in section <tt>head</tt> to
+a new <tt>value</tt>. If <tt>head</tt> or <tt>key</tt> is not found then add
+them as a new section or a new key.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Config::add"><tt> Config::add </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void add(const char* head, const char* key, const
+char* value) </td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt>head</tt></td>
+		<td>:</td>
+		<td>section name.</td>
+	</tr><tr>
+		<td><tt>key</tt></td>
+		<td>:</td>
+		<td>key name, that will be searched in the section.</td>
+	</tr><tr>
+		<td><tt> value </tt></td>
+		<td>:</td>
+		<td> a value for the <tt>key</tt>.</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new <tt>head</tt> or <tt>key</tt> to Config
+object if it is not exist.  If the <tt>key</tt> is already exist in the
+section <tt>head</tt> then the old value of <tt>key</tt> will replaced with
+<tt>value</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Config::add_comment"><tt> Config::add_comment </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void add_comment(const char* comment) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> comment </tt></td>
+	<td> : </td>
+	<td> pointer to string of comment, with leading '<tt>#</tt>' or
+	'<tt>;</tt>' character.
+	</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a comment string to Config object. </td>
+</tr>
+</table>
+
+</body>
+</html>

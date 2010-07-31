@@ -1,0 +1,38 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<h1> Developer Notes </h1>
+
+<h2> From C to C-with-Class</h2>
+<p>
+After writing program long enough in C, I am started to developing some
+pattern in my code. Most recognizable pattern is, in example,
+</p>
+<p>
+<pre>
+	func(struct adt* obj, int param)
+</pre>
+</p>
+<p>
+where <tt>struct adt</tt> is a collection of data that is dependable whether
+it is mutual or not, and <tt>func</tt> is a function that change the content
+of data in <tt>obj</tt>.
+</p>
+<p>
+In C++ this pattern can be handled easily using <tt>class</tt> syntax, why
+make it complicated if a compiler can handle it.
+</p>
+<p>
+Unlike C, which is have a simple and minimalistic syntax, C++ offer a more
+grammar to their user, on this library I only use three of them,
+<ul>
+<li><tt>class</tt>, including public and private section, </li>
+<li><tt>namespace</tt>, and </li>
+<li>class hierarchies : inheritance. </li>
+</ul>
+</p>
+
+</body>
+</html>
