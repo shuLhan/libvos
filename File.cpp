@@ -182,7 +182,7 @@ void File::set_eol(const int mode)
 /**
  * @method	: File::read
  * @return	:
- *	< >0	: success, return number of bytes readed.
+ *	< >0	: success, return number of bytes read.
  *	< 0	: EOF
  *	< <0	: fail, error at reading descriptor.
  * @desc	: read contents of file and saved it to buffer.
@@ -209,7 +209,7 @@ int File::read()
  * @param	:
  *	> n	: number of bytes to be read from descriptor.
  * @return	:
- *	< >0	: success, return number of bytes readed.
+ *	< >0	: success, return number of bytes read.
  *	< 0	: EOF, or file is not open.
  *	< <0	: fail.
  * @desc	:
@@ -321,7 +321,7 @@ int File::refill(int read_min)
  * @param	:
  *	> line	: out, pointer to Buffer object.
  * @return	:
- *	< 1	: success, one line readed.
+ *	< 1	: success, one line read.
  *	< 0	: success, EOF.
  *	< <0	: fail.
  * @desc	: get one line at a time from buffer.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -17,16 +17,15 @@ namespace vos {
  * @attr	:
  *	- _line	: temporary buffer for collecting row data in a single line.
  * @desc	:
- *	module for writing of Record object into file using Record Meta-Data,
- *	or in another word, a module for writing DSV data to file.
+ *	module for writing Record object into file using Record Meta-Data.
  */
 class Writer : public File {
 public:
 	Writer();
 	~Writer();
 
-	int write(Record *cols, RecordMD *rmd);
-	int writes(Record *rows, RecordMD *rmd);
+	int write(Record* row, RecordMD* rmd);
+	int writes(Record* rows, RecordMD* rmd);
 
 	Buffer _line;
 private:

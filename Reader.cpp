@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -34,7 +34,7 @@ Reader::~Reader()
  *	move unparsed line to the first position, and fill the rest with a new
  *	content.
  */
-inline int Reader::refill_buffer(const int read_min)
+int Reader::refill_buffer(const int read_min)
 {
 	register int move_len	= 0;
 	register int len	= 0;
@@ -46,19 +46,23 @@ inline int Reader::refill_buffer(const int read_min)
 
 	len = move_len + read_min;
 	if (len > _l) {
+
 		if (LIBVOS_DEBUG) {
 			printf("\n reader resize: from %d to %d\n", _l, len);
 		}
+
 		resize(len);
 		len -= move_len;
 	} else {
 		len = _l - move_len;
 		if (len <= 0) {
 			len = _l * 2;
+
 			if (LIBVOS_DEBUG) {
 				printf("\n reader resize: from %d to %d\n",
 					_l, len);
 			}
+
 			resize(len);
 			len -= move_len;
 		}
@@ -82,14 +86,14 @@ inline int Reader::refill_buffer(const int read_min)
  *	> r	: return value, record buffer; already allocated by user.
  *	> md	: record meta data, already set by user.
  * @return	:
- *	< 1	: one record readed.
+ *	< 1	: one record read.
  *	< 0	: EOF.
  *	< -1	: record rejected.
  * @desc	:
  *	read one row from file, using 'r' as record buffer, and 'md' as record
  *	meta data.
  */
-int Reader::read(Record *r, RecordMD *rmd)
+int Reader::read(Record* r, RecordMD* rmd)
 {
 	int n		= 0;
 	int startp	= _p;
@@ -99,15 +103,18 @@ int Reader::read(Record *r, RecordMD *rmd)
 
 	if (_i == 0) {
 		s = File::read();
-		if (s == 0)
+		if (s == 0) {
 			return 0;
+		}
 	} else if (startp >= _i) {
-		startp = startp - _p;
-		s = refill_buffer(0);
-		if (s == 0)
-			return 0;
-		if (s < 0)
+		startp	= startp - _p;
+		s	= refill_buffer(0);
+		if (s <= 0) {
+			if (s == 0) {
+				return 0;
+			}
 			goto reject;
+		}
 	}
 
 	while (rmd && r) {
@@ -115,12 +122,12 @@ int Reader::read(Record *r, RecordMD *rmd)
 			len = _p + rmd->_start_p;
 			if (len > _i) {
 				s = refill_buffer(rmd->_start_p);
-				if (s <= 0)
+				if (s <= 0) {
 					goto reject;
+				}
 			}
 			startp = _p + rmd->_start_p;
 		}
-
 		if (rmd->_left_q) {
 			if (_v[startp] != rmd->_left_q) {
 				goto reject;
@@ -128,20 +135,21 @@ int Reader::read(Record *r, RecordMD *rmd)
 
 			++startp;
 			if (startp >= _i) {
-				startp = startp - _p;
-				s = refill_buffer(0);
-				if (s <= 0)
+				startp	= startp - _p;
+				s	= refill_buffer(0);
+				if (s <= 0) {
 					goto reject;
+				}
 			}
 		}
-
 		if (rmd->_type == RMD_T_BLOB) {
 			len = startp + RecordMD::BLOB_SIZE;
 			if (len >= _i) {
-				startp = startp - _p;
-				s = refill_buffer(RecordMD::BLOB_SIZE);
-				if (s <= 0)
+				startp	= startp - _p;
+				s	= refill_buffer(RecordMD::BLOB_SIZE);
+				if (s <= 0) {
 					goto reject;
+				}
 			}
 			r->_i = 0;
 			memcpy(&r->_i, &_v[startp], RecordMD::BLOB_SIZE);
@@ -152,33 +160,35 @@ int Reader::read(Record *r, RecordMD *rmd)
 			if (r->_i > r->_l) {
 				r->resize(r->_i + 1);
 			}
-
 			if (r->_i > _l) {
-				startp = startp - _p;
-				s = refill_buffer(r->_i);
-				if (s <= 0)
+				startp	= startp - _p;
+				s	= refill_buffer(r->_i);
+				if (s <= 0) {
 					goto reject;
+				}
 			}
 
 			len = startp + r->_i;
 			if (len >= _i) {
-				startp = startp - _p;
-				s = refill_buffer(r->_i);
-				if (s <= 0)
+				startp	= startp - _p;
+				s	= refill_buffer(r->_i);
+				if (s <= 0) {
 					goto reject;
+				}
 			}
 
 			memcpy(r->_v, &_v[startp], r->_i);
 			r->_v[r->_i] = '\0';
+
 			startp += r->_i;
 			if (startp >= _i) {
 				startp = startp - _p;
 				s = refill_buffer(0);
 				/* do not check for s == 0 */
-				if (s < 0)
+				if (s < 0) {
 					goto reject;
+				}
 			}
-
 			if (rmd->_right_q) {
 				if (_v[startp] != rmd->_right_q) {
 					goto reject;
@@ -187,19 +197,20 @@ int Reader::read(Record *r, RecordMD *rmd)
 				if (startp >= _i) {
 					startp = startp - _p;
 					s = refill_buffer(0);
-					if (s <= 0)
+					if (s <= 0) {
 						goto reject;
+					}
 				}
 			}
-
 			if (rmd->_sep) {
 				while (_v[startp] != rmd->_sep) {
 					++startp;
 					if (startp >= _i) {
 						startp = startp - _p;
 						s = refill_buffer(0);
-						if (s <= 0)
+						if (s <= 0) {
 							goto reject;
+						}
 					}
 				}
 
@@ -208,8 +219,9 @@ int Reader::read(Record *r, RecordMD *rmd)
 					startp = startp - _p;
 					s = refill_buffer(0);
 					/* do not check for s == 0 */
-					if (s < 0)
+					if (s < 0) {
 						goto reject;
+					}
 				}
 			}
 		} else { /* not BLOB */
@@ -221,12 +233,13 @@ int Reader::read(Record *r, RecordMD *rmd)
 				}
 
 				if (startp + len >= _i) {
-					len = startp + len;
-					startp = startp - _p;
+					len	= startp + len;
+					startp	= startp - _p;
 
 					s = refill_buffer(len);
-					if (s <= 0)
+					if (s <= 0) {
 						goto reject;
+					}
 				}
 
 				memcpy(r->_v, &_v[startp], len);
@@ -238,31 +251,32 @@ int Reader::read(Record *r, RecordMD *rmd)
 				while (_v[startp] != rmd->_right_q) {
 					++startp;
 					if (startp >= _i) {
-						startp = startp - _p;
-						chop_bgn = chop_bgn - _p;
+						startp		= startp - _p;
+						chop_bgn	= chop_bgn - _p;
 
 						s = refill_buffer(0);
-						if (s <= 0)
+						if (s <= 0) {
 							goto reject;
+						}
 					}
 				}
 
 				len = startp - chop_bgn;
 				if (len > 0) {
-					s = _v[startp];
-					_v[startp] = '\0';
+					s		= _v[startp];
+					_v[startp]	= '\0';
 					r->append_raw(&_v[chop_bgn], len);
-					_v[startp] = (char) s;
+					_v[startp]	= (char) s;
 				}
 
 				++startp;
 				if (startp >= _i) {
-					startp = startp - _p;
-
-					s = refill_buffer(0);
+					startp	= startp - _p;
+					s	= refill_buffer(0);
 					/* do not check for s == 0 */
-					if (s < 0)
+					if (s < 0) {
 						goto reject;
+					}
 				}
 
 				if (rmd->_sep) {
@@ -271,8 +285,9 @@ int Reader::read(Record *r, RecordMD *rmd)
 						if (startp >= _i) {
 							startp = startp - _p;
 							s = refill_buffer(0);
-							if (s <= 0)
+							if (s <= 0) {
 								goto reject;
+							}
 						}
 					}
 
@@ -282,8 +297,9 @@ int Reader::read(Record *r, RecordMD *rmd)
 
 						s = refill_buffer(0);
 						/* do not check for s == 0 */
-						if (s < 0)
+						if (s < 0) {
 							goto reject;
+						}
 					}
 				}
 			} else if (rmd->_sep) {
@@ -295,16 +311,17 @@ int Reader::read(Record *r, RecordMD *rmd)
 						chop_bgn = chop_bgn - _p;
 
 						s = refill_buffer(0);
-						if (s <= 0)
+						if (s <= 0) {
 							goto reject;
+						}
 					}
 				}
 				len = startp - chop_bgn;
 				if (len > 0) {
-					s = _v[startp];
-					_v[startp] = '\0';
+					s		= _v[startp];
+					_v[startp]	= '\0';
 					r->append_raw(&_v[chop_bgn], len);
-					_v[startp] = (char) s;
+					_v[startp]	= (char) s;
 				}
 
 				++startp;
@@ -312,8 +329,9 @@ int Reader::read(Record *r, RecordMD *rmd)
 					startp = startp - _p;
 					s = refill_buffer(0);
 					/* do not check for s == 0 */
-					if (s < 0)
+					if (s < 0) {
 						goto reject;
+					}
 				}
 			} else {
 				chop_bgn = startp;
@@ -327,17 +345,18 @@ int Reader::read(Record *r, RecordMD *rmd)
 						if (0 == s) {
 							break;
 						}
-						if (s < 0)
+						if (s < 0) {
 							goto reject;
+						}
 					}
 				}
 
 				len = startp - chop_bgn;
 				if (len > 0) {
-					s = _v[startp];
-					_v[startp] = '\0';
+					s		= _v[startp];
+					_v[startp]	= '\0';
 					r->append_raw(&_v[chop_bgn], len);
-					_v[startp] = (char) s;
+					_v[startp]	= (char) s;
 				}
 			}
 		}
@@ -345,7 +364,6 @@ int Reader::read(Record *r, RecordMD *rmd)
 		rmd	= rmd->_next;
 		++n;
 	}
-
 	if (n == 0) {
 		_p = startp;
 		return 0;
@@ -353,18 +371,18 @@ int Reader::read(Record *r, RecordMD *rmd)
 	if (rmd) {
 		goto reject;
 	}
-
 	while (_v[startp] != _eol) {
 		++startp;
 		if (startp >= _i) {
-			startp = startp - _p;
-			s = refill_buffer(0);
-			if (0 == s) {
-				_p = startp;
-				return 1;
-			}
-			if (s < 0)
+			startp	= startp - _p;
+			s	= refill_buffer(0);
+			if (s <= 0) {
+				if (0 == s) {
+					_p = startp;
+					return 1;
+				}
 				goto reject;
+			}
 		}
 	}
 	_p = startp + 1;
@@ -375,14 +393,15 @@ reject:
 	while (_v[startp] != _eol) {
 		++startp;
 		if (startp >= _i) {
-			startp = startp - _p;
-			s = refill_buffer(0);
-			if (0 == s) {
-				_p = startp;
-				return -1;
-			}
-			if (s < 0)
+			startp	= startp - _p;
+			s	= refill_buffer(0);
+			if (s <= 0) {
+				if (0 == s) {
+					_p = startp;
+					return -1;
+				}
 				break;
+			}
 		}
 	}
 	_p = startp + 1;

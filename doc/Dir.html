@@ -1,0 +1,441 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1><a name="dir"> Dir Module </a></h1>
+
+<ul class="toc">
+	<li><a href="#dir_var"> Dir Variables </a></li>
+	<li><a href="#dir_method"> Dir Methods </a></li>
+		<ul>
+		<li><a href="#Dir::Dir"> Dir::Dir </a></li>
+		<li><a href="#Dir::~Dir"> Dir::~Dir </a></li>
+		<li><a href="#Dir::open"> Dir::open </a></li>
+		<li><a href="#Dir::close"> Dir::close </a></li>
+		<li><a href="#Dir::find"> Dir::find </a></li>
+		<li><a href="#Dir::get_parent_path"> Dir::get_parent_path </a></li>
+		<li><a href="#Dir::get_list"> Dir::get_list </a></li>
+		<li><a href="#Dir::get_symlink"> Dir::get_symlink </a></li>
+		<li><a href="#Dir::get_node"> Dir::get_node </a></li>
+		<li><a href="#Dir::refresh_by_path"> Dir::refresh_by_path </a></li>
+		<li><a href="#Dir::dump"> Dir::dump </a></li>
+		<li><a href="#Dir::CREATE"> Dir::CREATE </a></li>
+		<li><a href="#Dir::CREATES"> Dir::CREATES </a></li>
+		</ul>
+</ul>
+
+<h2><a name="dir_var"> Dir Variables </a></h2>
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td>int</td>
+	<td>_depth</td>
+	<td>Maximum depth of subdirectory to scan for it contents.</td>
+</tr><tr>
+	<td>Buffer</td>
+	<td>_name</td>
+	<td>Path to the directory.</td>
+</tr><tr>
+	<td>DirNode*</td>
+	<td>_ls</td>
+	<td>List of content of directory.</td>
+	<td></td>
+</tr>
+</table>
+
+
+<h2><a name="dir_method"> Dir Methods </a></h2>
+
+<h3><a name="Dir::Dir"><tt> Dir::Dir </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Dir() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Dir constructor. </td>
+</tr>
+</table>
+
+<h3><a name="Dir::~Dir"><tt> Dir::~Dir </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~Dir() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Dir destructor. </td>
+</tr>
+</table>
+
+<h3><a name="Dir::open"><tt> Dir::open </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int open(const char *path, int depth = 1) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td> a path to directory. </td>
+	</tr><tr>
+		<td><tt> depth </tt></td>
+		<td>:</td>
+		<td>a depth of directory to scan for their content, default
+to 1.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Open directory pointed by <tt>path</tt> and save all
+content of directory. If <tt>depth</tt> is set to <tt>-1</tt> then Dir will
+process and save all content of subdirectory recursively.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Dir::close"><tt> Dir::close </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void close() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Reset and release all contents of directory from
+memory. </td>
+</tr>
+</table>
+
+<h3><a name="Dir::find"><tt> Dir::find </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> DirNode* find(DirNode* dir, const char* name, int
+depth = 1) </td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt>dir</tt></td>
+		<td>:</td>
+		<td>pointer to root of directory to scan.</td>
+	</tr><tr>
+		<td><tt> name </tt></td>
+		<td>:</td>
+		<td> name of node to be searched for in <tt>dir</tt>. </td>
+	</tr><tr>
+		<td> depth </td>
+		<td> : </td>
+		<td> maximum number of child / subdirectory to looking
+for <tt>name</tt>.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> !NULL </tt></td>
+		<td>:</td>
+		<td>success, DirNode object with name is <tt>name</tt> is
+found.</td>
+	</tr><tr>
+		<td> NULL </td>
+		<td> : </td>
+		<td> fail, DirNode object with name is <tt>name</tt> is not
+found in the contents of <tt>dir</tt>.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Search node with a name is <tt>name</tt> in the
+content of list <tt>dir</tt>.  Again, if you want to search recursively in
+all content of list <tt>dir</tt>, set <tt>depth</tt> to <tt>-1</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Dir::get_parent_path"><tt> Dir::get_parent_path </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int get_parent_path(Buffer *path, DirNode *ls, int
+depth = 1) </td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td> return value, a path to directory. </td>
+	</tr><tr>
+		<td><tt> ls </tt></td>
+		<td>:</td>
+		<td> pointer to DirNode object. </td>
+	</tr><tr>
+		<td><tt> depth </tt></td>
+		<td>:</td>
+		<td> a counter for limit of traversing a child directory. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get a parent path of specific node.
+if <tt>node</tt> is a random node in directory list, we want to get a
+real path of <tt>node</tt> from the first directory, root. It could be
+"<tt>./node</tt>" or "<tt>../node</tt>" or "<tt>/dir/dir/node</tt>".
+	</td>
+</tr>
+</table>
+
+<h3><a name="Dir::get_list"><tt> Dir::get_list </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int get_list(DirNode* list, const char *path) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> list </tt></td>
+		<td>:</td>
+		<td> parent node, pointer to DirNode object. </td>
+	</tr><tr>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td> a path to directory to scan for list of node. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of child node in this node. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get list of all nodes in directory pointed by
+<tt>path</tt>, and save them in the child node of <tt>list</tt>.</td>
+</tr>
+</table>
+
+<h3><a name="Dir::get_symlink"><tt> Dir::get_symlink </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int get_symlink(DirNode* list) </td>
+</tr><tr>
+	<th>Parameter</th>
+		<td><tt> list </tt></td>
+		<td>:</td>
+		<td> list of DirNode object to scan for symbolic link and set
+for link name. </td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Recursively search for node with type is symbolic
+link in <tt>list</tt>, and then set <tt>_link</tt> pointer in DirNode object
+to point to the real node.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Dir::get_node"><tt> Dir::get_node </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> DirNode* get_node(Buffer* path, const char* root,
+int root_len) </td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt>path</tt></td>
+		<td>:</td>
+		<td>path to directory.</td>
+	</tr><tr>
+		<td><tt> root </tt></td>
+		<td>:</td>
+		<td>the root directory of this Dir object.</td>
+	</tr><tr>
+		<td><tt> root_len </tt></td>
+		<td>:</td>
+		<td>length of string <tt>root</tt>.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> DirNode* </td>
+		<td>:</td>
+		<td>success, pointer to DirNode object of <tt>path</tt>.</td>
+	</tr><tr>
+		<td>NULL</td>
+		<td>:</td>
+		<td>fail.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get pointer to DirNode object pointed by
+<tt>path</tt>.  This method is used to simplified and minimize memory usage
+of directory caches by using link to real node if node is a symbolic link in
+the same root. <br/>
+Case example,
+<pre>
+	0 | /root/dir
+	x | /root/dir/real/path/to/dir
+	...
+	node | linkname | /root/dir/real/path/to/dir
+</pre>
+<tt>0</tt> is a root directory, the first node in the DirNode object.
+<tT>path</tt> is a symbolic link to <tt>x</tt>, so, instead of creating list
+of directory <tt>path</tt> again, we just point the <tt>_link</tt> of
+<tt>path</tt> node to the same value of child pointer of directory
+<tt>x</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Dir::refresh_by_path"><tt> Dir::refresh_by_path </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int refresh_by_path(Buffer* path) </td>
+</tr><tr>
+	<th>Parameter</th>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td> path to be refreshed, path must be in the same root.
+		</td>
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt>&gt; =0</td>
+		<td>:</td>
+		<td>success, number of change (new node, removed
+node, or modified node) in the path. </td>
+	</tr><tr>
+		<td><tt>-1</tt></td>
+		<td>:</td>
+		<td> fail, path is not in the same root. </td>
+	</tr><tr>
+		<td><tt>-2</tt></td>
+		<td>:</td>
+		<td>fail, system error.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Check for new, deleted or modified node in the
+<tt>path</tt>. Use <tt>_name</tt> value if <tt>path</tt> is empty.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Dir::dump"><tt> Dir::dump </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void dump() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Dump content of Dir object, all nodes recursively,
+to standard output. </td>
+</tr>
+</table>
+
+<h3><a name="Dir::CREATE"><tt> Dir::CREATE </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int CREATE(const char *path, mode_t perm =
+DEF_DIR_PERM) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td> a path to directory to be created. </td>
+	</tr><tr>
+		<td><tt> perm </tt></td>
+		<td>:</td>
+		<td>permission for new directory.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create a new directory pointed by <tt>path</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Dir::CREATES"><tt> Dir::CREATES </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int CREATES(const char* path, mode_t perm =
+DEF_DIR_PERM) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td> a path to directory to be created. </td>
+	</tr><tr>
+		<td><tt> perm </tt></td>
+		<td>:</td>
+		<td>permission for new directory.</td>
+</tr><tr>
+	<th rowspan="2"> Return Value </th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success.</td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create <tt>path</tt> directory recursively. If
+<tt>path</tt> is "<tt>a/b/c</tt>", then create directory "<tt>a</tt>",
+"<tt>a/b</tt>", and then "<tt>a/b/c</tt>".
+	</td>
+</tr>
+</table>
+
+
+</body>
+</html>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -37,8 +37,8 @@ Record::~Record()
  */
 void Record::dump()
 {
-	Record *row = this;
-	Record *col = NULL;
+	Record* row = this;
+	Record* col = NULL;
 
 	while (row) {
 		col = row;
@@ -46,7 +46,6 @@ void Record::dump()
 			printf("%s|", col->_v);
 			col = col->_next_col;
 		}
-
 		printf("\n");
 		row = row->_next_row;
 	}
@@ -60,12 +59,13 @@ void Record::dump()
  *	< Record	: pointer to Record at column 'n'.
  * @desc		: get record in column 'n'.
  */
-Record *Record::get_column(int n)
+Record* Record::get_column(int n)
 {
-	Record *p = this;
+	Record* p = this;
 
-	for (; n > 0 && p; --n)
+	for (; n > 0 && p; --n) {
 		p = p->_next_col;
+	}
 
 	return p;
 }
@@ -80,24 +80,24 @@ Record *Record::get_column(int n)
  *	< <0	: fail.
  * @desc	: set column 'n' value to 'bfr'.
  */
-int Record::set_column(int n, Buffer *bfr)
+int Record::set_column(int n, Buffer* bfr)
 {
-	if (!bfr)
+	if (!bfr) {
 		return 0;
+	}
 
 	register int	s	= 0;
-	Record		*p	= this;
+	Record*		p	= this;
 
-	for (; n > 0 && p; --n)
+	for (; n > 0 && p; --n) {
 		p = p->_next_col;
-
-	if (n < 0 || NULL == p)
+	}
+	if (n < 0 || NULL == p) {
 		return -1;
-
+	}
 	if (bfr->_v) {
 		s = p->copy_raw(bfr->_v, bfr->_i);
 	}
-
 	return s;
 }
 
@@ -114,14 +114,15 @@ int Record::set_column(int n, Buffer *bfr)
 int Record::set_column_number(int n, const int number)
 {
 	register int	s	= 0;
-	Record		*p	= this;
+	Record*		p	= this;
 
-	for (; n > 0 && p; --n)
+	for (; n > 0 && p; --n) {
 		p = p->_next_col;
-
-	if (n < 0 || ! p)
+	}
+	if (n < 0 || NULL == p) {
 		return -1;
-
+	}
+	p->reset();
 	s = p->appendi(number);
 
 	return s;
@@ -133,7 +134,7 @@ int Record::set_column_number(int n, const int number)
  */
 void Record::columns_reset()
 {
-	Record *p = this;
+	Record* p = this;
 
 	while (p) {
 		p->reset();
@@ -148,7 +149,7 @@ void Record::columns_reset()
  *	> col	: a new column to be added to 'row'.
  * @desc	: add a new column 'col' to 'row'.
  */
-void Record::ADD_COL(Record **row, Record *col)
+void Record::ADD_COL(Record** row, Record* col)
 {
 	if (! (*row)) {
 		(*row) = col;
@@ -165,7 +166,7 @@ void Record::ADD_COL(Record **row, Record *col)
  *	> row	: a new row to be added to list of 'rows'.
  * @desc	: add a new 'row' to the list of 'rows'.
  */
-void Record::ADD_ROW(Record **rows, Record *row)
+void Record::ADD_ROW(Record** rows, Record* row)
 {
 	if (! (*rows)) {
 		(*rows) = row;
@@ -185,12 +186,13 @@ void Record::ADD_ROW(Record **rows, Record *row)
  *	< <0		: fail.
  * @desc		: add 'n_col' number of column to the 'row'.
  */
-int Record::INIT_ROW(Record **row, int n_col)
+int Record::INIT_ROW(Record** row, int n_col)
 {
-	if (0 == n_col)
+	if (0 == n_col) {
 		return 0;
+	}
 
-	Record *col = NULL;
+	Record* col = NULL;
 
 	for (; n_col > 0; --n_col) {
 		col = new Record();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -22,10 +22,10 @@ public:
 	~Reader();
 
 	int refill_buffer(const int read_min);
-	int read(Record *r, RecordMD *rmd);
+	int read(Record* r, RecordMD* rmd);
 private:
-	Reader(const Reader &);
-	void operator=(const Reader &);
+	Reader(const Reader&);
+	void operator=(const Reader&);
 };
 
 } /* namespace::vos */

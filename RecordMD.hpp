@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -55,9 +55,9 @@ public:
 
 	void dump();
 
-	static void ADD(RecordMD **o, RecordMD *md);
-	static int INIT(RecordMD **o, const char *meta);
-	static int INIT_FROM_FILE(RecordMD **o, const char *fmeta);
+	static void ADD(RecordMD** rmd, RecordMD* md);
+	static int INIT(RecordMD** o, const char* meta);
+	static int INIT_FROM_FILE(RecordMD** o, const char* fmeta);
 
 	int		_n_md;
 	int		_idx;
@@ -71,12 +71,13 @@ public:
 	int		_fltr_idx;
 	int		_fltr_rule;
 	int		(*_fop)(const int, const void *, const void *);
-	Buffer		*_name;
-	Buffer		*_date_format;
-	Buffer		*_fltr_v;
-	RecordMD	*_next;
+	Buffer		_name;
+	Buffer*		_date_format;
+	Buffer*		_fltr_v;
+	RecordMD*	_next;
 
 	static int	BLOB_SIZE;
+	static int	DEF_SEP;
 private:
 	RecordMD(const RecordMD&);
 	void operator=(const RecordMD&);

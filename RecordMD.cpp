@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -21,6 +21,7 @@ enum _rmd_parser {
 };
 
 int RecordMD::BLOB_SIZE = sizeof(int);
+int RecordMD::DEF_SEP	= ',';
 
 /**
  * @method	: RecordMD::RecordMD
@@ -39,7 +40,7 @@ RecordMD::RecordMD() :
 	_fltr_idx(0),
 	_fltr_rule(0),
 	_fop(NULL),
-	_name(NULL),
+	_name(),
 	_date_format(NULL),
 	_fltr_v(NULL),
 	_next(NULL)
@@ -51,8 +52,6 @@ RecordMD::RecordMD() :
  */
 RecordMD::~RecordMD()
 {
-	if (_name)
-		delete _name;
 	if (_date_format)
 		delete _date_format;
 	if (_fltr_v)
@@ -63,15 +62,15 @@ RecordMD::~RecordMD()
 
 /**
  * @method	: RecordMD::dump
- * @desc	: print content or RecordMD object to standard output.
+ * @desc	: print content of RecordMD object to standard output.
  */
 void RecordMD::dump()
 {
-	RecordMD *p = this;
+	RecordMD* p = this;
 
 	while (p) {
 		printf("'%c' : %s : '%c' : %3d : %3d | ", 
-			p->_left_q, p->_name->_v, p->_right_q, p->_start_p,
+			p->_left_q, p->_name.v(), p->_right_q, p->_start_p,
 			p->_end_p);
 
 		switch (p->_sep) {
@@ -116,9 +115,11 @@ void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
 		(*rmd)		= md;
 		(*rmd)->_n_md	= 1;
 	} else {
-		RecordMD *p = (*rmd);
-		while (p->_next)
+		RecordMD* p = (*rmd);
+
+		while (p->_next) {
 			p = p->_next;
+		}
 
 		p->_next = md;
 		(*rmd)->_n_md++;
@@ -138,22 +139,24 @@ void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
  *
  *	Field format:
  *
- *	'<char>':name:'<char>':[start-pos]:[end-pos | '<char>']:[type]
+ *	['<char>']:name[:['<char>']:[start-pos]:[end-pos | '<char>']:[type]]
  *
- *	[]	: optional.
- *	<char>	: any single character, in c-style for escape char.
+ *	name	: name only allow characters: a-z,A-Z,0-9.
+ *	[]	: optional field.
+ *	<char>	: any single character, except characters: a-z,A-Z,0-9.
  */
-int RecordMD::INIT(RecordMD **o, const char *meta)
+int RecordMD::INIT(RecordMD** o, const char* meta)
 {
-	if (! meta)
+	if (! meta) {
 		return 0;
+	}
 
 	int		i		= 0;
 	int		todo		= MD_START;
 	int		todo_next	= 0;
 	int		len		= (int) strlen(meta);
 	Buffer		v;
-	RecordMD	*md		= NULL;
+	RecordMD*	md		= NULL;
 
 	while (todo != MD_DONE) {
 		while (i < len && isspace(meta[i])) {
@@ -161,10 +164,11 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 		}
 		if (i >= len) {
 			if (todo_next == MD_START || todo_next == MD_END_P
-			||  todo_next == MD_TYPE)
+			||  todo_next == MD_TYPE) {
 				break;
-			else
+			} else {
 				goto err;
+			}
 		}
 
 		switch (todo) {
@@ -185,13 +189,19 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 				todo = todo_next;
 				break;
 			case ',':
-				todo = MD_START;
+				if (todo_next > MD_NAME) {
+					md->_sep	= DEF_SEP;
+					todo		= MD_START;
+				} else {
+					goto err;
+				}
 				break;
 			default:
-				if (todo_next == MD_TYPE)
+				if (todo_next == MD_TYPE) {
 					todo = MD_START;
-				else
+				} else {
 					goto err;
+				}
 			}
 
 			++i;
@@ -201,16 +211,16 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 			switch (meta[i]) {
 			case '\'':
 				++i;
-				if (i >= len)
+				if (i >= len) {
 					goto err;
-
+				}
 				if (meta[i] != '\\') {
 					md->_left_q = meta[i];
 				} else {
 					++i;
-					if (i >= len)
+					if (i >= len) {
 						goto err;
-
+					}
 					switch (meta[i]) {
 					case 't':
 						md->_left_q = '\t';
@@ -236,24 +246,19 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 					}
 				}
 				++i;
-				if (i >= len)
+				if (i >= len) {
 					goto err;
-
-				if (meta[i] != '\'')
+				}
+				if (meta[i] != '\'') {
 					goto err;
-
+				}
 				++i;
-				if (i >= len)
-					goto err;
-
 				todo		= MD_META_SEP;
 				todo_next	= MD_NAME;
 				break;
 			case ':':
 				todo = MD_NAME;
 				++i;
-				if (i >= len)
-					goto err;
 				break;
 			default:
 				goto err;
@@ -261,34 +266,38 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 			break;
 
 		case MD_NAME:
-			md->_name = new Buffer();
-			while (meta[i] != ':') {
-				md->_name->appendc(meta[i]);
-				++i;
-				if (i >= len)
-					goto err;
-			}
-			++i;
-			if (i >= len)
-				goto err;
+			while (i < len) {
+				if (meta[i] == ':' || meta[i] == ',') {
+					break;
+				}
+				if (isspace(meta[i])) {
+					do {
+						++i;
+					} while (i < len && isspace(meta[i]));
+					break;
+				}
 
-			todo = MD_RIGHT_Q;
+				md->_name.appendc(meta[i]);
+				++i;
+			}
+			todo		= MD_META_SEP;
+			todo_next	= MD_RIGHT_Q;
 			break;
 
 		case MD_RIGHT_Q:
 			switch (meta[i]) {
 			case '\'':
 				++i;
-				if (i >= len)
+				if (i >= len) {
 					goto err;
-
+				}
 				if (meta[i] != '\\') {
 					md->_right_q = meta[i];
 				} else {
 					++i;
-					if (i >= len)
+					if (i >= len) {
 						goto err;
-
+					}
 					switch (meta[i]) {
 					case 't':
 						md->_right_q = '\t';
@@ -314,25 +323,24 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 					}
 				}
 				++i;
-				if (i >= len)
+				if (i >= len) {
 					goto err;
-
-				if (meta[i] != '\'')
+				}
+				if (meta[i] != '\'') {
 					goto err;
-
+				}
 				++i;
-				if (i >= len)
-					goto err;
-
 				todo		= MD_META_SEP;
 				todo_next	= MD_START_P;
 				break;
 			case ':':
 				todo = MD_START_P;
-
 				++i;
-				if (i >= len)
-					goto err;
+				break;
+			case ',':
+				md->_sep	= DEF_SEP;
+				todo		= MD_START;
+				++i;
 				break;
 			default:
 				goto err;
@@ -340,11 +348,9 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 			break;
 
 		case MD_START_P:
-			while (isdigit(meta[i])) {
+			while (i < len && isdigit(meta[i])) {
 				v.appendc(meta[i]);
 				++i;
-				if (i >= len)
-					goto err;
 			}
 
 			md->_start_p = (int) strtol(v.v(), 0, 0);
@@ -356,25 +362,23 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 
 		case MD_END_P:
 			if (isdigit(meta[i])) {
-				while (isdigit(meta[i])) {
+				while (i < len && isdigit(meta[i])) {
 					v.appendc(meta[i]);
 					++i;
-					if (i >= len)
-						goto err;
 				}
 
 				md->_end_p = (int) strtol(v.v(), 0, 0);
 				v.reset();
 			} else if (meta[i] == '\'') {
 				++i;
-				if (i >= len)
+				if (i >= len) {
 					goto err;
-
+				}
 				if (meta[i] == '\\') {
 					++i;
-					if (i + 1 >= len)
+					if (i + 1 >= len) {
 						goto err;
-
+					}
 					if (meta[i] == '\''
 					&& meta[i + 1] != '\'') {
 						md->_sep = '\\';
@@ -404,21 +408,25 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 						}
 
 						++i;
-						if (i >= len)
+						if (i >= len) {
 							goto err;
+						}
 					}
 				} else {
 					md->_sep = meta[i];
 
 					++i;
-					if (i >= len)
+					if (i >= len) {
 						goto err;
+					}
 				}
 			
-				if (meta[i] != '\'')
+				if (meta[i] != '\'') {
 					goto err;
-
+				}
 				++i;
+			} else {
+				md->_sep = DEF_SEP;
 			}
 			todo		= MD_META_SEP;
 			todo_next	= MD_TYPE;
@@ -428,14 +436,13 @@ int RecordMD::INIT(RecordMD **o, const char *meta)
 			while (meta[i] != ',' && !isspace(meta[i])) {
 				v.appendc(meta[i]);
 				++i;
-				if (i >= len)
+				if (i >= len) {
 					break;
+				}
 			}
 
 			if (v._i) {
-				if (v.like_raw("STRING") == 0) {
-					md->_type = RMD_T_STRING;
-				} else if (v.like_raw("NUMBER") == 0) {
+				if (v.like_raw("NUMBER") == 0) {
 					md->_type = RMD_T_NUMBER;
 				} else if (v.like_raw("DATE") == 0) {
 					md->_type = RMD_T_DATE;
@@ -482,7 +489,7 @@ err:
  *	create and initialize meta-data object 'o' by loading meta-data from
  *	file 'fmeta'.
  */
-int RecordMD::INIT_FROM_FILE(RecordMD **o, const char *fmeta)
+int RecordMD::INIT_FROM_FILE(RecordMD** o, const char* fmeta)
 {
 	register int	s;
 	File		f;
@@ -502,7 +509,7 @@ int RecordMD::INIT_FROM_FILE(RecordMD **o, const char *fmeta)
 		return s;
 	}
 
-	return RecordMD::INIT(o, f._v);
+	return RecordMD::INIT(o, f.v());
 }
 
 } /* namespace::vos */

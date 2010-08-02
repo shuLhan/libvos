@@ -1,0 +1,285 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> DSV Record Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#Record::Record"> Record::Record </a></li>
+	<li><a href="#Record::~Record"> Record::~Record </a></li>
+	<li><a href="#Record::dump"> Record::dump </a></li>
+	<li><a href="#Record::get_column"> Record::get_column </a></li>
+	<li><a href="#Record::set_column"> Record::set_column </a></li>
+	<li><a href="#Record::set_column_number"> Record::set_column_number </a></li>
+	<li><a href="#Record::columns_reset"> Record::columns_reset </a></li>
+	<li><a href="#Record::ADD_COL"> Record::ADD_COL </a></li>
+	<li><a href="#Record::ADD_ROW"> Record::ADD_ROW </a></li>
+	<li><a href="#Record::INIT_ROW"> Record::INIT_ROW </a></li>
+	</ul>
+</ul>
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td> Record* </td>
+	<td> _next_col </td>
+	<td> Pointer to the next column. </td>
+</tr><tr>
+	<td> Record* </td>
+	<td> _last_col </td>
+	<td> Pointer to the last column. </td>
+</tr><tr>
+	<td> Record* </td>
+	<td> _next_row </td>
+	<td> Pointer to the next row. </td>
+</tr><tr>
+	<td> Record* </td>
+	<td> _last_row </td>
+	<td> Pointer to the last row. </td>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="Record::Record"><tt> Record::Record </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Record() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Record constructor. </td>
+</tr>
+</table>
+
+<h3><a name="Record::~Record"><tt> Record::~Record </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"></td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Record destructor. </td>
+</tr>
+</table>
+
+<h3><a name="Record::dump"><tt> Record::dump </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void dump() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Print content of Record object to standard output. </td>
+</tr>
+</table>
+
+<h3><a name="Record::get_column"><tt> Record::get_column </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Record* get_column(int n) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> n </tt></td>
+	<td>:</td>
+	<td> index of column, started from zero. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td><tt>Record*</tt></td>
+	<td>:</td>
+	<td>pointer to Record object at column '<tt>n</tt>'.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get Record object at specific column. </td>
+</tr>
+</table>
+
+<h3><a name="Record::set_column"><tt> Record::set_column </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int set_column(int n, Buffer* bfr) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> n </tt></td>
+		<td>:</td>
+		<td>index of column that will be set its value, started from zero.
+		</td>
+	</tr><tr>
+		<td><tt> bfr </tt></td>
+		<td>:</td>
+		<td> a new value for column '<tt>n</tt>'.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set value on column '<tt>n</tt>' to value of Buffer
+object '<tt>bfr</tt>'.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Record::set_column_number"><tt> Record::set_column_number </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int set_column_number(int n, const int number) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> n </tt></td>
+		<td>:</td>
+		<td>index of column that will be set its value, started from zero.
+		</td>
+	</tr><tr>
+		<td><tt> number </tt></td>
+		<td>:</td>
+		<td> a new value for column '<tt>n</tt>'.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set value on column '<tt>n</tt>' to value of number
+'<tt>number</tt>'.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Record::columns_reset"><tt> Record::columns_reset </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void columns_reset() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Empties content in all columns.</td>
+</tr>
+</table>
+
+<h3><a name="Record::ADD_COL"><tt> Record::ADD_COL </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">  static void ADD_COL(Record** row, Record* col) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> row </tt></td>
+		<td>:</td>
+		<td> pointer to Record row. </td>
+	</tr><tr>
+		<td><tt> col </tt></td>
+		<td>:</td>
+		<td> a new Record as column that will be added to
+'<tt>row</tt>'.	</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new column '<tt>col</tt>' to '<tt>row</tt>'.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Record::ADD_ROW"><tt> Record::ADD_ROW </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static void ADD_ROW(Record** rows, Record* row) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> rows </tt></td>
+		<td>:</td>
+		<td>pointer to the first row.</td>
+	</tr><tr>
+		<td><tt> row </tt></td>
+		<td>:</td>
+		<td>a new row that will be added to the list of row
+'<tt>rows</tt>'.
+		</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new '<tt>row</tt>' to the list of row
+'<tt>rows</tt>'.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Record::INIT_ROW"><tt> Record::INIT_ROW </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int INIT_ROW(Record** o, int n_col) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> o </tt></td>
+		<td>:</td>
+		<td> pointer to the Record row object or the first column in
+the row.</td>
+	</tr><tr>
+		<td><tt> n_col </tt></td>
+		<td>:</td>
+		<td> number of columns that will be added to the
+'<tt>row</tt>'.</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add '<tt>n_col</tt>' number of columns to the list
+of Record object '<tt>row</tt>'.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

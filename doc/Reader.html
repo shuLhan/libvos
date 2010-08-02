@@ -1,0 +1,133 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> DSV Reader Module </h1>
+
+<ul class="toc">
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#Reader::Reader"> Reader::Reader </a></li>
+	<li><a href="#Reader::~Reader"> Reader::~Reader </a></li>
+	<li><a href="#Reader::refill_buffer"> Reader::refill_buffer </a></li>
+	<li><a href="#Reader::read"> Reader::read </a></li>
+	</ul>
+</ul>
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="Reader::Reader"><tt> Reader::Reader </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Reader() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Reader constructor. </td>
+</tr>
+</table>
+
+<h3><a name="Reader::~Reader"><tt> Reader::~Reader </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~Reader() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Reader destructor. </td>
+</tr>
+</table>
+
+<h3><a name="Reader::refill_buffer"><tt> Reader::refill_buffer </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int refill_buffer(const int read_min) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> read_min </tt></td>
+	<td>:</td>
+	<td> minimum size that will be read from descriptor and fill the
+buffer.</td>
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt> &gt;0 </tt></td>
+		<td>:</td>
+		<td>  success, number of bytes filled in buffer. </td>
+	</tr><tr>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success, End Of File. </td>
+	</tr><tr>
+		<td><tt> &lt;0 </tt></td>
+		<td>:</td>
+		<td> fail, error at reading descriptor. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Refill the read buffer, move unparsed line to the
+first position, and fill the rest buffer with a new content.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Reader::read"><tt> Reader::read </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int read(Record* r, RecordMD* rmd) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> r </tt></td>
+		<td>:</td>
+		<td> output, Record row, which must already allocated by
+user.</td>
+	</tr><tr>
+		<td><tt> rmd </tt></td>
+		<td>:</td>
+		<td> pointer to Record meta-data object. </td>
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt> 1 </tt></td>
+		<td>:</td>
+		<td> success, one row read. </td>
+	</tr><tr>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success, End Of File.</td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail, record rejected or system error. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">
+<p>
+Read one row of DSV data from file, using '<tt>r</tt>' as a container for all
+columns in one row and '<tt>rmd</tt>' as Record meta-data.
+</p>
+<p>
+If <tt>rmd</tt> contain <tt>x</tt> number of Record meta-data, then
+<tt>r</tt> must already have <tt>x</tt> columns and initialized before
+calling this function.
+</p>
+	</td>
+</tr>
+</table>
+
+
+</body>
+</html>

@@ -1,0 +1,131 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> DSV Reader Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#Writer::Writer"> Writer::Writer </a></li>
+	<li><a href="#Writer::~Writer"> Writer::~Writer </a></li>
+	<li><a href="#Writer::write"> Writer::write </a></li>
+	<li><a href="#Writer::writes"> Writer::writes </a></li>
+	</ul>
+</ul>
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td>Buffer</td>
+	<td>_line</td>
+	<td> temporary buffer for collecting row data in a single line. </td>
+</table>
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="Writer::Writer"><tt> Writer::Writer </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Writer() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Writer constructor. </td>
+</tr>
+</table>
+
+<h3><a name="Writer::~Writer"><tt> Writer::~Writer </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~Writer() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Writer destructor. </td>
+</tr>
+</table>
+
+<h3><a name="Writer::write"><tt> Write::write </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int write(Record* row, RecordMD* rmd) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> cols </tt></td>
+		<td>:</td>
+		<td>row, list of columns data, that will be written to file.
+		</td>
+	</tr><tr>
+		<td><tt> rmd </tt></td>
+		<td>:</td>
+		<td> Record meta-data. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Write one '<tt>row</tt>' using meta-data from
+'<tt>rmd</tt>' to file.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Writer::writes"><tt> Writer::writes </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int writes(Record* rows, RecordMD* rmd) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> rows </tt></td>
+		<td>:</td>
+		<td> list of row that will be written to file. </td>
+	</tr><tr>
+		<td><tt> rmd </tt></td>
+		<td>:</td>
+		<td>record meta-data.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Write all rows in list of row, <tt>rows</tt>, to
+file using '<tt>rmd</tt>' as meta-data.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

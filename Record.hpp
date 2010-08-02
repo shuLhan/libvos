@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -28,19 +28,19 @@ public:
 
 	void dump();
 
-	Record *get_column(int n);
-	int set_column(int n, Buffer *bfr);
+	Record* get_column(int n);
+	int set_column(int n, Buffer* bfr);
 	int set_column_number(int n, const int number);
 	void columns_reset();
 
-	static void ADD_COL(Record **row, Record *col);
-	static void ADD_ROW(Record **rows, Record *row);
-	static int INIT_ROW(Record **o, int n_col);
+	static void ADD_COL(Record** row, Record* col);
+	static void ADD_ROW(Record** rows, Record* row);
+	static int INIT_ROW(Record** row, int n_col);
 
-	Record *_next_col;
-	Record *_last_col;
-	Record *_next_row;
-	Record *_last_row;
+	Record* _next_col;
+	Record* _last_col;
+	Record* _next_row;
+	Record* _last_row;
 private:
 	Record(const Record&);
 	void operator=(const Record&);

@@ -1,0 +1,252 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> DSV Record Meta-data Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#RecordMD::RecordMD"> RecordMD::RecordMD </a></li>
+	<li><a href="#RecordMD::~RecordMD"> RecordMD::~RecordMD </a></li>
+	<li><a href="#RecordMD::dump"> RecordMD::dump </a></li>
+	<li><a href="#RecordMD::ADD"> RecordMD::ADD </a></li>
+	<li><a href="#RecordMD::INIT"> RecordMD::INIT </a></li>
+	<li><a href="#RecordMD::INIT_FROM_FILE"> RecordMD::INIT_FROM_FILE </a></li>
+	</ul>
+</ul>
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td>int</td>
+	<td>_n_md</td>
+	<td> Number of meta-data record in this list.</td>
+</tr><tr>
+	<td>int</td>
+	<td>_idx</td>
+	<td> Index of current meta-data record.</td>
+</tr><tr>
+	<td>int</td>
+	<td>_flag</td>
+	<td> Flag for current meta-data record.</td>
+</tr><tr>
+	<td>int</td>
+	<td>_type</td>
+	<td> Type of record that this meta-data record hold.</td>
+</tr><tr>
+	<td>int</td>
+	<td>_left_q</td>
+	<td> Left character quote used in record data.</td>
+</tr><tr>
+	<td>int</td>
+	<td>_right_q</td>
+	<td> Right character quote used in record data.</td>
+</tr><tr>
+	<td>int</td>
+	<td>_start_p</td>
+	<td> Start position of record data.</td>
+</tr><tr>
+	<td>int</td>
+	<td>_end_p</td>
+	<td> End position of record data.</td>
+</tr><tr>
+	<td>int</td>
+	<td>_sep</td>
+	<td> Character used as separator between record data.</td>
+</tr><tr>
+	<td>int</td>
+	<td>_fltr_idx</td>
+	<td> Index of filter used in record.</td>
+</tr><tr>
+	<td>int</td>
+	<td>_fltr_rule</td>
+	<td> Rule of filter that will be used in record. </td>
+</tr><tr>
+	<td>int</td>
+	<td>_fop</td>
+	<td> Pointer to filter function. </td>
+</tr><tr>
+	<td> Buffer* </td>
+	<td> _name </td>
+	<td> Name of record. </td>
+</tr><tr>
+	<td> Buffer* </td>
+	<td> _date_format </td>
+	<td> Format of date used in data. </td>
+</tr><tr>
+	<td> Buffer* </td>
+	<td> _fltr_v </td>
+	<td> Value of filter, if filter is in comparable mode. </td>
+</tr><tr>
+	<td> RecordMD* </td>
+	<td> _next </td>
+	<td> Pointer to the next meta-data. </td>
+</tr><tr>
+	<td> static int </td>
+	<td> BLOB_SIZE </td>
+	<td> Size of blob header. </td>
+</tr>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="RecordMD::RecordMD"><tt> RecordMD::RecordMD </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> RecordMD() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> RecordMD constructor. </td>
+</tr>
+</table>
+
+<h3><a name="RecordMD::~RecordMD"><tt> RecordMD::~RecordMD </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~RecordMD() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> RecordMD destructor. </td>
+</tr>
+</table>
+
+<h3><a name="RecordMD::dump"><tt> RecordMD::dump </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"></td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Print content of RecordMD object to standard output. </td>
+</tr>
+</table>
+
+<h3><a name="RecordMD::ADD"><tt> RecordMD::ADD </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static void ADD(RecordMD** rmd, RecordMD* md) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> rmd </tt></td>
+		<td>:</td>
+		<td> pointer to the list of record meta-data. </td>
+	</tr><tr>
+		<td><tt> md </tt></td>
+		<td>:</td>
+		<td> pointer to the RecordMD object that will be added to the
+list.
+		</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add new RecordMD object, <tt> md </tt> to the list
+<tt>rmd</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="RecordMD::INIT"><tt> RecordMD::INIT </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int INIT(RecordMD** o, const char* meta) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> o </tt></td>
+		<td>:</td>
+		<td> output, list of RecordMD object. </td>
+	</tr><tr>
+		<td><tt> meta </tt></td>
+		<td>:</td>
+		<td> formatted string of field declaration. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3">
+Create and initialize meta data using field declaration in 'meta' string.
+Content of meta format:<br/>
+<pre>
+	['&lt;char&gt;']:name[:['&lt;char&gt;']:[start-pos]:[end-pos | '&lt;char&gt;']:[type]]
+</pre>
+	<ul>
+	<li><tt>&lt;char&gt;</tt>, any single character, single-quoted. </li>
+	<li><tt>name</tt>, name of field, no space allowed. </li>
+	<li><tt>[]</tt>, optional field.</li>
+	</ul>
+	</td>
+</tr>
+</table>
+
+<h3><a name="RecordMD::INIT_FROM_FILE"><tt> RecordMD::INIT_FROM_FILE </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int INIT_FROM_FILE(RecordMD** o, const char*
+fmeta) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> o </tt></td>
+		<td>:</td>
+		<td> return value, list of RecordMD objects.</td>
+	</tr><tr>
+		<td><tt> fmeta </tt></td>
+		<td>:</td>
+		<td> a name of file contain meta-data. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &lt; 0 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create and initialize meta-data object '<tt>o</tt>'
+by loading meta-data from file '<tt>fmeta</tt>'.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>
