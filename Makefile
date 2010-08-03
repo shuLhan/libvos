@@ -105,10 +105,14 @@ $(LIBVOS_BLD_D)/Dir.oo		: $(LIBVOS_BLD_D)/DirNode.oo
 
 $(LIBVOS_BLD_D)/Config.oo	: $(LIBVOS_BLD_D)/ConfigData.oo
 
+$(LIBVOS_BLD_D)/SockAddr.oo	: $(LIBVOS_BLD_D)/Buffer.oo
+
 $(LIBVOS_BLD_D)/RecordMD.oo	\
 $(LIBVOS_BLD_D)/Config.oo	\
 $(LIBVOS_BLD_D)/Dlogger.oo	\
 $(LIBVOS_BLD_D)/Socket.oo	: $(LIBVOS_BLD_D)/File.oo
+
+$(LIBVOS_BLD_D)/Socket.oo	: $(LIBVOS_BLD_D)/SockAddr.oo
 
 $(LIBVOS_BLD_D)/DNSQuery.oo	: $(LIBVOS_BLD_D)/DNS_rr.oo
 

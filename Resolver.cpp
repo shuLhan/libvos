@@ -117,7 +117,7 @@ int Resolver::add_server(char *server_list)
 	while (*server_list) {
 		if (*server_list == ',') {
 			*server_list = '\0';
-			s = SockAddr::INIT(&saddr, addr, PORT);
+			s = SockAddr::INIT(&saddr, AF_INET, addr, PORT);
 			*server_list = ',';
 			if (s < 0) {
 				return s;
@@ -130,7 +130,7 @@ int Resolver::add_server(char *server_list)
 			server_list++;
 		}
 	}
-	s = SockAddr::INIT(&saddr, addr, PORT);
+	s = SockAddr::INIT(&saddr, AF_INET, addr, PORT);
 	if (s < 0) {
 		return s;
 	}
@@ -256,7 +256,7 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 	unsigned int	n_try	= 0;
 	fd_set		fd_all;
 	fd_set		fd_read;
-	SockAddr	*server	= _servers;
+	SockAddr*	server	= _servers;
 
 	if (!question)
 		return 0;
@@ -271,10 +271,10 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 		_udp.reset();
 
 		if (LIBVOS_DEBUG) {
-			printf(">> querying %s... ", server->_addr->_v);
+			printf(">> querying %s... ", server->v());
 		}
 
-		s = (int) _udp.send_udp(server->_in, question->_bfr);
+		s = (int) _udp.send_udp(&server->_in, question->_bfr);
 		if (s < 0) {
 			server = server->_next;
 			continue;
@@ -352,7 +352,7 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 	unsigned int	n_try	= 0;
 	fd_set		fd_all;
 	fd_set		fd_read;
-	SockAddr	*server	= _servers;
+	SockAddr*	server	= _servers;
 
 	if (!question)
 		return 0;
@@ -366,10 +366,10 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 		_tcp.reset();
 
 		if (LIBVOS_DEBUG) {
-			printf(">> querying %s...\n", server->_addr->_v);
+			printf(">> querying %s...\n", server->v());
 		}
 
-		s = _tcp.connect_to(server->_in);
+		s = _tcp.connect_to(&server->_in);
 		if (s < 0) {
 			server = server->_next;
 			continue;

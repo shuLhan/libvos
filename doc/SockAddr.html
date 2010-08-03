@@ -1,0 +1,383 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> Socket Address Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#SockAddr::SockAddr"> SockAddr::SockAddr </a></li>
+	<li><a href="#SockAddr::~SockAddr"> SockAddr::~SockAddr </a></li>
+	<li><a href="#SockAddr::set"> SockAddr::set </a></li>
+	<li><a href="#SockAddr::get_port"> SockAddr::get_port </a></li>
+	<li><a href="#SockAddr::get_address"> SockAddr::get_address </a></li>
+	<li><a href="#SockAddr::dump"> SockAddr::dump </a></li>
+	<li><a href="#SockAddr::INIT"> SockAddr::INIT </a></li>
+	<li><a href="#SockAddr::IS_IPV4"> SockAddr::IS_IPV4 </a></li>
+	<li><a href="#SockAddr::CREATE_ADDR"> SockAddr::CREATE_ADDR </a></li>
+	<li><a href="#SockAddr::CREATE_ADDR6"> SockAddr::CREATE_ADDR6 </a></li>
+	<li><a href="#SockAddr::ADD"> SockAddr::ADD </a></li>
+	</ul>
+</ul>
+
+<p>
+Socket Address module is a module for handling network address: converting
+the IP address from text ("192.168.1.1") to byte format, and for collecting
+list of network address in one list.
+</p>
+<p>
+Socket Address is represented by <tt>SockAddr</tt> class, which can handle
+both IP version 4 (IPv4) and IP version 6 (IPv6) address.
+</p>
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td>int</td>
+	<td>_t</td>
+	<td>type of address. Valid values:
+		<ul>
+		<li><tt>0</tt>: no address set yet. </li>
+		<li><tt>AF_INET</tt>: address is IPv4. </li>
+		<li><tt>AF_INET6</tt>: address is IPv6. </li>
+		<li><tt>AF_INETS (AF_INET + AF_INET6)</tt>: both address,
+IPv4 and IPv6. </li>
+		</ul>
+	</td>
+</tr><tr>
+	<td>struct sockaddr_in</td>
+	<td>_in</td>
+	<td>network address for IPv4.</td>
+</tr><tr>
+	<td>struct sockaddr_in6</td>
+	<td>_in6</td>
+	<td>network address for IPv6. </td>
+</tr><tr>
+	<td>SockAddr*</td>
+	<td>_next</td>
+	<td>pointer to the next SockAddr object.</td>
+</tr><tr>
+	<td>SockAddr*</td>
+	<td>_last</td>
+	<td>pointer to the last SockAddr object in the list.</td>
+</tr><tr>
+	<td>static unsigned int</td>
+	<td>IN_SIZE</td>
+	<td>size of "<tt>struct sockaddr_in</tt>".</td>
+</tr><tr>
+	<td>static unsigned int</td>
+	<td>IN6_SIZE</td>
+	<td>size of "<tt>struct sockaddr_in6</tt>".</td>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="SockAddr::SockAddr"><tt> SockAddr::SockAddr </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> SockAddr() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> SockAddr constructor. </td>
+</tr>
+</table>
+
+<h3><a name="SockAddr::~SockAddr"><tt> SockAddr::~SockAddr </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~SockAddr() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> SockAddr destructor. </td>
+</tr>
+</table>
+
+<h3><a name="SockAddr::set"><tt> SockAddr::set </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int set(const int type, const char* addr, const int
+port) </td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> type </tt></td>
+		<td>:</td>
+		<td> type of network address to be set (<tt>AF_INET</tt> or
+<tt>AF_INET6</tt>). </td>
+	</tr><tr>
+		<td><tt> addr </tt></td>
+		<td>:</td>
+		<td> network address in string representation. </td>
+	</tr><tr>
+		<td><tt> port </tt></td>
+		<td>:</td>
+		<td>port number.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set one of the network address using address
+"<tt>addr</tt>" and port number in "<tt>port</tt>".
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockAddr::get_port"><tt> SockAddr::get_port </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int get_port(const int type = AF_INET) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> type </tt></td>
+	<td>:</td>
+	<td> network address type (<tt>AF_INET</tt> or <tt>AF_INET6</tt>).</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td><tt> &gt;=0 </tt></td>
+	<td> : </td>
+	<td> port number. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get port number of specific network address type. </td>
+</tr>
+</table>
+
+<h3><a name="SockAddr::get_address"><tt> SockAddr::get_address </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> const char* get_address(const int type = AF_INET) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> type </tt></td>
+	<td>:</td>
+	<td> network address type (<tt>AF_INET</tt> or <tt>AF_INET6</tt>).</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td><tt> const char* </tt></td>
+	<td> : </td>
+	<td> string representation of specific network address type. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get string representation of specific network
+address type.
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockAddr::dump"><tt> SockAddr::dump </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void dump() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Print content of all SockAddr objects, if current
+SockAddr is list, to standard output.</td>
+</tr>
+</table>
+
+<h3><a name="SockAddr::INIT"><tt> SockAddr::INIT </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int INIT(SockAddr** o, const int type
+			, const char* addr, const int port)
+	</td>
+</tr><tr>
+	<th rowspan="4">Parameter</th>
+		<td><tt> o </tt></td>
+		<td>:</td>
+		<td> output, pointer to uninitialized object of SockAddr.</td>
+	</tr><tr>
+		<td><tt> type </tt></td>
+		<td>:</td>
+		<td> type of network address (IPv4 or IPv6).</td>
+	</tr><tr>
+		<td><tt> addr </tt></td>
+		<td>:</td>
+		<td> network address in string representation. </td>
+	</tr><tr>
+		<td><tt> port </tt></td>
+		<td>:</td>
+		<td> port number. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create and initialize a new SockAddr object.
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockAddr::IS_IPV4"><tt> SockAddr::IS_IPV4 </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int IS_IPV4(const char* str) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> str </tt></td>
+	<td>:</td>
+	<td> string representation of IPv4. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 1 </tt></td>
+		<td>:</td>
+		<td> true, <tt>str</tt> is an IPv4 format. </td>
+	</tr><tr>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> false, <tt>str</tt> is not an IPv4 format. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Check if <tt>str</tt> is a valid IPv4 address.</td>
+</tr>
+</table>
+
+<h3><a name="SockAddr::CREATE_ADDR"><tt> SockAddr::CREATE_ADDR </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int CREATE_ADDR(struct sockaddr_in* sin
+			, const char* addr, const int port)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> sin </tt></td>
+		<td>:</td>
+		<td> output, pointer to uninitialized data of
+"<tt>struct sockaddr_in</tt>".</td>
+	</tr><tr>
+		<td><tt> addr </tt></td>
+		<td>:</td>
+		<td> IPv4 address in string representation. </td>
+	</tr><tr>
+		<td><tt> port </tt></td>
+		<td>:</td>
+		<td> port number. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create IPv4 address object from network
+address "<tt>addr</tt>" and port number "<tt>port</tt>".
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockAddr::CREATE_ADDR6"><tt> SockAddr::CREATE_ADDR6 </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int CREATE_ADDR6(struct sockaddr_in6* sin6
+			, const char* address, const int port)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> sin6 </tt></td>
+		<td>:</td>
+		<td> output, pointer to uninitialized data of
+"<tt>struct sockaddr_in6</tt>".</td>
+	</tr><tr>
+		<td><tt> addr </tt></td>
+		<td>:</td>
+		<td> IPv6 address in string representation. </td>
+	</tr><tr>
+		<td><tt> port </tt></td>
+		<td>:</td>
+		<td> port number. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create IPv6 address object from network
+address "<tt>addr</tt>" and port number "<tt>port</tt>".
+</tr>
+</table>
+
+<h3><a name="SockAddr::ADD"><tt> SockAddr::ADD </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static void ADD(SockAddr** head, SockAddr *node) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> head </tt></td>
+		<td>:</td>
+		<td> pointer to head of the list. </td>
+	</tr><tr>
+		<td><tt> node </tt></td>
+		<td>:</td>
+		<td>pointer to SockAddr object that will be added to the
+list.</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add "<tt>node</tt>" to the end of list
+"<tt>head</tt>".
+	</td>
+</tr>
+</table>
+
+</body>
+</html>
