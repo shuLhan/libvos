@@ -132,7 +132,7 @@ int FTPD::init(const char* address, const int port, const char* path
 		}
 	}
 
-	s = create_tcp();
+	s = create();
 	if (s < 0) {
 		return s;
 	}
@@ -386,7 +386,7 @@ void FTPD::client_process()
 {
 	int		s;
 	Socket*		csock	= NULL;
-	Socket*		cpsvr	= NULL;
+	SockServer*	cpsvr	= NULL;
 	FTPClient*	c	= _all_client;
 	FTPClient*	cnext	= NULL;
 
@@ -537,7 +537,7 @@ void FTPD::client_del(FTPClient* c)
 	FD_CLR(c->_sock->_d, &_fds_all);
 
 	if (c->_sock) {
-		remove_client_r(c->_sock);
+		remove_client(c->_sock);
 		delete c->_sock;
 		c->_sock = NULL;
 	}
@@ -893,7 +893,7 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
 	int		p2;
 	int		pasv_port	= GET_PASV_PORT();
 	Buffer		pasv_addr;
-	Socket*		pasv_sock	= NULL;
+	SockServer*	pasv_sock	= NULL;
 
 	if (!c->_sock) {
 		if (LIBVOS_DEBUG) {
@@ -902,12 +902,12 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPClient* c)
 		return;
 	}
 
-	pasv_sock = new Socket();
+	pasv_sock = new SockServer();
 	if (!pasv_sock) {
 		goto err;
 	}
 
-	c->_s = pasv_sock->create_tcp();
+	c->_s = pasv_sock->create();
 	if (c->_s < 0) {
 		goto err;
 	}
@@ -1141,7 +1141,7 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPClient* c)
 			node = node->_next;
 		}
 	}
-	pasv_c->send_raw(0);
+	pasv_c->flush();
 
 	c->_s = CODE_226;
 out:
@@ -1204,7 +1204,7 @@ void FTPD::on_cmd_NLST(FTPD* s, FTPClient* c)
 			node = node->_next;
 		}
 	}
-	pasv_c->send_raw(0);
+	pasv_c->flush();
 
 	c->_s = CODE_226;
 out:

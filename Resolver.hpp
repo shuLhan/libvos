@@ -9,8 +9,7 @@
 
 #include <time.h>
 #include "DNSQuery.hpp"
-
-using vos::DNSQuery;
+#include "SockServer.hpp"
 
 namespace vos {
 
@@ -59,8 +58,8 @@ public:
 	static unsigned int TIMEOUT;
 	static unsigned int N_TRY;
 
-	Socket		_tcp;
-	Socket		_udp;
+	SockServer	_tcp;
+	SockServer	_udp;
 	SockAddr	*_servers;
 private:
 	Resolver(const Resolver&);

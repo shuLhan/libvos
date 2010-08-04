@@ -18,65 +18,38 @@ namespace vos {
  * @class			: Socket
  * @attr			:
  *	- _family		: group or namespace this socket belong to.
- *	- _timeout		: time data used by socket as server.
- *	- _client_lock		: lock for accessing list of clients object.
- *	- _clients		: list of client connections.
  *	- _next			: pointer to the next client object.
  *	- _prev			: pointer to the previous client object.
  *	- DFLT_BUFFER_SIZE	: static, default size of buffer object.
- *	- DFLT_LISTEN_SIZE	: static, default size of client queue.
- *	- ADDR_WILCARD		: static, wilcard address for IPv4.
  * @desc			:
  *	module for handling Socket.
  */
 class Socket : public File {
 public:
-	Socket();
+	Socket(const int bfr_size = DFLT_BUFFER_SIZE);
 	~Socket();
 
-	int init(const int bfr_size = Socket::DFLT_BUFFER_SIZE);
-	void lock_client();
-	void unlock_client();
+	int create(const int family = PF_INET, const int type = SOCK_STREAM);
 
-	int create(const int family, const int type);
-	int create_tcp();
-	int create_udp();
-
-	int bind(const char* address, const int port);
-	int listen(const unsigned int queue_len);
-	int bind_listen(const char* address, const int port);
+	inline int create_udp()
+	{
+		return Socket::create(PF_INET, SOCK_DGRAM);
+	}
 
 	int connect_to(struct sockaddr_in* sin);
+	int connect_to6(struct sockaddr_in6* sin6);
 	int connect_to_raw(const char* address, const int port);
 
-	void add_client_r(Socket* client);
-	void remove_client(Socket* client);
-	void remove_client_r(Socket* client);
-
-	Socket* accept();
-	Socket* accept6();
-	Socket* accept_conn();
-
-	int send(Buffer* bfr);
-	int send_raw(const char* bfr, int len = 0);
-
-	long int send_udp(struct sockaddr_in* addr, Buffer *bfr);
-	long int send_udp_raw(struct sockaddr_in* addr, const char* bfr
-				, int len = 0);
+	long int send_udp(struct sockaddr_in* addr, Buffer *bfr = NULL);
+	long int send_udp_raw(struct sockaddr_in* addr
+				, const char* bfr = NULL, int len = 0);
 	long int recv_udp(struct sockaddr_in* addr);
 
-	int		_family;
-	struct timeval	_timeout;
-	pthread_mutex_t	_client_lock;
-	Socket*		_clients;
-	Socket*		_next;
-	Socket*		_prev;
+	int	_family;
+	Socket*	_next;
+	Socket*	_prev;
 
-	static Socket* ADD_CLIENT(Socket* list, Socket* client);
-
-	static unsigned int	DFLT_BUFFER_SIZE;
-	static unsigned int	DFLT_LISTEN_SIZE;
-	static const char*	ADDR_WILCARD;
+	static unsigned int DFLT_BUFFER_SIZE;
 private:
 	Socket(const Socket&);
 	void operator=(const Socket&);

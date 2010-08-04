@@ -39,7 +39,7 @@ enum __ftp_cmd_idx {
 
 enum _ftp_stat {
 	FTP_STT_DISCONNECT	= vos::FILE_OPEN_NO,
-	FTP_STT_CONNECTED	= O_RDWR,
+	FTP_STT_CONNECTED	= O_RDWR | O_SYNC,
 	FTP_STT_LOGGED_IN	= O_RDWR << 1,
 	FTP_STT_LOGGED_OUT	= O_RDWR << 2
 };

@@ -1,0 +1,335 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> Socket Server Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#SockServer::SockServer"><tt> SockServer::SockServer </tt></a></li>
+	<li><a href="#SockServer::~SockServer"><tt> SockServer::~SockServer </tt></a></li>
+	<li><a href="#SockServer::lock_client"><tt> SockServer::lock_client </tt></a></li>
+	<li><a href="#SockServer::unlock_client"><tt> SockServer::unlock_client </tt></a></li>
+	<li><a href="#SockServer::bind"><tt> SockServer::bind </tt></a></li>
+	<li><a href="#SockServer::listen"><tt> SockServer::listen </tt></a></li>
+	<li><a href="#SockServer::bind_listen"><tt> SockServer::bind_listen </tt></a></li>
+	<li><a href="#SockServer::accept"><tt> SockServer::accept </tt></a></li>
+	<li><a href="#SockServer::accept6"><tt> SockServer::accept6 </tt></a></li>
+	<li><a href="#SockServer::accept_conn"><tt> SockServer::accept_conn </tt></a></li>
+	<li><a href="#SockServer::add_client"><tt> SockServer::add_client </tt></a></li>
+	<li><a href="#SockServer::remove_client"><tt> SockServer::remove_client </tt></a></li>
+	</ul>
+</ul>
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td>struct timeval</td>
+	<td>_timeout</td>
+	<td>timeout value, usually used by server when listening for
+connection or receiving new data.
+	</td>
+</tr><tr>
+	<td>pthread_mutex_t</td>
+	<td>_client_lock</td>
+	<td>lock when adding or removing client from the list.</td>
+</tr><tr>
+	<td>Socket*</td>
+	<td>_clients</td>
+	<td>list of client Socket object.</td>
+</tr><tr>
+	<td>const char*</td>
+	<td>ADDR_WILCARD</td>
+	<td>wildcard address for IPv4, set to "<tt>0.0.0.0</tt>".</td>
+</tr><tr>
+	<td>const char*</td>
+	<td>ADDR_WILCARD6</td>
+	<td>wildcard address for IPv6, set to "<tt>::</tt>".</td>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="SockServer::SockServer"><tt> SockServer::SockServer </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> SockServer() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> SockServer constructor. </td>
+</tr>
+</table>
+
+<h3><a name="SockServer::~SockServer"><tt> SockServer::~SockServer </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~SockServer() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> SockServer destructor. </td>
+</tr>
+</table>
+
+<h3><a name="SockServer::lock_client"><tt> SockServer::lock_client </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void lock_client() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Block others threads from accessing list of client
+objects.</td>
+</tr>
+</table>
+
+<h3><a name="SockServer::unlock_client"><tt> SockServer::unlock_client </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"></td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> allow others threads to access list of client objects. </td>
+</tr>
+</table>
+
+<h3><a name="SockServer::bind"><tt> SockServer::bind </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int bind(const char* address, const int port) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> address </tt></td>
+		<td>:</td>
+		<td> hostname or IP address that this server will listen for
+a new client connection.</td>
+	</tr><tr>
+		<td><tt> port </tt></td>
+		<td>:</td>
+		<td>port number.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Bind socket to "<tt>address</tt>" and
+"<tt>port</tt>".
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockServer::listen"><tt> SockServer::listen </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int listen(const unsigned int queue_len = 0) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> queue_len </tt></td>
+	<td>:</td>
+	<td> length of queue for client connection before accepted by server.
+	</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Start listening for a new connection from client.
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockServer::bind_listen"><tt> SockServer::bind_listen </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int bind_listen(const char* address, const int port) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> address </tt></td>
+		<td>:</td>
+		<td> hostname of IP address that this server will listen for
+a new client connection.</td>
+	</tr><tr>
+		<td><tt> port </tt></td>
+		<td>:</td>
+		<td> port number. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> A simple way to start listening connection by
+combining both method <tt>bind()</tt> and <tt>listen()</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockServer::accept"><tt> SockServer::accept </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Socket* accept() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> Socket* </tt></td>
+		<td>:</td>
+		<td> success, new client connected.</td>
+	</tr><tr>
+		<td><tt> NULL </tt></td>
+		<td>:</td>
+		<td>fail.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> This method is used by server socket for accepting a
+new client connection.
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockServer::accept6"><tt> SockServer::accept6 </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Socket* accept6() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> Socket* </tt></td>
+		<td>:</td>
+		<td> success, new client connected.</td>
+	</tr><tr>
+		<td><tt> NULL </tt></td>
+		<td>:</td>
+		<td>fail.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> This method is used by server socket for accepting a
+new client connection using IPv6 address.
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockServer::accept_conn"><tt> SockServer::accept_conn </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Socket* accept_conn() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> Socket* </tt></td>
+		<td>:</td>
+		<td> success, new client connected.</td>
+	</tr><tr>
+		<td><tt> NULL </tt></td>
+		<td>:</td>
+		<td>fail.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> This method is used by server socket for accepting a
+new client connection, in generic way for IPv4 and IPv6 address.
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockServer::add_client"><tt> SockServer::add_client </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void add_client(Socket* client) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> client </tt></td>
+	<td>:</td>
+	<td> pointer to Socket object, new client. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new client to the list of "<tt>_clients</tt>".
+	</td>
+</tr>
+</table>
+
+<h3><a name="SockServer::remove_client"><tt> SockServer::remove_client </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void remove_client(Socket* client) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> client </tt></td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Remove <tt>client</tt> object from the list of
+"<tt>_clients</tt>".
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

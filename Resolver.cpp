@@ -43,24 +43,17 @@ Resolver::~Resolver()
  * @method	: Resolver::init
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: initialize Resolver object.
  */
 int Resolver::init()
 {
 	int s;
 
-	s = _tcp.init(Socket::DFLT_BUFFER_SIZE);
-	if (s != 0)
-		return s;
-
-	s = _udp.init(UDP_PACKET_SIZE);
-	if (s != 0)
-		return s;
-
-	s = _tcp.create_tcp();
-	if (s != 0)
-		return s;
+	s = _tcp.create();
+	if (s != 0) {
+		return -1;
+	}
 
 	s = _udp.create_udp();
 
@@ -85,7 +78,7 @@ void Resolver::dump()
  *	> server_list	: list of server name, separated by comma.
  * @return		:
  *	< 0		: success.
- *	< <0		: fail.
+ *	< -1		: fail.
  * @desc		: add another server to list of server '_servers'.
  */
 int Resolver::set_server(char *server_list)
@@ -104,7 +97,7 @@ int Resolver::set_server(char *server_list)
  *	> server_list	: list of server name, separated by comma.
  * @return		:
  *	< 0		: success.
- *	< <0		: fail.
+ *	< -1		: fail.
  * @desc		: add another server to list of server '_servers'.
  */
 int Resolver::add_server(char *server_list)
@@ -120,7 +113,7 @@ int Resolver::add_server(char *server_list)
 			s = SockAddr::INIT(&saddr, AF_INET, addr, PORT);
 			*server_list = ',';
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 			SockAddr::ADD(&_servers, saddr);
 
@@ -132,7 +125,7 @@ int Resolver::add_server(char *server_list)
 	}
 	s = SockAddr::INIT(&saddr, AF_INET, addr, PORT);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 	SockAddr::ADD(&_servers, saddr);
 
@@ -375,7 +368,7 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 			continue;
 		}
 
-		s = _tcp.send(question->_bfr);
+		s = _tcp.write(question->_bfr);
 		if (s < 0) {
 			server = server->_next;
 			continue;
@@ -471,7 +464,7 @@ int Resolver::send_query(DNSQuery *question, DNSQuery *answer)
  *	> addr	: address of end point where 'bfr' will be send.
  *	> bfr	: data to be send.
  * @return	:
- *	< >=0	: success, number of bytes sended.
+ *	< >=0	: success, number of bytes send.
  *	< <0	: fail.
  * @desc	: send data 'bfr' to 'addr' using UDP protocol.
  */
@@ -487,7 +480,7 @@ long int Resolver::send_udp(struct sockaddr_in *addr, Buffer *bfr)
  *	> bfr	: data to be send.
  *	> len	: length of 'bfr' data.
  * @return	:
- *	< >=0	: success, number of bytes sended.
+ *	< >=0	: success, number of bytes send.
  *	< <0	: fail.
  * @desc	: send data 'bfr' to 'addr' using UDP protocol.
  */

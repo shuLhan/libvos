@@ -84,7 +84,7 @@ extern const char* _FTP_month[12];
  * @desc		:
  * A simple FTP server module for serving a file system to the network.
  */
-class FTPD : public Socket {
+class FTPD : public SockServer {
 public:
 	FTPD();
 	~FTPD();

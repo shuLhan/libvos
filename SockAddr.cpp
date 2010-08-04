@@ -214,6 +214,7 @@ int SockAddr::IS_IPV4(const char* str)
 	if (!str) {
 		return 0;
 	}
+
 	register int	n	= 0;
 	register int	dot	= 0;
 	char		x[3];
@@ -383,6 +384,9 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
  */
 void SockAddr::ADD(SockAddr** head, SockAddr* node)
 {
+	if (!node) {
+		return;
+	}
 	if (!(*head)) {
 		(*head) = node;
 	} else {

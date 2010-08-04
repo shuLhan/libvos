@@ -8,7 +8,7 @@
 #define	_LIBVOS_FTP_CLIENT_HPP	1
 
 #include "Dir.hpp"
-#include "Socket.hpp"
+#include "SockServer.hpp"
 #include "FTPCmd.hpp"
 
 namespace vos {
@@ -63,7 +63,7 @@ public:
 	Buffer		_path_real;
 	DirNode*	_path_node;
 	Socket*		_sock;
-	Socket*		_psrv;
+	SockServer*	_psrv;
 	Socket*		_pclt;
 	const char*	_rmsg;
 	const char*	_rmsg_plus;

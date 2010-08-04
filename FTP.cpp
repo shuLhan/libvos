@@ -62,20 +62,22 @@ FTP::~FTP()
  *	> mode	: mode of connection (NORMAL | PASV).
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: create FTP connection to 'host:port'.
  */
 int FTP::connect(const char *host, const int port, const int mode)
 {
 	register int s;
 
-	s = create_tcp();
-	if (s < 0)
-		return s;
+	s = create();
+	if (s < 0) {
+		return -1;
+	}
 
 	s = connect_to_raw(host, port);
-	if (s < 0)
-		return s;
+	if (s < 0) {
+		return -1;
+	}
 
 	_mode = mode;
 
@@ -175,6 +177,7 @@ int FTP::recv(const int to_sec, const int to_usec)
 	register int	s;
 	fd_set		fd_all;
 	fd_set		fd_read;
+	struct timeval	_timeout;
 
 	reset();
 	FD_ZERO(&fd_all);
@@ -239,7 +242,7 @@ int FTP::send_cmd(const int cmd, const char *parm)
 		return s;
 	}
 
-	s = send(NULL);
+	s = flush();
 	if (s < 0) {
 		return s;
 	}
@@ -293,8 +296,9 @@ int FTP::get_reply(const int timeout)
 	case 202: /* command superflous */
 		return 0;
 	case 220: /* service ready */
-		if (_status == FTP_STT_DISCONNECT)
+		if (_status == FTP_STT_DISCONNECT) {
 			_status = FTP_STT_CONNECTED;
+		}
 		return 0;
 	case 221: /* logout successful */
 		_status = (FTP_STT_CONNECTED | FTP_STT_LOGGED_OUT);

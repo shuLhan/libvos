@@ -12,8 +12,6 @@
 #include <utime.h>
 #include "Buffer.hpp"
 
-using vos::Buffer;
-
 namespace vos {
 
 enum _file_eol_mode {
@@ -24,11 +22,12 @@ enum _file_eol_mode {
 extern const char* __eol[N_EOL_MODE];
 
 enum _file_open_type {
-	FILE_OPEN_NO	= -1,
-	FILE_OPEN_R	= O_RDONLY,
-	FILE_OPEN_W	= O_WRONLY | O_CREAT | O_TRUNC,
-	FILE_OPEN_WA	= O_WRONLY | O_CREAT | O_APPEND,
-	FILE_OPEN_RW	= O_RDWR | O_CREAT | O_APPEND,
+	FILE_OPEN_NO	= -1
+,	FILE_OPEN_R	= O_RDONLY
+,	FILE_OPEN_W	= O_WRONLY | O_CREAT | O_TRUNC
+,	FILE_OPEN_WA	= O_WRONLY | O_CREAT | O_APPEND
+,	FILE_OPEN_RW	= O_RDWR | O_CREAT | O_APPEND
+,	FILE_OPEN_SYNC	= O_SYNC
 };
 
 /**

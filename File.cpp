@@ -469,6 +469,9 @@ int File::write_raw(const char* bfr, int len)
 		if (s < 0) {
 			return s;
 		}
+		if (_status & O_SYNC) {
+			flush();
+		}
 	}
 
 	return len;
@@ -554,6 +557,10 @@ int File::writec(const char c)
 	}
 
 	_v[_i++] = c;
+
+	if (_status & O_SYNC) {
+		flush();
+	}
 
 	return 1;
 }

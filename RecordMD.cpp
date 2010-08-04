@@ -190,8 +190,12 @@ int RecordMD::INIT(RecordMD** o, const char* meta)
 				break;
 			case ',':
 				if (todo_next > MD_NAME) {
-					md->_sep	= DEF_SEP;
+					if (0 == md->_sep) {
+						md->_sep = DEF_SEP;
+					}
 					todo		= MD_START;
+				} else if (todo_next == MD_START) {
+					todo = todo_next;
 				} else {
 					goto err;
 				}
@@ -433,12 +437,9 @@ int RecordMD::INIT(RecordMD** o, const char* meta)
 			break;
 
 		case MD_TYPE:
-			while (meta[i] != ',' && !isspace(meta[i])) {
+			while (i < len && meta[i] != ',' && !isspace(meta[i])) {
 				v.appendc(meta[i]);
 				++i;
-				if (i >= len) {
-					break;
-				}
 			}
 
 			if (v._i) {

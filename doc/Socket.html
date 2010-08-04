@@ -1,0 +1,333 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> Socket Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#Socket::Socket"><tt> Socket::Socket </tt></a></li>
+	<li><a href="#Socket::~Socket"><tt> Socket::~Socket </tt></a></li>
+	<li><a href="#Socket::create"><tt> Socket::create </tt></a></li>
+	<li><a href="#Socket::create_udp"><tt> Socket::create_udp </tt></a></li>
+	<li><a href="#Socket::connect_to"><tt> Socket::connect_to </tt></a></li>
+	<li><a href="#Socket::connect_to6"><tt> Socket::connect_to6 </tt></a></li>
+	<li><a href="#Socket::connect_to_raw"><tt> Socket::connect_to_raw </tt></a></li>
+	<li><a href="#Socket::send_udp"><tt> Socket::send_udp </tt></a></li>
+	<li><a href="#Socket::send_udp_raw"><tt> Socket::send_udp_raw </tt></a></li>
+	<li><a href="#Socket::recv_udp"><tt> Socket::recv_udp </tt></a></li>
+	</ul>
+</ul>
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td>int</td>
+	<td>_family</td>
+	<td>internet namespace, IPv4 (<tt>AF_INET</tt> or IPv6
+(<tt>AF_INET6</tt>).</td>
+</tr><tr>
+	<td>Socket*</td>
+	<td>_next</td>
+	<td>pointer to the next Socket object.</td>
+</tr><tr>
+	<td>Socket*</td>
+	<td>_prev</td>
+	<td>pointer to the previous Socket object.</td>
+</tr><tr>
+	<td>static unsigned int</td>
+	<td>DFLT_BUFFER_SIZE</td>
+	<td>default buffer size for receiving/sending data, default to
+<tt>65536</tt>.</td>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="Socket::Socket"><tt> Socket::Socket </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> Socket(const int bfr_size = DFLT_BUFFER_SIZE) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> bfr_size </tt></td>
+	<td>:</td>
+	<td> size of socket buffer, default to <tt>DFLT_BUFFER_SIZE</tt>.</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Socket constructor. </td>
+</tr>
+</table>
+
+<h3><a name="Socket::~Socket"><tt> Socket::~Socket </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~Socket() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Socket destructor. </td>
+</tr>
+</table>
+
+<h3><a name="Socket::create"><tt> Socket::create </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int create(const int family = PF_INET, const int
+type = SOCK_STREAM) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> family </tt></td>
+		<td>:</td>
+		<td> specifies the address family used in the communications
+domain, default to <tt>PF_INET</tt> (<tt>IPv4</tt>). </td>
+	</tr><tr>
+		<td><tt> type </tt></td>
+		<td>:</td>
+		<td> specifies the socket type, which determines the
+semantics of communication over the socket. Valid values,
+			<ul>
+			<li><tt>SOCK_STREAM</tt>, for data transfer using TCP.</li>
+			<li><tt>SOCK_DGRAM</tt>, for data transfer using UDP.</li>
+			</ul>
+		</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create a new Socket object, using "<tt>family</tt>"
+for address family and "<tt>type</tt>" for data transfer mechanism. <br/>
+	If <tt>family</tt> and/or <tt>type</tt> is not set, then this method
+default to creating socket for TCP.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Socket::create_udp"><tt> Socket::create_udp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline int create_udp() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create a new Socket object for transferring data
+using UDP.</td>
+</tr>
+</table>
+
+<h3><a name="Socket::connect_to"><tt> Socket::connect_to </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int connect_to(struct sockaddr_in* sin) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> sin </tt></td>
+	<td>:</td>
+	<td> socket address. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Connect to end point, where it address is IPv4 that
+already defined and packed in "<tt>sin</tt>".</td>
+</tr>
+</table>
+
+<h3><a name="Socket::connect_to6"><tt> Socket::connect_to6 </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int connect_to6(struct sockaddr_in6* sin6) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> sin6 </tt></td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Connect to end point, where it address is IPv6 that
+already defined and packed in "<tt>sin6</tt>".
+	</td>
+</tr>
+</table>
+
+<h3><a name="Socket::connect_to_raw"><tt> Socket::connect_to_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int connect_to_raw(const char* address, const int
+port) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> address </tt></td>
+		<td>:</td>
+		<td> destination network address to connect to, IPv4 or IPv6.</td>
+	</tr><tr>
+		<td><tt> port </tt></td>
+		<td>:</td>
+		<td> destination port number. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Connect to end-point at "<tt>address</tt>" and
+"<tt>port</tt>".
+	</td>
+</tr>
+</table>
+
+<h3><a name="Socket::send_udp"><tt> Socket::send_udp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> long int send_udp(struct sockaddr_in* addr, Buffer
+*bfr) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> addr </tt></td>
+		<td>:</td>
+		<td> destination address. </td>
+	</tr><tr>
+		<td><tt> bfr </tt></td>
+		<td>:</td>
+		<td> data that will be send to "<tt>addr</tt>".</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of bytes send. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Send data "<tt>bfr</tt>" to end-point at
+"<tt>addr</tt>" using UDP.</td>
+</tr>
+</table>
+
+<h3><a name="Socket::send_udp_raw"><tt> Socket::send_udp_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> long int send_udp_raw(struct sockaddr_in* addr,
+const char* bfr, int len = 0) </td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> addr </tt></td>
+		<td>:</td>
+		<td> destination address. </td>
+	</tr><tr>
+		<td><tt> bfr </tt></td>
+		<td>:</td>
+		<td> data that will be send to "<tt>addr</tt>".</td>
+	</tr><tr>
+		<td><tt> len </tt></td>
+		<td>:</td>
+		<td> length of data. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of bytes send. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Send data "<tt>bfr</tt>" to end-point at
+"<tt>addr</tt>" using UDP.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Socket::recv_udp"><tt> Socket::recv_udp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> long int recv_udp(struct sockaddr_in* addr) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> addr </tt></td>
+	<td>:</td>
+	<td> output, address of sender. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of data received in bytes. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Received packet data from UDP line, save the sender
+address in "<tt>addr</tt>".
+	</td>
+</tr>
+</table>
+
+</body>
+</html>
