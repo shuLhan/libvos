@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -81,7 +81,7 @@ void Resolver::dump()
  *	< -1		: fail.
  * @desc		: add another server to list of server '_servers'.
  */
-int Resolver::set_server(char *server_list)
+int Resolver::set_server(char* server_list)
 {
 	if (_servers) {
 		delete _servers;
@@ -100,11 +100,11 @@ int Resolver::set_server(char *server_list)
  *	< -1		: fail.
  * @desc		: add another server to list of server '_servers'.
  */
-int Resolver::add_server(char *server_list)
+int Resolver::add_server(char* server_list)
 {
 	register int	s;
-	char		*addr;
-	SockAddr	*saddr;
+	char*		addr;
+	SockAddr*	saddr;
 
 	addr = server_list; 
 	while (*server_list) {
@@ -139,23 +139,24 @@ int Resolver::add_server(char *server_list)
  *	> qname	: hostname that will be saved in DNSQuery object.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: create a DNSQuery object for hostname 'qname'.
  */
-int Resolver::create_question_udp(DNSQuery **query, const char *qname)
+int Resolver::create_question_udp(DNSQuery** query, const char* qname)
 {
+	if (!qname) {
+		return 0;
+	}
+
 	int	s;
 	int	len;
 	Buffer	label;
-	Buffer	*q	= NULL;
-
-	if (!qname)
-		return 0;
+	Buffer	*q = NULL;
 
 	if (!(*query)) {
 		s = DNSQuery::INIT(query, NULL, BUFFER_IS_UDP);
 		if (s != 0) {
-			return s;
+			return -1;
 		}
 	} else {
 		(*query)->reset(vos::DNSQ_DO_ALL);
@@ -167,8 +168,8 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 	(*query)->_n_ans	= htons(0);
 	(*query)->_n_aut	= htons(0);
 	(*query)->_n_add	= htons(0);
-	(*query)->_type		= htons(QUERY_T_ADDRESS);
-	(*query)->_class	= htons(QUERY_C_IN);
+	(*query)->_q_type	= htons(QUERY_T_ADDRESS);
+	(*query)->_q_class	= htons(QUERY_C_IN);
 	(*query)->_name.copy_raw(qname);
 
 	len = (*query)->_name._i + 16;
@@ -179,8 +180,12 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 	q = (*query)->_bfr;
 	q->reset();
 
-	if (len > q->_l)
-		q->resize(len);
+	if (len > q->_l) {
+		s = q->resize(len);
+		if (s < 0) {
+			return -1;
+		}
+	}
 
 	memcpy(q->_v, (*query), DNS_HDR_SIZE);
 	q->_i = DNS_HDR_SIZE;
@@ -189,8 +194,12 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 		if (*qname == '.') {
 			if (label._i) {
 				len = q->_i + label._i + 1;
-				if (len > q->_l)
-					q->resize(len);
+				if (len > q->_l) {
+					s = q->resize(len);
+					if (s < 0) {
+						return -1;
+					}
+				}
 
 				q->_v[q->_i] = (char) label._i;
 				q->_i++;
@@ -205,8 +214,12 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 
 	if (label._i) {
 		len = q->_i + label._i + 1;
-		if (len > q->_l)
-			q->resize(len);
+		if (len > q->_l) {
+			s = q->resize(len);
+			if (s < 0) {
+				return -1;
+			}
+		}
 
 		q->_v[q->_i] = (char) label._i;
 		q->_i++;
@@ -218,12 +231,16 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
 	q->_i++;
 
 	len = q->_i + 4;
-	if (len > q->_l)
-		q->resize(len);
+	if (len > q->_l) {
+		s = q->resize(len);
+		if (s < 0) {
+			return -1;
+		}
+	}
 
-	memcpy(&q->_v[q->_i], &(*query)->_type, 2);
+	memcpy(&q->_v[q->_i], &(*query)->_q_type, 2);
 	q->_i += 2;
-	memcpy(&q->_v[q->_i], &(*query)->_class, 2);
+	memcpy(&q->_v[q->_i], &(*query)->_q_class, 2);
 	q->_i += 2;
 
 	(*query)->net_to_host();
@@ -238,21 +255,23 @@ int Resolver::create_question_udp(DNSQuery **query, const char *qname)
  *	> answer	: return value, answer from server.
  * @return		:
  *	< 0		: success.
- *	< <0		: fail.
+ *	< -1		: fail.
  * @desc		:
  *	send 'question' to server to get an 'answer' using UDP protocol.
  */
-int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
+int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 {
+	if (!question) {
+		return 0;
+	}
+
 	int		s	= 0;
 	int		maxfd	= 0;
 	unsigned int	n_try	= 0;
 	fd_set		fd_all;
 	fd_set		fd_read;
+	struct timeval	timeout;
 	SockAddr*	server	= _servers;
-
-	if (!question)
-		return 0;
 
 	FD_ZERO(&fd_all);
 	FD_ZERO(&fd_read);
@@ -274,11 +293,11 @@ int Resolver::send_query_udp(DNSQuery *question, DNSQuery *answer)
 		}
 
 		do {
-			fd_read			= fd_all;
-			_udp._timeout.tv_sec	= TIMEOUT;
-			_udp._timeout.tv_usec	= 0;
+			fd_read		= fd_all;
+			timeout.tv_sec	= TIMEOUT;
+			timeout.tv_usec	= 0;
 
-			s = select(maxfd, &fd_read, NULL, NULL, &_udp._timeout);
+			s = select(maxfd, &fd_read, NULL, NULL, &timeout);
 			if (s < 0) {
 				if (EINTR == errno) {
 					goto intr;
@@ -339,16 +358,19 @@ intr:
  * @desc		:
  *	send 'question' to server to get an 'answer' using TCP protocol.
  */
-int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
+int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 {
+	if (!question) {
+		return 0;
+	}
+
 	int		s	= 0;
 	unsigned int	n_try	= 0;
 	fd_set		fd_all;
 	fd_set		fd_read;
+	struct timeval	timeout;
 	SockAddr*	server	= _servers;
 
-	if (!question)
-		return 0;
 
 	FD_ZERO(&fd_all);
 	FD_ZERO(&fd_read);
@@ -375,15 +397,15 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 		}
 
 		do {
-			fd_read			= fd_all;
-			_tcp._timeout.tv_sec	= TIMEOUT;
-			_tcp._timeout.tv_usec	= 0;
+			fd_read		= fd_all;
+			timeout.tv_sec	= TIMEOUT;
+			timeout.tv_usec	= 0;
 
-			s = select(_tcp._d + 1, &fd_read, NULL, NULL,
-					&_tcp._timeout);
+			s = select(_tcp._d + 1, &fd_read, NULL, NULL
+					, &timeout);
 			if (s < 0) {
 				if (EINTR == errno) {
-					goto intr;
+					return -1;
 				}
 			}
 			if (0 == s || !FD_ISSET(_tcp._d, &fd_read)) {
@@ -425,7 +447,6 @@ int Resolver::send_query_tcp(DNSQuery *question, DNSQuery *answer)
 
 		server = server->_next;
 	}
-intr:
 	return -1;
 }
 
@@ -436,18 +457,19 @@ intr:
  *	> answer	: return value, answer from server.
  * @return		:
  *	< 0		: success.
- *	< <0		: fail.
+ *	< -1		: fail.
  * @desc		:
  *	send 'question' to server to get an 'answer'. This is a generic form
  *	of sending query, query send using protocol based on type of buffer in
  *	'question'.
  */
-int Resolver::send_query(DNSQuery *question, DNSQuery *answer)
+int Resolver::send_query(DNSQuery* question, DNSQuery* answer)
 {
-	int s;
-
-	if (!question)
+	if (!question) {
 		return 0;
+	}
+
+	register int s;
 
 	if (question->_bfr_type == BUFFER_IS_TCP) {
 		s = send_query_tcp(question, answer);
@@ -465,10 +487,10 @@ int Resolver::send_query(DNSQuery *question, DNSQuery *answer)
  *	> bfr	: data to be send.
  * @return	:
  *	< >=0	: success, number of bytes send.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: send data 'bfr' to 'addr' using UDP protocol.
  */
-long int Resolver::send_udp(struct sockaddr_in *addr, Buffer *bfr)
+long int Resolver::send_udp(struct sockaddr_in* addr, Buffer* bfr)
 {
 	return _udp.send_udp(addr, bfr);
 }
@@ -481,11 +503,11 @@ long int Resolver::send_udp(struct sockaddr_in *addr, Buffer *bfr)
  *	> len	: length of 'bfr' data.
  * @return	:
  *	< >=0	: success, number of bytes send.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: send data 'bfr' to 'addr' using UDP protocol.
  */
-long int Resolver::send_udp_raw(struct sockaddr_in *addr, const char *bfr,
-				const int len)
+long int Resolver::send_udp_raw(struct sockaddr_in* addr, const char* bfr
+				, const int len)
 {
 	return _udp.send_udp_raw(addr, bfr, len);
 }

@@ -47,7 +47,7 @@ Config::~Config()
  *	> ini	: a name of configuration file, with or without leading path.
  * @return	:
  *	< 0	: success, or 'ini' is nil.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: open config file and load all key and values.
  */
 int Config::load(const char* ini)
@@ -62,7 +62,7 @@ int Config::load(const char* ini)
 
 	s = open_ro(ini);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	s = parsing();
@@ -74,7 +74,7 @@ int Config::load(const char* ini)
  * @method	: Config::save
  * @return	:
  *	> 0	: success.
- *	> <0	: fail.
+ *	> -1	: fail.
  * @desc	: save all heads, keys, and values to file.
  */
 int Config::save()
@@ -89,7 +89,7 @@ int Config::save()
 
 	s = ini.copy(&_name);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	close();
@@ -106,7 +106,7 @@ int Config::save()
  *	> mode	: save with (1) or without comment (0).
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: save all heads, keys, and values to a new 'ini' file.
  */
 int Config::save_as(const char* ini, const int mode)
@@ -123,14 +123,15 @@ int Config::save_as(const char* ini, const int mode)
 
 	s = fini.open_wo(ini);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	while (phead) {
 		if (phead->like_raw(CONFIG_ROOT) != 0) {
 			s = fini.writes("[%s]\n", phead->v());
-			if (s < 0)
-				goto err;
+			if (s < 0) {
+				return -1;
+			}
 		}
 
 		pkey = phead->_next_key;
@@ -141,13 +142,13 @@ int Config::save_as(const char* ini, const int mode)
 						pkey->_value ?
 						pkey->_value->_v : "");
 				if (s < 0) {
-					goto err;
+					return -1;
 				}
 			} else {
 				if (CONFIG_SAVE_WITH_COMMENT == mode) {
 					s = fini.writes("%s\n", pkey->_v);
 					if (s < 0) {
-						goto err;
+						return -1;
 					}
 				}
 			}
@@ -155,11 +156,7 @@ int Config::save_as(const char* ini, const int mode)
 		}
 		phead = phead->_next_head;
 	}
-	s = 0;
-err:
-	fini.close();
-
-	return s;
+	return 0;
 }
 
 /**
@@ -273,7 +270,7 @@ long int Config::get_number(const char* head, const char* key, const int dflt)
  *	> value	: a new value for key.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: set a 'key' value, where the head is 'head', to 'value'.
  */
 int Config::set(const char* head, const char* key, const char* value)
@@ -292,19 +289,21 @@ int Config::set(const char* head, const char* key, const char* value)
 			while (k) {
 				if (k->like_raw(key) == 0) {
 					s = k->_value->copy_raw(value);
-					return s;
+					return -1;
 				}
 				k = k->_next_key;
 			}
 
 			/* add key:value to config list, if not found */
 			s = ConfigData::INIT(&k, CONFIG_T_KEY, key);
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 
 			s = ConfigData::INIT(&k->_value, CONFIG_T_VALUE, value);
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 
 			h->_last_key->_next_key	= k;
 			h->_last_key		= k;
@@ -314,42 +313,28 @@ int Config::set(const char* head, const char* key, const char* value)
 	}
 
 	s = ConfigData::INIT(&h, CONFIG_T_HEAD, head);
-	if (s < 0)
-		return s;
+	if (s < 0) {
+		return -1;
+	}
 
 	_data.add_head(h);
 
 	s = ConfigData::INIT(&k, CONFIG_T_KEY, key);
-	if (s < 0)
-		return s;
+	if (s < 0) {
+		return -1;
+	}
 
 	_data.add_key(k);
 
 	k = NULL;
 	s = ConfigData::INIT(&k, CONFIG_T_VALUE, value);
-	if (s < 0)
-		return s;
+	if (s < 0) {
+		return -1;
+	}
 
 	s = _data.add_value(k);
 
 	return s;
-}
-
-/**
- * @method	: Config::add
- * @param	:
- *	> head	: a name of head, where the key is resided.
- *	> key	: a name of key.
- *	> value	: a new value for key.
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
- * @desc	:
- *	add a new 'head', or a new 'key' with 'value', to Config data.
- */
-void Config::add(const char* head, const char* key, const char* value)
-{
-	set(head, key, value);
 }
 
 /**
@@ -382,7 +367,7 @@ void Config::add_comment(const char* comment)
  * @method	: Config::parsing
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: inline, parsing content of config file.
  */
 inline int Config::parsing()
@@ -397,12 +382,12 @@ inline int Config::parsing()
 
 	s = resize((int) get_size());
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	s = read();
 	if (s <= 0) {
-		return s;
+		return -1;
 	}
 
 	_p = 0;
@@ -432,14 +417,14 @@ inline int Config::parsing()
 
 			s = b.append_raw(&_v[start], _p - start);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 
 			b.trim();
 
 			s = _data.add_misc_raw(b._v);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 
 			b.reset();
@@ -469,7 +454,7 @@ inline int Config::parsing()
 
 			s = b.append_raw(&_v[start], _p - start);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 
 			b.trim();
@@ -481,7 +466,7 @@ inline int Config::parsing()
 
 			s = _data.add_head_raw(b._v, b._i);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 
 			b.reset();
@@ -509,7 +494,7 @@ inline int Config::parsing()
 
 			s = b.append_raw(&_v[start], _p - start);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 
 			b.trim();
@@ -521,7 +506,7 @@ inline int Config::parsing()
 
 			s = _data.add_key_raw(b._v, b._i);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 
 			b.reset();
@@ -542,7 +527,7 @@ inline int Config::parsing()
 
 			s = b.append_raw(&_v[start], _p - start);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 
 			b.trim();
@@ -553,7 +538,7 @@ inline int Config::parsing()
 
 			s = _data.add_value_raw(b._v, b._i);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 
 			b.reset();

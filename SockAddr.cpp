@@ -15,15 +15,13 @@ unsigned int SockAddr::IN6_SIZE	= sizeof(struct sockaddr_in6);
  * @method	: SockAddr::SockAddr
  * @desc	: SockAddr object constructor.
  */
-SockAddr::SockAddr() : Buffer()
+SockAddr::SockAddr(const int bfr_size) : Buffer(bfr_size)
 ,	_t(0)
 ,	_in()
 ,	_in6()
 ,	_next(NULL)
 ,	_last(this)
-{
-	resize(INET6_ADDRSTRLEN);
-}
+{}
 
 /**
  * @method	: SockAddr::~SockAddr

@@ -1,0 +1,31 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> DNS Module </h1>
+
+<ul class="toc">
+	<li><a target="content" href="DNS_rr.html"> DNS Resource Record Module </a></li>
+	<li><a target="content" href="DNSQuery.html"> DNS Query Module </a></li>
+</ul>
+
+<p>
+DNS module is a network module to talk to DNS server in low level. "Talk" in
+this context mean is when you want to know the IP address of some host name
+(i.e. www.google.com) you must ask the DNS server. How the query data packed,
+send to DNS server, received (a reply) the data back from DNS server, and
+unpacked the data back is what this module provide.
+</p>
+<p>
+The high level of this API is provided by libc through
+"<tt>gethostbyname()</tt>" and their variants, where their output is already
+simplified into string of IP address.
+</p>
+<p>
+DNS module is separated into three module: <tt>DNS_rr</tt>,
+<tt>DNSQuery</tt>, and the main module <tt>Resolver</tt>.
+
+</body>
+</html>

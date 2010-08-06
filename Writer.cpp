@@ -30,7 +30,7 @@ Writer::~Writer()
  *	> rmd	: record meta-data.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: write one row using 'rmd' as meta-data to file.
  */
 int Writer::write(Record *row, RecordMD *rmd)
@@ -42,13 +42,13 @@ int Writer::write(Record *row, RecordMD *rmd)
 		if (rmd->_start_p) {
 			s = _line.resize(rmd->_start_p);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 		}
 		if (rmd->_left_q) {
 			s = _line.appendc((char) rmd->_left_q);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 		}
 
@@ -58,20 +58,20 @@ int Writer::write(Record *row, RecordMD *rmd)
 		case RMD_T_DATE:
 			s = _line.append_raw(row->_v, row->_i);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 			break;
 		case RMD_T_BLOB:
 			s = row->shiftr(RecordMD::BLOB_SIZE);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 
 			memcpy(&row->_v[0], &row->_i, RecordMD::BLOB_SIZE);
 
 			s = _line.append_raw(row->_v, row->_i);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 			break;
 		}
@@ -98,13 +98,13 @@ int Writer::write(Record *row, RecordMD *rmd)
 		if (rmd->_right_q) {
 			s = _line.appendc((char) rmd->_right_q);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 		}
 		if (rmd->_sep) {
 			s = _line.appendc((char) rmd->_sep);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 		}
 		row = row->_next_col;
@@ -120,7 +120,7 @@ int Writer::write(Record *row, RecordMD *rmd)
 
 	s = append_raw(_line._v, _line._i);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	_line.reset();
@@ -135,7 +135,7 @@ int Writer::write(Record *row, RecordMD *rmd)
  *	> rmd	: Record meta-data.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: write all 'rows' to file.
  */
 int Writer::writes(Record *rows, RecordMD *rmd)
@@ -144,8 +144,9 @@ int Writer::writes(Record *rows, RecordMD *rmd)
 
 	while (rows) {
 		s = write(rows, rmd);
-		if (s < 0)
-			return s;
+		if (s < 0) {
+			return -1;
+		}
 		rows = rows->_next_row;
 	}
 

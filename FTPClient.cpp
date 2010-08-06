@@ -54,7 +54,6 @@ void FTPClient::reply()
 
 	_sock->reset();
 	_sock->writes(_rmsg, _rmsg_plus);
-	_sock->send_raw(0);
 }
 
 void FTPClient::reply_raw(int code, const char* msg, const char* msg_add)

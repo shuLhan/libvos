@@ -276,7 +276,7 @@ int Dir::get_list(DirNode* list, const char* path)
  *	> list	: list of DirNode objects to search and set the link.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	:
  * set '_link' pointer in DirNode object to point to the real DirNode object.
  */
@@ -291,7 +291,7 @@ int Dir::get_symlink(DirNode *list)
 		if (list->_child) {
 			s = get_symlink(list->_child);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 		} else if (list->_linkname.is_empty()) {
 			continue;

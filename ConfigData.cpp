@@ -51,7 +51,7 @@ ConfigData::~ConfigData()
  *	> len	: length of 'data', default to 0.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: initialize ConfigData object.
  */
 int ConfigData::init(const int type, const char* data, int len)
@@ -81,7 +81,7 @@ void ConfigData::add_head(const ConfigData* head)
  *	> len	: length of string 'head', default to 0.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: add new header to Config list.
  */
 int ConfigData::add_head_raw(const char* head, int len)
@@ -121,7 +121,7 @@ void ConfigData::add_key(const ConfigData* key)
  *	> len	: length of string 'key', default to 0.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: add new key to the last header in Config list.
  */
 int ConfigData::add_key_raw(const char* key, int len)
@@ -146,7 +146,7 @@ int ConfigData::add_key_raw(const char* key, int len)
  *	> value	: pointer to a new ConfigData value object.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: Add value to the last key in the last header in Config list.
  */
 int ConfigData::add_value(const ConfigData* value)
@@ -171,7 +171,7 @@ int ConfigData::add_value(const ConfigData* value)
  *	> len	: length of string 'value', default to 0.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: add value to the last key in the last header in Config list.
  */
 int ConfigData::add_value_raw(const char* value, int len)
@@ -208,7 +208,7 @@ void ConfigData::add_misc(const ConfigData* misc)
  *	> len	: length of string 'misc', default to 0.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: add a non-key and non-header object, i.e: comment, to Config
  *                list.
  */
@@ -268,7 +268,7 @@ void ConfigData::dump()
  *	> len	: length of string 'data'.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: create and initialize a new ConfigData object.
  */
 int ConfigData::INIT(ConfigData** o, const int type, const char* data

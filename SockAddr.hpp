@@ -31,7 +31,7 @@ namespace vos {
  */
 class SockAddr : public Buffer {
 public:
-	SockAddr();
+	SockAddr(const int bfr_size = INET6_ADDRSTRLEN);
 	~SockAddr();
 
 	int set(const int type, const char* addr, const int port);

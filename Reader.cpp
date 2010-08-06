@@ -29,7 +29,7 @@ Reader::~Reader()
  * @return		:
  *	> >0		: success, number of bytes filled in buffer.
  *	> 0		: EOF.
- *	> <0		: fail, error at reading descriptor.
+ *	> -1		: fail, error at reading descriptor.
  * @desc		:
  *	move unparsed line to the first position, and fill the rest with a new
  *	content.

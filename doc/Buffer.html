@@ -147,10 +147,13 @@ factor of <tt>_l</tt> when <tt>_i</tt> is reached the same value with
 <table class="class-method">
 <tr>
 	<th>Code</th>
-	<td colspan="3"> Buffer() </td>
+	<td colspan="3"> Buffer(const int bfr_size = DFLT_SIZE) </td>
 </tr><tr>
 	<th>Parameter</th>
-	<td>-</td>
+	<td><tt> bfr_size </tt></td>
+	<td>:</td>
+	<td> initial size for buffer, default to "<tt>DFLT_SIZE</tt>" which
+is set to 16.</td>
 </tr><tr>
 	<th>Return Value</th>
 	<td>-</td>
@@ -192,7 +195,7 @@ factor of <tt>_l</tt> when <tt>_i</tt> is reached the same value with
 		<td>:</td>
 		<td> success. </td>
 	</tr><tr>
-		<td><tt>&lt;0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail.</td>
 </tr><tr>
@@ -281,7 +284,7 @@ copied, default to <tt>0</tt>.</td>
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr>
@@ -311,7 +314,7 @@ copied, default to <tt>0</tt>.</td>
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -343,7 +346,7 @@ is similar with <tt>copy()</tt> function but with additional parameter
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -369,7 +372,7 @@ is nil.</td>
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td>fail.</td>
 </tr><tr>
@@ -400,7 +403,7 @@ object, <tt>bfr</tt>, leave current object to be an empty Buffer object.
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail </td>
 </tr><tr>
@@ -426,7 +429,7 @@ right.</td>
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -455,7 +458,7 @@ right.</td>
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -484,7 +487,7 @@ right.</td>
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -509,7 +512,7 @@ right.</td>
 		<td>:</td>
 		<td> success, number of bytes appended.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -535,7 +538,7 @@ fraction is six digits. </td>
 		<td>:</td>
 		<td> success, number of bytes appended. </td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -565,7 +568,7 @@ buffer.</td>
 		<td>:</td>
 		<td> success, number of bytes appended. </td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -599,7 +602,7 @@ method, resizing the buffer to <tt>len</tt>.</td>
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail.</td>
 </tr><tr>
@@ -629,7 +632,7 @@ method, resizing the buffer to <tt>len</tt>.</td>
 		<td>:</td>
 		<td> success, number of bytes appended. </td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -658,7 +661,7 @@ method, resizing the buffer to <tt>len</tt>.</td>
 		<td>:</td>
 		<td> success, number of bytes appended. </td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -683,7 +686,7 @@ method, resizing the buffer to <tt>len</tt>.</td>
 		<td>:</td>
 		<td> success, number of bytes added to the beginning of buffer. </td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail </td>
 </tr><tr>
@@ -713,7 +716,7 @@ beginning of this Buffer object.</td>
 		<td>:</td>
 		<td> success, number of bytes added to beginning of buffer. </td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -1012,7 +1015,7 @@ way to do this is by directly checking the '<tt>_i</tt>' value.</td>
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -1042,7 +1045,7 @@ data on <tt>bfr</tt> object.</td>
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -1072,7 +1075,7 @@ raw buffer <tt>bfr</tt>.</td>
 		<td>:</td>
 		<td> success.</td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>

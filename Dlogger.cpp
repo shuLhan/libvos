@@ -41,21 +41,19 @@ Dlogger::~Dlogger()
  *	> logfile	: a log file name, with or without leading path.
  * @return		:
  *	< 0		: success.
- *	< <0		: fail.
+ *	< -1		: fail.
  * @desc		: start the log daemon on the file 'logfile'.
  */
 int Dlogger::open(const char* logfile)
 {
 	if (logfile) {
-		register int s;
-
 		close();
 
-		s = open_wa(logfile);
-		if (s < 0) {
+		_s = open_wa(logfile);
+		if (_s < 0) {
 			_d = STDERR_FILENO;
 		}
-		return s;
+		return _s;
 	}
 	return 0;
 }
@@ -122,7 +120,7 @@ void Dlogger::_w(FILE* stream, const char* fmt)
  *	> ...	: one or more arguments for output.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: write message to standard error and log file.
  */
 int Dlogger::er(const char* fmt, ...)
@@ -145,7 +143,7 @@ int Dlogger::er(const char* fmt, ...)
  *	> ...	: one or more arguments for output.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: write message to standard output and log file.
  */
 int Dlogger::out(const char* fmt, ...)
@@ -168,7 +166,7 @@ int Dlogger::out(const char* fmt, ...)
  *	> ...	: one or more arguments for output.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: write message to log file only.
  */
 int Dlogger::it(const char* fmt, ...)

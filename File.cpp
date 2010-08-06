@@ -15,16 +15,14 @@ const char* __eol[N_EOL_MODE] = {
 
 unsigned int File::DFLT_SIZE = 8192;
 
-File::File(const unsigned int bfr_size) : Buffer(),
-	_d(0),
-	_p(0),
-	_status(FILE_OPEN_NO),
-	_eol(__eol[EOL_NIX][0]),
-	_eols(__eol[EOL_NIX]),
-	_name()
-{
-	Buffer::resize(bfr_size);
-}
+File::File(const unsigned int bfr_size) : Buffer(bfr_size)
+,	_d(0)
+,	_p(0)
+,	_status(FILE_OPEN_NO)
+,	_eol(__eol[EOL_NIX][0])
+,	_eols(__eol[EOL_NIX])
+,	_name()
+{}
 
 File::~File()
 {
@@ -40,7 +38,7 @@ File::~File()
  *                default to 0600 (read-write for user only).
  * @return	:
  *	< 0	: success, or 'path' is nil.
- *	< <0	: fail, error at opening file.
+ *	< -1	: fail, error at opening file.
  * @desc	:
  *	the generic method to open file with specific mode and permission.
  */
@@ -54,7 +52,7 @@ int File::_open(const char* path, const int mode, const int perm)
 	if (!_v) {
 		s = resize(DFLT_SIZE);
 		if (s < 0) {
-			return s;
+			return -1;
 		}
 	}
 
@@ -66,7 +64,7 @@ int File::_open(const char* path, const int mode, const int perm)
 
 	s = _name.copy_raw(path);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	_status = (mode & (O_RDONLY | O_WRONLY | O_RDWR));
@@ -81,7 +79,7 @@ int File::_open(const char* path, const int mode, const int perm)
  *	> path	: path to a file name.
  * @return	:
  *	< 0	: success, or 'path' is nil.
- *	< <0	: fail, error at opening file.
+ *	< -1	: fail, error at opening file.
  * @desc	:
  *	open file for read and write, create a file if it is not exist.
  */
@@ -96,7 +94,7 @@ int File::open(const char* path)
  *	> path	: path to a file.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail, error at opening file.
+ *	< -1	: fail, error at opening file.
  * @desc	: open file for read only.
  */
 int File::open_ro(const char* path)
@@ -110,7 +108,7 @@ int File::open_ro(const char* path)
  *	> path	: path to a file.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail, error at opening file.
+ *	< -1	: fail, error at opening file.
  * @desc	: open file for write only.
  */
 int File::open_wo(const char* path)
@@ -124,7 +122,7 @@ int File::open_wo(const char* path)
  *	> path	: path to a file.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: open file for write and append.
  */
 int File::open_wa(const char* path)
@@ -137,7 +135,7 @@ int File::open_wa(const char* path)
  * @return	:
  *	< >0	: size of file.
  *	< 0	: if file is empty.
- *	< <0	: fail, error at seek.
+ *	< -1	: fail, error at seek.
  * @desc	: get current size of file.
  */
 off_t File::get_size()
@@ -184,7 +182,7 @@ void File::set_eol(const int mode)
  * @return	:
  *	< >0	: success, return number of bytes read.
  *	< 0	: EOF
- *	< <0	: fail, error at reading descriptor.
+ *	< -1	: fail, error at reading descriptor.
  * @desc	: read contents of file and saved it to buffer.
  */
 int File::read()
@@ -211,7 +209,7 @@ int File::read()
  * @return	:
  *	< >0	: success, return number of bytes read.
  *	< 0	: EOF, or file is not open.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	:
  *	read n bytes of characters from file, automatically increase buffer if n
  *	is greater than File buffer size.
@@ -227,7 +225,7 @@ int File::readn(int n)
 	if (n > _l) {
 		s = resize(n);
 		if (s != 0) {
-			return s; 
+			return -1; 
 		}
 	}
 	_i = 0;
@@ -323,7 +321,7 @@ int File::refill(int read_min)
  * @return	:
  *	< 1	: success, one line read.
  *	< 0	: success, EOF.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: get one line at a time from buffer.
  *
  *	- this operation will change contents of file buffer.
@@ -342,7 +340,7 @@ int File::get_line(Buffer* line)
 	if (_i == 0) {
 		s = File::read();
 		if (s <= 0) {
-			return s;
+			return -1;
 		}
 	}
 
@@ -393,7 +391,7 @@ int File::get_line(Buffer* line)
 
 	s = line->copy_raw(&_v[start], len);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	_p++;
@@ -407,7 +405,7 @@ int File::get_line(Buffer* line)
  *	> bfr	: Buffer object to be write to file.
  * @return	:
  *	< >=0	: success, number of bytes appended to File buffer.
- *	< <0	: fail, error at writing to descriptor.
+ *	< -1	: fail, error at writing to descriptor.
  * @desc	: append buffer 'bfr' to File buffer for writing.
  */
 int File::write(const Buffer* bfr)
@@ -425,7 +423,7 @@ int File::write(const Buffer* bfr)
  *	> len	: length of 'bfr' to write, default to zero.
  * @return	:
  *	< >=0	: success, number of bytes appended to File buffer.
- *	< <0	: fail, error at writing to descriptor.
+ *	< -1	: fail, error at writing to descriptor.
  * @desc	: append buffer 'bfr' to File buffer for writing.
  */
 int File::write_raw(const char* bfr, int len)
@@ -447,7 +445,7 @@ int File::write_raw(const char* bfr, int len)
 	if (len >= _l) {
 		s = flush();
 		if (s < 0) {
-			return s;
+			return -1;
 		}
 		while (len > 0) {
 			s = (int) ::write(_d, &bfr[x], len);
@@ -462,12 +460,12 @@ int File::write_raw(const char* bfr, int len)
 		if (_l < (_i + len)) {
 			s = flush();
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 		}
 		s = append_raw(bfr, len);
 		if (s < 0) {
-			return s;
+			return -1;
 		}
 		if (_status & O_SYNC) {
 			flush();
@@ -485,7 +483,7 @@ int File::write_raw(const char* bfr, int len)
  * @return	:
  *	< >=0	: success, return number of bytes written to file.
  *	< 0	: success, file is not open.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: write buffer of formatted string to file.
  */
 int File::writef(const char* fmt, va_list args)
@@ -499,7 +497,7 @@ int File::writef(const char* fmt, va_list args)
 
 	s = b.vprint(fmt, args);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	return write_raw(b._v, b._i);
@@ -512,7 +510,7 @@ int File::writef(const char* fmt, va_list args)
  *	> ...	: any arguments for value in formatted string.
  * @return	:
  *	< >=0	: success, return number of bytes written to file.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: write buffer of formatted string to file.
  */
 int File::writes(const char* fmt, ...)
@@ -538,7 +536,7 @@ int File::writes(const char* fmt, ...)
  *	> c	: a character to be appended to file.
  * @return	:
  *	< 1	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: write one character to file.
  */
 int File::writec(const char c)
@@ -552,7 +550,7 @@ int File::writec(const char c)
 	if (_i + 1 >= _l) {
 		s = flush();
 		if (s < 0) {
-			return s;
+			return -1;
 		}
 	}
 
@@ -569,7 +567,7 @@ int File::writec(const char c)
  * @method	: File::flush
  * @return	:
  *	< >=0	: success, size of buffer flushed to the system, in bytes.
- *	< <0	: fail, error at writing to descriptor.
+ *	< -1	: fail, error at writing to descriptor.
  * @desc	: flush buffer cache; write all File buffer to disk.
  */
 int File::flush()
@@ -699,7 +697,7 @@ int File::IS_EXIST(const char* path, int acc_mode)
  *	> path		: a path to directory or file.
  * @return		:
  *	< 0		: success.
- *	< <0		: fail.
+ *	< -1		: fail.
  * @desc		:
  * get the basename, last node, of path, it could be a file or directory.
  */
@@ -718,14 +716,14 @@ int File::BASENAME(Buffer* name, const char* path)
 	if (!path) {
 		s = name->appendc('.');
 		if (s < 0) {
-			return s;
+			return -1;
 		}
 	} else {
 		len = (int) strlen(path);
 		if (path[0] == '/' && len == 1) {
 			s = name->appendc('/');
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 		} else {
 			p = len - 1;
@@ -741,7 +739,7 @@ int File::BASENAME(Buffer* name, const char* path)
 			}
 			s = name->copy_raw(&path[p], len - p);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 		}
 	}
@@ -775,19 +773,19 @@ int File::COPY(const char* src, const char* dst)
 
 	s = from.open_ro(src);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	s = to.open_wo(dst);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	s = from.read();
 	while (s > 0) {
 		s = to.write(&from);
 		if (s < 0) {
-			return s;
+			return -1;
 		}
 
 		s = from.read();
@@ -820,7 +818,7 @@ int File::TOUCH(const char* filename)
 		if (errno == ENOENT) {
 			s = ::open(filename, FILE_OPEN_WA, S_IRUSR | S_IWUSR);
 			if (s < 0) {
-				return s;
+				return -1;
 			}
 			::close(s);
 			s = 0;

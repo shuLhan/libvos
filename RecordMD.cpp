@@ -133,7 +133,7 @@ void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
  *	> meta	: formatted string of field declaration.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	:
  *	create and initialize meta data using field declaration in 'meta'.
  *
@@ -485,7 +485,7 @@ err:
  *                path.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	:
  *	create and initialize meta-data object 'o' by loading meta-data from
  *	file 'fmeta'.
@@ -497,17 +497,17 @@ int RecordMD::INIT_FROM_FILE(RecordMD** o, const char* fmeta)
 
 	s = f.open_ro(fmeta);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	s = f.resize((int) f.get_size());
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	s = f.read();
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	return RecordMD::INIT(o, f.v());

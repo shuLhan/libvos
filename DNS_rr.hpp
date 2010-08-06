@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -52,20 +52,19 @@ enum _RR_CLASS {
  *	- _len		: length of Resource Record.
  *	- _mx_pref	: priority of Resource Record with MX type.
  *	- _name		: domain name for MX record.
- *	- _data		: data of Resource Record, depend on type of RR.
  *	- _next		: pointer to the next RR.
  *	- DNS_RDATA_MAX_SIZE	: static, maximum size for '_data'.
  * @desc		:
  *	submodule of DNSQuery, for listing Resource Record of DNS packet.
  */
-class DNS_rr {
+class DNS_rr : public Buffer {
 public:
-	DNS_rr();
+	DNS_rr(int bfr_size = DNS_RDATA_MAX_SIZE);
 	~DNS_rr();
-	int init();
+
 	void reset();
 	void dump();
-	static void ADD(DNS_rr **root, DNS_rr *rr);
+	static void ADD(DNS_rr** root, DNS_rr* rr);
 
 	uint16_t	_type;
 	uint16_t	_class;
@@ -73,13 +72,12 @@ public:
 	uint16_t	_len;
 	uint16_t	_mx_pref;
 	Buffer		_name;
-	Buffer		_data;
-	DNS_rr		*_next;
+	DNS_rr*		_next;
+
+	static unsigned int DNS_RDATA_MAX_SIZE;
 private:
 	DNS_rr(const DNS_rr&);
 	void operator=(const DNS_rr&);
-
-	static unsigned int DNS_RDATA_MAX_SIZE;
 };
 
 } /* namespace::vos */

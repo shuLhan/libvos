@@ -1,0 +1,158 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> DNS Resource Record (RR) Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#DNS_rr::DNS_rr"><tt> DNS_rr::DNS_rr </tt></a></li>
+	<li><a href="#DNS_rr::~DNS_rr"><tt> DNS_rr::~DNS_rr </tt></a></li>
+	<li><a href="#DNS_rr::reset"><tt> DNS_rr::reset </tt></a></li>
+	<li><a href="#DNS_rr::dump"><tt> DNS_rr::dump </tt></a></li>
+	<li><a href="#DNS_rr::ADD"><tt> DNS_rr::ADD </tt></a></li>
+	</ul>
+</ul>
+
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td>uint16_t</td>
+	<td>_type</td>
+	<td>type of RR object.</td>
+</tr><tr>
+	<td>uint16_t</td>
+	<td>_class</td>
+	<td>class of RR object.</td>
+</tr><tr>
+	<td>uint32_t</td>
+	<td>_ttl</td>
+	<td>time to live for RR object.</td>
+</tr><tr>
+	<td>uint16_t</td>
+	<td>_len</td>
+	<td>length of RR data object.</td>
+</tr><tr>
+	<td>uint16_t</td>
+	<td>_mx_pref</td>
+	<td>priority of RR if type is MX.</td>
+</tr><tr>
+	<td>Buffer</td>
+	<td>_name</td>
+	<td>domain name for RR object with type is MX.</td>
+</tr><tr>
+	<td>DNS_rr*</td>
+	<td>_next</td>
+	<td>pointer to the next RR object.</td>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="DNS_rr::DNS_rr"><tt> DNS_rr::DNS_rr </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> DNS_rr(int bfr_size = DNS_RDATA_MAX_SIZE) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> bfr_size </td>
+	<td>:</td>
+	<td> maximum size of buffer for each RR object. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> DNS_rr constructor. </td>
+</tr>
+</table>
+
+<h3><a name="DNS_rr::~DNS_rr"><tt> DNS_rr::~DNS_rr </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~DNS_rr() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> DNS_rr destructor. </td>
+</tr>
+</table>
+
+<h3><a name="DNS_rr::reset"><tt> DNS_rr::reset </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void reset() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> reset DNS_rr data. </td>
+</tr>
+</table>
+
+<h3><a name="DNS_rr::dump"><tt> DNS_rr::dump </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void dump() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> print content of DNS_rr data to standard output.
+	</td>
+</tr>
+</table>
+
+<h3><a name="DNS_rr::ADD"><tt> DNS_rr::ADD </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static void ADD(DNS_rr** root, DNS_rr* rr)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> root </tt></td>
+		<td>:</td>
+		<td>pointer to the head of the list.</td>
+	</tr><tr>
+		<td><tt> rr </tt></td>
+		<td>:</td>
+		<td> pointer to DNS_rr object. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new node '<tt>rr</tt>' to the list of
+'<tt>root</tt>'.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

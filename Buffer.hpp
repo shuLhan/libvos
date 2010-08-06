@@ -40,7 +40,7 @@ namespace vos {
  */
 class Buffer {
 public:
-	Buffer();
+	Buffer(const int bfr_size = DFLT_SIZE);
 	virtual ~Buffer();
 
 	int resize(const int len);

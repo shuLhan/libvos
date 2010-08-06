@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -42,25 +42,25 @@ public:
 	int init();
 
 	void dump();
-	int set_server(char *server_list);
-	int add_server(char *server_list);
+	int set_server(char* server_list);
+	int add_server(char* server_list);
 
-	int create_question_udp(DNSQuery **query, const char *qname);
-	int send_query_udp(DNSQuery *question, DNSQuery *answer);
-	int send_query_tcp(DNSQuery *question, DNSQuery *answer);
-	int send_query(DNSQuery *question, DNSQuery *answer);
-	long int send_udp(struct sockaddr_in *addr, Buffer *bfr);
-	long int send_udp_raw(struct sockaddr_in *addr, const char *bfr,
-				const int len);
+	int create_question_udp(DNSQuery** query, const char* qname);
+	int send_query_udp(DNSQuery* question, DNSQuery* answer);
+	int send_query_tcp(DNSQuery* question, DNSQuery* answer);
+	int send_query(DNSQuery* question, DNSQuery* answer);
+	long int send_udp(struct sockaddr_in* addr, Buffer* bfr);
+	long int send_udp_raw(struct sockaddr_in* addr, const char* bfr
+				, const int len);
 
 	static unsigned int PORT;
 	static unsigned int UDP_PACKET_SIZE;
 	static unsigned int TIMEOUT;
 	static unsigned int N_TRY;
 
-	SockServer	_tcp;
-	SockServer	_udp;
-	SockAddr	*_servers;
+	Socket		_tcp;
+	Socket		_udp;
+	SockAddr*	_servers;
 private:
 	Resolver(const Resolver&);
 	void operator=(const Resolver&);

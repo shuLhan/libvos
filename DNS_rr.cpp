@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -13,15 +13,14 @@ unsigned int DNS_rr::DNS_RDATA_MAX_SIZE = 255;
 /**
  * @method	: DNS_rr::DNS_rr
  */
-DNS_rr::DNS_rr() :
-	_type(0),
-	_class(0),
-	_ttl(0),
-	_len(0),
-	_mx_pref(0),
-	_name(),
-	_data(),
-	_next(NULL)
+DNS_rr::DNS_rr(const int bfr_size) : Buffer(bfr_size)
+,	_type(0)
+,	_class(0)
+,	_ttl(0)
+,	_len(0)
+,	_mx_pref(0)
+,	_name()
+,	_next(NULL)
 {}
 
 /**
@@ -29,20 +28,9 @@ DNS_rr::DNS_rr() :
  */
 DNS_rr::~DNS_rr()
 {
-	if (_next)
+	if (_next) {
 		delete _next;
-}
-
-/**
- * @method	: DNS_rr::init
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
- * @desc	: initialize DNS_rr object data.
- */
-int DNS_rr::init()
-{
-	return _data.resize(DNS_RDATA_MAX_SIZE);
+	}
 }
 
 /**
@@ -56,9 +44,10 @@ void DNS_rr::reset()
 	_ttl	= 0;
 	_len	= 0;
 	_name.reset();
-	_data.reset();
-	if (_next)
+	reset();
+	if (_next) {
 		delete _next;
+	}
 }
 
 /**
@@ -67,14 +56,12 @@ void DNS_rr::reset()
  */
 void DNS_rr::dump()
 {
-	DNS_rr *p = this;
+	DNS_rr* p = this;
 
 	printf(" name|type|class|TTL|length|MX preference|data\n");
 	while (p) {
 		printf(" %s|%d|%d|%d|%d|%d|%s\n", p->_name.v(), p->_type
-			, p->_class, p->_ttl, p->_len, p->_mx_pref
-			, p->_data.v());
-
+			, p->_class, p->_ttl, p->_len, p->_mx_pref, p->v());
 		p = p->_next;
 	}
 }
@@ -86,15 +73,19 @@ void DNS_rr::dump()
  *	> rr	: a new node.
  * @desc	: add a new node 'rr' to the list of 'root'.
  */
-void DNS_rr::ADD(DNS_rr **root, DNS_rr *rr)
+void DNS_rr::ADD(DNS_rr** root, DNS_rr* rr)
 {
+	if (!rr) {
+		return;
+	}
 	if (! (*root)) {
 		(*root) = rr;
 	} else {
-		DNS_rr *p = (*root);
-		while (p->_next)
-			p = p->_next;
+		DNS_rr* p = (*root);
 
+		while (p->_next) {
+			p = p->_next;
+		}
 		p->_next = rr;
 	}
 }

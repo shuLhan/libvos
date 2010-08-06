@@ -51,7 +51,12 @@ public:
 				, const int dflt = 0);
 
 	int set(const char* head, const char* key, const char* value);
-	void add(const char* head, const char* key, const char* value);
+
+	int add(const char* head, const char* key, const char* value)
+	{
+		return set(head, key, value);
+	}
+
 	void add_comment(const char* comment);
 
 	ConfigData _data;

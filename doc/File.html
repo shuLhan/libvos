@@ -178,7 +178,7 @@ const int perm = S_IRUSR | S_IWUSR)</td>
 		<td>:</td>
 		<td>success.</td>
 	</tr><tr>
-		<td><tt> &lt;0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td>fail, or '<tt>path</tt>' is nil.</td>
 </tr><tr>
@@ -206,7 +206,7 @@ const int perm = S_IRUSR | S_IWUSR)</td>
 		<td>:</td>
 		<td>success.</td>
 	</tr><tr>
-		<td><tt> &lt;0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td>fail, or '<tt>path</tt>' is nil.</td>
 </tr><tr>
@@ -233,7 +233,7 @@ const int perm = S_IRUSR | S_IWUSR)</td>
 		<td>:</td>
 		<td>success.</td>
 	</tr><tr>
-		<td><tt> &lt;0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td>fail, or '<tt>path</tt>' is nil.</td>
 </tr><tr>
@@ -258,7 +258,7 @@ const int perm = S_IRUSR | S_IWUSR)</td>
 		<td>:</td>
 		<td>success.</td>
 	</tr><tr>
-		<td><tt> &lt;0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td>fail, or '<tt>path</tt>' is nil.</td>
 </tr><tr>
@@ -286,7 +286,7 @@ be truncated.
 		<td>:</td>
 		<td>success.</td>
 	</tr><tr>
-		<td><tt> &lt;0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td>fail, or '<tt>path</tt>' is nil.</td>
 </tr><tr>
@@ -313,7 +313,7 @@ the end of file.
 		<td> success, current size of file.
 		</td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -367,7 +367,7 @@ object.
 		<td>success, end of file reached, or file is not opened for
 read</td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td> : </td>
 		<td> fail, error at reading file descriptor.
 		</td>
@@ -399,7 +399,7 @@ read</td>
 		<td>success, end of file reached, or file is not opened for
 read</td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td> : </td>
 		<td> fail, error at reading file descriptor.
 		</td>
@@ -432,7 +432,7 @@ automatically increase buffer if <tt>n</tt> is greater than File buffer size.
 		<td>success, end of file reached, or file is not opened for
 read</td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td> : </td>
 		<td> fail, error at reading file descriptor.
 		</td>
@@ -491,7 +491,7 @@ index <tt>_i</tt> is filled with new data from file.
 		<td>:</td>
 		<td> success, end of file. </td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail.</td>
 </tr><tr>
@@ -520,7 +520,7 @@ index <tt>_i</tt> is filled with new data from file.
 		<td>:</td>
 		<td> success, number of bytes appended to File buffer. </td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -550,7 +550,7 @@ writing.</td>
 		<td>:</td>
 		<td> success, number of bytes appended to File buffer. </td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -581,7 +581,7 @@ writing.
 		<td>:</td>
 		<td> success, number of bytes appended to File buffer. </td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -611,7 +611,7 @@ writing.
 		<td>:</td>
 		<td> success, number of bytes appended to File buffer. </td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -636,7 +636,7 @@ writing.
 		<td>:</td>
 		<td> success. </td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 
@@ -661,7 +661,7 @@ writing.
 		<td>:</td>
 		<td> success, size of buffer flushed to the system, in bytes. </td>
 	</tr><tr>
-		<td><tt>&lt; 0</tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -774,7 +774,7 @@ user had a permission to acesss it.
 		<td>:</td>
 		<td> success. </td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -804,7 +804,7 @@ could be a file or directory.</td>
 		<td>:</td>
 		<td> success. </td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>
@@ -833,7 +833,7 @@ of file in file system.
 		<td>:</td>
 		<td> success. </td>
 	</tr><tr>
-		<td><tt> &lt; 0 </tt></td>
+		<td><tt> -1 </tt></td>
 		<td>:</td>
 		<td> fail. </td>
 </tr><tr>

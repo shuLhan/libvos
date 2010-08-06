@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -94,18 +94,18 @@ public:
 	DNSQuery();
 	~DNSQuery();
 
-	int init(const Buffer *bfr);
-	int set_buffer(const Buffer *bfr, const int type);
+	int init(const Buffer* bfr);
+	int set_buffer(const Buffer* bfr, const int type);
 
 	int extract();
 	int extract_header();
 	int extract_question();
-	int extract_rr(DNS_rr **rr, const unsigned char *bfr_org,
-			const unsigned char *bfr,
-			const unsigned char **bfr_ret,
-			const int last_type);
-	int read_label(Buffer *label, const unsigned char *bfr_org,
-			const unsigned char *bfr, const int bfr_off);
+	int extract_rr(DNS_rr** rr, const unsigned char* bfr_org
+			, const unsigned char* bfr
+			, const unsigned char** bfr_ret
+			, const int last_type);
+	int read_label(Buffer* label, const unsigned char* bfr_org
+			, const unsigned char* bfr, const int bfr_off);
 
 	void remove_rr_aut();
 	void remove_rr_add();
@@ -127,19 +127,19 @@ public:
 	uint16_t	_n_aut;
 	uint16_t	_n_add;
 	/* DNS QUESTION Section */
-	uint16_t	_type;
-	uint16_t	_class;
+	uint16_t	_q_type;
+	uint16_t	_q_class;
 	Buffer		_name;
 	/* DNS Buffer for question & answer */
 	int		_bfr_type;
-	Buffer		*_bfr;
+	Buffer*		_bfr;
 	/* DNS resource records */
-	DNS_rr		*_rr_ans;
-	DNS_rr		*_rr_aut;
-	DNS_rr		*_rr_add;
-	const char	*_rr_ans_p;
-	const char	*_rr_aut_p;
-	const char	*_rr_add_p;
+	DNS_rr*		_rr_ans;
+	DNS_rr*		_rr_aut;
+	DNS_rr*		_rr_add;
+	const char*	_rr_ans_p;
+	const char*	_rr_aut_p;
+	const char*	_rr_add_p;
 private:
 	DNSQuery(const DNSQuery&);
 	void operator=(const DNSQuery&);

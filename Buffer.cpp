@@ -29,11 +29,13 @@ enum __print_flag {
 int Buffer::DFLT_SIZE = 16;
 int Buffer::CHAR_SIZE = sizeof(char);
 
-Buffer::Buffer() :
+Buffer::Buffer(const int bfr_size) :
 	_i(0)
 ,	_l(0)
 ,	_v(NULL)
-{}
+{
+	resize(bfr_size);
+}
 
 Buffer::~Buffer()
 {
@@ -164,7 +166,7 @@ int Buffer::copy_raw(const char* bfr, int len)
  *	> dflt	: default value to be copied to buffer if 'bfr' is empty.
  * @return	:
  *	< 0	: success, or 'bfr' is nil.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	:
  *	set contents of Buffer to 'bfr'. This method is similar with copy()
  *	with additional parameter 'dflt', if 'bfr' is nil then 'dflt' value
@@ -290,7 +292,7 @@ int Buffer::appendc(const char c)
  *	> base	: base number, default to 10.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: Append an integer 'i' as a string to buffer.
  */
 int Buffer::appendi(long int i, int base)
@@ -302,7 +304,7 @@ int Buffer::appendi(long int i, int base)
 	if (i < 0) {
 		s = appendc('-');
 		if (s < 0) {
-			return s;
+			return -1;
 		}
 		i = -(i);
 	}
@@ -317,7 +319,7 @@ int Buffer::appendi(long int i, int base)
 	while (x >= 0) {
 		s = appendc(rebmun[x]);
 		if (s < 0) {
-			return s;
+			return -1;
 		}
 		--x;
 	}
@@ -331,7 +333,7 @@ int Buffer::appendi(long int i, int base)
  *	> base	: base number, default to 10.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: Append an unsigned integer 'i' to buffer.
  */
 int Buffer::appendui(long unsigned int i, int base)
@@ -353,7 +355,7 @@ int Buffer::appendui(long unsigned int i, int base)
 	while (x >= 0) {
 		s = appendc(rebmun[x]);
 		if (s < 0) {
-			return s;
+			return -1;
 		}
 		--x;
 	}
@@ -366,7 +368,7 @@ int Buffer::appendui(long unsigned int i, int base)
  *	> d	: float or double number.
  * @return	:
  *	< >=0	: success, number of bytes appended.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: Append a float number to buffer.
  *
  *	Maximum digit in fraction is six digits.
@@ -406,7 +408,7 @@ int Buffer::append(const Buffer* bfr)
  *	> len	: optional, length of 'bfr', default to 0.
  * @return	:
  *	> >=0	: success, number of bytes appended.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: Append a raw buffer 'bfr' to buffer.
  *
  * If 'bfr' is nil and len is greater than zero, than this method will behave
@@ -444,7 +446,7 @@ int Buffer::append_raw(const char* bfr, int len)
  *	> ...	: others raw buffer. (the last parameter must be NULL).
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: Append several raw buffer to buffer.
  *
  * NOTE: the last parameter must be NULL.
@@ -464,7 +466,7 @@ int Buffer::concat(const char* bfr, ...)
 	while (p) {
 		s = append_raw(p);
 		if (s < 0) {
-			return s;
+			return -1;
 		}
 		p = va_arg(al, const char *);
 	}
@@ -482,7 +484,7 @@ int Buffer::concat(const char* bfr, ...)
  *	> ...	: format string parameter.
  * @return:
  *	< >=0	: success, number of bytes appended.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: Append a formatted string to buffer.
  */
 int Buffer::aprint(const char* fmt, ...)
@@ -504,7 +506,7 @@ int Buffer::aprint(const char* fmt, ...)
  *	> args	: list of arguments for 'fmt'.
  * @return	:
  *	< >=0	: success, number of bytes appended.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: Append a formatted string to buffer.
  *
  * vsnprintf() return length of string without '\0'.
@@ -530,7 +532,7 @@ int Buffer::vprint(const char* fmt, va_list args)
 	++len;
 	s = resize(_i + len);
 	if (s < 0) {
-		return s;
+		return -1;
 	}
 
 	len = Buffer::VSNPRINTF(&_v[_i], len, fmt, args);
@@ -798,7 +800,7 @@ void Buffer::dump_hex()
  *	> bfr	: pointer to Buffer object, to be copied to new object.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	:
  * Create and initialize a new Buffer object based on data on 'bfr' object.
  */
@@ -828,7 +830,7 @@ int Buffer::INIT(Buffer** o, const Buffer* bfr)
  *	> bfr	: pointer to raw buffer.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	:
  * Create and initialized a new Buffer object based on raw buffer 'bfr'.
  */
@@ -858,7 +860,7 @@ int Buffer::INIT_RAW(Buffer** o, const char* bfr)
  *	> size	: size of buffer, for a new Buffer object.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	:
  * Create and initialized a new Buffer object with buffer size is equal to
  * 'size'.
@@ -868,7 +870,7 @@ int Buffer::INIT_SIZE(Buffer** o, const int size)
 	register int s = -1;
 
 	if ((*o)) {
-		(*o)->resize(size);
+		s = (*o)->resize(size);
 	} else {
 		(*o) = new Buffer();
 		if ((*o)) {
@@ -891,7 +893,7 @@ int Buffer::INIT_SIZE(Buffer** o, const int size)
  *	> args	: list of arguments for 'fmt'.
  * @return	:
  *	< >=0	: success, length of buffer.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	:
  *	create an output of formatted string 'fmt' and their arguments,
  *	'args', to buffer 'bfr'.
@@ -909,13 +911,14 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 	while (*p) {
 		while (*p && *p != '%') {
 			s = b.appendc(*p);
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 			p++;
 		}
-		if (!*p)
+		if (!*p) {
 			break;
-
+		}
 		p++;
 		while (*p) {
 			switch (*p) {
@@ -953,21 +956,24 @@ next:
 			p++;
 		}
 
-		if (!*p)
+		if (!*p) {
 			break;
+		}
 
 		switch (*p) {
 		case 'c':
 			s = o.appendc((char) va_arg(args, int));
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 			break;
 		case 'd':
 		case 'i':
 			flag |= FL_NUMBER;
 			s = o.appendi(va_arg(args, int));
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 			break;
 		case 'u':
 			flag |= FL_NUMBER;
@@ -976,30 +982,35 @@ next:
 			} else {
 				s = o.appendui(va_arg(args, unsigned int));
 			}
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 			break;
 		case 's':
 			s = o.append_raw(va_arg(args, const char *));
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 			break;
 		case 'f':
 			flag |= FL_NUMBER;
 			s = o.appendd(va_arg(args, double));
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 			break;
 		case 'o':
 			flag |= FL_OCTAL | FL_NUMBER;
 			flag &= ~FL_SIGN;
 			if (flen) {
-				if (flag & FL_ALT_OUT)
+				if (flag & FL_ALT_OUT) {
 					--flen;
+				}
 			}
 			s = o.appendi(va_arg(args, int), 8);
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 			break;
 		case 'p':
 			flag |= FL_ALT_OUT;
@@ -1008,23 +1019,27 @@ next:
 			flag |= FL_HEX | FL_NUMBER;
 			flag &= ~FL_SIGN;
 			if (flen > 2) {
-				if (flag & FL_ALT_OUT)
+				if (flag & FL_ALT_OUT) {
 					flen -= 2;
+				}
 			} else {
 				flen = 0;
 			}
 			s = o.appendi(va_arg(args, int), 16);
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 			break;
 		default:
 			s = o.appendc('%');
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 
 			s = o.appendc(*p);
-			if (s < 0)
-				return s;
+			if (s < 0) {
+				return -1;
+			}
 
 			flag = 0;
 			break;
@@ -1035,10 +1050,11 @@ next:
 				if ((flag & FL_SIGN) && (flag & FL_NUMBER)) {
 					--flen;
 				}
-				if (flen > o._i)
+				if (flen > o._i) {
 					flen = flen - o._i;
-				else
+				} else {
 					flen = 0;
+				}
 			}
 			if ((flag & FL_NUMBER)) {
 				if ((flag & FL_ZERO) && flen) {

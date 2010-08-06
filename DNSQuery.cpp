@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -12,23 +12,23 @@ namespace vos {
  * @method	: DNSQuery::DNSQuery
  */
 DNSQuery::DNSQuery() :
-	_id(0),
-	_flag(0),
-	_n_qry(0),
-	_n_ans(0),
-	_n_aut(0),
-	_n_add(0),
-	_type(0),
-	_class(0),
-	_name(),
-	_bfr_type(BUFFER_IS_UDP),
-	_bfr(NULL),
-	_rr_ans(NULL),
-	_rr_aut(NULL),
-	_rr_add(NULL),
-	_rr_ans_p(NULL),
-	_rr_aut_p(NULL),
-	_rr_add_p(NULL)
+	_id(0)
+,	_flag(0)
+,	_n_qry(0)
+,	_n_ans(0)
+,	_n_aut(0)
+,	_n_add(0)
+,	_q_type(0)
+,	_q_class(0)
+,	_name()
+,	_bfr_type(BUFFER_IS_UDP)
+,	_bfr(NULL)
+,	_rr_ans(NULL)
+,	_rr_aut(NULL)
+,	_rr_add(NULL)
+,	_rr_ans_p(NULL)
+,	_rr_aut_p(NULL)
+,	_rr_add_p(NULL)
 {}
 
 /**
@@ -253,15 +253,15 @@ int DNSQuery::extract_question()
 	}
 	startp += len;
 
-	memcpy(&_type, bfr + startp, DNS_QTYPE_SIZE);
-	_type	= ntohs(_type);
+	memcpy(&_q_type, bfr + startp, DNS_QTYPE_SIZE);
+	_q_type	= ntohs(_q_type);
 	len	+= DNS_QTYPE_SIZE;
 	startp	+= DNS_QTYPE_SIZE;
 	if (startp > _bfr->_i)
 		return -1;
 
-	memcpy(&_class, bfr + startp, DNS_QCLASS_SIZE);
-	_class	= ntohs(_class);
+	memcpy(&_q_class, bfr + startp, DNS_QCLASS_SIZE);
+	_q_class	= ntohs(_q_class);
 	len	+= DNS_QCLASS_SIZE;
 
 	return len;
@@ -287,18 +287,14 @@ int DNSQuery::extract_rr(DNS_rr **rr, const unsigned char *bfr_org,
 				const unsigned char **bfr_ret,
 				const int last_type)
 {
-	int	s	= 0;
 	int	l	= 0;
-	DNS_rr	*prr	= NULL;
+	DNS_rr*	prr	= NULL;
 
 	if (! (*rr)) {
 		(*rr) = new DNS_rr();
-		if (! (*rr))
+		if (! (*rr)) {
 			return -1;
-
-		s = (*rr)->init();
-		if (s < 0)
-			return s;
+		}
 	} else if (0 == last_type) {
 		(*rr)->reset();
 	}
@@ -328,13 +324,13 @@ int DNSQuery::extract_rr(DNS_rr **rr, const unsigned char *bfr_org,
 
 	switch (prr->_type) {
 	case QUERY_T_ADDRESS:
-		inet_ntop(AF_INET, bfr, prr->_data._v, prr->_data._l);
+		inet_ntop(AF_INET, bfr, prr->_v, prr->_l);
 		bfr += prr->_len;
 		break;
 
 	case QUERY_T_CNAME:
 	case QUERY_T_NAMESERVER:
-		l	= read_label(&prr->_data, bfr_org, bfr, 0);
+		l	= read_label((Buffer*) &prr, bfr_org, bfr, 0);
 		bfr	+= prr->_len;
 		break;
 
@@ -343,7 +339,7 @@ int DNSQuery::extract_rr(DNS_rr **rr, const unsigned char *bfr_org,
 		prr->_mx_pref	= ntohs(prr->_mx_pref);
 		bfr		+= 2;
 
-		l	= read_label(&prr->_data, bfr_org, bfr, 0);
+		l	= read_label((Buffer*) &prr, bfr_org, bfr, 0);
 		bfr	+= prr->_len;
 		break;
 
@@ -538,8 +534,8 @@ void DNSQuery::reset(const int do_type)
 	_n_ans		= 0;
 	_n_aut		= 0;
 	_n_add		= 0;
-	_type		= 0;
-	_class		= 0;
+	_q_type		= 0;
+	_q_class		= 0;
 	_name.reset();
 	if (_bfr && !(do_type & DNSQ_DO_EXCEPT_BUFFER)) {
 		_bfr_type = BUFFER_IS_UDP;
@@ -573,8 +569,8 @@ void DNSQuery::net_to_host()
 	_n_ans	= ntohs(_n_ans);
 	_n_aut	= ntohs(_n_aut);
 	_n_add	= ntohs(_n_add);
-	_type	= ntohs(_type);
-	_class	= ntohs(_class);
+	_q_type	= ntohs(_q_type);
+	_q_class	= ntohs(_q_class);
 }
 
 /**
@@ -598,8 +594,8 @@ void DNSQuery::dump(const int do_type)
 	printf(" n auth          : %d\n", _n_aut);
 	printf(" n additional    : %d\n", _n_add);
 	printf("; QUESTION section\n");
-	printf(" type            : %d\n", _type);
-	printf(" class           : %d\n", _class);
+	printf(" type            : %d\n", _q_type);
+	printf(" class           : %d\n", _q_class);
 	printf(" name            : %s\n", _name.v());
 
 	if (_rr_ans) {
