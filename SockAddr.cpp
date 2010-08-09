@@ -31,6 +31,7 @@ SockAddr::~SockAddr()
 {
 	if (_next) {
 		delete _next;
+		_next = NULL;
 	}
 	_last = NULL;
 }
@@ -149,10 +150,10 @@ void SockAddr::dump()
 	register int	i = 0;
 	SockAddr*	p = this;
 
-	printf("[vos::Socket] dump,\n");
+	printf("[vos::SockAddr] dump,\n");
 
 	while (p) {
-		printf( "\n[%02d]\n"	\
+		printf( "[%02d]\n"	\
 			" family  : %d\n", i++, p->_t);
 
 		switch (p->_t) {

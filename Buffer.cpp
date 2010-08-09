@@ -64,8 +64,8 @@ int Buffer::resize(const int size)
 		if (!_v) {
 			return -1;
 		}
-		_l = size;
-		_v[_i] = '\0';
+		_v[_i]	= '\0';
+		_l	= size;
 	}
 	return 0;
 }
@@ -218,7 +218,7 @@ int Buffer::move_to(Buffer** bfr)
 		delete (*bfr);
 	}
 
-	(*bfr) = new Buffer();
+	(*bfr) = new Buffer(0);
 	if (! (*bfr)) {
 		return -1;
 	}
@@ -435,6 +435,32 @@ int Buffer::append_raw(const char* bfr, int len)
 	memcpy(&_v[_i], bfr, len);
 	_i	+= len;
 	_v[_i]	= '\0';
+
+	return len;
+}
+
+/**
+ * @method	: Buffer::append_bin
+ * @param	:
+ *	> bin	: binary data.
+ *	> len	: length of 'bin', in bytes.
+ * @return	:
+ *	< >=0	: success.
+ *	< -1	: fail.
+ * @desc	: append binary data to buffer.
+ */
+int Buffer::append_bin(void *bin, int len)
+{
+	if (!bin || len <= 0) {
+		return 0;
+	}
+	if (resize(_i + len) < 0) {
+		return -1;
+	}
+
+	memcpy(&_v[_i], bin, len);
+	_i += len;
+	_v[_i] = 0;;
 
 	return len;
 }
@@ -765,32 +791,48 @@ void Buffer::dump()
  */
 void Buffer::dump_hex()
 {
-	register int i = 0;
-	register int j = 0;
+	register int	i = 0;
+	register int	j = 0;
+	register int	k = 0;
+	Buffer		o(_i * 5);
 
 	for (; i < _i; ++i) {
+		if ((i % 4) == 0) {
+			o.append_raw("  ", 2);
+		}
 		if ((i % 8) == 0) {
-			putchar('\t');
+			o.appendc('\t');
 			for (; j < i; ++j) {
-				printf(" %-2c", isprint(_v[j]) ? _v[j] : '.' );
+				if ((j % 4) == 0) {
+					o.append_raw("  ", 2);
+				}
+				o.aprint(" %-2c", isprint(_v[j])
+							? _v[j] : '.' );
 			}
 			j = i;
-			putchar('\n');
+			o.aprint("\n %04X |", i);
 		}
-		printf(" %02X", _v[i] < 0 ? 0x80 & _v[i] : _v[i]);
+		o.aprint(" %02X", (unsigned char) _v[i]);
 	}
 
-	if ((i % 8)) {
-		for (int k = i % 8; k < 8; ++k) {
-			printf("   ");
+	k = i % 8;
+	for (; k < 8; ++k) {
+		if ((k % 4) == 0) {
+			o.append_raw("  ", 2);
 		}
+		o.append_raw("   ", 3);
 	}
 
-	putchar('\t');
+	o.appendc('\t');
 	for (; j < i; ++j) {
-		printf(" %-2c", isprint(_v[j]) ? _v[j] : '.' );
+		if ((j % 4) == 0) {
+			o.append_raw("  ", 2);
+		}
+		o.aprint(" %-2c", isprint(_v[j]) ? _v[j] : '.' );
 	}
-	printf("\n\n");
+	o.append_raw("\n\n", 2);
+
+	printf("%s", o._v);
 }
 
 /**

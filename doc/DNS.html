@@ -9,13 +9,14 @@
 <ul class="toc">
 	<li><a target="content" href="DNS_rr.html"> DNS Resource Record Module </a></li>
 	<li><a target="content" href="DNSQuery.html"> DNS Query Module </a></li>
+	<li><a target="content" href="Resolver.html"> Resolver Module </a></li>
 </ul>
 
 <p>
 DNS module is a network module to talk to DNS server in low level. "Talk" in
 this context mean is when you want to know the IP address of some host name
 (i.e. www.google.com) you must ask the DNS server. How the query data packed,
-send to DNS server, received (a reply) the data back from DNS server, and
+send to DNS server, received the data back (a reply) from DNS server, and
 unpacked the data back is what this module provide.
 </p>
 <p>
@@ -27,5 +28,411 @@ simplified into string of IP address.
 DNS module is separated into three module: <tt>DNS_rr</tt>,
 <tt>DNSQuery</tt>, and the main module <tt>Resolver</tt>.
 
+
+<h1> DNS Protocol </h1>
+
+This is a simple and quick notes about DNS packet and protocol, for
+comprehensive and more detailed information please read RFC 1035.
+
+<h2>Concepts and Definitions</h2>
+
+<ul>
+<li><tt>NBO</tt>: Network Byte Order. </li>
+<li><tt>RR</tt>: Resource Record.</li>
+</ul>
+
+
+<h2>DNS packet (message)</h2>
+<p>
+Each of DNS packet contains five chunks of data, which illustrated below,
+</p>
+<pre>
+    +---------------------+
+    |        Header       |
+    +---------------------+
+    |       Question      | the question for the name server
+    +---------------------+
+    |        Answer       | RRs answering the question
+    +---------------------+
+    |      Authority      | RRs pointing toward an authority
+    +---------------------+
+    |      Additional     | RRs holding additional information
+    +---------------------+
+</pre>
+<p>
+The first two chunk is used for query and the last three is used for query
+answer.
+</p>
+
+
+<h3>Header</h3>
+
+<pre>
+      0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |              size (only for TCP)              |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                      ID                       |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |QR|   QTYPE   |AA|TC|RD|RA|   Z    |   RCODE   |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    QDCOUNT                    |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    ANCOUNT                    |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    NSCOUNT                    |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    ARCOUNT                    |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+</pre>
+
+<table class="class-var">
+<tr><th> Field name </th><th> Size (bit) </th><th> Description </th></tr>
+<tr>
+	<td> size </td>
+	<td> 16 </td>
+	<td> length of packet data (only if packet is from TCP) </td>
+</tr><tr>
+	<td> ID </td>
+	<td> 16 (NBO) </td>
+	<td> Identifier assigned by the program that generates any kind of
+query. This identifier is copied the corresponding reply and can be used by
+the requester to match up replies to outstanding queries.
+	</td>
+</tr><tr>
+	<td> QR </td>
+	<td> 1 </td>
+	<td> Specifies whether this message is a
+		<ul>
+		<li><tt> 0 </tt>: query, or a </li>
+		<li><tt> 1 </tt>: response. </li>
+		</ul>
+	</td>
+</tr><tr>
+	<td> QTYPE </td>
+	<td> 4 (NBO) </td>
+	<td> Query type,
+		<ul>
+		<li><tt> 0 </tt> : standard query, </li>
+		<li><tt> 1 </tt> : an inverse query, or </li>
+		<li><tt> 2 </tt> : a server status query. </li>
+		</ul>
+	</td>
+</tr><tr>
+	<td> AA </td>
+	<td> 1 </td>
+	<td> Authoritative Answer, set in response to specifies that the
+responding name is server is an authority for the domain name in question
+section. </td>
+</tr><tr>
+	<td> TC </td>
+	<td> 1 </td>
+	<td> TrunCation, to indicated that message is truncated. </td>
+</tr><tr>
+	<td> RD </td>
+	<td> 1 </td>
+	<td> Recursion Desired, set in query and copied back in response. </td>
+</tr><tr>
+	<td> RA </td>
+	<td> 1 </td>
+	<td> Recursion Available, set or cleared in response to denotes
+whether recursive query support is available in name server.</td>
+</tr><tr>
+	<td> Z </td>
+	<td> 3 </td>
+	<td> reserved, must be zero in query and response.</td>
+</tr><tr>
+	<td> RCODE </td>
+	<td> 4 (NBO) </td>
+	<td> Response CODE, value:
+		<ul>
+		<li><tt> 0 </tt>: no error. </li>
+		<li><tt> 1 </tt>: format error. </li>
+		<li><tt> 2 </tt>: server failure. </li>
+		<li><tt> 3 </tt>: name error, name is not exist. </li>
+		<li><tt> 4 </tt>: not implemented. </li>
+		<li><tt> 5 </tt>: refused. </li>
+		</ul>
+	</td>
+</tr><tr>
+	<td> QDCOUNT </td>
+	<td> 16 (NBO) </td>
+	<td> number of entries in question section. </td>
+</tr><tr>
+	<td> ANCOUNT </td>
+	<td> 16 (NBO) </td>
+	<td> number of entries in answer section. </td>
+</tr><tr>
+	<td> NSCOUNT </td>
+	<td> 16 (NBO) </td>
+	<td> number of entries in authority section. </td>
+</tr><tr>
+	<td> ARCOUNT </td>
+	<td> 16 (NBO) </td>
+	<td> number of entries in additional section. </td>
+</tr>
+</table>
+
+
+<h3> Question </h3>
+<pre>
+      0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                                               |
+    /                     QNAME                     /
+    /                                               /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                     QTYPE                     |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                     QCLASS                    |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+</pre>
+
+<table class="class-var">
+<tr><th> Field name </th><th> Size (bit) </th><th> Description </th></tr>
+<tr>
+	<td> QNAME </td>
+	<td> dynamic length </td>
+	<td> a domain name represented as sequence of labels, where each
+label consist of a length octet followed by that number of octets.</td>
+	Instruction on how to real label described in section
+<a href="#qname_read"> How-to Read Label </a>.
+</tr><tr>
+	<td> QTYPE </td>
+	<td> 16 (NBO) </td>
+	<td> type of query. </td>
+</tr><tr>
+	<td> QCLASS </td>
+	<td> 16 (NBO) </td>
+	<td> class of query. </td>
+</tr>
+</table>
+<p>
+The question packet must end with '<tt>\0</tt>' or zero byte.
+</p>
+
+<h3> RR format </h3>
+<pre>
+      0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                                               |
+    /                                               /
+    /                      NAME                     /
+    |                                               |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                      TYPE                     |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                     CLASS                     |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                      TTL                      |
+    |                                               |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                   RDLENGTH                    |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--|
+    /                     RDATA                     /
+    /                                               /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+</pre>
+
+<table class="class-var">
+<tr><th> Field name </th><th> Size (bit) </th><th> Description </th></tr>
+<tr>
+	<td> NAME </td>
+	<td> dynamic length </td>
+	<td> an owner name. </td>
+</tr><tr>
+	<td> TYPE </td>
+	<td> 16 (NBO) </td>
+	<td> type of RR. </td>
+</tr><tr>
+	<td> CLASS </td>
+	<td> 16 (NBO) </td>
+	<td> class of RR. </td>
+</tr><tr>
+	<td> TTL </td>
+	<td> 32 (NBO) </td>
+	<td> time interval that RR may be cached before requested again. Zero
+value mean that RR should not be cached. </td>
+</tr><tr>
+	<td> RDLENGTH </td>
+	<td> 16 (NBO) </td>
+	<td> the length of RDATA field. </td>
+</tr><tr>
+	<td> RDATA </td>
+	<td> see RDLENGTH </td>
+	<td> string of octets. Content of this field varies according to
+<tt>TYPE</tt> and <tt>CLASS</tt>of RR. </td>
+</tr>
+</table>
+
+
+<h4> RR Type </h4>
+
+<table class="class-var">
+<tr><th> Field name </th><th> Size (bit) </th><th> Description </th></tr>
+<tr>
+	<td> A </td>
+	<td> 1 </td>
+	<td> a host address. </td>
+</tr><tr>
+	<td> NS </td>
+	<td> 2 </td>
+	<td> an authoritative name server. </td>
+</tr><tr>
+	<td> CNAME </td>
+	<td> 5 </td>
+	<td> the canonical name for an alias. </td>
+</tr><tr>
+	<td> SOA </td>
+	<td> 6 </td>
+	<td> marks the start of a zone of authority. </td>
+</tr><tr>
+	<td> WKS </td>
+	<td> 11 </td>
+	<td> a well known service description. </td>
+</tr><tr>
+	<td> PTR </td>
+	<td> 12 </td>
+	<td> a domain name pointer. </td>
+</tr><tr>
+	<td> HINFO </td>
+	<td> 13 </td>
+	<td> host information. </td>
+</tr><tr>
+	<td> MINFO </td>
+	<td> 14 </td>
+	<td> mailbox or mail list information. </td>
+</tr><tr>
+	<td> MX </td>
+	<td> 15 </td>
+	<td> mail exchange. </td>
+</tr><tr>
+	<td> TXT </td>
+	<td> 16 </td>
+	<td> text strings. </td>
+</tr>
+</table>
+
+<ul>
+<li> TYPE 1: A (a host address) </li>
+<pre>
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    ADDRESS                    |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+
+ADDRESS	:	A 32 bit Internet address.
+</pre>
+
+
+<li> TYPE 2: NS (an authoritative name server) </li>
+<pre>
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /                   NSDNAME                     /
+    /                                               /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+NSDNAME	:	A <domain-name> which specifies a host which should be
+		authoritative for the specified class and domain.
+
+</pre>
+
+
+<li> TYPE 5: CNAME (Canonical Name) </li>
+<pre>
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /                     CNAME                     /
+    /                                               /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+CNAME	:	A <domain-name> which specifies the canonical or primary
+		name for the owner.  The owner name is an alias.
+</pre>
+
+
+<li> MX format </li>
+<pre>
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                  PREFERENCE                   |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /                   EXCHANGE                    /
+    /                                               /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+PREFERENCE	:	A 16 bit integer which specifies the preference given
+			to this RR among others at the same owner.  Lower
+			values are preferred.
+
+EXCHANGE	:	A <domain-name> which specifies a host willing to act
+			as a mail exchange for the owner name.
+</pre>
+</ul>
+
+<h2><a name="qname_read">How-to Read Label</a></h2>
+
+<p>
+Label (QNAME in header or NAME in RR) is a sequence of characters with the
+length of characters is indicated in the first byte, and end with zero byte.
+Format of label,
+<pre>
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	|        length         |         data          |
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+</pre>
+</p>
+<p>
+In order to reduce the size of messages, label can be compressed by
+eliminates the repetition of domain names in a messages. Format of label with
+pointer,
+<pre>
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+	| 1  1|                OFFSET                   |
+	+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+</pre>
+</p>
+<p>
+Example of label data,
+</p>
+<pre>
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    20 |           1           |           F           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    22 |           3           |           I           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    24 |           S           |           I           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    26 |           4           |           A           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    28 |           R           |           P           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    30 |           A           |           0           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    40 |           3           |           F           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    42 |           O           |           O           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    44 | 1  1|                20                       |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    64 | 1  1|                26                       |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    92 |           0           |                       |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+</pre>
+<p>
+In above data there is four label:
+<ul>
+	<li><tt>F.ISI.ARPA</tt>, start at offset 20; </li>
+	<li><tt>FOO.F.ISI.ARPA</tt>, start at offset 40 and continue to
+offset 20; </li>
+	<li><tt>ARPA</tt> start at offset 64 and continue to offset 26; and </li>
+	<li> (root or empty label), start at offset 92.</li>
+</ul>
+</p>
 </body>
 </html>

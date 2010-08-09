@@ -19,10 +19,9 @@ unsigned int Resolver::N_TRY		= 0;
  *	Resolver object constructor.
  *	This constructor initialize RNG for DNS transaction ID.
  */
-Resolver::Resolver() :
-	_tcp(),
-	_udp(),
-	_servers(NULL)
+Resolver::Resolver() : Socket()
+,	_tcp()
+,	_servers(NULL)
 {
 	srand((unsigned int) time(NULL));
 }
@@ -55,7 +54,7 @@ int Resolver::init()
 		return -1;
 	}
 
-	s = _udp.create_udp();
+	s = create_udp();
 
 	return s;
 }
@@ -67,7 +66,7 @@ int Resolver::init()
 void Resolver::dump()
 {
 	if (_servers) {
-		printf("; Servers\n");
+		printf("\n[vos::Resolver] dump:\n; Servers\n");
 		_servers->dump();
 	}
 }
@@ -79,10 +78,13 @@ void Resolver::dump()
  * @return		:
  *	< 0		: success.
  *	< -1		: fail.
- * @desc		: add another server to list of server '_servers'.
+ * @desc		: create a new parent server list.
  */
 int Resolver::set_server(char* server_list)
 {
+	if (!server_list) {
+		return 0;
+	}
 	if (_servers) {
 		delete _servers;
 		_servers = NULL;
@@ -102,148 +104,51 @@ int Resolver::set_server(char* server_list)
  */
 int Resolver::add_server(char* server_list)
 {
+	if (!server_list) {
+		return 0;
+	}
+
 	register int	s;
-	char*		addr;
+	Buffer		addr;
+	char*		p;
 	SockAddr*	saddr;
 
-	addr = server_list; 
-	while (*server_list) {
-		if (*server_list == ',') {
-			*server_list = '\0';
-			s = SockAddr::INIT(&saddr, AF_INET, addr, PORT);
-			*server_list = ',';
+	p = server_list;
+
+	while (*p) {
+		while (isspace(*p)) {
+			p++;
+		}
+		while (*p && (isalnum(*p) || *p == '.')) {
+			addr.appendc(*p);
+			p++;
+		}
+		while (isspace(*p)) {
+			p++;
+		}
+		if (!*p) {
+			break;
+		}
+		if (*p != ',') {
+			return -1;
+		}
+		p++;
+		if (!addr.is_empty()) {
+			s = SockAddr::INIT(&saddr, AF_INET, addr._v, PORT);
 			if (s < 0) {
 				return -1;
 			}
 			SockAddr::ADD(&_servers, saddr);
-
-			server_list++;
-			addr = server_list;
-		} else {
-			server_list++;
+			addr.reset();
 		}
 	}
-	s = SockAddr::INIT(&saddr, AF_INET, addr, PORT);
-	if (s < 0) {
-		return -1;
-	}
-	SockAddr::ADD(&_servers, saddr);
-
-	return 0;
-}
-
-/**
- * @method	: Resolver::create_question_udp
- * @param	:
- *	> query	: return value.
- *	> qname	: hostname that will be saved in DNSQuery object.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: create a DNSQuery object for hostname 'qname'.
- */
-int Resolver::create_question_udp(DNSQuery** query, const char* qname)
-{
-	if (!qname) {
-		return 0;
-	}
-
-	int	s;
-	int	len;
-	Buffer	label;
-	Buffer	*q = NULL;
-
-	if (!(*query)) {
-		s = DNSQuery::INIT(query, NULL, BUFFER_IS_UDP);
-		if (s != 0) {
-			return -1;
-		}
-	} else {
-		(*query)->reset(vos::DNSQ_DO_ALL);
-	}
-
-	(*query)->_id		= htons((uint16_t) (rand() % 65536));
-	(*query)->_flag		= htons(HDR_IS_QUERY | OPCODE_QUERY | RTYPE_RD);
-	(*query)->_n_qry	= htons(1);
-	(*query)->_n_ans	= htons(0);
-	(*query)->_n_aut	= htons(0);
-	(*query)->_n_add	= htons(0);
-	(*query)->_q_type	= htons(QUERY_T_ADDRESS);
-	(*query)->_q_class	= htons(QUERY_C_IN);
-	(*query)->_name.copy_raw(qname);
-
-	len = (*query)->_name._i + 16;
-
-	if (! (*query)->_bfr) {
-		(*query)->_bfr = new Buffer();
-	}
-	q = (*query)->_bfr;
-	q->reset();
-
-	if (len > q->_l) {
-		s = q->resize(len);
+	if (!addr.is_empty()) {
+		s = SockAddr::INIT(&saddr, AF_INET, addr._v, PORT);
 		if (s < 0) {
 			return -1;
 		}
+		SockAddr::ADD(&_servers, saddr);
 	}
-
-	memcpy(q->_v, (*query), DNS_HDR_SIZE);
-	q->_i = DNS_HDR_SIZE;
-
-	while (*qname) {
-		if (*qname == '.') {
-			if (label._i) {
-				len = q->_i + label._i + 1;
-				if (len > q->_l) {
-					s = q->resize(len);
-					if (s < 0) {
-						return -1;
-					}
-				}
-
-				q->_v[q->_i] = (char) label._i;
-				q->_i++;
-				q->append(&label);
-			}
-			label.reset();
-		} else {
-			label.appendc(*qname);
-		}
-		qname++;
-	}
-
-	if (label._i) {
-		len = q->_i + label._i + 1;
-		if (len > q->_l) {
-			s = q->resize(len);
-			if (s < 0) {
-				return -1;
-			}
-		}
-
-		q->_v[q->_i] = (char) label._i;
-		q->_i++;
-		q->append(&label);
-	}
-
-	/* end of query */
-	q->_v[q->_i] = 0;
-	q->_i++;
-
-	len = q->_i + 4;
-	if (len > q->_l) {
-		s = q->resize(len);
-		if (s < 0) {
-			return -1;
-		}
-	}
-
-	memcpy(&q->_v[q->_i], &(*query)->_q_type, 2);
-	q->_i += 2;
-	memcpy(&q->_v[q->_i], &(*query)->_q_class, 2);
-	q->_i += 2;
-
-	(*query)->net_to_host();
 
 	return 0;
 }
@@ -273,20 +178,28 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 	struct timeval	timeout;
 	SockAddr*	server	= _servers;
 
+	if (question->_bfr_type == BUFFER_IS_TCP) {
+		s = question->to_udp();
+		if (s < 0) {
+			return -1;
+		}
+	}
+
 	FD_ZERO(&fd_all);
 	FD_ZERO(&fd_read);
-	FD_SET(_udp._d, &fd_all);
-	maxfd = _udp._d + 1;
+	FD_SET(_d, &fd_all);
+	maxfd = _d + 1;
 
 	while (server) {
-		n_try = 0;
-		_udp.reset();
-
 		if (LIBVOS_DEBUG) {
-			printf(">> querying %s... ", server->v());
+			printf("[vos::Resolver] >> querying %s ...\n"
+				, server->v());
 		}
 
-		s = (int) _udp.send_udp(&server->_in, question->_bfr);
+		n_try = 0;
+		reset();
+
+		s = (int) send_udp(&server->_in, question);
 		if (s < 0) {
 			server = server->_next;
 			continue;
@@ -303,21 +216,23 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 					goto intr;
 				}
 			}
-			if (0 == s || 0 == FD_ISSET(_udp._d, &fd_read)) {
+			if (0 == s || 0 == FD_ISSET(_d, &fd_read)) {
 				++n_try;
 				if (LIBVOS_DEBUG) {
-					printf(">> timeout...(%d)\n", n_try);
+					printf(
+					"[vos::Resolver] >> timeout...(%d)\n"
+					, n_try);
 				}
 				continue;
 			}
 
-			s = _udp.read();
+			s = (int) recv_udp(&server->_in);
 			if (s <= 0) {
 				return s;
 			}
 
 			answer->reset(DNSQ_DO_ALL);
-			answer->set_buffer(&_udp, BUFFER_IS_UDP);
+			answer->set(this);
 			answer->extract_header();
 			answer->extract_question();
 
@@ -333,9 +248,6 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 			s = question->_name.like(&answer->_name);
 			if (s != 0) {
 				break;
-			}
-			if (LIBVOS_DEBUG) {
-				printf(" OK\n");
 			}
 			return 0;
 		} while (n_try < N_TRY);
@@ -354,14 +266,14 @@ intr:
  *	> answer	: return value, answer from server.
  * @return		:
  *	< 0		: success.
- *	< <0		: fail.
+ *	< -1		: fail.
  * @desc		:
  *	send 'question' to server to get an 'answer' using TCP protocol.
  */
 int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 {
 	if (!question) {
-		return 0;
+		return -1;
 	}
 
 	int		s	= 0;
@@ -371,18 +283,25 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 	struct timeval	timeout;
 	SockAddr*	server	= _servers;
 
+	if (question->_bfr_type == BUFFER_IS_UDP) {
+		s = question->to_tcp();
+		if (s < 0) {
+			return -1;
+		}
+	}
 
 	FD_ZERO(&fd_all);
 	FD_ZERO(&fd_read);
 	FD_SET(_tcp._d, &fd_all);
 
 	while (server) {
+		if (LIBVOS_DEBUG) {
+			printf("[vos::Resolver] >> querying %s...\n"
+				, server->v());
+		}
+
 		n_try = 0;
 		_tcp.reset();
-
-		if (LIBVOS_DEBUG) {
-			printf(">> querying %s...\n", server->v());
-		}
 
 		s = _tcp.connect_to(&server->_in);
 		if (s < 0) {
@@ -390,7 +309,7 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 			continue;
 		}
 
-		s = _tcp.write(question->_bfr);
+		s = _tcp.write(question);
 		if (s < 0) {
 			server = server->_next;
 			continue;
@@ -411,18 +330,20 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 			if (0 == s || !FD_ISSET(_tcp._d, &fd_read)) {
 				++n_try;
 				if (LIBVOS_DEBUG) {
-					printf(">> timeout...(%d)\n", n_try);
+					printf(
+					"[vos::Resolver] >> timeout...(%d)\n"
+					, n_try);
 				}
 				continue;
 			}
 
 			s = _tcp.read();
 			if (s <= 0) {
-				return s;
+				return -1;
 			}
 
 			answer->reset(DNSQ_DO_ALL);
-			answer->set_buffer(&_tcp, BUFFER_IS_TCP);
+			answer->to_udp(&_tcp);
 			answer->extract_header();
 			answer->extract_question();
 
@@ -438,9 +359,6 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 			s = question->_name.like(&answer->_name);
 			if (s != 0) {
 				break;
-			}
-			if (LIBVOS_DEBUG) {
-				printf(" OK\n");
 			}
 			return 0;
 		} while (n_try < N_TRY);
@@ -478,38 +396,6 @@ int Resolver::send_query(DNSQuery* question, DNSQuery* answer)
 	}
 
 	return s;
-}
-
-/**
- * @method	: Resolver::send_udp
- * @param	:
- *	> addr	: address of end point where 'bfr' will be send.
- *	> bfr	: data to be send.
- * @return	:
- *	< >=0	: success, number of bytes send.
- *	< -1	: fail.
- * @desc	: send data 'bfr' to 'addr' using UDP protocol.
- */
-long int Resolver::send_udp(struct sockaddr_in* addr, Buffer* bfr)
-{
-	return _udp.send_udp(addr, bfr);
-}
-
-/**
- * @method	: Resolver::send_udp_raw
- * @param	:
- *	> addr	: address of end point where 'bfr' will be send.
- *	> bfr	: data to be send.
- *	> len	: length of 'bfr' data.
- * @return	:
- *	< >=0	: success, number of bytes send.
- *	< -1	: fail.
- * @desc	: send data 'bfr' to 'addr' using UDP protocol.
- */
-long int Resolver::send_udp_raw(struct sockaddr_in* addr, const char* bfr
-				, const int len)
-{
-	return _udp.send_udp_raw(addr, bfr, len);
 }
 
 } /* namespace::vos */

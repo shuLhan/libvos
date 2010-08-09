@@ -1,0 +1,557 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> DNS Query Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#DNSQuery::DNSQuery"><tt> DNSQuery::DNSQuery </tt></a></li>
+	<li><a href="#DNSQuery::~DNSQuery"><tt> DNSQuery::~DNSQuery </tt></a></li>
+	<li><a href="#DNSQuery::set"><tt> DNSQuery::set </tt></a></li>
+	<li><a href="#DNSQuery::to_udp"><tt> DNSQuery::to_udp </tt></a></li>
+	<li><a href="#DNSQuery::to_tcp"><tt> DNSQuery::to_tcp </tt></a></li>
+	<li><a href="#DNSQuery::create_question"><tt> DNSQuery::create_question </tt></a></li>
+	<li><a href="#DNSQuery::extract"><tt> DNSQuery::extract </tt></a></li>
+	<li><a href="#DNSQuery::extract_header"><tt> DNSQuery::extract_header </tt></a></li>
+	<li><a href="#DNSQuery::extract_question"><tt> DNSQuery::extract_question </tt></a></li>
+	<li><a href="#DNSQuery::extract_rr"><tt> DNSQuery::extract_rr </tt></a></li>
+	<li><a href="#DNSQuery::extract_label"><tt> DNSQuery::extract_label </tt></a></li>
+	<li><a href="#DNSQuery::remove_rr_aut"><tt> DNSQuery::remove_rr_aut </tt></a></li>
+	<li><a href="#DNSQuery::remove_rr_add"><tt> DNSQuery::remove_rr_add </tt></a></li>
+	<li><a href="#DNSQuery::set_id"><tt> DNSQuery::set_id </tt></a></li>
+	<li><a href="#DNSQuery::reset"><tt> DNSQuery::reset </tt></a></li>
+	<li><a href="#DNSQuery::dump"><tt> DNSQuery::dump </tt></a></li>
+	<li><a href="#DNSQuery::INIT"><tt> DNSQuery::INIT </tt></a></li>
+	</ul>
+</ul>
+
+DNS Query, implemented as <tt>DNSQuery</tt> class, represent packet of data
+that will be send or received back from DNS server. Each <tt>DNSQuery</tt>
+record contains several RR records (implemented as <tt>DNS_rr</tt> class).
+
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td> uint16_t </td>
+	<td> _id </td>
+	<td> packet transaction ID. </td>
+</tr><tr>
+	<td> uint16_t </td>
+	<td> _flag </td>
+	<td> packet header flag. </td>
+</tr><tr>
+	<td> uint16_t </td>
+	<td> _n_qry </td>
+	<td> number of RR query. </td>
+</tr><tr>
+	<td> uint16_t </td>
+	<td> _n_ans </td>
+	<td> number of RR answer. </td>
+</tr><tr>
+	<td> uint16_t </td>
+	<td> _n_aut </td>
+	<td> number of RR authority. </td>
+</tr><tr>
+	<td> uint16_t </td>
+	<td> _n_add </td>
+	<td> number of RR additional. </td>
+</tr><tr>
+	<td> uint16_t </td>
+	<td> _q_type </td>
+	<td> type of query. </td>
+</tr><tr>
+	<td> uint16_t </td>
+	<td> _q_class </td>
+	<td> class of query. </td>
+</tr><tr>
+	<td> Buffer </td>
+	<td> _name </td>
+	<td> domain name that will be queried. </td>
+</tr><tr>
+	<td> int </td>
+	<td> _bfr_type </td>
+	<td> type of current query buffer, UDP packet or TCP packet.</td>
+</tr><tr>
+	<td> DNS_rr* </td>
+	<td> _rr_ans </td>
+	<td> list of answer RR. </td>
+</tr><tr>
+	<td> DNS_rr* </td>
+	<td> _rr_aut </td>
+	<td> list of authority RR. </td>
+</tr><tr>
+	<td> DNS_rr* </td>
+	<td> _rr_add </td>
+	<td> list of additional RR. </td>
+</tr><tr>
+	<td> const char* </td>
+	<td> _rr_ans_p </td>
+	<td> pointer to the offset of the first RR answer in packet buffer. </td>
+</tr><tr>
+	<td> const char* </td>
+	<td> _rr_aut_p</td>
+	<td> pointer to the offset of the first RR authority in packet
+buffer. </td>
+</tr><tr>
+	<td> const char* </td>
+	<td> _rr_add_p </td>
+	<td> pointer to the offset of the first RR additional in packet
+buffer. </td>
+</tr>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="DNSQuery::DNSQuery"><tt> DNSQuery::DNSQuery </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> DNSQuery() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> DNSQuery constructor. </td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::~DNSQuery"><tt> DNSQuery::~DNSQuery </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~DNSQuery() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> DNSQuery destructor. </td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::set"><tt> DNSQuery::set </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int set(const Buffer* bfr, const int type =
+BUFFER_IS_UDP) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> bfr </tt></td>
+		<td>:</td>
+		<td>pointer to DNS packet.</td>
+	</tr><tr>
+		<td><tt> type </tt></td>
+		<td>:</td>
+		<td>type of packet origin, from UDP or TCP.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set DNSQuery packet buffer to '<tt>bfr</tt>'. </td>
+</tr>
+</table>
+
+
+<h3><a name="DNSQuery::to_udp"><tt> DNSQuery::to_udp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int to_udp(const Buffer* tcp = NULL) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> tcp </tt></td>
+	<td>:</td>
+	<td> pointer to TCP buffer of DNS packet. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Convert DNS packet from "<tt>tcp</tt>" mode to
+UDP mode (without header length). If <tt>tcp</tt> is nil, convert content
+buffer of this object.
+	</td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::to_tcp"><tt> DNSQuery::to_tcp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int to_tcp(const Buffer* udp = NULL) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> udp </tt></td>
+	<td>:</td>
+	<td> pointer to UDP buffer of DNS packet. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Convert DNS packet from "<tt>udp</tt>" mode to
+TCP mode (with header length). If <tt>udp</tt> is nil, convert content buffer
+of this object.
+	</td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::create_question"><tt> DNSQuery::create_question </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int create_question(const char* qname, const int
+type = QUERY_T_ADDRESS) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> qname </tt></td>
+		<td>:</td>
+		<td> domain name to query. </td>
+	</tr><tr>
+		<td><tt> type </tt></td>
+		<td>:</td>
+		<td> type of address that will be queried. Valid and
+supported values,
+			<ul>
+			<li><tt> QUERY_T_ADDRESS </tt>: 1, a host address.  </li>
+			<li><tt> QUERY_T_NAMESERVER </tt>: 2, an authoritative name server. </li>
+			<li><tt> QUERY_T_CNAME </tt>: 5, the canonical name for an alias. </li>
+			<li><tt> QUERY_T_SOA </tt>: 6, marks the start of a zone authority. </li>
+			<li><tt> QUERY_T_PTR </tt>: 12, a domain name pointer. </li>
+			<li><tt> QUERY_T_HINFO </tt>: 13, host information. </li>
+			<li><tt> QUERY_T_MX </tt>: 15, mail exchange. </li>
+			<li><tt> QUERY_T_TXT </tt>: 16, text strings. </li>
+			</ul>
+			<p>
+			There are others type that is not supported because
+of absolute or experimental. For a complete list of RR type see RFC 1035.
+			</p>
+		</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create a UDP packet for <tt>name</tt> for querying
+to DNS server. </td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::extract"><tt> DNSQuery::extract </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int extract() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Extract DNS packet in buffer of this object to get
+all data in it. </td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::extract_header"><tt> DNSQuery::extract_header </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int extract_header() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Extract only the header of DNS packet in this
+buffer object. </td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::extract_question"><tt> DNSQuery::extract_question </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int extract_question() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> &gt;0 </tt></td>
+		<td>:</td>
+		<td> success, return the length of question section. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Extract question section of DNS packet in this
+buffer object. </td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::extract_rr"><tt> DNSQuery::extract_rr </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> DNS_rr* extract_rr(int* offset, const int last_type
+= 0) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> offset </tt></td>
+		<td>:</td>
+		<td> the start position to parsing RR from the buffer. </td>
+	</tr><tr>
+		<td><tt> last_type </tt></td>
+		<td>:</td>
+		<td> the last type of RR that has been extracted. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> DNS_rr* </tt></td>
+		<td>:</td>
+		<td> success, pointer to the new DNS_rr object. </td>
+	</tr><tr>
+		<td><tt> NULL </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Extract RR from buffer start from "<tt>offset</tt>".
+	</td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::extract_label"><tt> DNSQuery::extract_label </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int extract_label(Buffer* label, const int bfr_off) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> label </tt></td>
+		<td>:</td>
+		<td>output, content label in packet. </td>
+	</tr><tr>
+		<td><tt> bfr_off </tt></td>
+		<td>:</td>
+		<td> start position to parsing label from the buffer.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> &gt;0 </tt></td>
+		<td>:</td>
+		<td> success, length of label in packet. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Read or parse label in packet. Label could be
+compressed, so the length of "<tt>label</tt>" does not guaranteed the length
+of label in packet.
+	</td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::remove_rr_aut"><tt> DNSQuery::remove_rr_aut </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void remove_rr_aut() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Remove RR authority from DNS packet in this buffer. </td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::remove_rr_add"><tt> DNSQuery::remove_rr_add </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void remove_rr_add() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Remove additional RR from DNS packet in this
+buffer. </td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::set_id"><tt> DNSQuery::set_id </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void set_id(const int id) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> id </tt></td>
+	<td>:</td>
+	<td>the new ID for DNS packet. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set new ID for this DNS packet. </td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::reset"><tt> DNSQuery::reset </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void reset(const int do_type = DNSQ_DO_DATA_ONLY) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> do_type </tt></td>
+	<td>:</td>
+	<td> type of reset. Valid values,
+		<ul>
+		<li><tt> DNSQ_DO_DATA_ONLY</tt> : reset only data, keep the
+buffer content. </li>
+		<li><tt> DNSQ_DO_ALL</tt> : reset all data and buffer. </li>
+		</ul>
+	</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Reset all data and/or buffer. 
+	</td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::dump"><tt> DNSQuery::dump </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void dump(const int do_type = DNSQ_DO_DATA_ONLY) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> do_type </tt></td>
+	<td>:</td>
+	<td> type of dump, valid values is same with the <tt>reset()</tt>
+	method.  </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Dump content of DNS packet to standard output. </td>
+</tr>
+</table>
+
+<h3><a name="DNSQuery::INIT"><tt> DNSQuery::INIT </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> static int INIT(DNSQuery** o, const Buffer* bfr,
+const int type) </td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> o </tt></td>
+		<td>:</td>
+		<td> output, a new DNSQuery object. </td>
+	</tr><tr>
+		<td><tt> bfr </tt></td>
+		<td>:</td>
+		<td> pointer to DNS packet buffer. </td>
+	</tr><tr>
+		<td>type</td>
+		<td>:</td>
+		<td> the origin of DNS packet <tt>bfr</tt>, from TCP or UDP. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create and initialized a new DNSQuery object using
+"<tt>bfr</tt>" as original DNS packet and "<tt>type</tt>" as the type of
+DNS packet from (from TCP or from UDP). If "<tt>bfr</tt>" is from TCP then
+convert them to UDP.</td>
+</tr>
+</table>
+
+</body>
+</html>

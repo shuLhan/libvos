@@ -26,6 +26,7 @@
 	<li><a href="#Buffer::appendd"> Buffer::appendd </a></li>
 	<li><a href="#Buffer::append"> Buffer::append </a></li>
 	<li><a href="#Buffer::append_raw"> Buffer::append_raw </a></li>
+	<li><a href="#Buffer::append_bin"> Buffer::append_bin </a></li>
 	<li><a href="#Buffer::concat"> Buffer::concat </a></li>
 	<li><a href="#Buffer::aprint"> Buffer::aprint </a></li>
 	<li><a href="#Buffer::vprint"> Buffer::vprint </a></li>
@@ -579,6 +580,36 @@ is greater than zero, than this method will behaving like <tt>resize()</tt>
 method, resizing the buffer to <tt>len</tt>.</td>
 </tr>
 </table>
+
+<h3><a name="Buffer::append_bin"><tt> Buffer::append_bin </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int append_bin(void *bin, int len) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> bin </tt></td>
+		<td>:</td>
+		<td> pointer to binary data. </td>
+	</tr><tr>
+		<td><tt> len </tt></td>
+		<td>:</td>
+		<td> length of binary data, in bytes. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success, number of bytes appended to end of buffer. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Append binary data to buffer. </td>
+</tr>
+</table>
+
 
 <h3><a name="Buffer::concat"><tt> Buffer::concat </tt></a></h3>
 <table class="class-method">

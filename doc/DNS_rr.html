@@ -41,17 +41,51 @@
 	<td>_len</td>
 	<td>length of RR data object.</td>
 </tr><tr>
-	<td>uint16_t</td>
-	<td>_mx_pref</td>
-	<td>priority of RR if type is MX.</td>
-</tr><tr>
 	<td>Buffer</td>
 	<td>_name</td>
 	<td>domain name for RR object with type is MX.</td>
 </tr><tr>
+	<td> Buffer </td>
+	<td> _data </td>
+	<td>extract value for A record, NS record, SOA MNAME field, PTR
+record, and HINFO CPU field. </td>
+</tr><tr>
+	<td> Buffer </td>
+	<td> _data2 </td>
+	<td> extract value for SOA RNAME field and HINFO OS field. </td>
+</tr><tr>
+	<td> uint32_t </td>
+	<td> _serial </td>
+	<td> SOA serial value. </td>
+</tr><tr>
+	<td> uint32_t </td>
+	<td> _refresh </td>
+	<td> SOA refresh value. </td>
+</tr><tr>
+	<td> uint32_t </td>
+	<td> _retry </td>
+	<td> SOA retry value. </td>
+</tr><tr>
+	<td> uint32_t </td>
+	<td> _expire </td>
+	<td> SOA expire value. </td>
+</tr><tr>
+	<td> uint32_t </td>
+	<td> _minimum </td>
+	<td> SOA minimum value. </td>
+</tr><tr>
+	<td>uint16_t</td>
+	<td>_mx_pref</td>
+	<td>priority of RR if type is MX.</td>
+</tr><tr>
+	<td>static unsigned int</td>
+	<td>RDATA_MAX_SIZE</td>
+	<td>maximum size for RDATA field in RR.</td>
+</tr><tr>
 	<td>DNS_rr*</td>
 	<td>_next</td>
 	<td>pointer to the next RR object.</td>
+</tr>
 </table>
 
 

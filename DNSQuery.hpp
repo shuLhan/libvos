@@ -12,56 +12,54 @@
 
 namespace vos {
 
-enum _DNS_PACKET_SIZE_AND_POS {
-	DNS_TCP_HDR_SIZE	= 2,
-	DNS_HDR_ID_SIZE		= 2,
-	DNS_QTYPE_SIZE		= 2,
-	DNS_QCLASS_SIZE		= 2,
-	DNS_CNT_SIZE		= 2,
-	DNS_ANS_CNT_POS		= 6,
-	DNS_AUT_CNT_POS		= 8,
-	DNS_ADD_CNT_POS		= 10,
-	DNS_HDR_SIZE		= 12
+enum _DNS_DATA_SIZE {
+	DNS_TCP_HDR_SIZE	= 2
+,	DNS_HDR_SIZE		= 12
+};
+
+enum _DNS_DATA_POS {
+	DNS_AUT_CNT_POS		= 8
+,	DNS_ADD_CNT_POS		= 10
 };
 
 enum _DNS_HDR_RCODE {
-	RCODE_OK	= 0x0000,
-	RCODE_FORMAT	= 0x0001,
-	RCODE_SERVER	= 0x0002,
-	RCODE_NAME	= 0x0003,
-	RCODE_NOT_IMPL	= 0x0004,
-	RCODE_REFUSED	= 0x0005,
-	RCODE_FLAG	= 0x000F
+	RCODE_OK	= 0x0000
+,	RCODE_FORMAT	= 0x0001
+,	RCODE_SERVER	= 0x0002
+,	RCODE_NAME	= 0x0003
+,	RCODE_NOT_IMPL	= 0x0004
+,	RCODE_REFUSED	= 0x0005
+,	RCODE_FLAG	= 0x000F
 };
 
 enum _DNS_HDR_RTYPE {
-	RTYPE_RA	= 0x0080,	/* Recursion Available */
-	RTYPE_RD	= 0x0100,	/* Recursion Desired */
-	RTYPE_TC	= 0x0200,	/* TrunCation */
-	RTYPE_AA	= 0x0400,	/* Authoritative Answer */
-	RTYPE_FLAG	= 0x0780
+	RTYPE_RA	= 0x0080	/* Recursion Available */
+,	RTYPE_RD	= 0x0100	/* Recursion Desired */
+,	RTYPE_TC	= 0x0200	/* TrunCation */
+,	RTYPE_AA	= 0x0400	/* Authoritative Answer */
+,	RTYPE_FLAG	= 0x0780
 };
 
 enum _DNS_HDR_OPCODE {
-	OPCODE_QUERY	= 0x0000,
-	OPCODE_IQUERY	= 0x0800,
-	OPCODE_STATUS	= 0x1000,
-	OPCODE_FLAG	= 0x1800
+	OPCODE_QUERY	= 0x0000
+,	OPCODE_IQUERY	= 0x0800
+,	OPCODE_STATUS	= 0x1000
+,	OPCODE_FLAG	= 0x1800
 };
 
 enum _DNS_HDR_TYPE {
-	HDR_IS_QUERY	= 0x0000,
-	HDR_IS_RESPONSE	= 0x8000
+	HDR_IS_QUERY	= 0x0000
+,	HDR_IS_RESPONSE	= 0x8000
 };
 
 enum _DNS_BFR_TYPE {
-	BUFFER_IS_UDP	= 1,
-	BUFFER_IS_TCP	= 2
+	BUFFER_IS_UDP	= 1
+,	BUFFER_IS_TCP	= 2
 };
 
 enum _dnsq_do_type {
-	DNSQ_DO_ALL		= 0,
-	DNSQ_DO_EXCEPT_BUFFER	= 1
+	DNSQ_DO_DATA_ONLY	= 0
+,	DNSQ_DO_ALL		= 1
 };
 
 /**
@@ -73,11 +71,10 @@ enum _dnsq_do_type {
  *	- _n_ans	: number of answer RR.
  *	- _n_aut	: number of authority RR.
  *	- _n_add	: number of additional RR.
- *	- _type		: type of packet, if question.
- *	- _class	: class of packet, if question.
+ *	- _q_type	: type of packet, if question.
+ *	- _q_class	: class of packet, if question.
  *	- _name		: domain name that will be queried.
  *	- _bfr_type	: type of packet (UDP or TCP).
- *	- _bfr		: packet that ready to transmitted or received.
  *	- _rr_ans	: list of answers record.
  *	- _rr_aut	: list of authority record.
  *	- _rr_add	: list of additional record.
@@ -88,36 +85,34 @@ enum _dnsq_do_type {
  *	- _rr_add_p	: pointer to the first byte of additional RR on
  *                        buffer.
  * @desc		: module for processing DNS packet.
+ *
+ *	DNSQuery is ALWAYS in UDP packet mode, if you want to send the packet
+ *	using TCP you must convert it to TCP first.
  */
-class DNSQuery {
+class DNSQuery : public Buffer {
 public:
 	DNSQuery();
 	~DNSQuery();
 
-	int init(const Buffer* bfr);
-	int set_buffer(const Buffer* bfr, const int type);
+	int set(const Buffer* bfr, const int type = BUFFER_IS_UDP);
+	int to_udp(const Buffer* tcp = NULL);
+	int to_tcp(const Buffer* udp = NULL);
+	int create_question(const char* qname
+				, const int type = QUERY_T_ADDRESS);
 
 	int extract();
 	int extract_header();
 	int extract_question();
-	int extract_rr(DNS_rr** rr, const unsigned char* bfr_org
-			, const unsigned char* bfr
-			, const unsigned char** bfr_ret
-			, const int last_type);
-	int read_label(Buffer* label, const unsigned char* bfr_org
-			, const unsigned char* bfr, const int bfr_off);
+	DNS_rr* extract_rr(int* offset, const int last_type = 0);
+	int extract_label(Buffer* label, const int bfr_off);
 
 	void remove_rr_aut();
 	void remove_rr_add();
 
 	void set_id(const int id);
-	void set_tcp_size(int size);
 
-	void reset(const int do_type);
-	void net_to_host();
-	void dump(const int do_type);
-
-	static int INIT(DNSQuery **o, const Buffer *bfr, const int type);
+	void reset(const int do_type = DNSQ_DO_DATA_ONLY);
+	void dump(const int do_type = DNSQ_DO_DATA_ONLY);
 
 	/* DNS HEADER Section */
 	uint16_t	_id;
@@ -132,7 +127,6 @@ public:
 	Buffer		_name;
 	/* DNS Buffer for question & answer */
 	int		_bfr_type;
-	Buffer*		_bfr;
 	/* DNS resource records */
 	DNS_rr*		_rr_ans;
 	DNS_rr*		_rr_aut;
@@ -140,6 +134,8 @@ public:
 	const char*	_rr_ans_p;
 	const char*	_rr_aut_p;
 	const char*	_rr_add_p;
+
+	static int INIT(DNSQuery** o, const Buffer* bfr, const int type);
 private:
 	DNSQuery(const DNSQuery&);
 	void operator=(const DNSQuery&);

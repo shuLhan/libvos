@@ -50,7 +50,11 @@ int Socket::create(const int family, const int type)
 	}
 
 	_family	= family;
-	_status = FILE_OPEN_NO;
+	if (type == SOCK_STREAM) {
+		_status = FILE_OPEN_NO;
+	} else {
+		_status = FILE_OPEN_RW | O_SYNC;
+	}
 
 	return 0;
 }
@@ -183,11 +187,9 @@ long int Socket::send_udp(struct sockaddr_in* addr, Buffer* bfr)
 			s = ::sendto(_d, _v, _i, 0
 				, (struct sockaddr *) addr, SockAddr::IN_SIZE);
 		}
-	} else {
-		if (bfr->_i > 0) {
+	} else if (bfr->_i > 0) {
 			s = ::sendto(_d, bfr->_v, bfr->_i, 0
 				, (struct sockaddr *) addr, SockAddr::IN_SIZE);
-		}
 	}
 
 	return s;

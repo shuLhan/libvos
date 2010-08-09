@@ -50,16 +50,26 @@ enum _RR_CLASS {
  *	- _class	: class of Resource Record.
  *	- _ttl		: time-to-live of Resource Record.
  *	- _len		: length of Resource Record.
- *	- _mx_pref	: priority of Resource Record with MX type.
- *	- _name		: domain name for MX record.
+ *	- _name_len	: length of '_name'.
+ *	- _name		: domain name.
+ *	- _data		: extract value for A record, NS record, SOA MNAME
+ *			field, PTR record, and HINFO CPU field.
+ *	- _data2	: extract value for SOA RNAME field and HINFO OS
+ *			field.
+ *	- _serial	: SOA serial value.
+ *	- _refresh	: SOA refresh value.
+ *	- _retry	: SOA retry value.
+ *	- _expire	: SOA expire value.
+ *	- _minimum	: SOA minimum value.
+ *	- _mx_pref	: priority of RR MX.
  *	- _next		: pointer to the next RR.
- *	- DNS_RDATA_MAX_SIZE	: static, maximum size for '_data'.
+ *	- RDATA_MAX_SIZE: static, maximum size for RR buffer.
  * @desc		:
  *	submodule of DNSQuery, for listing Resource Record of DNS packet.
  */
 class DNS_rr : public Buffer {
 public:
-	DNS_rr(int bfr_size = DNS_RDATA_MAX_SIZE);
+	DNS_rr(int bfr_size = RDATA_MAX_SIZE);
 	~DNS_rr();
 
 	void reset();
@@ -70,11 +80,24 @@ public:
 	uint16_t	_class;
 	uint32_t	_ttl;
 	uint16_t	_len;
-	uint16_t	_mx_pref;
+	uint16_t	_name_len;
 	Buffer		_name;
+	/* A record, NS record, SOA MNAME, PTR record, HINFO CPU field */
+	Buffer		_data;
+	/* SOA RNAME, HINFO OS field */
+	Buffer		_data2;
+	/* SOA record */
+	uint32_t	_serial;
+	uint32_t	_refresh;
+	uint32_t	_retry;
+	uint32_t	_expire;
+	uint32_t	_minimum;
+	/* MX pref field */
+	uint16_t	_mx_pref;
+
 	DNS_rr*		_next;
 
-	static unsigned int DNS_RDATA_MAX_SIZE;
+	static unsigned int RDATA_MAX_SIZE;
 private:
 	DNS_rr(const DNS_rr&);
 	void operator=(const DNS_rr&);
