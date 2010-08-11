@@ -555,8 +555,8 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 
 	default:
 		fprintf(stderr
-			, "[vos::DNSQuery] %s: Record type '%d' is not handle yet!\n",
-			_name.v(), rr->_type);
+, "[vos::DNSQuery] extract_rr: (%s) Record type '%d' is not handle yet!\n"
+		, _name.v(), rr->_type);
 		goto err;
 	}
 
@@ -564,8 +564,8 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 err:
 	if (LIBVOS_DEBUG) {
 		fprintf(stderr
-		, "[vos::DNSQuery] extract_rr: error extracting record type '%d'!"
-		, rr->_type);
+	, "[vos::DNSQuery] extract_rr: error extracting record type '%d'!"
+	, rr->_type);
 	}
 	delete rr;
 	return NULL;

@@ -64,10 +64,12 @@ void DNS_rr::reset()
  */
 void DNS_rr::dump()
 {
+	Buffer	o;
 	DNS_rr* p = this;
 
+	o.append_raw("[vos::DNS_rr__] dump:\n");
 	while (p) {
-		printf(	"\n[RR]\n"		\
+		o.aprint("\n[RR]\n"		\
 			" name       : %s\n"	\
 			" type       : %d\n"	\
 			" class      : %d\n"	\
@@ -75,44 +77,44 @@ void DNS_rr::dump()
 			" length     : %d\n"	\
 			" data       :\n", p->_name.v(), p->_type, p->_class
 			, p->_ttl, p->_len);
-		p->dump_hex();
 
 		switch (p->_type) {
 		case QUERY_T_ADDRESS:
-			printf( " address    : %s\n", p->_data.v());
+			o.aprint(" address    : %s\n", p->_data.v());
 			break;
 		case QUERY_T_NAMESERVER:
-			printf(	" nameserver : %s\n", p->_data.v());
+			o.aprint(" nameserver : %s\n", p->_data.v());
 			break;
 		case QUERY_T_CNAME:
-			printf( " c. name    : %s\n", p->_data.v());
+			o.aprint(" c. name    : %s\n", p->_data.v());
 			break;
 		case QUERY_T_SOA:
-			printf(	" mname      : %s\n", p->_data.v());
-			printf(	" rname      : %s\n", p->_data2.v());
-			printf(	" serial     : %d\n", p->_serial);
-			printf(	" refresh    : %d\n", p->_refresh);
-			printf(	" retry      : %d\n", p->_retry);
-			printf( " expire     : %d\n", p->_expire);
-			printf( " minimum    : %d\n", p->_minimum);
+			o.aprint(" mname      : %s\n", p->_data.v());
+			o.aprint(" rname      : %s\n", p->_data2.v());
+			o.aprint(" serial     : %d\n", p->_serial);
+			o.aprint(" refresh    : %d\n", p->_refresh);
+			o.aprint(" retry      : %d\n", p->_retry);
+			o.aprint(" expire     : %d\n", p->_expire);
+			o.aprint(" minimum    : %d\n", p->_minimum);
 			break;
 		case QUERY_T_PTR:
-			printf(	" PTRDNAME   : %s\n", p->_data.v());
+			o.aprint(" PTRDNAME   : %s\n", p->_data.v());
 			break;
 		case QUERY_T_HINFO:
-			printf(	" CPU        : %s\n", p->_data.v());
-			printf( " OS         : %s\n", p->_data2.v());
+			o.aprint(" CPU        : %s\n", p->_data.v());
+			o.aprint(" OS         : %s\n", p->_data2.v());
 			break;
 		case QUERY_T_MX:
-			printf(	" score      : %d\n", p->_mx_pref);
-			printf(	" exchange   : %s\n", p->_data.v());
+			o.aprint(" score      : %d\n", p->_mx_pref);
+			o.aprint(" exchange   : %s\n", p->_data.v());
 			break;
 		case QUERY_T_TXT:
-			printf(	" TXT        : %s\n", p->_data.v());
+			o.aprint(" TXT        : %s\n", p->_data.v());
 			break;
 		}
 		p = p->_next;
 	}
+	printf("%s", o.v());
 }
 
 /**

@@ -66,40 +66,43 @@ RecordMD::~RecordMD()
  */
 void RecordMD::dump()
 {
-	RecordMD* p = this;
+	Buffer		o;
+	RecordMD*	p = this;
 
+	o.append_raw("[vos::RecordMD] dump:\n");
 	while (p) {
-		printf("'%c' : %s : '%c' : %3d : %3d | ", 
-			p->_left_q, p->_name.v(), p->_right_q, p->_start_p,
-			p->_end_p);
+		o.aprint("'%c' : %s : '%c' : %3d : %3d | " 
+			, p->_left_q, p->_name.v(), p->_right_q, p->_start_p
+			, p->_end_p);
 
 		switch (p->_sep) {
 		case '\t':
-			printf("'\\t'");
+			o.append_raw("'\\t'");
 			break;
 		case '\n':
-			printf("'\\n'");
+			o.append_raw("'\\n'");
 			break;
 		case '\v':
-			printf("'\\v'");
+			o.append_raw("'\\v'");
 			break;
 		case '\r':
-			printf("'\\r'");
+			o.append_raw("'\\r'");
 			break;
 		case '\f':
-			printf("'\\f'");
+			o.append_raw("'\\f'");
 			break;
 		case '\b':
-			printf("'\\b'");
+			o.append_raw("'\\b'");
 			break;
 		default:
-			printf("'%c'", p->_sep);
+			o.aprint("'%c'", p->_sep);
 		}
 
-		printf(" : %2d\n", p->_type);
+		o.aprint(" : %2d\n", p->_type);
 
 		p = p->_next;
 	}
+	printf("%s", o.v());
 }
 
 /**
@@ -465,9 +468,10 @@ int RecordMD::INIT(RecordMD** o, const char* meta)
 
 	return 0;
 err:
-	fprintf(stderr, "invalid field meta data : %s\n", &meta[i]);
-	fprintf(stderr, "  at position %d,\n", i);
-	fprintf(stderr, "  at character '%c'.\n", meta[i]);
+	fprintf(stderr
+	, "[vos::RecordMD] INIT: invalid field meta data : %s\n"	\
+	  "                at position '%d', at character '%c'.\n"
+	, &meta[i], i, meta[i]);
 
 	if ((*o)) {
 		delete (*o);

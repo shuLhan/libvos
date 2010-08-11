@@ -83,7 +83,7 @@ int Config::save()
 	Buffer		ini;
 
 	if (_name.is_empty()) {
-		printf("[VOS::CONFIG] Error: filename is empty!\n");
+		printf("[vos::Config__] save: filename is empty!\n");
 		return -1;
 	}
 
@@ -117,7 +117,7 @@ int Config::save_as(const char* ini, const int mode)
 	ConfigData*	pkey	= NULL;
 
 	if (!ini) {
-		printf("[VOS::CONFIG] Error: filename is empty!\n");
+		printf("[vos::Config__] save_as: filename is empty!\n");
 		return -1;
 	}
 
@@ -553,8 +553,9 @@ inline int Config::parsing()
 
 	return 0;
 bad_cfg:
-	fprintf(stderr, " [CONFIG-ERROR] line %d: invalid config format.\n",
-			_e_row);
+	fprintf(stderr
+	, "[vos::Config] parsing: line '%d', invalid config format.\n"
+	, _e_row);
 
 	return -1;
 }

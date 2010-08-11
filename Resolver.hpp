@@ -17,6 +17,11 @@ namespace vos {
  * @class			: Resolver
  * @attr			:
  *	- _tcp			: Socket object for handling TCP connection.
+ *	- _fd_all		: collection of all open descriptor.
+ *	- _fd_read		: temporary collection.
+ *	- _maxfd		: maximum descriptor in this object.
+ *	- _n_try		: temporary counter.
+ *	- _timeout		: temporary data for storing timeout value.
  *	- _servers		: list of parent DNS server addresses.
  *
  *	- PORT			: static, default DNS server port.
@@ -49,6 +54,11 @@ public:
 	int send_query(DNSQuery* question, DNSQuery* answer);
 
 	Socket		_tcp;
+	fd_set		_fd_all;
+	fd_set		_fd_read;
+	int		_maxfd;
+	unsigned int	_n_try;
+	struct timeval	_timeout;
 	SockAddr*	_servers;
 
 	static unsigned int PORT;

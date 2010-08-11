@@ -21,6 +21,11 @@ unsigned int Resolver::N_TRY		= 0;
  */
 Resolver::Resolver() : Socket()
 ,	_tcp()
+,	_fd_all()
+,	_fd_read()
+,	_maxfd(0)
+,	_n_try(0)
+,	_timeout()
 ,	_servers(NULL)
 {
 	srand((unsigned int) time(NULL));
@@ -55,6 +60,17 @@ int Resolver::init()
 	}
 
 	s = create_udp();
+	if (s < 0) {
+		return -1;
+	}
+
+	FD_ZERO(&_fd_all);
+	FD_ZERO(&_fd_read);
+	FD_SET(_d, &_fd_all);
+	FD_SET(_tcp._d, &_fd_all);
+
+	_maxfd = _d > _tcp._d ? _d : _tcp._d;
+	_maxfd++;
 
 	return s;
 }
@@ -171,11 +187,6 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 	}
 
 	int		s	= 0;
-	int		maxfd	= 0;
-	unsigned int	n_try	= 0;
-	fd_set		fd_all;
-	fd_set		fd_read;
-	struct timeval	timeout;
 	SockAddr*	server	= _servers;
 
 	if (question->_bfr_type == BUFFER_IS_TCP) {
@@ -185,18 +196,13 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 		}
 	}
 
-	FD_ZERO(&fd_all);
-	FD_ZERO(&fd_read);
-	FD_SET(_d, &fd_all);
-	maxfd = _d + 1;
-
 	while (server) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::Resolver] >> querying %s ...\n"
+			printf("[vos::Resolver] send_query_udp: '%s' ...\n"
 				, server->v());
 		}
 
-		n_try = 0;
+		_n_try = 0;
 		reset();
 
 		s = (int) send_udp(&server->_in, question);
@@ -206,22 +212,21 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 		}
 
 		do {
-			fd_read		= fd_all;
-			timeout.tv_sec	= TIMEOUT;
-			timeout.tv_usec	= 0;
+			_fd_read		= _fd_all;
+			_timeout.tv_sec		= TIMEOUT;
+			_timeout.tv_usec	= 0;
 
-			s = select(maxfd, &fd_read, NULL, NULL, &timeout);
+			s = select(_maxfd, &_fd_read, NULL, NULL, &_timeout);
 			if (s < 0) {
 				if (EINTR == errno) {
 					goto intr;
 				}
 			}
-			if (0 == s || 0 == FD_ISSET(_d, &fd_read)) {
-				++n_try;
+			if (0 == s || 0 == FD_ISSET(_d, &_fd_read)) {
+				++_n_try;
 				if (LIBVOS_DEBUG) {
 					printf(
-					"[vos::Resolver] >> timeout...(%d)\n"
-					, n_try);
+"[vos::Resolver] send_query_udp: timeout...(%d)\n", _n_try);
 				}
 				continue;
 			}
@@ -237,24 +242,42 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 			answer->extract_question();
 
 			if ((answer->_flag & RCODE_FLAG) != 0) {
+				if (LIBVOS_DEBUG) {
+					printf(
+"[vos::Resolver] send_query_udp: reply flag is zero.\n");
+				}
 				break;
 			}
 			if (answer->_n_ans <= 0) {
-				break;
-			}
-			if (question->_id != answer->_id) {
+				if (LIBVOS_DEBUG) {
+					printf(
+"[vos::Resolver] send_query_udp: number of RR answer '%d'\n", answer->_n_ans);
+				}
 				break;
 			}
 			s = question->_name.like(&answer->_name);
 			if (s != 0) {
+				if (LIBVOS_DEBUG) {
+					printf(
+"[vos::Resolver] send_query_udp: mismatch name [Q:%s] vs [A:%s]\n"
+					, question->_name.v()
+					, answer->_name.v());
+				}
 				break;
 			}
+			if (question->_id != answer->_id) {
+				if (LIBVOS_DEBUG) {
+					printf(
+"[vos::Resolver] send_query_udp: mismatch ID [Q:%d] vs [A:%d]\n"
+					, question->_id, answer->_id);
+				}
+				answer->set_id(question->_id);
+			}
 			return 0;
-		} while (n_try < N_TRY);
+		} while (_n_try < N_TRY);
 
 		server = server->_next;
 	}
-
 intr:
 	return -1;
 }
@@ -277,10 +300,6 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 	}
 
 	int		s	= 0;
-	unsigned int	n_try	= 0;
-	fd_set		fd_all;
-	fd_set		fd_read;
-	struct timeval	timeout;
 	SockAddr*	server	= _servers;
 
 	if (question->_bfr_type == BUFFER_IS_UDP) {
@@ -290,17 +309,13 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 		}
 	}
 
-	FD_ZERO(&fd_all);
-	FD_ZERO(&fd_read);
-	FD_SET(_tcp._d, &fd_all);
-
 	while (server) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::Resolver] >> querying %s...\n"
+			printf("[vos::Resolver] send_query_tcp: '%s' ...\n"
 				, server->v());
 		}
 
-		n_try = 0;
+		_n_try = 0;
 		_tcp.reset();
 
 		s = _tcp.connect_to(&server->_in);
@@ -316,23 +331,21 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 		}
 
 		do {
-			fd_read		= fd_all;
-			timeout.tv_sec	= TIMEOUT;
-			timeout.tv_usec	= 0;
+			_fd_read		= _fd_all;
+			_timeout.tv_sec		= TIMEOUT;
+			_timeout.tv_usec	= 0;
 
-			s = select(_tcp._d + 1, &fd_read, NULL, NULL
-					, &timeout);
+			s = select(_maxfd, &_fd_read, NULL, NULL, &_timeout);
 			if (s < 0) {
 				if (EINTR == errno) {
 					return -1;
 				}
 			}
-			if (0 == s || !FD_ISSET(_tcp._d, &fd_read)) {
-				++n_try;
+			if (0 == s || !FD_ISSET(_tcp._d, &_fd_read)) {
+				++_n_try;
 				if (LIBVOS_DEBUG) {
 					printf(
-					"[vos::Resolver] >> timeout...(%d)\n"
-					, n_try);
+"[vos::Resolver] send_query_tcp: timeout...(%d)\n", _n_try);
 				}
 				continue;
 			}
@@ -348,20 +361,39 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 			answer->extract_question();
 
 			if ((answer->_flag & RCODE_FLAG) != 0) {
+				if (LIBVOS_DEBUG) {
+					printf(
+"[vos::Resolver] send_query_tcp: reply flag is zero.\n");
+				}
 				break;
 			}
 			if (answer->_n_ans <= 0) {
-				break;
-			}
-			if (question->_id != answer->_id) {
+				if (LIBVOS_DEBUG) {
+					printf(
+"[vos::Resolver] send_query_tcp: number of RR answer '%d'\n", answer->_n_ans);
+				}
 				break;
 			}
 			s = question->_name.like(&answer->_name);
 			if (s != 0) {
+				if (LIBVOS_DEBUG) {
+					printf(
+"[vos::Resolver] send_query_tcp: mismatch name [Q:%s] vs [A:%s]\n"
+					, question->_name.v()
+					, answer->_name.v());
+				}
 				break;
 			}
+			if (question->_id != answer->_id) {
+				if (LIBVOS_DEBUG) {
+					printf(
+"[vos::Resolver] send_query_tcp: mismatch ID [Q:%d] vs [A:%d]\n"
+					, question->_id, answer->_id);
+				}
+				answer->set_id(question->_id);
+			}
 			return 0;
-		} while (n_try < N_TRY);
+		} while (_n_try < N_TRY);
 
 		server = server->_next;
 	}

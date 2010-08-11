@@ -235,28 +235,29 @@ int ConfigData::add_misc_raw(const char* misc, int len)
  */
 void ConfigData::dump()
 {
-	ConfigData *h = this;
-	ConfigData *k = NULL;
+	Buffer		o;
+	ConfigData*	h = this;
+	ConfigData*	k = NULL;
 
-	printf("----------------------------------------------------\n");
+	o.append_raw("[vos::ConfigDt] dump: ----------------------------\n");
 	while (h) {
-		printf("[%s]\n", h->_v);
+		o.aprint("[%s]\n", h->_v);
 
 		k = h->_next_key;
 		while (k) {
 			if (CONFIG_T_KEY == k->_t) {
-				printf("\t%s = %s\n", k->v(),
-					k->_value ? k->_value->v() : "\0");
+				o.aprint("\t%s = %s\n", k->v()
+					, k->_value ? k->_value->v() : "\0");
 			} else {
-				printf("%s\n", k->v());
+				o.aprint("%s\n", k->v());
 			}
-
 			k = k->_next_key;
 		}
-
 		h = h->_next_head;
 	}
-	printf("----------------------------------------------------\n");
+	o.append_raw("--------------------------------------------------\n");
+
+	printf("%s", o.v());
 }
 
 /**

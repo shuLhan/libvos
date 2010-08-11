@@ -37,18 +37,22 @@ Record::~Record()
  */
 void Record::dump()
 {
+	Buffer	o;
 	Record* row = this;
 	Record* col = NULL;
 
+	o.append_raw("[vos::Record__] dump:\n");
 	while (row) {
 		col = row;
 		while (col) {
-			printf("%s|", col->_v);
+			o.append(col);
+			o.appendc('|');
 			col = col->_next_col;
 		}
-		printf("\n");
+		o.appendc('\n');
 		row = row->_next_row;
 	}
+	printf("%s", o.v());
 }
 
 /**

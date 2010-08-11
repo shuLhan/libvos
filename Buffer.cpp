@@ -273,6 +273,9 @@ int Buffer::shiftr(const int nbyte, int c)
  */
 int Buffer::appendc(const char c)
 {
+	if (c <= 0) {
+		return 0;
+	}
 	if (_i + CHAR_SIZE > _l) {
 		_l += DFLT_SIZE;
 		_v = (char *) realloc(_v, _l + CHAR_SIZE);
@@ -780,7 +783,7 @@ long int Buffer::to_lint()
  */
 void Buffer::dump()
 {
-	printf("%d|%d|%s|\n", _i, _l, v());
+	printf("[vos::Buffer__] dump: [%d|%d|%s]\n", _i, _l, v());
 }
 
 /**
@@ -794,7 +797,9 @@ void Buffer::dump_hex()
 	register int	i = 0;
 	register int	j = 0;
 	register int	k = 0;
-	Buffer		o(_i * 5);
+	Buffer		o(_i * 6);
+
+	o.append_raw("[vos::Buffer__] dump_hex:\n");
 
 	for (; i < _i; ++i) {
 		if ((i % 4) == 0) {

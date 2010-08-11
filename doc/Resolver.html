@@ -33,6 +33,27 @@
 	<td> _tcp </td>
 	<td> Socket object for handling TCP connection. </td>
 </tr><tr>
+	<td> fd_set </td>
+	<td> _fd_all </td>
+	<td> collection of all open file descriptor. </td>
+</tr><tr>
+	<td> fd_set </td>
+	<td> _fd_read </td>
+	<td> temporary descriptor used only when receiving reply from server. </td>
+</tr><tr>
+	<td> int </td>
+	<td> _maxfd </td>
+	<td> maximum file descriptor in this object. </td>
+</tr><tr>
+	<td> unsigned int </td>
+	<td> _n_try </td>
+	<td> temporary variable for counting number of packet re-send back to
+server. </td>
+</tr><tr>
+	<td> struct timeval </td>
+	<td> _timeout </td>
+	<td> temporary data for storing timeout value. </td>
+</tr><tr>
 	<td> SockAddr* </td>
 	<td> _servers </td>
 	<td> list of parent DNS server addresses. </td>

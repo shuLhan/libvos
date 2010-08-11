@@ -1,6 +1,6 @@
 html {
 	background	: #EFEFEF;
-	font-family	: serif;
+	font-family	: serif, Bitsream Vera Serif;
 	margin		: 0 auto 0 auto;
 	width		: 216mm;
 }
@@ -63,6 +63,15 @@ th, td {
 	padding		: 1em;
 	border-top	: 1px dashed silver;
 	border-bottom	: 1px dashed silver;
+}
+
+ul.rab {
+	padding-left	: 4em;
+	list-style-type	: none;
+}
+ul.rab li {
+	padding-top	: 1em;
+	text-indent	: -4em;
 }
 
 /*

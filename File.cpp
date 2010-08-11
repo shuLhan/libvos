@@ -283,7 +283,7 @@ int File::refill(int read_min)
 	len = move_len + read_min;
 	if (len > _l) {
 		if (LIBVOS_DEBUG) {
-			printf("[VOS::FILE] read resize: from %d to %d\n"
+			printf("[vos::File____] refill: read resize from '%d' to '%d'\n"
 				, _l, len);
 		}
 		resize(len);
@@ -293,7 +293,7 @@ int File::refill(int read_min)
 		if (len <= 0) {
 			len = _l * 2;
 			if (LIBVOS_DEBUG) {
-				printf("[VOS::FILE] read resize: from %d to %d\n"
+				printf("[vos::File____] refile: read resize from '%d' to '%d'\n"
 					, _l, len);
 			}
 			resize(len);
@@ -618,10 +618,10 @@ void File::close()
  */
 void File::dump()
 {
-	printf("[FILE-%d]\n", _d);
-	printf("\t name     : %s\n", _name.v());
-	printf("\t contents :\n"
-		"\t>>\n%s\n<<\n", v());
+	printf("[vos::File____] dump:\n");
+	printf("  descriptor  : %d\n", _d);
+	printf("  name        : %s\n", _name.v());
+	printf("  contents    :\n[%s]\n", v());
 }
 
 /**

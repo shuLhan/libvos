@@ -1,0 +1,809 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> FTP Client Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#FTP::FTP"><tt> FTP::FTP </tt></a></li>
+	<li><a href="#FTP::~FTP"><tt> FTP::~FTP </tt></a></li>
+	<li><a href="#FTP::connect"><tt> FTP::connect </tt></a></li>
+	<li><a href="#FTP::login"><tt> FTP::login </tt></a></li>
+	<li><a href="#FTP::logout"><tt> FTP::logout </tt></a></li>
+	<li><a href="#FTP::disconnect"><tt> FTP::disconnect </tt></a></li>
+
+	<li><a href="#FTP::recv"><tt> FTP::recv </tt></a></li>
+	<li><a href="#FTP::send_cmd"><tt> FTP::send_cmd </tt></a></li>
+	<li><a href="#FTP::get_reply"><tt> FTP::get_reply </tt></a></li>
+
+	<li><a href="#FTP::parsing_pasv_reply"><tt> FTP::parsing_pasv_reply </tt></a></li>
+	<li><a href="#FTP::do_pasv"><tt> FTP::do_pasv </tt></a></li>
+
+	<li><a href="#FTP::do_put"><tt> FTP::do_put </tt></a></li>
+	<li><a href="#FTP::do_rename"><tt> FTP::do_rename </tt></a></li>
+	<li><a href="#FTP::do_cdup"><tt> FTP::do_cdup </tt></a></li>
+	<li><a href="#FTP::do_cd"><tt> FTP::do_cd </tt></a></li>
+	<li><a href="#FTP::do_delete"><tt> FTP::do_delete </tt></a></li>
+	<li><a href="#FTP::do_mkdir"><tt> FTP::do_mkdir </tt></a></li>
+	<li><a href="#FTP::do_pwd"><tt> FTP::do_pwd </tt></a></li>
+	<li><a href="#FTP::do_rmdir"><tt> FTP::do_rmdir </tt></a></li>
+	<li><a href="#FTP::do_type"><tt> FTP::do_type </tt></a></li>
+	<li><a href="#FTP::do_get"><tt> FTP::do_get </tt></a></li>
+	<li><a href="#FTP::do_list"><tt> FTP::do_list </tt></a></li>
+	<li><a href="#FTP::do_list_simple"><tt> FTP::do_list_simple </tt></a></li>
+	</ul>
+</ul>
+
+<p>
+FTP Client module is a module to talk to FTP server.
+</p>
+
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td> int </td>
+	<td> _reply </td>
+	<td> last reply code. </td>
+</tr><tr>
+	<td> int </td>
+	<td> _mode </td>
+	<td> status of FTP connection. Valid values,
+		<ul>
+		<li><tt> FTP_MODE_NORMAL </tt>, normal connection. </li>
+		<li><tt> FTP_MODE_PASV </tt>, passive connection. </li>
+		</ul>
+	</td>
+</tr><tr>
+	<td> fd_set </td>
+	<td> _fd_all </td>
+	<td> collection of open descriptor. </td>
+</tr><tr>
+	<td> fd_set </td>
+	<td> _fd_read </td>
+	<td> temporary collection for checking if one of the descriptor is
+receiving new data from server. </td>
+</tr><tr>
+	<td> struct timeval </td>
+	<td> _timeout </td>
+	<td> temporary variable for storing timeout data, used for reading
+reply from server. </td>
+</tr><tr>
+	<td> static unsigned int </td>
+	<td> PORT </td>
+	<td> default FTP server port number.</td>
+</tr><tr>
+	<td> static unsigned int </td>
+	<td> TIMEOUT </td>
+	<td> default time-out value, in seconds. </td>
+</tr>
+</table>
+
+<p>
+Valid status value for FTP client,
+<ul>
+	<li><tt> FTP_STT_DISCONNECT </tt>, client is not connected.</li>
+	<li><tt> FTP_STT_CONNECTED </tt>, client is connected to FTP server.</li>
+	<li><tt> FTP_STT_LOGGED_IN </tt>, client is logged in to FTP server.</li>
+	<li><tt> FTP_STT_LOGGED_OUT </tt>, client is logged out from FTP server. </li>
+</ul>
+Status is the value of variable <tt>_status</tt> inherited from Socket
+module.
+</p>
+
+<p>
+List of known and valid FTP command in this module,
+</p>
+<table class="class-var">
+<tr>
+	<th>Name</th><th>Parameter</th><th>Description</th>
+</tr><tr>
+<td> USER </td><td> username </td><td> User in server for logged in. </td>
+</tr><tr>
+<td> PASS </td><td> password </td><td> Identification of user for logged in.  </td>
+</tr><tr>
+<td> ACCT </td><td> account-name </td><td> Account name in server. </td>
+</tr><tr>
+<td> CWD </td><td> directory </td><td> Change Working Directory on server. </td>
+</tr><tr>
+<td> CDUP </td><td> - </td><td> Change Directory UP, one level above current. </td>
+</tr><tr>
+<td> PASV </td><td> - </td><td> Command for initiating passive connection.  </td>
+</tr><tr>
+<td> TYPE </td><td> [A|I] </td><td> Change transfer mode. </td>
+</tr><tr>
+<td> RETR </td><td> /path/to/filename </td><td> RETRieve file on server.  </td>
+</tr><tr>
+<td> STOR </td><td> /path/to/filename </td><td> STORe local file to server.  </td>
+</tr><tr>
+<td> LIST </td><td> [directory] </td><td> LIST all files in server directory.</td>
+</tr><tr>
+<td> NLST </td><td> [directory] </td><td> Name LiST all files in server directory. </td>
+</tr><tr>
+<td> DELE </td><td> /path/to/filename </td><td> DELEte file on server.</td>
+</tr><tr>
+<td> RNFR </td><td> /path/to/filename.old </td><td> ReName FRom, file to be renamed or moved in server.</td>
+</tr><tr>
+<td> RNTO </td><td> /path/to/filename.new </td><td> ReName TO, a new name or path in server. </td>
+</tr><tr>
+<td> RMD </td> <td> directory </td><td> ReMove Dir, remove a directory. </td>
+</tr><tr>
+<td> MKD </td> <td> directory </td><td> MaKe Dir, create a new directory.  </td>
+</tr><tr>
+<td> PWD </td> <td> - </td><td> Print Working Directory. </td>
+</tr><tr>
+<td> QUIT </td><td> - </td><td> QUIT from server. </td>
+</tr>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="FTP::FTP"><tt> FTP::FTP </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"></td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> FTP constructor. </td>
+</tr>
+</table>
+
+<h3><a name="FTP::~FTP"><tt> FTP::~FTP </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"></td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> FTP destructor. </td>
+</tr>
+</table>
+
+<h3><a name="FTP::connect"><tt> FTP::connect </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int connect(const char* host, const int port, const int mode = FTP_MODE_NORMAL)</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> host </tt></td>
+		<td>:</td>
+		<td>hostname or IP address of FTP server to connect.</td>
+	</tr><tr>
+		<td><tt> port </tt></td>
+		<td>:</td>
+		<td> port number of FTP server.</td>
+	</tr><tr>
+		<td><tt> mode </tt></td>
+		<td>:</td>
+		<td>default to <tt>FTP_MODE_NORMAL</tt>, unless you want to
+connect manually to FTP passive server, you should leave this option
+unchanged.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create a connection to FTP server at
+"<tt>host:port</tt>".
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::login"><tt> FTP::login </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int login(const char* username, const char* password)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> username </tt></td>
+		<td>:</td>
+		<td> name of user or account in FTP server.</td>
+	</tr><tr>
+		<td> password </td>
+		<td>:</td>
+		<td> string for user identification. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Login to FTP server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::logout"><tt> FTP::logout </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void logout() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Log out from FTP server, but keep connection open.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::disconnect"><tt> FTP::disconnect </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void disconnect() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Close connection to FTP server, if user is logged
+in, logged out first. </td>
+</tr>
+</table>
+
+<h3><a name="FTP::recv"><tt> FTP::recv </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int recv(const int to_sec = TIMEOUT, const int to_usec = 0)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> to_sec </tt></td>
+		<td>:</td>
+		<td> timeout value in seconds. </td>
+	</tr><tr>
+		<td><tt> to_usec </tt></td>
+		<td>:</td>
+		<td> timeout value in mili-seconds. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Receiving a reply (or series of data) from FTP
+server. </td>
+</tr>
+</table>
+
+<h3><a name="FTP::send_cmd"><tt> FTP::send_cmd </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int send_cmd(const char* cmd, const char *parm)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> cmd </tt></td>
+		<td>:</td>
+		<td>command code.</td>
+	</tr><tr>
+		<td><tt> parm </tt></td>
+		<td>:</td>
+		<td>string of parameter, if needed for command to
+accomplished. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Send command code <tt>cmd</tt> to server. If command
+need a parameter pass it to <tt>parm</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::get_reply"><tt> FTP::get_reply </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int get_reply(const int timeout)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> timeout </tt></td>
+	<td>:</td>
+	<td> timeout value, in second, when waiting for reply from server.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Wait and receive reply from FTP server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::parsing_pasv_reply"><tt> FTP::parsing_pasv_reply </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int parsing_pasv_reply(Buffer *addr, int *port)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> addr </tt></td>
+		<td>:</td>
+		<td> output, address of server.</td>
+	</tr><tr>
+		<td><tt> port </tt></td>
+		<td>:</td>
+		<td> output, port to connect on server.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Parsing PASV reply message into <tt>address</tt> and
+<tt>port</tt>. PASV command usually replied with message like these,
+<pre>
+227 Entering Passive Mode (127,0,0,1,45,235)
+</pre>
+After parsed we will get <tt>127.0.0.1</tt> as the address of FTP server that
+we will connect to, and <tt>11755</tt> as <tt>((45 * 256) + 235)</tt> as the
+port number opened by server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_pasv"><tt> FTP::do_pasv </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int do_pasv(const char* cmd, const char *parm, const char *out)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> cmd </tt></td>
+		<td>:</td>
+		<td> FTP command that need a PASV connection. </td>
+	</tr><tr>
+		<td><tt> parm </tt></td>
+		<td>:</td>
+		<td> parameter for command. </td>
+	</tr><tr>
+		<td><tt> out </tt></td>
+		<td>:</td>
+		<td> a name of file where output of PASV command <tt>cmd</tt>
+will be saved.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Send <tt>cmd</tt>, with or without parameter
+<tt>parm</tt>, to FTP server using PASV connection, save the output or result
+of data to file defined in <tt>out</tt>. If <tt>out</tt> is nil then output
+will be printed to standard output.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_put"><tt> FTP::do_put </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int do_put(const char *path) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> path </tt></td>
+	<td>:</td>
+	<td> path to a local file to be 'put' to server. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Put or store file <tt>path</tt> from local to server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_rename"><tt> FTP::do_rename </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int do_rename(const char *from, const char *to)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> from </tt></td>
+		<td>:</td>
+		<td> original file name, with or without path.</td>
+	</tr><tr>
+		<td><tt> to </tt></td>
+		<td>:</td>
+		<td> a new file name, with or without path.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Rename or move a file on FTP server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_cdup"><tt> FTP::do_cdup </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline int do_cdup() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Change working directory on server one level up.</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_cd"><tt> FTP::do_cd </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline int do_cd(const char *path = "/") </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> path </tt></td>
+	<td>:</td>
+	<td> path to directory on server, default to "<tt>/</tt>" (root
+directory). </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Change working directory on server to directory in
+<tt>path</tt>.</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_delete"><tt> FTP::do_delete </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline int do_delete(const char *path) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> path </tt></td>
+	<td>:</td>
+	<td> path to file to in server. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Remove file pointed by <tt>path</tt> in FTP server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_mkdir"><tt> FTP::do_mkdir </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline int do_mkdir(const char *path) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> path </tt></td>
+	<td>:</td>
+	<td> path to a directory name. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create a new directory in server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_pwd"><tt> FTP::do_pwd </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline int do_pwd() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Print current working directory in server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_rmdir"><tt> FTP::do_rmdir </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline int do_rmdir(const char *path) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> path </tt></td>
+	<td>:</td>
+	<td> path to directory on server. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Remove directory <tt>path</tt> on server. Directory
+must be empty, before removed. If directory is not empty this operation will
+be fail.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_type"><tt> FTP::do_type </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline int do_type(const char* type) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt>type</tt></td>
+	<td>:</td>
+	<td> type of transfer mode, valid values:
+		<ul>
+		<li><tt>A</tt>: for ascii, </li>
+		<li><tt>I</tt>: for binary. </li>
+		</ul>
+	</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Change type of transfer mode.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_get"><tt> FTP::do_get </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> inline int do_get(const char *in, const char *out)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> in </tt></td>
+		<td>:</td>
+		<td> a path to a file in server.</td>
+	</tr><tr>
+		<td><tt> out </tt></td>
+		<td>:</td>
+		<td> a path to a file in local.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get or retrieve remote file <tt>in</tt> from server
+to local file system <tt>out</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_list"><tt> FTP::do_list </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+inline int do_list(const char *path, const char *out)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td> a path to directory on server.</td>
+	</tr><tr>
+		<td><tt> out </tt></td>
+		<td>:</td>
+		<td> a path to a file where the output of this command will
+be saved. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> List content of directory pointed by <tt>path</tt>
+on server with their attributes, and save the list output to file defined in
+<tt>out</tt> parameter. If <tt>out</tt> is nil, output will be printed to
+standard output.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTP::do_list_simple"><tt> FTP::do_list_simple </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+inline int do_list_simple(const char *path, const char *out)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td> a path to directory on server.</td>
+	</tr><tr>
+		<td><tt> out </tt></td>
+		<td>:</td>
+		<td> a path to a file where the output of this command will
+be saved. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> List content of directory pointed by <tt>path</tt>
+on server <em>without</em> their attributes only file name, and save the list
+output to file defined in <tt>out</tt> parameter. If <tt>out</tt> is nil,
+output will be printed to standard output.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

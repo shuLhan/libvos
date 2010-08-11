@@ -70,7 +70,7 @@ int SockServer::bind(const char* address, const int port)
 	int	optval	= 1;
 
 	if (LIBVOS_DEBUG) {
-		printf("[vos::SockServer] bind: %s:%d\n", address, port);
+		printf("[vos::SockSrvr] bind: %s:%d\n", address, port);
 	}
 
 	if (!address) {
@@ -257,7 +257,7 @@ Socket* SockServer::accept_conn()
 		client = accept();
 	}
 	if (client && LIBVOS_DEBUG) {
-		printf("[vos::SockServer] accept_conn: from '%s'\n"
+		printf("[vos::SockSrvr] accept_conn: from '%s'\n"
 			, client->_name.v());
 	}
 
