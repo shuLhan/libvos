@@ -1,0 +1,209 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> FTP Server Module </h1>
+
+<b> FTPD: a simple FTP server </b>
+
+<ul class="toc">
+<li><a href="#FTPD_limit"> FTPD Limitations </a></li>
+<li><a href="#FTPD_how"> How FTPD Works </a></li>
+	<ul>
+	<li><a href="#FTPD_init"> Initializing FTPD object </a></li>
+	<li><a href="#FTPD_add_user"> Creating an account for FTPD service </a></li>
+	<li><a href="#FTPD_set_path"> Setting directory to be served </a></li>
+	<li><a href="#FTPD_set_cb"> Setting server command callback </a></li>
+	<li><a href="#FTPD_add_cmd"> Adding custom command </a></li>
+	<li><a href="#FTPD_run"> Running FTPD server </a></li>
+	</ul>
+<li><a href="#FTPD_example"> Example of FTPD program </a></li>
+</ul>
+
+</ul>
+
+<h2><a name="FTPD_limit"> FTPD Limitations </a></h2>
+
+(This limitation can be changes in the code, before this article is updated.)
+
+<ul>
+<li> libvos FTPD module only using type <tt>I</tt> (Image) or binary data
+transfer. </br>
+Rationale: any files in UNIX world be, it text or executable file, just an
+array of characters grouped together.
+</li>
+<li> libvos FTPD module only transfer data with stream mode. </br>
+  Rationale: stream mode is simple and does not need any additional process,
+  write and close connection when it's done, connection and data reliability
+  handled by TCP.
+</li>
+<li> libvos FTPD does not implement ACCT command. <br/>
+  Rationale: duplicate with USER command.
+</li>
+<li> libvos FTPD does not implement PORT command. <br/>
+  Rationale: a client behind a simple no-incoming-connections firewall will be
+  unable to retrieve or sending files.
+</li>
+<li> libvos FTPD does not implement REST and APPE command. <br/>
+  Rationale: restarting transfer is possible but will break the reliability
+  of data if file is already modified before transfer restarted.
+</li>
+<li> libvos FTPD does not implement STOU command. <br/>
+  Rationale: STOU is like STOR without parameter, except that STOU let the
+  FTP server pick the file name in the server.
+</li>
+<li> libvos FTPD does not have per user access, all the directory will be
+  served as long as user that run FTPD service has an access into it.
+</li>
+<li> libvos FTPD is implemented only for x86 and x86_64 machine.
+</li>
+</ul>
+
+
+<h2><a name="FTPD_how"> How FTPD Works </a></h2>
+
+<h3><a name="FTPD_init"> Initializing FTPD object </a></h3>
+<pre>
+	int init(const char* address  = FTPD_DEF_ADDRESS
+		, const int port      = FTPD_DEF_PORT
+		, const char* path    = FTPD_DEF_PATH
+		, const int auth_mode = AUTH_NOLOGIN);
+</pre>
+<p>
+The first parameter is IP address of server want to listen to. The
+format is IPv4 address, "0.0.0.0" (default) if the server want to listen to
+all connection that it have, or "127.0.0.1" if the server only want to listen
+in local connection only.
+</p>
+<p>
+The second parameter is port number, default to 21. Note: only root account can
+listening to port below 1024.
+</p>
+<p>
+The third parameter is path to directory in the system that FTPD will serve
+to network. Default value is current directory of where user run the
+command.
+</p>
+<p>
+The fourth parameter is authentication mode, default to "no authentication"
+or all user-name is allowed to log in to the FTP server.
+</p>
+
+
+<h3><a name="FTPD_add_user"> Creating an account for FTPD service </a></h3>
+<pre>
+	int add_user(const char* name, const char* pass);
+</pre>
+<ul>
+<li> name : user-name for new account. </li>
+<li> pass : user identified string, password. </li>
+</ul>
+<p>
+FTPD user can create more than one account.
+</p>
+
+
+<h3><a name="FTPD_set_path"> Setting directory to be served. </a></h3>
+<pre>
+	int set_path(const char* path);
+</pre>
+<p>
+User can set the path from <tt>init()</tt>, third parameter, or (re)set the
+directory back with this function.
+</p>
+
+
+<h3><a name="FTPD_set_cb"> Setting server command callback </a></h3>
+<pre>
+	void set_default_callback();
+
+	int set_callback(const int type, void (*callback)(FTPD*, FTPClient*));
+</pre>
+<p>
+Callback function is a function that will be called after server receiving
+a specific command that server known.
+</p>
+<p>
+Method <tt>set_default_callback()</tt> set all callback function to the
+default function in the server.
+</p>
+<p>
+Unless FTPD user want to set their own callback with <tt>set_callback()</tt>
+option, they should call <tt>set_default_callback()</tt> immediately before
+running an FTP server.
+</p>
+
+
+<h3><a name="FTPD_add_cmd"> Adding custom command </a></h3>
+<pre>
+	void add_command(const int code, const char* cmd, 
+			, void (*callback)(FTPD*, FTPClient*));
+</pre>
+<p>
+With this command user can implement their own FTP command. Each time user
+send command with "<tt>cmd</tt>" string, callback function will be called by
+FTPD server.
+</p>
+
+<h3><a name="FTPD_run"> Running FTPD server </a></h3>
+<pre>
+	int run();
+</pre>
+<p>
+Run the server. The only way to stop this server is by sending quit signal
+(<tt>SIGQUIT</tt> or <tt>CTRL + |</tt>) or interrupt signal (<tt>SIGINT</tt>
+or <tt>CTRL+c</tt>) to the server process.
+</p>
+
+
+<h2><a name="FTPD_example"> Example of FTPD program </a></h2>
+<p>
+An example of using FTPD module on user program,
+</p>
+<pre>
+#include "FTPD.hpp"
+
+using vos::FTPD;
+using vos::FTPClient;
+using vos::_FTP_reply_msg;
+
+static void on_cmd_CUST(FTPD* s, FTPClient* c)
+{
+	if (!s || !c) {
+		return;
+	}
+
+	c->reply_raw(vos::CODE_200, _FTP_reply_msg[vos::CODE_200], NULL);
+}
+
+int main()
+{
+	int	s;
+	FTPD	ftpd;
+
+	s = ftpd.init("0.0.0.0", 5151, "../", vos::AUTH_LOGIN);
+	if (s) {
+		goto err;
+	}
+
+	s = ftpd.add_user("test","password");
+	if (s) {
+		goto err;
+	}
+
+	ftpd.set_default_callback();
+	ftpd.add_command(100, "CUST", &on_cmd_CUST);
+
+	s = ftpd.run();
+err:
+	if (s) {
+		perror(NULL);
+	}
+	return s;
+}
+</pre>
+
+</body>
+</html>

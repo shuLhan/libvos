@@ -1,0 +1,632 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> FTPD Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#FTPD::FTPD"><tt> FTPD::FTPD </tt></a></li>
+	<li><a href="#FTPD::~FTPD"><tt> FTPD::~FTPD </tt></a></li>
+	<li><a href="#FTPD::init"><tt> FTPD::init </tt></a></li>
+	<li><a href="#FTPD::add_user"><tt> FTPD::add_user </tt></a></li>
+	<li><a href="#FTPD::add_command"><tt> FTPD::add_command </tt></a></li>
+	<li><a href="#FTPD::set_path"><tt> FTPD::set_path </tt></a></li>
+	<li><a href="#FTPD::set_default_callback"><tt> FTPD::set_default_callback </tt></a></li>
+	<li><a href="#FTPD::set_callback"><tt> FTPD::set_callback </tt></a></li>
+	<li><a href="#FTPD::run"><tt> FTPD::run </tt></a></li>
+	<li><a href="#FTPD::client_process"><tt> FTPD::client_process </tt></a></li>
+	<li><a href="#FTPD::client_get_command"><tt> FTPD::client_get_command </tt></a></li>
+	<li><a href="#FTPD::client_add"><tt> FTPD::client_add </tt></a></li>
+	<li><a href="#FTPD::client_del"><tt> FTPD::client_del </tt></a></li>
+	<li><a href="#FTPD::client_get_path"><tt> FTPD::client_get_path </tt></a></li>
+	<li><a href="#FTPD::client_get_parent_path"><tt> FTPD::client_get_parent_path </tt></a></li>
+	</ul>
+<li><a href="#class_cb"> FTPD Command Callback </a></li>
+</ul>
+
+
+<h2><a name="class_var">Class Variables</a></h2>
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td> int </td>
+	<td> _running </td>
+	<td> flag for server if still allowed to run or not. </td>
+</tr><tr>
+	<td> int </td>
+	<td> _auth_mode </td>
+	<td> authentication mode, login or without login. </td>
+</tr><tr>
+	<td> int </td>
+	<td> _maxfd </td>
+	<td> maximum used descriptor in this object. </td>
+</tr><tr>
+	<td> Buffer </td>
+	<td> _path </td>
+	<td> the real path to directory that the server serve to the
+networks. </td>
+</tr><tr>
+	<td> Dir </td>
+	<td> _dir </td>
+	<td> Contain caches of all files in '<tt>_path</tt>'. </td>
+</tr><tr>
+	<td> fd_set </td>
+	<td> _fd_all </td>
+	<td> collection of all open descriptor in this object. </td>
+</tr><tr>
+	<td> fd_set </td>
+	<td> _fd_read </td>
+	<td> temporary collection for reading all open descriptor. </td>
+</tr><tr>
+	<td> FTPD_client* </td>
+	<td> _clients </td>
+	<td> list of all client connection connected to this service. </td>
+</tr><tr>
+	<td> FTPD_user* </td>
+	<td> _users </td>
+	<td> list of all virtual user allowed to log in to the service. </td>
+</tr><tr>
+	<td> FTPD_cmd* </td>
+	<td> _cmds </td>
+	<td> list of all FTP command that this FTP service support. </td>
+</tr>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="FTPD::FTPD"><tt> FTPD::FTPD </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> FTPD()
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> FTPD constructor. </td>
+</tr>
+</table>
+
+<h3><a name="FTPD::~FTPD"><tt> FTPD::~FTPD </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~FTPD()
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> FTPD destructor.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::init"><tt>FTPD::init </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int init(const char* address = FTPD_DEF_ADDRESS <br/>
+	, const int port = FTPD_DEF_PORT <br/>
+	, const char* path = FTPD_DEF_PATH  <br/>
+	, const int auth_mode = AUTH_NOLOGIN)
+	</td>
+</tr><tr>
+	<th rowspan="4">Parameter</th>
+		<td><tt> address </tt></td>
+		<td>:</td>
+		<td> address to listen for client connection, default to
+"<tt>0.0.0.0</tt>".</td>
+	</tr><tr>
+		<td><tt> port </tt></td>
+		<td>:</td>
+		<td> port to listen for client connection, default to
+<tt>21</tt>.</td>
+	</tr><tr>
+		<td><tt> path </tt></td>
+		<td>:</td>
+		<td> a path to directory in file system to be served to
+client. Default to current directory of where the program running.
+		</td>
+	</tr><tr>
+		<td><tt> mode </tt></td>
+		<td>:</td>
+		<td> authentication mode for server. Valid values,
+			<ul>
+			<li><tt> AUTH_NOLOGIN (0)</tt>, for no authentication, and </li>
+			<li><tt> AUTH_LOGIN (1) </tt>, client must be have an
+account to access the service. </li>
+			</ul>
+		</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Initialize a FTPD object. A new client connection
+will be not accepted until '<tt>run()</tt>' is called.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::add_user"><tt> FTPD::add_user </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int add_user(const char* name, const char* pass)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> name </tt></td>
+		<td>:</td>
+		<td> a user name for new account. </td>
+	</tr><tr>
+		<td><tt> pass </tt></td>
+		<td>:</td>
+		<td> a password for identifying user name. </td>
+</tr><tr>
+	<th rowspan="3">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail, user with name '<tt>name</tt>' is already exist. </td>
+	</tr><tr>
+		<td><tt> -2 </tt></td>
+		<td>:</td>
+		<td> fail, system error. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new virtual account for accessing the FTP
+service.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::add_command"><tt>FTPD::add_command </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int add_command(const int code <br/>
+	, const char* cmd_name <br/>
+	, void (*callback)(FTPD*, FTPD_client*)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> code </tt></td>
+		<td>:</td>
+		<td> command code. </td>
+	</tr><tr>
+		<td><tt> cmd_name </tt></td>
+		<td>:</td>
+		<td> command name, in string.</td>
+	</tr><tr>
+		<td><tt> callback </tt></td>
+		<td>:</td>
+		<td> command callback, function that will be called if
+command is send by client. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new command to be served by FTP service. Check
+if command with code is <tt>code</tt> is already exist in command list. If
+code is exist then replace old command name and callback with a new name and
+callback from parameter. If code is not exist add the new command to the
+command list, <tt>_cmds</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::set_path"><tt> FTPD::set_path </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int set_path(const char* path)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> path </tt></td>
+	<td>:</td>
+	<td> path to directory in file system that will be served to network.
+</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set root directory of FTP server to <tt>path</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::set_default_callback"><tt> FTPD::set_default_callback </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+void set_default_callback()
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set default callback for each commands that supported
+by this FTP service.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::set_callback"><tt> FTPD::set_callback </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int set_callback(const int code, void (*callback)(FTPD*, FTPD_client*))
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> code </tt></td>
+		<td>:</td>
+		<td> command code. </td>
+	</tr><tr>
+		<td><tt> callback </tt></td>
+		<td>:</td>
+		<td> pointer to function callback.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set a function callback to a command with a code is
+<tt>code</tt> in the list of commands. If command is not exist, add a new
+command to the list.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::run"><tt> FTPD::run </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int run() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Run a FTP service, start receiving a new client
+connection, and process them.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::client_process"><tt> FTPD::client_process </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void client_process() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Process all client connection. Unless you creating a
+new FTP server by inheriting the FTPD class you should not call this function
+directly.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::client_get_command"><tt> FTPD::client_get_command </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int client_get_command(Socket* c, FTPD_cmd* ftp_cmd) </td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> c </tt></td>
+		<td>:</td>
+		<td> pointer to client Socket object. </td>
+	</tr><tr>
+		<td><tt> ftp_cmd </tt></td>
+		<td>:</td>
+		<td> output, pointer to FTPD_cmd object that has been filled
+with command name and arguments. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Process client connection, receive the data from
+socket and parsing them to get the command name and parameter.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::client_add"><tt> FTPD::client_add</tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void client_add(FTPD_client* c) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> c </tt></td>
+	<td>:</td>
+	<td> pointer to a new client connection. </tt>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new client object <tt>c</tt> to the list of
+client <tt>_clients</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::client_del"><tt> FTPD::client_del </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void client_del(FTPD_client *c) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> c </tt></td>
+	<td>:</td>
+	<td> pointer to client connection. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Remove client object, <tt>c</tt>, from the list of
+client, <tt>_clients</tt>.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::client_get_path"><tt> FTPD::client_get_path </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int client_get_path(FTPD_client* c, int check_parm = 1)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> c </tt></td>
+		<td>:</td>
+		<td> pointer to client connection. </td>
+	</tr><tr>
+		<td><tt> check_parm </tt></td>
+		<td>:</td>
+		<td> flag to check for empty command parameter or not. FTP
+command like LIST or NLST does not need a parameter, because if parameter is
+empty then server will use client current working directory as parameter.
+		</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &gt;0 </tt></td>
+		<td>:</td>
+		<td> fail, will return the specific error code based on FTP
+specification, I.e.: 550. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Function to check if path given in
+command parameter is exist in server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD::client_get_parent_path"><tt> FTPD::client_get_parent_path </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int client_get_parent_path(FTPD_client* c)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> c </tt></td>
+	<td>:</td>
+	<td> pointer to client connection. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> &gt;0 </tt></td>
+		<td>:</td>
+		<td> fail, will return the specific error code based on FTP
+specification. I.e.: 550. </td>
+
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Get pointer to DirNode object that point to
+'<tt>cmd_path</tt>' minus last-node. <br/>
+In example: if <tt>cmd_path</tt> is "<tt>../b/c</tt>", then
+<tt>_path_real</tt> in client attribute will become "<tt>/a/b/c</tt>" and
+<tt>_path_node</tt> will point to <tt>DirNode</tt> object to path
+"<tt>/a/b</tt>" and <tt>_path_base</tt> will contain only "<tt>c</tt>".
+	</td>
+</tr>
+</table>
+
+
+<h2><a name="class_cb"> FTPD Command Callback </a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Code</th><th>Name</th><th>Function Callback</th>
+</tr><tr>
+	<td> FTP_CMD_USER </td>
+	<td> USER </td>
+	<td><tt> static void on_cmd_USER(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_PASS</td>
+	<td> PASS</td>
+	<td><tt> static void on_cmd_PASS(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_SYST </td>
+	<td> SYST </td>
+	<td><tt> static void on_cmd_SYST(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_TYPE </td>
+	<td> TYPE </td>
+	<td><tt> static void on_cmd_TYPE(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_MODE </td>
+	<td> MODE </td>
+	<td><tt> static void on_cmd_MODE(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_STRU </td>
+	<td> STRU </td>
+	<td><tt> static void on_cmd_STRU(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_FEAT </td>
+	<td> FEAT </td>
+	<td><tt> static void on_cmd_FEAT(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_SIZE </td>
+	<td> SIZE </td>
+	<td><tt> static void on_cmd_SIZE(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_MDTM </td>
+	<td> MDTM </td>
+	<td><tt> static void on_cmd_MDTM(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_CWD </td>
+	<td> CWD </td>
+	<td><tt> static void on_cmd_CWD(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_CDUP </td>
+	<td> CDUP </td>
+	<td><tt> static void on_cmd_CDUP(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_PWD </td>
+	<td> PWD </td>
+	<td><tt> static void on_cmd_PWD(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_PASV </td>
+	<td> PASV </td>
+	<td><tt> static void on_cmd_PASV(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_LIST </td>
+	<td> LIST </td>
+	<td><tt> static void on_cmd_LIST(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_NLST </td>
+	<td> NLST </td>
+	<td><tt> static void on_cmd_NLST(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_RETR </td>
+	<td> RETR </td>
+	<td><tt> static void on_cmd_RETR(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_STOR </td>
+	<td> STOR </td>
+	<td><tt> static void on_cmd_STOR(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_DELE </td>
+	<td> DELE </td>
+	<td><tt> static void on_cmd_DELE(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_RNFR </td>
+	<td> RNFR </td>
+	<td><tt> static void on_cmd_RNFR(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_RNTO </td>
+	<td> RNTO </td>
+	<td><tt> static void on_cmd_RNTO(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_RMD </td>
+	<td> RMD </td>
+	<td><tt> static void on_cmd_RMD(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_MKD </td>
+	<td> MKD </td>
+	<td><tt> static void on_cmd_MKD(FTPD* s, FTPD_client* c) </tt></td>
+</tr><tr>
+	<td> FTP_CMD_QUIT </td>
+	<td> QUIT </td>
+	<td><tt> static void on_cmd_QUIT(FTPD* s, FTPD_client* c) </tt></td>
+</tr>
+</table>
+
+</body>
+</html>

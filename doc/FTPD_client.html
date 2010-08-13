@@ -1,0 +1,281 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> FTPD Client Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#FTPD_client::FTPD_client"><tt> FTPD_client::FTPD_client </tt></a></li>
+	<li><a href="#FTPD_client::~FTPD_client"><tt> FTPD_client::~FTPD_client </tt></a></li>
+	<li><a href="#FTPD_client::reset"><tt> FTPD_client::reset </tt></a></li>
+	<li><a href="#FTPD_client::reply"><tt> FTPD_client::reply </tt></a></li>
+	<li><a href="#FTPD_client::reply_raw"><tt> FTPD_client::reply_raw </tt></a></li>
+	<li><a href="#FTPD_client::ADD"><tt> FTPD_client::ADD </tt></a></li>
+	<li><a href="#FTPD_client::REMOVE"><tt> FTPD_client::REMOVE </tt></a></li>
+	</ul>
+</ul>
+
+
+<h2><a name="class_var">Class Variables</a></h2>
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td> int </td>
+	<td> _s </td>
+	<td> temporary variable for minimizing local variable. </td>
+</tr><tr>
+	<td> int </td>
+	<td> _conn_stat </td>
+	<td> status of client connection. </td>
+</tr><tr>
+	<td> FTPD_cmd </td>
+	<td> _cmd </td>
+	<td> current command send by client. </td>
+</tr><tr>
+	<td> FTPD_cmd</td>
+	<td> _cmd_last</td>
+	<td> last command send by client. </td>
+</tr><tr>
+	<td> Buffer </td>
+	<td> _wd </td>
+	<td> path to current working directory. </td>
+</tr><tr>
+	<td> DirNode* </td>
+	<td> _wd_node </td>
+	<td> pointer to node of directory object in Dir caches. </td>
+</tr><tr>
+	<td> Buffer </td>
+	<td> _path </td>
+	<td> path to a file/directory, as parsed from command parameter,
+based on the FTP root directory.
+	 </td>
+</tr><tr>
+	<td> Buffer </td>
+	<td> _path_base </td>
+	<td> basename of '<tt>_path</tt>'. </td>
+</tr><tr>
+	<td> Buffer </td>
+	<td> _path_real </td>
+	<td> a real path of '_path' in file system.</td>
+</tr><tr>
+	<td> DirNode* </td>
+	<td> _path_node </td>
+	<td> pointer to node object in Dir caches. </td>
+</tr><tr>
+	<td> Socket* </td>
+	<td> _sock </td>
+	<td> pointer to client connection. </td>
+</tr><tr>
+	<td> SockServer* </td>
+	<td> _psrv </td>
+	<td> pointer to PASsiVe server connection. </td>
+</tr><tr>
+	<td> Socket* </td>
+	<td> _pclt </td>
+	<td> pointer to PASsiVe client connection. </td>
+</tr><tr>
+	<td> const char* </td>
+	<td> _rmsg </td>
+	<td> pointer to client reply message. </td>
+</tr><tr>
+	<td> const char* </td>
+	<td> _rmsg_plus </td>
+	<td> pointer to client additional reply message. </td>
+</tr><tr>
+	<td> FTPD_client* </td>
+	<td> _next </td>
+	<td> pointer to the next client in the list. </td>
+</tr><tr>
+	<td> FTPD_client* </td>
+	<td> _prev </td>
+	<td> pointer to the previous client in the list.</td>
+</tr><tr>
+	<td> FTPD_client* </td>
+	<td> _last </td>
+	<td> pointer to the last client in the list. </td>
+</tr>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="FTPD_client::FTPD_client"><tt> FTPD_client::FTPD_client </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> FTPD_client(Socket* socket = NULL) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> socket </tt></td>
+	<td>:</td>
+	<td> pointer to client Socket connection. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> FTPD_client constructor. </td>
+</tr>
+</table>
+
+<h3><a name="FTPD_client::~FTPD_client"><tt> FTPD_client::~FTPD_client </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~FTPD_client() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> FTPD_client destructor. </td>
+</tr>
+</table>
+
+<h3><a name="FTPD_client::reset"><tt> FTPD_client::reset </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void reset() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Reset some attributes of this client object.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD_client::reply"><tt> FTPD_client::reply </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int reply() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Send message data in '<tt>_rmsg</tt>' and
+'<tt>_rmsg_plus</tt>' to client.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD_client::reply_raw"><tt> FTPD_client::reply_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int reply_raw(int code, const char* msg, const char* msg_add)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> code </tt></td>
+		<td>:</td>
+		<td> reply code. </td>
+	</tr><tr>
+		<td><tt> msg </tt></td>
+		<td>:</td>
+		<td> reply message. </td>
+	</tr><tr>
+		<td><tt> msg_add </tt></td>
+		<td>:</td>
+		<td> additional reply messages. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> &gt;=0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Send message data in '<tt>msg</tt>' and
+'<tt>msg_add</tt>' to client.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD_client::ADD"><tt> FTPD_client::ADD </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+static void ADD(FTPD_client** list, FTPD_client* client)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> list </tt></td>
+		<td>:</td>
+		<td> pointer to the list of FTPD_client objects.</td>
+	</tr><tr>
+		<td><tt> client </tt></td>
+		<td>:</td>
+		<td> pointer to the new FTPD_client object. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add '<tt>client</tt>' to the '<tt>list</tt>'.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD_client::REMOVE"><tt> FTPD_client::REMOVE </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+static void REMOVE(FTPD_client** list, FTPD_client* client)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> list </tt></td>
+		<td>:</td>
+		<td> pointer to the list of FTPD_client objects. </td>
+	</tr><tr>
+		<td><tt> client </tt></td>
+		<td>:</td>
+		<td> pointer to the FTPD_client object that will be removed
+from the '<tt>list</tt>'.
+		</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Remove '<tt>client</tt>' from '<tt>list</tt>' and
+delete the client object from memory, even if client is not found or not a
+member of the list.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

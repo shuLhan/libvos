@@ -1,0 +1,211 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> FTPD Command Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#FTPD_cmd::FTPD_cmd"><tt> FTPD_cmd::FTPD_cmd </tt></a></li>
+	<li><a href="#FTPD_cmd::~FTPD_cmd"><tt> FTPD_cmd::~FTPD_cmd </tt></a></li>
+	<li><a href="#FTPD_cmd::reset"><tt> FTPD_cmd::reset </tt></a></li>
+	<li><a href="#FTPD_cmd::set"><tt> FTPD_cmd::set </tt></a></li>
+	<li><a href="#FTPD_cmd::dump"><tt> FTPD_cmd::dump </tt></a></li>
+	<li><a href="#FTPD_cmd::INIT"><tt> FTPD_cmd::INIT </tt></a></li>
+	<li><a href="#FTPD_cmd::ADD"><tt> FTPD_cmd::ADD </tt></a></li>
+	</ul>
+</ul>
+
+<h2><a name="class_var">Class Variables</a></h2>
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td> int </td>
+	<td> _code </td>
+	<td> command code. </td>
+</tr><tr>
+	<td> Buffer </td>
+	<td> _name </td>
+	<td> command string name. </td>
+</tr><tr>
+	<td> Buffer </td>
+	<td> _parm </td>
+	<td> command parameter. </td>
+</tr><tr>
+	<td> void (*)(const void*, const void*) </td>
+	<td> callback </td>
+	<td> pointer to function callback. </td>
+</tr><tr>
+	<td> FTPD_cmd* </td>
+	<td> _next </td>
+	<td> pointer to the next command in the list. </td>
+</tr><tr>
+	<td> FTPD_cmd* </td>
+	<td> _last </td>
+	<td> pointer to the last command in the list. </td>
+</tr>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="FTPD_cmd::FTPD_cmd"><tt> FTPD_cmd::FTPD_cmd </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> FTPD_cmd() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> FTPD_cmd constructor. </td>
+</tr>
+</table>
+
+<h3><a name="FTPD_cmd::~FTPD_cmd"><tt> FTPD_cmd::~FTPD_cmd </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~FTPD_cmd() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> FTPD_cmd destructor. </td>
+</tr>
+</table>
+
+<h3><a name="FTPD_cmd::reset"><tt> FTPD_cmd::reset </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void reset() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Reset all attributes of object. </td>
+</tr>
+</table>
+
+<h3><a name="FTPD_cmd::set"><tt> FTPD_cmd::set </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void set(FTPD_cmd *cmd) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> cmd </tt></td>
+	<td>:</td>
+	<td> pointer to FTPD_cmd. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set attributes of this object using data from
+'<tt>cmd</tt>' object.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD_cmd::dump"><tt> FTPD_cmd::dump </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void dump() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Print content of this object to standard output. </td>
+</tr>
+</table>
+
+<h3><a name="FTPD_cmd::INIT"><tt> FTPD_cmd::INIT </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+static FTPD_cmd* INIT(const int code, const char* name, void
+(*callback)(const void*, const void*)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> code </tt></td>
+		<td>:</td>
+		<td> command code. </td>
+	</tr><tr>
+		<td><tt> name </tt></td>
+		<td>:</td>
+		<td> command name. </td>
+	</tr><tr>
+		<td><tt> callback </tt></td>
+		<td>:</td>
+		<td> pointer to function callback. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> FTPD_cmd* </tt></td>
+		<td>:</td>
+		<td> success, a new FTPD_cmd object created.</td>
+	</tr><tr>
+		<td><tt> NULL </tt></td>
+		<td>:</td>
+		<td>fail.</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create and initialize a new FTPD_cmd object.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD_cmd::ADD"><tt> FTPD_cmd::ADD </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+static void ADD(FTPD_cmd** cmds, FTPD_cmd* cmd_new)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> cmds </tt></td>
+		<td>:</td>
+		<td> pointer to the list of FTPD_cmd objects. </td>
+	</tr><tr>
+		<td><tt> cmd_new </tt></td>
+		<td>:</td>
+		<td> pointer to the new FTPD_cmd object. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new FTPD_cmd object, <tt>cmd_new</tt>, to the
+list <tt>cmds</tt>.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

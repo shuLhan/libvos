@@ -25,6 +25,10 @@ ul, ol {
 	margin		: 1em auto 1em auto;
 }
 
+li {
+	padding-top	: 8px;
+}
+
 table, tr {
 	border		: 1px solid silver;
 	width		: 100%;

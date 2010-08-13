@@ -43,9 +43,10 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/Resolver.oo		\
 			$(LIBVOS_BLD_D)/FTP.oo			\
 			$(LIBVOS_BLD_D)/FTPD.oo			\
-			$(LIBVOS_BLD_D)/FTPClient.oo		\
-			$(LIBVOS_BLD_D)/FTPCmd.oo		\
-			$(LIBVOS_BLD_D)/FTPUser.oo
+			$(LIBVOS_BLD_D)/FTPD_client.oo		\
+			$(LIBVOS_BLD_D)/FTPD_cmd.oo		\
+			$(LIBVOS_BLD_D)/FTPD_user.oo		\
+			$(LIBVOS_BLD_D)/FTP_command.oo
 
 #
 # with OCI library

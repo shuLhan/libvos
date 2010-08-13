@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -10,27 +10,6 @@ namespace vos {
 
 unsigned int FTP::PORT		= 21;
 unsigned int FTP::TIMEOUT	= 3;
-
-const char *_ftp_cmd[N_FTP_CMD] = {
-	"USER"	/* USER	username		*/
-,	"PASS"	/* PASS	password		*/
-,	"ACCT"	/* ACCT	username		*/
-,	"CWD" 	/* CWD	directory		*/
-,	"CDUP"	/* CDUP				*/
-,	"PASV"	/* PASV				*/
-,	"TYPE"	/* TYPE	[A|I]			*/
-,	"RETR"	/* RETR	/path/to/filename	*/
-,	"STOR"	/* STOR	/path/to/filename	*/
-,	"LIST"	/* LIST	[directory]		*/
-,	"NLST"	/* NLST	[directory]		*/
-,	"DELE"	/* DELE	/path/to/filename	*/
-,	"RNFR"	/* RNFR	/path/to/filename.old	*/
-,	"RNTO"	/* RNTO	/path/to/filename.new	*/
-,	"RMD"	/* RMD	directory		*/
-,	"MKD"	/* MKD	directory		*/
-,	"PWD"	/* PWD				*/
-,	"QUIT"	/* QUIT				*/
-};
 
 /**
  * @method	: FTP::FTP
@@ -118,17 +97,17 @@ int FTP::login(const char* username, const char* password)
 {
 	register int s;
 
-	s = send_cmd(_ftp_cmd[FTP_CMD_USER], username);
+	s = send_cmd(_FTP_cmd[FTP_CMD_USER], username);
 	if (s < 0) {
 		return -1;
 	}
 
-	s = send_cmd(_ftp_cmd[FTP_CMD_PASS], password);
+	s = send_cmd(_FTP_cmd[FTP_CMD_PASS], password);
 	if (s < 0) {
 		return -1;
 	}
 
-	s = send_cmd(_ftp_cmd[FTP_CMD_TYPE], "I");
+	s = send_cmd(_FTP_cmd[FTP_CMD_TYPE], "I");
 	if (s < 0) {
 		return -1;
 	}
@@ -143,7 +122,7 @@ int FTP::login(const char* username, const char* password)
 void FTP::logout()
 {
 	if (_status & FTP_STT_LOGGED_IN) {
-		send_cmd(_ftp_cmd[FTP_CMD_QUIT], NULL);
+		send_cmd(_FTP_cmd[FTP_CMD_QUIT], NULL);
 	}
 }
 
@@ -438,7 +417,7 @@ int FTP::do_pasv(const char* cmd, const char* parm, const char* out)
 	File	fout;
 	FTP	pasv;
 
-	s = send_cmd(_ftp_cmd[FTP_CMD_PASV], NULL);
+	s = send_cmd(_FTP_cmd[FTP_CMD_PASV], NULL);
 	if (s < 0) {
 		return -1;
 	}
@@ -460,7 +439,7 @@ int FTP::do_pasv(const char* cmd, const char* parm, const char* out)
 
 	if (out) {
 		s = fout.open_wo(out);
-	} else if (strncasecmp(cmd, _ftp_cmd[FTP_CMD_RETR], 4) == 0) {
+	} else if (strncasecmp(cmd, _FTP_cmd[FTP_CMD_RETR], 4) == 0) {
 		s = fout.open_wo(parm);
 	} else {
 		fout._d		= STDOUT_FILENO;
@@ -507,7 +486,7 @@ int FTP::do_put(const char* path)
 		return -1;
 	}
 
-	s = send_cmd(_ftp_cmd[FTP_CMD_PASV], NULL);
+	s = send_cmd(_FTP_cmd[FTP_CMD_PASV], NULL);
 	if (s < 0) {
 		return -1;
 	}
@@ -522,7 +501,7 @@ int FTP::do_put(const char* path)
 		return -1;
 	}
 
-	s = send_cmd(_ftp_cmd[FTP_CMD_STOR], path);
+	s = send_cmd(_FTP_cmd[FTP_CMD_STOR], path);
 	if (s < 0) {
 		return -1;
 	}
@@ -557,12 +536,12 @@ int FTP::do_rename(const char* from, const char* to)
 
 	register int s;
 
-	s = send_cmd(_ftp_cmd[FTP_CMD_RNFR], from);
+	s = send_cmd(_FTP_cmd[FTP_CMD_RNFR], from);
 	if (s < 0) {
 		return -1;
 	}
 
-	return send_cmd(_ftp_cmd[FTP_CMD_RNTO], to);
+	return send_cmd(_FTP_cmd[FTP_CMD_RNTO], to);
 }
 
 } /* namespace::vos */

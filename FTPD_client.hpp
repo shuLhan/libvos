@@ -9,24 +9,17 @@
 
 #include "Dir.hpp"
 #include "SockServer.hpp"
-#include "FTPCmd.hpp"
+#include "FTPD_cmd.hpp"
 
 namespace vos {
 
-enum _ftp_stat {
-	FTP_STT_DISCONNECT	= vos::FILE_OPEN_NO
-,	FTP_STT_CONNECTED	= O_RDWR
-,	FTP_STT_LOGGED_IN	= O_RDWR << 1
-,	FTP_STT_LOGGED_OUT	= O_RDWR << 2
-};
-
 /**
- * @class		: FTPClient
+ * @class		: FTPD_client
  * @attr		:
  *	- _s		: status of last command on this client.
  *	- _conn_stat	: status of client connection (see _ftp_stat).
- *	- _cmnd		: current command.
- *	- _cmnd_last	: last command.
+ *	- _cmd		: current command.
+ *	- _cmd_last	: last command.
  *	- _wd		: current working directory.
  *	- _wd_node	: pointer to DirNode object, of working directory.
  *	- _path		: path of command parameter.
@@ -43,19 +36,19 @@ enum _ftp_stat {
  * @desc		:
  * This class represent status and connection of FTP client on the server.
  */
-class FTPClient {
+class FTPD_client {
 public:
-	FTPClient(Socket* socket = NULL);
-	~FTPClient();
+	FTPD_client(Socket* socket = NULL);
+	~FTPD_client();
 
 	void reset();
-	void reply();
-	void reply_raw(int code, const char* msg, const char* msg_add);
+	int reply();
+	int reply_raw(int code, const char* msg, const char* msg_add);
 
 	int		_s;
 	int		_conn_stat;
-	FTPCmd		_cmnd;
-	FTPCmd		_cmnd_last;
+	FTPD_cmd	_cmd;
+	FTPD_cmd	_cmd_last;
 	Buffer		_wd;
 	DirNode*	_wd_node;
 	Buffer		_path;
@@ -67,14 +60,15 @@ public:
 	Socket*		_pclt;
 	const char*	_rmsg;
 	const char*	_rmsg_plus;
-	FTPClient*	_next;
-	FTPClient*	_last;
+	FTPD_client*	_next;
+	FTPD_client*	_prev;
+	FTPD_client*	_last;
 
-	static void ADD(FTPClient** list, FTPClient* client);
-	static void REMOVE(FTPClient** list, FTPClient* client);
+	static void ADD(FTPD_client** list, FTPD_client* client);
+	static void REMOVE(FTPD_client** list, FTPD_client* client);
 private:
-	FTPClient(const FTPClient&);
-	void operator=(const FTPClient&);
+	FTPD_client(const FTPD_client&);
+	void operator=(const FTPD_client&);
 };
 
 } /* namespace::vos */

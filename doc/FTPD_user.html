@@ -1,0 +1,195 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> FTPD User Module </h1>
+
+<ul class="toc">
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+	<li><a href="#FTPD_user::FTPD_user"><tt> FTPD_user::FTPD_user </tt></a></li>
+	<li><a href="#FTPD_user::~FTPD_user"><tt> FTPD_user::~FTPD_user </tt></a></li>
+	<li><a href="#FTPD_user::INIT"><tt> FTPD_user::INIT </tt></a></li>
+	<li><a href="#FTPD_user::ADD"><tt> FTPD_user::ADD </tt></a></li>
+	<li><a href="#FTPD_user::IS_EXIST"><tt> FTPD_user::IS_EXIST </tt></a></li>
+	</ul>
+</ul>
+<p>
+This module handle list of virtual user account on FTPD module. When using
+FTP server service, through FTPD module, you need a virtual account to let
+only authenticated user to log into your service. You must not use your
+system account when setting up and using a service in open protocol, like
+FTP.
+</p>
+
+
+<h2><a name="class_var">Class Variables</a></h2>
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td>_name</td>
+	<td>:</td>
+	<td>a user name for the service.</td>
+</tr><tr>
+	<td>_pass</td>
+	<td>:</td>
+	<td>a plain-text password for authenticating user into the service.</td>
+</tr><tr>
+	<td>_next</td>
+	<td>:</td>
+	<td>pointer to the next FTPD_user object.</td>
+</tr>
+</table>
+
+
+<h2><a name="class_method"> Class Methods </a></h2>
+
+<h3><a name="FTPD_user::FTPD_user"><tt> FTPD_user::FTPD_user </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> FTPD_user() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> FTPD_user constructor. </td>
+</tr>
+</table>
+
+<h3><a name="FTPD_user::~FTPD_user"><tt> FTPD_user::~FTPD_user </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~FTPD_user() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> FTPD_user destructor. </td>
+</tr>
+</table>
+
+<h3><a name="FTPD_user::INIT"><tt> FTPD_user::INIT </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+static int INIT(FTPD_user** user, const char* name, const char* pass)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> user </tt></td>
+		<td>:</td>
+		<td> output, a new FTPD_user object. </td>
+	</tr><tr>
+		<td><tt> name </tt></td>
+		<td>:</td>
+		<td> a user-name for new account. </td>
+	</tr><tr>
+		<td><tt> pass </tt></td>
+		<td>:</td>
+		<td> a identification string. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create and initialize a new user account.
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD_user::ADD"><tt> FTPD_user::ADD </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+static int ADD(FTPD_user** list, FTPD_user* acc)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> list </tt></td>
+		<td>:</td>
+		<td> pointer to the list of FTPD_user objects.</td>
+	</tr><tr>
+		<td><tt> user </tt></td>
+		<td>:</td>
+		<td> pointer to FTPD_user object that will be added to the
+'<tt>list</tt>'.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new account '<tt>acc</tt>'
+	</td>
+</tr>
+</table>
+
+<h3><a name="FTPD_user::IS_EXIST"><tt> FTPD_user::IS_EXIST </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+static int IS_EXIST(FTPD_user* users, Buffer* name, Buffer* pass = NULL)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> users </tt></td>
+		<td>:</td>
+		<td>a list of users.</td>
+	</tr><tr>
+		<td><tt> name </tt></td>
+		<td>:</td>
+		<td> a user name that will be checked in the list.</td>
+	</tr><tr>
+		<td><tt> pass </tt></td>
+		<td>:</td>
+		<td> option, password for user, default to <tt>NULL</tt>. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> false, user with '<tt>name</tt>' and/or '<tt>pass</tt>'
+is not exist in the list. </td>
+	</tr><tr>
+		<td><tt> 1 </tt></td>
+		<td>:</td>
+		<td> true, user with '<tt>name</tt>' and/or '<tt>pass</tt>'
+exist in the list. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Check for user name with name is <tt>name</tt> in
+the list of user <tt>list</tt>. If <tt>pass</tt> is not nil, also check for
+password if it's equal or not.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

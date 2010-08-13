@@ -1,0 +1,651 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<pre>
+@author: ms@kilabit.org
+
+-----------------------------------------------------------------------------
+ FTP Server Made Simple
+=============================================================================
+
+File Transfer Protocol is a mechanism to allow sharing of file from server
+to any client through a network, shield a client from variations of file
+system in server, and to transfer data reliably and efficiently.
+
+Traditionally, FTP only served file system in host where it run, but
+on today computing and technology, any hierarchical or tree like data can
+be served using FTP.
+
+FTP communication sometime use two channel or more, one for sending and
+receiving FTP command and others channel for transmitting data. This two way
+communication and with naked data transmission are disadvantages of FTP:
+opening some random port in server and receiving or accepting any data based
+only on the IP address of peer. With this security mindset you should know
+when to use and when not to use FTP.
+
+This article will try to explain how the simple FTP server could be
+implemented.
+
+
+-----------------------------------------------------------------------------
+ FTP Model
+=============================================================================
+
+Diagram of FTP service,
+
+	-	-	-	-	-	-	-	-
+                                            -------------
+                                            |/---------\|
+                                            ||   User  ||    --------
+                                            ||Interface|<--->| User |
+                                            |\----^----/|    --------
+                  ----------                |     |     |
+                  |/------\|  FTP Commands  |/----V----\|
+                  ||Server|<---------------->|   User  ||
+                  ||  PI  ||   FTP Replies  ||    PI   ||
+                  |\--^---/|                |\----^----/|
+                  |   |    |                |     |     |
+      --------    |/--V---\|      Data      |/----V----\|    --------
+      | File |<--->|Server|<---------------->|  User   |<--->| File |
+      |System|    || DTP  ||   Connection   ||   DTP   ||    |System|
+      --------    |\------/|                |\---------/|    --------
+                  ----------                -------------
+
+                  Server-FTP                   USER-FTP
+	-	-	-	-	-	-	-	-
+
+* server-PI
+
+  The server protocol interpreter "listens" on Port L for a connection
+  from a user-PI and establishes a control communication connection.  It
+  receives standard FTP commands from the user-PI, sends replies, and governs
+  the server-DTP.
+
+  In a normal and standard FTP server, server-PI listening on port 21.
+
+* user-PI
+
+  The user protocol interpreter initiates the control connection
+  to the server-FTP process, initiates FTP commands, and governs the
+  user-DTP if that process is part of the file transfer.
+
+* server-DTP
+
+  The data transfer port, in its normal "active" state. It sets up
+  parameters for transfer and storage, and transfers data on command from its
+  PI.
+
+  After server-PI receiving PASV command, server will listening on any port
+  greater than 1024, waiting for user-DTP.
+
+* user-DTP
+
+  The data transfer port establishes the data connection with server-DTP.
+  If two servers are transferring data between them, the user-DTP is
+  inactive.
+
+
+-----------------------------------------------------------------------------
+ How the FTP Server works.
+=============================================================================
+
+* FTP server is used to host file system on network.
+
+* FTP server listening on some port, the standard port is 21, waiting for
+  client.
+
+* FTP service can be authentication or can be anonymous mode.
+
+	In authentication mode, FTP server should not use any system
+	account for login. This is to minimize security break. FTP server can
+	create a virtual account so other user/client from another host can
+	login without exposing the real user name on the host system.
+
+	Anonymous mode is when FTP server can allow any user to login just
+	using 'anonymous' as user name and a format like email address for
+	password.
+
+
+-----------------------------------------------------------------------------
+ FTP Command
+=============================================================================
+
+* List of common FTP command.
+
+	+ RFC 959
+
+		- USER <SP> <username> <CRLF>
+		- PASS <SP> <password> <CRLF>
+		- SYST <CRLF>
+		- TYPE <SP> <type-code> <CRLF>
+		- MODE <SP> <mode-code> <CRLF>
+		- STRU <SP> <structure-code> <CRLF>
+		- CWD  <SP> <pathname> <CRLF>
+		- CDUP <CRLF>
+		- PASV <CRLF>
+		- RETR <SP> <pathname> <CRLF>
+		- STOR <SP> <pathname> <CRLF>
+		- LIST [<SP> <pathname>] <CRLF>
+		- NLST [<SP> <pathname>] <CRLF>
+		- DELE <SP> <pathname> <CRLF>
+		- RNFR <SP> <pathname> <CRLF>
+		- RNTO <SP> <pathname> <CRLF>
+		- RMD  <SP> <pathname> <CRLF>
+		- MKD  <SP> <pathname> <CRLF>
+		- PWD  <CRLF>
+		- QUIT <CRLF>
+
+	+ RFC 2389
+		- FEAT <CRLF>
+
+	+ RFC 3659
+
+		- SIZE <SP> <pathname> <CRLF>
+		- MDTM <SP> <pathname> <CRLF>
+
+
+	LIST, NLST, RETR, and STOR is a command that must be done with PASV
+	command. Those command need four process on client,
+
+	- client send a PASV command to the server,
+	- client connect to the server port based on PASV reply from server,
+	- client send a specified command to the server,
+	- client send/receive data transfer from DTP channel.
+
+
+-----------------------------------------------------------------------------
+ Common FTP Server Reply
+=============================================================================
+
+* 150	: Transfer begin.
+* 200	: Command okay.
+* 211	: List of server features.
+* 213	: File status, reply of SIZE and MDTM command.
+* 215	: Type of OS on the server.
+* 220	: User connected.
+* 221	: User logging out, disconnected from server.
+* 226	: End of data transfer.
+* 227	: PASV response from server.
+* 230	: User logged in.
+* 250	: File operation success.
+* 257	: File operation success.
+* 331	: User name is okay, continue with PASS command.
+* 350	: RNFR command accepted, continue with RNTO.
+* 421	: Server will closing their connection.
+* 425	: Cannot open DTP. If client issue a command that need DTP, but
+          client not opening DTP -- PASV command followed by client opening
+          DTP to server -- server will reply with this code.
+* 450	: File or directory not exist, or user have no access to the file.
+* 451	: Error in system while processing the command.
+* 501	: Syntax error in parameter.
+* 502	: Command not implemented.
+* 503	: Bad sequence of commands.
+* 530	: Not logged in.
+* 550	: File or directory not exist, or user have no access to the file.
+* 553	: File name not allowed.
+
+-----------------------------------------------------------------------------
+ FTP Command Sequences
+=============================================================================
+
+* Client Connecting Process
+
+	+ Command	: -
+	+ Parameter	: -
+	+ Server reply	:
+		- 220	: Server banner.
+	+ Description	:
+
+	If the server banner more than one line, then first message must be
+	using hyphen (or minus character) after the reply code, in example,
+
+		220-first line
+		second line
+		 444 a line beginning with number.
+		220 last line.
+
+	Or, the most recommended one is every line that is not last line
+	should be prefixed by a reply code + hyphen.
+
+		220-first line
+		220-second line
+		220-444 a line beginning with number.
+		220 last line
+
+* Login Process
+
+	+ Command	: USER
+	+ Parameter	: user-name on FTP server.
+	+ Server reply	:
+		- 230	: success, user logged in, no need to send PASS.
+		- 331	: success, continue with PASS command.
+		- 530	: fail, unknown user.
+
+	+ Command	: PASS
+	+ Parameter	: string to identified user.
+	+ Server reply	:
+		- 230	: success, user logged in.
+		- 503	: fail, bad sequence of command.
+		- 530	: fail, invalid user or password.
+
+* Querying FTP server OS name
+
+	+ Command	: SYST
+	+ Parameter	: -
+	+ Server reply	:
+		- 215	: success, format is,
+
+				215<SP><OS name><CRLF> 
+
+	+ Description	: ask for information about server's operating system.
+
+		The recommended way of OS name according to [6] is,
+
+			215 UNIX Type: L8
+
+		or, but not recommended, an output of `uname -o` command.
+
+		The SYSTem command is not mandatory, since it should not
+		affect on how FTP server behave or how client pass the
+		command to the server.
+
+* Setting Transfer Mode
+
+	+ Command	: TYPE
+	+ Parameter	:
+		- I	: for binary or Image transfer.
+		- A	: ASCII.
+		- E	: EBCDIC.
+	+ Server reply	:
+		- 200	: success.
+	+ Description	:
+
+		ASCII type was used to transfer text file, but since text
+		file is a subset of binary file, FTP server can use binary
+		type as default in any transfer.
+
+		EBCDIC type is obsolete.
+
+		In FTP-959 there is additional option after A and E, which
+		is N (Non-print), T (Telnet format), and C (Carriage
+		control). In FTPD all of those all ignored and considered
+		obsolete.
+
+		FTPD module only use the binary transfer, you cannot switch
+		or turn it off to other type.
+
+
+	+ Command	: MODE
+	+ Parameter	:
+		- S	: stream, data transmitted as a stream of bytes.
+		- B	: block, data transmitted as a series of blocks.
+		- C	: compressed.
+	+ Server reply	:
+		- 200	: success, mode is accepted.
+		- 504	: fail, mode is rejected.
+	+ Description	:
+
+		MODE is obsolete, all data transfer must default to S [6].
+
+
+	+ Command	: STRU
+	+ Parameter	:
+		- F	: File (no record structure)
+		- R	: Record structure
+		- P	: Page structure
+	+ Server reply	:
+		- 200	: success, structure is accepted by server.
+		- 504	: fail, structure is rejected by server.
+	+ Description	:
+
+		STRU is obsolete, structure should default to F [6].
+
+
+* Querying Server Additional Command [4]
+
+	+ Command	: FEAT
+	+ Parameter	: -
+	+ Server reply	:
+		- 211	: format of reply
+
+				211-<text><CRLF>
+				<SP><feature name><CRLF>
+				...
+				211<SP><text><CRLF>
+	+ Description	:
+
+		Example of reply messages,
+
+			S> 211-Extensions supported:
+			S>  MLST size*;create;modify*;perm;media-type
+			S>  SIZE
+			S>  COMPRESSION
+			S>  MDTM
+			S> 211 END
+
+* Querying Size of File on Server [5]
+
+	+ Command	: SIZE
+	+ Parameter	: /path/to/file
+	+ Server reply	:
+		- 213	: success, format is,
+
+				213<SP><size-of-file><CRLF>
+
+		- 501	: fail, syntax error in parameter or arguments.
+		- 550	: fail, path is not available, no access, etc.
+	+ Description	:
+
+		The FTP command, SIZE OF FILE (SIZE), is used to obtain the
+		transfer size of a file from the server-FTP process.  This is
+		the exact number of octets (8 bit bytes) that would be
+		transmitted over the data connection should that file be
+		transmitted.
+
+		Example of FEAT response for SIZE,
+
+			C> FEAT
+			S> 211- <any descriptive text>
+			S>  ...
+			S>  SIZE
+			S>  ...
+			S> 211 END
+
+* Querying Modification Time of File on Server [5]
+
+	+ Command	: MDTM
+	+ Parameter	: /path/to/file
+	+ Server reply	:
+		- 213	: success, format is,
+
+				213<SP><time-value><CRLF>
+
+		- 501	: fail, syntax error in parameter or arguments.
+		- 550	: fail, path is not available, no access, etc.
+	+ Description	:
+
+		The FTP command, MODIFICATION TIME (MDTM), can be used to
+		determine when a file in the server NVFS was last modified.
+
+		Symbolically, a time-value may be viewed as
+
+			YYYYMMDDHHMMSS.sss
+
+		The "." and subsequent digits ("sss") are optional.  However
+		the "." MUST NOT appear unless at least one following digit
+		also appears.
+
+		Time values are always represented in UTC (GMT), and in the
+		Gregorian calendar regardless of what calendar may have been
+		in use at the date and time indicated at the location of the
+		server-PI.
+
+* Change Working Directory
+
+	+ Command	: CWD
+	+ Parameter	: pathname
+	+ Server reply	:
+		- 250	: success.
+		- 501	: fail, syntax error in parameter or arguments.
+		- 550	: fail, path is not available.
+	+ Description	:
+
+		Change client working directory on the server to 'pathname'.
+
+* Change to Parent Directory
+
+	+ Command	: CDUP
+	+ Parameter	: -
+	+ Server reply	:
+		- 250	: success.
+	+ Description	:
+
+		Change client working directory on the server to parent
+		directory, or another way to send "CWD ..".
+
+* Print Working Directory
+
+	+ Command	: PWD
+	+ Parameter	: -
+	+ Server reply	:
+		- 257	: success, format is,
+
+			257<SP>"<pathname>"<CRLF>
+
+* Opening a new connection (DTP) on Server
+
+	+ Command	: PASV
+	+ Parameter	: -
+	+ Server reply	:
+		- 227	: success, format is,
+
+			227<SP>=<h1,h2,h3,h4,p1,p2><CRLF>
+
+		- 451	: fail, local error in processing.
+
+	+ Description	:
+
+		This command request the FTP server to opening random port on
+		server for data transfer.
+
+		h1, h2, h3, and h4 is the IP4 address of server and p1, p2 is
+		the port number ((p1 * 256) + p2)). Example, if server
+		listening on, 192.168.1.1:5000 then
+
+			p1 = 5000 / 256 = 19
+			p2 = 5000 % 256 = 136
+
+		and the reply message would become,
+
+			227 =192,168,1,1,19,136
+
+* Retrieving File from Remote to Local.
+
+	+ Command	: RETR
+	+ Parameter	: pathname
+	+ Server reply	:
+		- 150	: success, transfer begin.
+		- 226	: success, transfer end.
+		- 425	: fail, server cannot open data connection to client.
+		- 451	: fail, local error in processing.
+		- 501	: fail, RETR without parameter.
+	+ Description	:
+
+		This command is for getting a remote file to the local file
+		system. Sequence of commands,
+
+			C> SIZE /path/to/file
+			C> 213 size-of-file
+			C> PASV
+			S> 227 =(192,168,1,1,19,136)
+			C> opening data connection to 192.168.1.1:5000
+			C> RETR /path/to/file
+			S> 150
+			S> server send data through DTP
+			C> client retrieving data through DTP
+			S> 226
+			S> server close DTP
+			C> check retrieved data size and server file size.
+
+		Client will restart the transfer if file size if different.
+
+* Storing Local File to Remote System.
+
+	+ Command	: STOR
+	+ Parameter	: pathname
+	+ Server reply	:
+		- 150	: success, transfer begin.
+		- 226	: success, transfer end.
+		- 425	: fail, server cannot open data connection to client.
+		- 451	: fail, local error in processing.
+		- 501	: fail, RETR without parameter.
+	+ Description	:
+
+		Sequence of commands,
+
+			C> PASV
+			S> 227 =192,168,1,1,19,136
+			C> opening data connection to 192.168.1.1:5000
+			C> STOR /path/to/file
+			S> 150
+			C> send data through DTP
+			S> retrieving data through DTP
+			C> client close DTP
+			S> 226
+			C> SIZE /path/to/file
+			C> 213 size-of-file
+			C> check retrieved data size and server file size.
+
+		Client will restart the transfer if file size if different.
+
+* Listing all files in the server
+
+	There are two way of listing directory on server, LIST and NLST.
+
+	LIST will use a long listing format. The format could be
+	different between server.
+
+	NLST will use a simple format, which is only send the name of file.
+
+	Recommended format for LIST reply [6],
+
+		-rw-r--r-- 1 owner group           213 Aug 26 16:31 README
+
+	The line contains,
+
+		+ '-' for a regular file or 'd' for a directory;
+		+ the literal string 'rw-r--r-- 1 owner group' for a regular
+		  file, or 'rwxr-xr-x 1 owner group' for a directory;
+		+ the file size in decimal right-justified in a 13-byte
+		  field;
+		+ a three-letter month name, first letter capitalized;
+		+ a day number right-justified in a 3-byte field;
+		+ a space and a 2-digit hour number;
+		+ a colon and a 2-digit minute number;
+		+ a space and the abbreviated pathname of the file.
+
+	File names containing spaces, stars, hyphens, or slashes will be
+	misinterpreted by some clients, and must be omitted from the list. 
+
+	The month name, day number, hour number, and minute number express the
+	file's modification time in the server's local time zone. This creates
+	several obstacles to reliable mirroring.
+
+	The format shown above applies only to files modified in the last six
+	months. Other files show the year instead of the hour number and
+	minute number:
+
+		-rw-r--r-- 1 owner group          1383 Apr 10  1997 ip.c
+
+	Some servers (e.g., NetWare) set the cutoff at one year, making it
+	impossible for the client to reliably distinguish dates near the
+	cutoff from recent dates.
+
+	+ Command	: LIST / NLST
+	+ Parameter	:
+		- none	: no parameter, then server will send list of
+			  directory based on client CWD.
+		- pathname
+	+ Server reply	:
+		- 150	: success, transfer begin.
+		- 226	: success, transfer end.
+		- 425	: fail, no DTP.
+		- 450	: fail, pathname is not available or no access.
+
+	+ Description	:
+
+		Sequence of commands,
+
+			C> PASV
+			S> 227 =192,168,1,1,19,136
+			C> opening data connection to 192.168.1.1:5000
+			C> LIST /path/to/directory
+			S> 150
+			S> send data through DTP
+			C> retrieving data through DTP
+			C> close DTP
+			S> 226
+
+
+* Deleting file in the remote system
+
+	* Command	: DELE
+	* Parameter	: pathname
+	* Server reply	:
+		- 250	: success, file deleted.
+		- 501	: fail, invalid argument.
+		- 550	: fail, invalid path or file is not accesible.
+
+* Rename / moving file in the remote system
+
+	Renaming or moving a file in remote system, consisting of two command
+	operation. Beginning with RNFR and followed immediately by RNTO.
+
+	* Command	: RNFR
+	* Parameter	: pathname
+	* Server reply	:
+		- 350	: success, continue with RNTO.
+		- 501	: fail, parameter is empty or invalid.
+		- 550	: fail, invalid pathname.
+
+	* Command	: RNTO
+	* Parameter	: pathname
+	* Server reply	:
+		- 250	: success.
+		- 501	: fail, empty parameter.
+		- 503	: fail, last command is not RNFR.
+		- 550	: fail, invalid path or no access to path.
+		- 553	: fail, file name not allowed.
+
+	* Description	:
+
+		A complete sequence of commands,
+
+		C> RNFR /path/to/file
+		S> 350
+		C> RNTO /path/to/new-file-name
+		S> 250
+
+* Removing directory in the remote system
+
+	* Command	: RMD
+	* Parameter	: pathname
+	* Server reply	:
+		- 250	: success.
+		- 501	: fail, empty parameter.
+		- 550	: fail, invalid pathname or no access to directory,
+			  or directory is not empty.
+
+* Make a new directory.
+
+	* Command	: MKD
+	* Parameter	: pathname
+	* Server reply	:
+		- 257	: success.
+		- 501	: fail, empty parameter.
+		- 550	: fail, invalid pathname or no access to create
+			  directory.
+
+* Logging out.
+
+	* Command	: QUIT
+	* Parameter	: -
+	* Server reply	:
+		- 221	: Success.
+
+
+-----------------------------------------------------------------------------
+ References
+=============================================================================
+
+[1] RFC  765 - File Transfer Protocol
+[2] RFC  959 - File Transfer Protocol
+[3] RFC 1123 - Requirement for Internet Hosts - Application and Support
+[4] RFC 2389 - Feature negotiation mechanism for the File Transfer Protocol
+[5] RFC 3659 - Extensions to FTP
+[6] D.J.Bernstein, http://cr.yp.to/ftp
+</pre>
+</body>
+</html>

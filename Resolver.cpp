@@ -186,8 +186,9 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 		return 0;
 	}
 
-	int		s	= 0;
-	SockAddr*	server	= _servers;
+	int			s	= 0;
+	SockAddr*		server	= _servers;
+	struct sockaddr_in	addr;
 
 	if (question->_bfr_type == BUFFER_IS_TCP) {
 		s = question->to_udp();
@@ -231,7 +232,7 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 				continue;
 			}
 
-			s = (int) recv_udp(&server->_in);
+			s = (int) recv_udp(&addr);
 			if (s <= 0) {
 				return s;
 			}
@@ -263,7 +264,7 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 					, question->_name.v()
 					, answer->_name.v());
 				}
-				break;
+				continue;
 			}
 			if (question->_id != answer->_id) {
 				if (LIBVOS_DEBUG) {
@@ -273,6 +274,7 @@ int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
 				}
 				answer->set_id(question->_id);
 			}
+
 			return 0;
 		} while (_n_try < N_TRY);
 
@@ -315,6 +317,7 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 				, server->v());
 		}
 
+		/* send a question packet */
 		_n_try = 0;
 		_tcp.reset();
 
@@ -382,7 +385,7 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
 					, question->_name.v()
 					, answer->_name.v());
 				}
-				break;
+				continue;
 			}
 			if (question->_id != answer->_id) {
 				if (LIBVOS_DEBUG) {
