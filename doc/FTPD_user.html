@@ -7,6 +7,8 @@
 <h1> FTPD User Module </h1>
 
 <ul class="toc">
+<li><a href="#mod_dep"> Module Dependencies </a></li>
+<li><a href="#desc"> Description </a></li>
 <li><a href="#class_var"> Class Variables </a></li>
 <li><a href="#class_method"> Class Methods </a></li>
 	<ul>
@@ -17,6 +19,22 @@
 	<li><a href="#FTPD_user::IS_EXIST"><tt> FTPD_user::IS_EXIST </tt></a></li>
 	</ul>
 </ul>
+
+
+<h2><a name="mod_dep"> Module Dependencies </h2>
+<pre>
+   Buffer
+     *
+     |
+ FTPD_user
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+
+<h2><a name="desc"> Description </a></h2>
 <p>
 This module handle list of virtual user account on FTPD module. When using
 FTP server service, through FTPD module, you need a virtual account to let

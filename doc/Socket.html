@@ -7,6 +7,8 @@
 <h1> Socket Module </h1>
 
 <ul class="toc">
+<li><a href="#mod_dep"> Module Dependencies </a></li>
+<li><a href="#desc"> Description </a></li>
 <li><a href="#class_var"> Class Variables </a></li>
 <li><a href="#class_method"> Class Methods </a></li>
 	<ul>
@@ -22,6 +24,36 @@
 	<li><a href="#Socket::recv_udp"><tt> Socket::recv_udp </tt></a></li>
 	</ul>
 </ul>
+
+
+<h2><a name="mod_dep"> Module Dependencies </h2>
+<pre>
+   Buffer        File
+     *             ^
+     |             |
+ ....|.............|.....
+ .   |             |    .
+ . SockAddr *--- Socket .
+ .                      .
+ ........................
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+
+<h2><a name="desc"> Description </a></h2>
+<p>
+Socket is a module for creating socket. <br/>
+A Socket is a generalized interprocess communication channel. Like a pipe, a
+socket is represented as a file descriptor. Unlike pipes socket support
+communication between unrelated processes, and even between processes running
+on different machines that communicate over a network. Sockets are the
+primary means of communicating with other machines; telnet, rlogin, ftp, talk
+and other familiar network programs use sockets.
+</p>
+
 
 <h2><a name="class_var">Class Variables</a></h2>
 

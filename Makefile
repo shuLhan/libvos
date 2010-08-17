@@ -29,10 +29,10 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/Dlogger.oo		\
 			$(LIBVOS_BLD_D)/Config.oo		\
 			$(LIBVOS_BLD_D)/ConfigData.oo		\
+			$(LIBVOS_BLD_D)/RecordMD.oo		\
+			$(LIBVOS_BLD_D)/Record.oo		\
 			$(LIBVOS_BLD_D)/Reader.oo		\
 			$(LIBVOS_BLD_D)/Writer.oo		\
-			$(LIBVOS_BLD_D)/Record.oo		\
-			$(LIBVOS_BLD_D)/RecordMD.oo		\
 			$(LIBVOS_BLD_D)/Dir.oo			\
 			$(LIBVOS_BLD_D)/DirNode.oo		\
 			$(LIBVOS_BLD_D)/SockAddr.oo		\
@@ -41,12 +41,12 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/DNS_rr.oo		\
 			$(LIBVOS_BLD_D)/DNSQuery.oo		\
 			$(LIBVOS_BLD_D)/Resolver.oo		\
+			$(LIBVOS_BLD_D)/FTP_cmd.oo		\
 			$(LIBVOS_BLD_D)/FTP.oo			\
-			$(LIBVOS_BLD_D)/FTPD.oo			\
-			$(LIBVOS_BLD_D)/FTPD_client.oo		\
 			$(LIBVOS_BLD_D)/FTPD_cmd.oo		\
+			$(LIBVOS_BLD_D)/FTPD_client.oo		\
 			$(LIBVOS_BLD_D)/FTPD_user.oo		\
-			$(LIBVOS_BLD_D)/FTP_command.oo
+			$(LIBVOS_BLD_D)/FTPD.oo
 
 #
 # with OCI library

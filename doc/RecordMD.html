@@ -7,6 +7,8 @@
 <h1> DSV Record Meta-data Module </h1>
 
 <ul class="toc">
+<li><a href="#mod_dep"> Module Dependencies </a></li>
+<li><a href="#desc"> Description </a></li>
 <li><a href="#class_var"> Class Variables </a></li>
 <li><a href="#class_method"> Class Methods </a></li>
 	<ul>
@@ -18,6 +20,29 @@
 	<li><a href="#RecordMD::INIT_FROM_FILE"> RecordMD::INIT_FROM_FILE </a></li>
 	</ul>
 </ul>
+
+
+<h2><a name="mod_dep"> Module Dependencies </h2>
+<pre>
+   File
+    *
+    |
+ RecordMD
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+
+<h2><a name="desc"> Description </a></h2>
+<p>
+RecordMD (Record Meta-Data) hold each definition of records in DSV file.
+RecordMD describing how the record will be parsed later on DSV file. In
+example, does the record data started with single quote, double quote, or any
+single printable character; does a record use a separator between them or
+does it use a fixed position.
+</p>
 
 <h2><a name="class_var">Class Variables</a></h2>
 

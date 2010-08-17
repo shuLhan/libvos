@@ -7,12 +7,16 @@
 <h1>Config Module</h1>
 
 <ul class="toc"
-<li><a href="#format"> Format </a></li>
-	<ul>
-	<li><a href="#format::param"> Parameters </a></li>
-	<li><a href="#format::section"> Sections </a></li>
-	<li><a href="#format::comment"> Comments </a></li>
-	</ul>
+<li><a href="#mod_dep"> Module Dependencies </a></li>
+<li><a href="#desc"> Description </a></li>
+        <ul>
+        <li><a href="#format"> Format </a></li>
+	        <ul>
+        	<li><a href="#format::param"> Parameters </a></li>
+	        <li><a href="#format::section"> Sections </a></li>
+        	<li><a href="#format::comment"> Comments </a></li>
+	        </ul>
+        </ul>
 <li><a href="#class_var"> Class Variables </a></li>
 <li><a href="#class_method"> Class Methods </a></li>
 	<ul>
@@ -31,6 +35,25 @@
 	</ul>
 </ul>
 
+
+<h2><a name="mod_dep"> Module Dependencies </h2>
+<pre>
+     Buffer        File
+       ^             ^
+       |             |
+ ......|.............|.....
+ .     |             |    .
+ . ConfigData *--- Config .
+ .                        .
+ ..........................
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+
+<h2><a name="desc"> Description </a></h2>
 <p>
 Config module is a module for reading and writing
 <a href="http://en.wikipedia.org/wiki/INI_file"> INI file format.</a>
@@ -44,9 +67,9 @@ a different extension, such as "<tt>.CFG</tt>", "<tt>.conf</tt>", or
 "<tt>.TXT</tt>".
 </p>
 
-<h2><a name="format"> Format </a></h2>
+<h3><a name="format"> Format </a></h3>
 
-<h3><a name="format::param"> Parameters </a></h3>
+<h4><a name="format::param"> Parameters </a></h4>
 <p>
 The basic element contained in an INI file is the <em>parameter</em>.  Every
 parameter has a <em>key</em> and a <em>value</em>, delimited by an equals
@@ -92,7 +115,7 @@ will result in value of "<tt>text</tt>" not "<tt>&nbsp;&nbsp;&nbsp;ext</tt>".
 </ul>
 </p>
 
-<h3><a name="format::section"> Sections </a></h3>
+<h4><a name="format::section"> Sections </a></h4>
 <p>
 Parameters may be grouped into arbitrarily named sections. The section name
 appears on a line by itself, in square brackets ([ and ]). All parameters
@@ -108,7 +131,7 @@ Format of section,
 </p>
 
 
-<h3><a name="format::comment"> Comments </a></h3>
+<h4><a name="format::comment"> Comments </a></h4>
 <p>
 Semicolons (<tt>;</tt>) and number sign (<tt>#</tt>) indicate the start of a
 comment. Comments continue to the end of the line. Everything between the
@@ -122,6 +145,7 @@ Example of comment format,
 # another line of comment
 </pre>
 </p>
+
 
 <h2><a name="class_var">Class Variables</a></h2>
 <table class="class-var">

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -14,11 +14,11 @@ unsigned int OCIValue::DFLT_SIZE = 4000;
  * @method	: OCIValue::OCIValue
  * @desc	: OCIValue object constructor.
  */
-OCIValue::OCIValue() : Buffer(),
-	_t(0),
-	_p(0),
-	_bind(NULL),
-	_define(NULL)
+OCIValue::OCIValue() : Buffer()
+,	_t(0)
+,	_p(0)
+,	_bind(NULL)
+,	_define(NULL)
 {}
 
 OCIValue::~OCIValue()
@@ -41,7 +41,7 @@ OCIValue::~OCIValue()
  *	> len	: initial size of buffer.
  * @return	:
  *	< 0	: success.
- *	< <0	: fail.
+ *	< -1	: fail.
  * @desc	: initialize OCIValue object.
  */
 int OCIValue::init(const int pos, const int type, const int len)

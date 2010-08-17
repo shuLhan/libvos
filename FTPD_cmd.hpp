@@ -8,8 +8,7 @@
 #define	_LIBVOS_FTP_COMMAND_HPP	1
 
 #include <ctype.h>
-#include "Buffer.hpp"
-#include "FTP_command.hpp"
+#include "FTP_cmd.hpp"
 
 namespace vos {
 

@@ -7,6 +7,8 @@
 <h1> FTPD Module </h1>
 
 <ul class="toc">
+<li><a href="#mod_dep"> Module Dependencies </a></li>
+<li><a href="#desc"> Description </a></li>
 <li><a href="#class_var"> Class Variables </a></li>
 <li><a href="#class_method"> Class Methods </a></li>
 	<ul>
@@ -28,6 +30,33 @@
 	</ul>
 <li><a href="#class_cb"> FTPD Command Callback </a></li>
 </ul>
+
+
+<h2><a name="mod_dep"> Module Dependencies </h2>
+<pre>
+                                            Dir
+                                             *
+                                             |
+            .................................|............
+            .                                |           .
+            .   FTP_cmd *--- FTPD_cmd *--- FTPD_client -----* SockServer
+            .                                            .        ^
+            .                                            .        |
+  Buffer *----- FTPD_user *--------------- FTPD ------------------+
+            .                                            .
+            ..............................................
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+
+<h2><a name="desc"> Description </a></h2>
+<p>
+FTPD is a module for serving a file system or tree based hierarchy of data
+to the networks using File Transport Protocol (FTP).
+</p>
 
 
 <h2><a name="class_var">Class Variables</a></h2>

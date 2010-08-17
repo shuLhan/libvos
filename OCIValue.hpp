@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -13,20 +13,20 @@
 namespace vos {
 
 enum _oci_type {
-	OCI_T_VARCHAR	= 1,
-	OCI_T_NUMBER,
-	OCI_T_DATE,
-	OCI_T_RAW,
-	OCI_T_ROWID,
-	OCI_T_CHAR,
-	OCI_T_BINARY_FLOAT,
-	OCI_T_BINARY_DOUBLE,
-	OCI_T_TIMESTAMP,
-	OCI_T_TIMESTAMP_WITH_TZ,
-	OCI_T_TIMESTAMP_WITH_LTZ,
-	OCI_T_INTERVAL_Y_TO_M,
-	OCI_T_INTERVAL_D_TO_S,
-	OCI_T_UROWID
+	OCI_T_VARCHAR	= 1
+,	OCI_T_NUMBER
+,	OCI_T_DATE
+,	OCI_T_RAW
+,	OCI_T_ROWID
+,	OCI_T_CHAR
+,	OCI_T_BINARY_FLOAT
+,	OCI_T_BINARY_DOUBLE
+,	OCI_T_TIMESTAMP
+,	OCI_T_TIMESTAMP_WITH_TZ
+,	OCI_T_TIMESTAMP_WITH_LTZ
+,	OCI_T_INTERVAL_Y_TO_M
+,	OCI_T_INTERVAL_D_TO_S
+,	OCI_T_UROWID
 };
 
 /**
@@ -45,11 +45,11 @@ public:
 	OCIValue();
 	~OCIValue();
 
-	int init(const int pos, const int type = OCI_T_VARCHAR,
-			const int len = DFLT_SIZE);
+	int init(const int pos, const int type = OCI_T_VARCHAR
+		, const int len = DFLT_SIZE);
 
-	static OCIValue* INIT(const int pos, const int type = OCI_T_VARCHAR,
-				const int len = DFLT_SIZE);
+	static OCIValue* INIT(const int pos, const int type = OCI_T_VARCHAR
+				, const int len = DFLT_SIZE);
 
 	static inline OCIValue * NUMBER(const int pos) {
 		return OCIValue::INIT(pos, OCI_T_NUMBER, 22);
@@ -91,12 +91,12 @@ public:
 		return OCIValue::INIT(pos, OCI_T_UROWID, 3951);
 	}
 
-	static unsigned int DFLT_SIZE;
-
 	int		_t;
 	int		_p;
 	OCIBind		*_bind;
 	OCIDefine	*_define;
+
+	static unsigned int DFLT_SIZE;
 private:
 	OCIValue(const OCIValue&);
 	void operator=(const OCIValue&);

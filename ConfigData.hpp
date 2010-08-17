@@ -53,15 +53,15 @@ public:
 
 	void dump();
 
-	static int INIT(ConfigData** o, const int type, const char* data
-			, int len = 0);
-
 	int		_t;
 	ConfigData*	_value;
 	ConfigData*	_next_head;
 	ConfigData*	_last_head;
 	ConfigData*	_next_key;
 	ConfigData*	_last_key;
+
+	static int INIT(ConfigData** o, const int type, const char* data
+			, int len = 0);
 private:
 	ConfigData(const ConfigData&);
 	void operator=(const ConfigData&);

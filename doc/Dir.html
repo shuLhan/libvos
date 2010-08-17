@@ -7,24 +7,50 @@
 <h1><a name="dir"> Dir Module </a></h1>
 
 <ul class="toc">
-	<li><a href="#dir_var"> Dir Variables </a></li>
-	<li><a href="#dir_method"> Dir Methods </a></li>
-		<ul>
-		<li><a href="#Dir::Dir"> Dir::Dir </a></li>
-		<li><a href="#Dir::~Dir"> Dir::~Dir </a></li>
-		<li><a href="#Dir::open"> Dir::open </a></li>
-		<li><a href="#Dir::close"> Dir::close </a></li>
-		<li><a href="#Dir::find"> Dir::find </a></li>
-		<li><a href="#Dir::get_parent_path"> Dir::get_parent_path </a></li>
-		<li><a href="#Dir::get_list"> Dir::get_list </a></li>
-		<li><a href="#Dir::get_symlink"> Dir::get_symlink </a></li>
-		<li><a href="#Dir::get_node"> Dir::get_node </a></li>
-		<li><a href="#Dir::refresh_by_path"> Dir::refresh_by_path </a></li>
-		<li><a href="#Dir::dump"> Dir::dump </a></li>
-		<li><a href="#Dir::CREATE"> Dir::CREATE </a></li>
-		<li><a href="#Dir::CREATES"> Dir::CREATES </a></li>
-		</ul>
+<li><a href="#mod_dep"> Module Dependencies </a></li>
+<li><a href="#desc"> Description </a></li>
+<li><a href="#dir_var"> Dir Variables </a></li>
+<li><a href="#dir_method"> Dir Methods </a></li>
+	<ul>
+	<li><a href="#Dir::Dir"> Dir::Dir </a></li>
+	<li><a href="#Dir::~Dir"> Dir::~Dir </a></li>
+	<li><a href="#Dir::open"> Dir::open </a></li>
+	<li><a href="#Dir::close"> Dir::close </a></li>
+	<li><a href="#Dir::find"> Dir::find </a></li>
+	<li><a href="#Dir::get_parent_path"> Dir::get_parent_path </a></li>
+	<li><a href="#Dir::get_list"> Dir::get_list </a></li>
+	<li><a href="#Dir::get_symlink"> Dir::get_symlink </a></li>
+	<li><a href="#Dir::get_node"> Dir::get_node </a></li>
+	<li><a href="#Dir::refresh_by_path"> Dir::refresh_by_path </a></li>
+	<li><a href="#Dir::dump"> Dir::dump </a></li>
+	<li><a href="#Dir::CREATE"> Dir::CREATE </a></li>
+	<li><a href="#Dir::CREATES"> Dir::CREATES </a></li>
+	</ul>
 </ul>
+
+
+<h2><a name="mod_dep"> Module Dependencies </h2>
+<pre>
+   Buffer
+     *
+     |
+ ....|...............
+ .   |              .
+ . DirNode *--- Dir .
+ .                  .
+ ....................
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+
+<h2><a name="desc"> Description </a></h2>
+<p>
+Dir module is a module for listing and caching content of directory.
+</p>
+
 
 <h2><a name="dir_var"> Dir Variables </a></h2>
 <table class="class-var">

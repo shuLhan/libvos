@@ -5,7 +5,6 @@
 <body>
 <h1>Introduction</h1>
 <ul class="toc">
-	<li><a target="content" href="Introduction.html#moddep"> Module Dependencies</a></li>
 	<li><a target="content" href="Introduction.html#using"> Using libvos</a></li>
 	<ul>
 	<li><a target="content" href="Introduction.html#using_with_make"> Using libvos with (GNU) make</a></li>
@@ -23,7 +22,7 @@ more capabilities.
 </p>
 <p>
 libvos contain several modules that can be independent or dependable
-through class inheritance and include pragma.
+through class inheritance and <tt>include</tt> pragma.
 </p>
 <p>
 Current modules and features,
@@ -31,20 +30,20 @@ Current modules and features,
 <ul>
 <li>
 Buffer module, very easy and simple module for processing sequence of
-byte of data. In example: string or TCP packet.
+byte of data. In example: string or network packet.
 </li>
 <li>
-File module, module to talk to local ﬁle system, reading and writing ﬁle.
+File module, module to talk to local file system, reading and writing file.
 </li>
 <li>
-Dir module, module to talk to local ﬁle system, listing and caching directory
+Dir module, module to talk to local file system, listing and caching directory
 content.
 </li>
 <li>
 Reading and writing Delimited Separated Value (DSV) data.
 </li>
 <li>
-Reading and writing INI ﬁle format.
+Reading and writing INI file format.
 </li>
 <li>
 Socket module, talk to network using UDP or TCP socket.
@@ -53,60 +52,14 @@ Socket module, talk to network using UDP or TCP socket.
 FTP module, very easy and simple module to talk to FTP server.
 </li>
 <li>
-OCI module, Minimalist and simple module for sending a query to Oracle
-Database server and receiving query data.
-</li>
-<li>
-FTP server, module for serving ﬁle system or any hierarchy of data to
+FTP server, module for serving file system or any hierarchy of data to
 networks using FTP.
 </li>
+<li>
+OCI module, Minimalist and simple module for sending a query to Oracle
+Database server and receiving query data (not fully supported).
+</li>
 </ul>
-
-<p class="break"></p>
-
-<h2><a name="moddep">Module Dependencies</a></h2>
-<pre>
-            libvos
-               *
-               |
-     +----* Buffer *--------------------------------------+
-     |         ^                                          |
-     |         |                                          |
-     |       File *---------------------------------+     |
-     |         ^                                    |     |
-     |         |                                    |     |
-  DirNode      +--- Dlogger                         |     |
-     *         |                                    |     |
-     |         |                                    |     |
-    Dir        +--- Config ----* ConfigData --------|-----+
-     *         |                                    |     |
-     |         +--- Reader ----+                    |     |
-     |         |               |                    |     |
-     |         |               +------* RecordMD ---+     |
-     |         |               |                          |
-     |         |               +------* Record -----------+
-     |         |               |                          |
-     |         +--- Writer ----+                          |
-     |         |                                          |
-     |         |  +---* SocketAddr -----------------------+
-     |         |  |                                       |
-     |        Socket *---------+--------+                 |
-     |         ^               |        |                 |
-     |         |       +--* DNSQuery -------* DNS_rr -----+
-     |         |       |                |                 |
-     |         +--- Resolver            |                 |
-     |         |                        |                 |
-     |         |          +-----* FTPClient --* FTPCmd ---+
-     |         |          |                               |
-     |         +---- FTPD +---* FTPUser ------------------+
-     |         |                    |
-     |         +---- FTP            |
-     +------------------------------+
-
-Legend:
-^ : inheritance.
-* : include.
-</pre>
 
 <p class="break"></p>
 
@@ -157,8 +110,8 @@ and three common variable that will affect build process:
 <p>
 <tt>PRE_TARGET</tt> is a set of target that needed to exist/create/build
 before building <tt>TARGET_OBJS</tt> and <tt>TARGET</tt>. You must add your
-target to <tt>PRE_TARGET</tt> using '</tt>+=</tt>', and be careful by not
-replacing them using '<tt>=</tt>' because libvos already set target on
+target to <tt>PRE_TARGET</tt> using "</tt>+=</tt>", and be careful by not
+replacing them using "<tt>=</tt>" because libvos already set target on
 <tt>PRE_TARGET</tt> to create libvos build directory.
 </p>
 
@@ -176,7 +129,7 @@ dependencies for building the <tt>TARGET</tt>.
 </pre>
 <p>
 <b>NOTE</b>: You <em>must</em> always add
-'<tt>$(LIBVOS_BLD_D)/libvos.oo</tt>' to <tt>TARGET_OBJS</tt>.
+"<tt>$(LIBVOS_BLD_D)/libvos.oo</tt>" to <tt>TARGET_OBJS</tt>.
 </p>
 
 <li>Set your target (<tt>TARGET</tt>)</li>

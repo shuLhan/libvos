@@ -23,11 +23,11 @@ LDFLAGS_ADD	=
 
 do_compile=\
 	echo "[C] $@";\
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@;
 
 do_build=\
 	echo "[B] $@";\
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@;
 
 do_install=\
 	echo "[I] installing $(1) => $(2)";\
@@ -37,12 +37,12 @@ do_install=\
 do_link=\
 	echo "[S] linking $(1) => $(2)";\
 	rm -f $(2) 2&> /dev/null;\
-	ln -s $(1) $(2)
+	ln -s $(1) $(2);
 
 do_mkdir=\
 	echo "[M] mkdir $(1)";\
-	mkdir -p $(1)
+	mkdir -p $(1);
 
 do_rmdir=\
 	echo "[R] remove dir $(1)";\
-	rm -rf $(1)
+	rm -rf $(1);

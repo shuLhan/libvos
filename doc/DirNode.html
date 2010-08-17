@@ -7,27 +7,47 @@
 <h1><a name="dirnode"> DirNode Module </a></h1>
 
 <ul class="toc">
-	<li><a href="#dirnode_var"> DirNode Variables </a></li>
-	<li><a href="#dirnode_method"> DirNode Methods </a></li>
-		<ul>
-		<li><a href="#DirNode::DirNode"> DirNode::DirNode </a></li>
-		<li><a href="#DirNode::~DirNode"> DirNode::~DirNode </a></li>
-		<li><a href="#DirNode::get_attr"> DirNode::get_attr </a></li>
-		<li><a href="#DirNode::update_attr"> DirNode::update_attr </a></li>
-		<li><a href="#DirNode::update_child_attr"> DirNode::update_child_attr </a></li>
-		<li><a href="#DirNode::dump"> DirNode::dump </a></li>
-		<li><a href="#DirNode::is_dir"> DirNode::is_dir </a></li>
-		<li><a href="#DirNode::is_link"> DirNode::is_link </a></li>
-		<li><a href="#DirNode::is_file"> DirNode::is_file </a></li>
-		<li><a href="#DirNode::INIT"> DirNode::INIT </a></li>
-		<li><a href="#DirNode::GET_LINK_NAME"> DirNode::GET_LINK_NAME </a></li>
-		<li><a href="#DirNode::INSERT"> DirNode::INSERT </a></li>
-		<li><a href="#DirNode::INSERT_CHILD"> DirNode::INSERT_CHILD </a></li>
-		<li><a href="#DirNode::UNLINK"> DirNode::UNLINK </a></li>
-		<li><a href="#DirNode::REMOVE_CHILD_BY_NAME"> DirNode::REMOVE_CHILD_BY_NAME </a></li>
-		</ul>
+<li><a href="#mod_dep"> Module Dependencies </a></li>
+<li><a href="#desc"> Description </a></li>
+<li><a href="#dirnode_var"> DirNode Variables </a></li>
+<li><a href="#dirnode_method"> DirNode Methods </a></li>
+	<ul>
+	<li><a href="#DirNode::DirNode"> DirNode::DirNode </a></li>
+	<li><a href="#DirNode::~DirNode"> DirNode::~DirNode </a></li>
+	<li><a href="#DirNode::get_attr"> DirNode::get_attr </a></li>
+	<li><a href="#DirNode::update_attr"> DirNode::update_attr </a></li>
+	<li><a href="#DirNode::update_child_attr"> DirNode::update_child_attr </a></li>
+	<li><a href="#DirNode::dump"> DirNode::dump </a></li>
+	<li><a href="#DirNode::is_dir"> DirNode::is_dir </a></li>
+	<li><a href="#DirNode::is_link"> DirNode::is_link </a></li>
+	<li><a href="#DirNode::is_file"> DirNode::is_file </a></li>
+	<li><a href="#DirNode::INIT"> DirNode::INIT </a></li>
+	<li><a href="#DirNode::GET_LINK_NAME"> DirNode::GET_LINK_NAME </a></li>
+	<li><a href="#DirNode::INSERT"> DirNode::INSERT </a></li>
+	<li><a href="#DirNode::INSERT_CHILD"> DirNode::INSERT_CHILD </a></li>
+	<li><a href="#DirNode::UNLINK"> DirNode::UNLINK </a></li>
+	<li><a href="#DirNode::REMOVE_CHILD_BY_NAME"> DirNode::REMOVE_CHILD_BY_NAME </a></li>
+	</ul>
 </ul>
 
+
+<h2><a name="mod_dep"> Module Dependencies </h2>
+<pre>
+ Buffer
+   *
+   |
+ DirNode
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+
+<h2><a name="desc"> Description </a></h2>
+<p>
+DirNode class handling attributes and link of node.
+</p>
 
 <h2><a name="dirnode_var"> DirNode Variables </a></h2>
 <table class="class-var">

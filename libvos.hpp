@@ -8,7 +8,12 @@
 #define	_LIBVOS_MACRO_HPP	1
 
 #include <errno.h>
+#include <ctype.h>
+#include <limits.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 namespace vos {
 

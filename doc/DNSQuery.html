@@ -7,6 +7,8 @@
 <h1> DNS Query Module </h1>
 
 <ul class="toc">
+<li><a href="#mod_dep"> Module Dependencies </a></li>
+<li><a href="#desc"> Description </a></li>
 <li><a href="#class_var"> Class Variables </a></li>
 <li><a href="#class_method"> Class Methods </a></li>
 	<ul>
@@ -30,9 +32,31 @@
 	</ul>
 </ul>
 
+
+<h2><a name="mod_dep"> Module Dependencies </h2>
+<pre>
+  Buffer <--------+
+    ^             |
+    |             |
+ ...|.............|......
+ .  |             |     .
+ . DNS_rr *--- DNSQuery .
+ .                      .
+ ........................
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+
+<h2><a name="desc"> Description </a></h2>
+<p>
 DNS Query, implemented as <tt>DNSQuery</tt> class, represent packet of data
 that will be send or received back from DNS server. Each <tt>DNSQuery</tt>
-record contains several RR records (implemented as <tt>DNS_rr</tt> class).
+record contains several Resource Records (implemented as class
+<tt>DNS_rr</tt>).
+</p>
 
 
 <h2><a name="class_var">Class Variables</a></h2>

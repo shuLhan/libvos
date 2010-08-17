@@ -7,6 +7,8 @@
 <h1> DSV Reader Module </h1>
 
 <ul class="toc">
+<li><a href="#mod_dep"> Module Dependencies </a></li>
+<li><a href="#desc"> Description </a></li>
 <li><a href="#class_method"> Class Methods </a></li>
 	<ul>
 	<li><a href="#Reader::Reader"> Reader::Reader </a></li>
@@ -15,6 +17,29 @@
 	<li><a href="#Reader::read"> Reader::read </a></li>
 	</ul>
 </ul>
+
+
+<h2><a name="mod_dep"> Module Dependencies </h2>
+<pre>
+  Buffer        File *------+
+    ^            ^          |
+    |            |          |
+ ...|............|..........|........
+ .  |            |          |       .
+ . Record *--- Reader ---* RecordMD .
+ .                                  .
+ ....................................
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+
+<h2><a name="desc"> Description </a></h2>
+<p>
+Reader is a module for reading DSV file.
+</p>
 
 <h2><a name="class_method"> Class Methods </a></h2>
 

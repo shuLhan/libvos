@@ -1,0 +1,436 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<h1> ConfigData Module</h1>
+
+<ul class="toc">
+<li><a href="#mod_dep"> Module Dependencies </a></li>
+<li><a href="#desc"> Description </a></li>
+<li><a href="#class_var"> Class Variables </a></li>
+<li><a href="#class_method"> Class Methods </a></li>
+	<ul>
+        </ul>
+</ul>
+
+
+<h2><a name="mod_dep"> Module Dependencies </h2>
+<pre>
+   Buffer
+     ^
+     |
+ ConfigData
+
+Legend:
+^ : inheritance.
+* : include.
+</pre>
+
+
+<h2><a name="desc"> Description </a></h2>
+<p>
+ConfigData is a class that mapping all header, key, value, and comment from
+config file to the list of object in memory.
+</p>
+
+
+<h2><a name="class_var">Class Variables</a></h2>
+
+<table class="class-var">
+<tr>
+	<th>Type</th><th>Name</th><th>Description</th>
+</tr><tr>
+	<td> int </td>
+	<td> _t </td>
+	<td> type of object, valid values:
+		<ul>
+		<li><tt> CONFIG_T_NONE </tt>: (0) object is unset. </li>
+		<li><tt> CONFIG_T_HEAD </tt>: (1) object is a header. </li>
+		<li><tt> CONFIG_T_KEY </tt>: (2) object is a key. </li>
+		<li><tt> CONFIG_T_VALUE </tt>: (3) object is a value of key.  </li>
+		<li><tt> CONFIG_T_MISC </tt>: (4) object is a comments. </li>
+                </ul>
+	</td>
+</tr><tr>
+	<td> ConfigData* </td>
+	<td> _value </td>
+	<td> pointer to a config value. </td>
+</tr><tr>
+	<td> ConfigData* </td>
+	<td> _next_head </td>
+	<td> pointer to the next config header in the list. </td>
+</tr><tr>
+	<td> ConfigData* </td>
+	<td> _last_head </td>
+	<td> pointer to the last config header in the list. </td>
+</tr><tr>
+	<td> ConfigData* </td>
+	<td> _next_key </td>
+	<td> pointer to the next config key in the list. </td>
+</tr><tr>
+	<td> ConfigData* </td>
+	<td> _last_key </td>
+	<td> pointer to the last config key in the list. </td>
+</tr>
+</table>
+
+
+<h2><a name="class_method">Class Methods</a></h2>
+
+<h3><a name="ConfigData::ConfigData"><tt> ConfigData::ConfigData </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ConfigData() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> ConfigData constructor. </td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::~ConfigData"><tt> ConfigData::~ConfigData </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> ~ConfigData() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> ConfigData destructor. </td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::init"><tt> ConfigData::init </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int init(const int type, const char* data, int len = 0)
+	</td>
+</tr><tr>
+	<th rowspan="3">Parameter</th>
+		<td><tt> type </tt></td>
+		<td>:</td>
+		<td> type of config object. </td>
+	</tr><tr>
+		<td><tt> data </tt></td>
+		<td>:</td>
+		<td> pointer to config data, i.e: header name, key name,
+key value, or comments.
+		</td>
+	</tr><tr>
+		<td><tt> len </tt></td>
+		<td>:</td>
+		<td> length of data, in bytes, default to <tt>0</tt>. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Initialize ConfigData object with value from
+parameters.
+	</td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::add_head"><tt> ConfigData::add_head </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+void add_head(const ConfigData* head)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> head </tt></td>
+	<td>:</td>
+	<td> pointer to a ConfigData object contain header name. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new header to ConfigData list.
+	</td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::add_head_raw"><tt> ConfigData::add_head_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int add_head_raw(const char* head, int len = 0)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> head </tt></td>
+		<td>:</td>
+		<td> a new header name. </td>
+	</tr><tr>
+		<td><tt> len </tt></td>
+		<td>:</td>
+		<td> optional, length of "<tt>head</tt>" string. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new header to ConfigData list.
+	</td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::add_key"><tt> ConfigData::add_key </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+void add_key(const ConfigData* key)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> key </tt></td>
+	<td>:</td>
+	<td> pointer to ConfigData object contain a new key. </td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new key to the list.
+	</td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::add_key_raw"><tt> ConfigData::add_key_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int add_key_raw(const char* key, int len = 0)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> key </tt></td>
+		<td>:</td>
+		<td> key name. </td>
+	</tr><tr>
+		<td><tt> len </tt></td>
+		<td>:</td>
+		<td> optional, length of "<tt>key</tt>". </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a new key to the list.
+	</td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::add_value"><tt> ConfigData::add_value </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> int add_value(const ConfigData* value) </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> value </tt></td>
+	<td>:</td>
+	<td> pointer to ConfigData contain the value of a key. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set the value of the last key in the list.
+	</td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::add_value_raw"><tt> ConfigData::add_value_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int add_value_raw(const char* value, int len = 0)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> value </tt></td>
+		<td>:</td>
+		<td> value string. </td>
+	</tr><tr>
+		<td><tt> len </tt></td>
+		<td>:</td>
+		<td> optional, length of value. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set the value of the last key in the list.
+	</td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::add_misc"><tt> ConfigData::add_misc </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+void add_misc(const ConfigData* misc)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> misc </tt></td>
+	<td>:</td>
+	<td> pointer to ConfigData contain misc data.</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a comment, or any data to the list.
+	</td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::add_misc_raw"><tt> ConfigData::add_misc_raw </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int add_misc_raw(const char* misc, int len = 0)
+	</td>
+</tr><tr>
+	<th rowspan="2">Parameter</th>
+		<td><tt> misc </tt></td>
+		<td>:</td>
+		<td> miscellaneous data. </td>
+	</tr><tr>
+		<td><tt> len </tt></td>
+		<td>:</td>
+		<td> optional, length of "<tt>misc</tt". </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Add a comment or any data to the list.
+	</td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::dump"><tt> ConfigData::dump </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3"> void dump() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Print content of ConfigData and their descendent to
+standard output.
+	</td>
+</tr>
+</table>
+
+<h3><a name="ConfigData::INIT"><tt> ConfigData::INIT </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+static int INIT(ConfigData** o, const int type, const char* data <br/>
+	, int len = 0)
+	</td>
+</tr><tr>
+	<th rowspan="4"> Parameter </th>
+		<td><tt> o </tt></td>
+		<td>:</td>
+		<td> output, pointer to a new ConfigData object. </td>
+	</tr><tr>
+		<td><tt> type </tt></td>
+		<td>:</td>
+		<td> type for a new object. </td>
+	</tr><tr>
+		<td><tt> data </tt></td>
+		<td>:</td>
+		<td> content data for a new object. </td>
+	</tr><tr>
+		<td><tt> len </tt></td>
+		<td>:</td>
+		<td> optional, length of data. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Create and initialize a new ConfigData object.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

@@ -9,7 +9,7 @@
 
 #include <time.h>
 #include "DNSQuery.hpp"
-#include "SockServer.hpp"
+#include "Socket.hpp"
 
 namespace vos {
 
@@ -36,8 +36,7 @@ namespace vos {
  * @desc			:
  *
  *	module for translating hostname to IP address, by sending a DNS query
- *	to one of the server in the list of '_servers' using UDP or TCP
- *	protocol.
+ *	to one of the server in the list of '_servers' using UDP or TCP.
  */
 class Resolver : public Socket {
 public:

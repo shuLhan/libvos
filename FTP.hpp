@@ -11,7 +11,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include "FTP_command.hpp"
+#include "FTP_cmd.hpp"
 
 namespace vos {
 

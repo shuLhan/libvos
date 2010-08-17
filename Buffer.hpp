@@ -7,14 +7,6 @@
 #ifndef _LIBVOS_BUFFER_HPP
 #define	_LIBVOS_BUFFER_HPP	1
 
-#include <ctype.h>
-#include <errno.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "libvos.hpp"
 
 namespace vos {

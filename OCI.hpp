@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 kilabit.org
+ * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
  */
@@ -15,14 +15,14 @@ namespace vos {
 #define	OCI_DEF_ENV_MODE	(OCI_THREADED | OCI_OBJECT | OCI_EVENTS)
 
 enum _oci_errcode {
-	E_OCI_OK			= 0,
-	E_OCI_SUCC_WITH_INFO,
-	E_OCI_NEED_DATA,
-	E_OCI_NO_DATA,
-	E_OCI_NULL_HNDL,		/* 4 */
-	E_OCI_INVLD_HNDL,
-	E_OCI_STILL_EXEC,
-	E_OCI_CONT
+	E_OCI_OK		= 0
+,	E_OCI_SUCC_WITH_INFO
+,	E_OCI_NEED_DATA
+,	E_OCI_NO_DATA
+,	E_OCI_NULL_HNDL
+,	E_OCI_INVLD_HNDL
+,	E_OCI_STILL_EXEC
+,	E_OCI_CONT
 };
 
 /**
@@ -73,23 +73,23 @@ public:
 	void create_env();
 	void create_err();
 
-	int connect(const char *hostname, const char *service_name,
-			int port = OCI_DEF_PORT);
+	int connect(const char* hostname, const char* service_name
+			, int port = OCI_DEF_PORT);
 
-	int create_session(const char *conn, int conn_len = 0);
-	int create_session_pool(const char *conn, int conn_len = 0);
+	int create_session(const char* conn, int conn_len = 0);
+	int create_session_pool(const char* conn, int conn_len = 0);
 
-	int login(const char *username, const char *password,
-			const char *conn = NULL);
-	int login_new_session(const char *username, const char *password,
-				const char *conn = NULL);
-	int stmt_describe(const char *stmt);
-	int stmt_prepare(const char *stmt);
+	int login(const char* username, const char* password
+		, const char *conn = NULL);
+	int login_new_session(const char* username, const char* password
+				, const char* conn = NULL);
+	int stmt_describe(const char* stmt);
+	int stmt_prepare(const char* stmt);
 
-	int stmt_subscribe(void *callback);
+	int stmt_subscribe(void* callback);
 	void stmt_unsubscribe();
 
-	int stmt_execute(const char *stmt = 0);
+	int stmt_execute(const char* stmt = 0);
 	int  stmt_fetch();
 	void stmt_release();
 	void logout();
@@ -191,41 +191,41 @@ public:
 	const char* get_value(const int pos);
 	long get_value_number(const int pos);
 
-	int get_notification_type(void *descriptor, unsigned int *type);
+	int get_notification_type(void* descriptor, unsigned int *type);
 
-	int get_table_changes(void *descriptor);
-	int get_table_descriptor(int index, void **table_desc);
-	int get_table_operation(void *table_desc, unsigned int *operation);
-	int get_table_name(void *table_desc, char **table_name);
+	int get_table_changes(void* descriptor);
+	int get_table_descriptor(int index, void** table_desc);
+	int get_table_operation(void* table_desc, unsigned int* operation);
+	int get_table_name(void* table_desc, char** table_name);
 
-	int get_row_changes(void *table_d);
-	int get_row_change_descriptor(int index, void **rowd);
-	int get_row_change_op(void *rowd, unsigned int *op);
-	int get_row_change_id(void *rowd, char **rowid,
-				unsigned int *rowid_len);
+	int get_row_changes(void* table_d);
+	int get_row_change_descriptor(int index, void** rowd);
+	int get_row_change_op(void* rowd, unsigned int* op);
+	int get_row_change_id(void* rowd, char** rowid
+				, unsigned int* rowid_len);
 
 	int		_stat;
 	int		_env_mode;
 	int		_table_changes_n;
 	int		_row_changes_n;
-	OCIValue	**_v;
+	OCIValue**	_v;
 
 	int		_value_i;
 	int		_value_sz;
 
-	OCIEnv		*_env;
-	OCIError	*_err;
-	OCIServer	*_server;
-	OCISession	*_session;
-	OCISPool	*_spool;
-	OCISvcCtx	*_service;
-	OCIAuthInfo	*_auth;
-	OCIStmt		*_stmt;
-	OCIStmt		*_cursor;
-	OCIBind		*_cursor_bind;
-	OCISubscription	*_subscr;
-	OCIColl		*_table_changes;
-	OCIColl		*_row_changes;
+	OCIEnv*			_env;
+	OCIError*		_err;
+	OCIServer*		_server;
+	OCISession*		_session;
+	OCISPool*		_spool;
+	OCISvcCtx*		_service;
+	OCIAuthInfo*		_auth;
+	OCIStmt*		_stmt;
+	OCIStmt*		_cursor;
+	OCIBind*		_cursor_bind;
+	OCISubscription*	_subscr;
+	OCIColl*		_table_changes;
+	OCIColl*		_row_changes;
 
 private:
 	OCI(const OCI&);
@@ -245,7 +245,7 @@ private:
 	static int	_spool_inc;
 	static int	_stmt_cache_size;
 	static int	_spool_name_len;
-	static char	*_spool_name;
+	static char*	_spool_name;
 	static Buffer	_spool_conn_name;
 };
 

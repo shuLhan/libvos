@@ -239,7 +239,7 @@ void ConfigData::dump()
 	ConfigData*	h = this;
 	ConfigData*	k = NULL;
 
-	o.append_raw("[vos::ConfigDt] dump: ----------------------------\n");
+	o.append_raw("[vos::CnfgData] dump: ----------------------------\n");
 	while (h) {
 		o.aprint("[%s]\n", h->_v);
 
