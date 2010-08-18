@@ -134,8 +134,6 @@ int DNSQuery::to_tcp(const Buffer* udp)
 		size = (uint16_t)(_i - DNS_TCP_HDR_SIZE);
 		size = htons(size);
 		memcpy(_v, &size, DNS_TCP_HDR_SIZE);
-
-		dump_hex();
 	} else {
 		s = resize(udp->_i + DNS_TCP_HDR_SIZE);
 		if (s < 0) {

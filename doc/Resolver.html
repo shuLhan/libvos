@@ -18,9 +18,13 @@
 	<li><a href="#Resolver::dump"><tt> Resolver::dump </tt></a></li>
 	<li><a href="#Resolver::set_server"><tt> Resolver::set_server </tt></a></li>
 	<li><a href="#Resolver::add_server"><tt> Resolver::add_server </tt></a></li>
-	<li><a href="#Resolver::send_query_udp"><tt> Resolver::send_query_udp </tt></a></li>
-	<li><a href="#Resolver::send_query_tcp"><tt> Resolver::send_query_tcp </tt></a></li>
-	<li><a href="#Resolver::send_query"><tt> Resolver::send_query </tt></a></li>
+	<li><a href="#Resolver::rotate_server"><tt> Resolver::rotate_server </tt></a></li>
+	<li><a href="#Resolver::send_udp"><tt> Resolver::send_udp </tt></a></li>
+	<li><a href="#Resolver::recv_udp"><tt> Resolver::recv_udp </tt></a></li>
+	<li><a href="#Resolver::recv_tcp"><tt> Resolver::recv_tcp </tt></a></li>
+	<li><a href="#Resolver::resolve_udp"><tt> Resolver::resolve_udp </tt></a></li>
+	<li><a href="#Resolver::resolve_tcp"><tt> Resolver::resolve_tcp </tt></a></li>
+	<li><a href="#Resolver::resolve"><tt> Resolver::resolve </tt></a></li>
 	</ul>
 </ul>
 
@@ -55,10 +59,6 @@ using UDP or TCP.
 <table class="class-var">
 <tr>
 	<th>Type</th><th>Name</th><th>Description</th>
-</tr><tr>
-	<td> Socket </td>
-	<td> _tcp </td>
-	<td> Socket object for handling TCP connection. </td>
 </tr><tr>
 	<td> fd_set </td>
 	<td> _fd_all </td>
@@ -147,10 +147,17 @@ server when no reply from server after specific 'TIMEOUT' is reached.
 <table class="class-method">
 <tr>
 	<th>Code</th>
-	<td colspan="3"> int init() </td>
+	<td colspan="3"> int init(const int type = SOCK_DGRAM) </td>
 </tr><tr>
 	<th>Parameter</th>
-	<td>-</td>
+	<td><tt> type </tt></td>
+	<td>:</td>
+	<td> connection type, valid values:
+		<ul>
+		<li><tt> SOCK_DGRAM</tt> for UDP connection, or
+		<li><tt> SOCK_STREAM</tt> for TCP connection.
+		</ul>
+	</td>
 </tr><tr>
 	<th rowspan="2">Return Value</th>
 		<td><tt> 0 </tt></td>
@@ -243,12 +250,149 @@ by comma. I.e: "8.8.8.8, 8.8.4.4".
 </tr>
 </table>
 
-<h3><a name="Resolver::send_query_udp"><tt> Resolver::send_query_udp </tt></a></h3>
+<h3><a name="Resolver::rotate_server"><tt> Resolver::rotate_server </tt></a></h3>
 <table class="class-method">
 <tr>
 	<th>Code</th>
-	<td colspan="3"> int send_query_udp(DNSQuery* question, DNSQuery*
-answer) </td>
+	<td colspan="3"> void rotate_server() </td>
+</tr><tr>
+	<th>Parameter</th>
+	<td>-</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Switch or change parent server to the one in the
+list. </td>
+</tr>
+</table>
+
+
+<h3><a name="Resolver::send_udp"><tt> Resolver::send_udp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int send_udp(DNSQuery* question)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> question </tt></td>
+	<td>:</td>
+	<td> pointer to DNS packet that will be send to server.</td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Send DNS packet "<tt>question</tt>" to one of the
+parent server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Resolver::recv_udp"><tt> Resolver::recv_udp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int recv_udp(DNSQuery* answer)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> answer </tt></td>
+	<td>:</td>
+	<td> output, a DNS packet reply from parent server. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Receive DNS reply from parent server.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Resolver::send_tcp"><tt> Resolver::send_tcp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int send_tcp(DNSQuery* question)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> question </tt></td>
+	<td>:</td>
+	<td> pointer to DNS packet that will be send to parent server. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Send a DNS query packet to one of parent servers
+through TCP connection.
+	</td>
+</tr>
+</table>
+
+
+<h3><a name="Resolver::recv_tcp"><tt> Resolver::recv_tcp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int recv_tcp(DNSQuery* answer)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> answer </tt></td>
+	<td>:</td>
+	<td> output, a DNS packet reply from parent server. </td>
+</tr><tr>
+	<th rowspan="2">Return Value</th>
+		<td><tt> 0 </tt></td>
+		<td>:</td>
+		<td> success. </td>
+	</tr><tr>
+		<td><tt> -1 </tt></td>
+		<td>:</td>
+		<td> fail. </td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Receive a DNS reply from parent server through TCP
+channel. Note that, DNS packet will converted to UDP mode (without header
+length) even though it was from TCP.
+	</td>
+</tr>
+</table>
+
+<h3><a name="Resolver::resolve_udp"><tt> Resolver::resolve_udp </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+int resolve_udp(DNSQuery* question, DNSQuery* answer)
+	</td>
 </tr><tr>
 	<th rowspan="2">Parameter</th>
 		<td><tt> question </tt></td>
@@ -276,12 +420,13 @@ answer) </td>
 </tr>
 </table>
 
-<h3><a name="Resolver::send_query_tcp"><tt> Resolver::send_query_tcp </tt></a></h3>
+<h3><a name="Resolver::resolve_tcp"><tt> Resolver::resolve_tcp </tt></a></h3>
 <table class="class-method">
 <tr>
 	<th>Code</th>
-	<td colspan="3"> int send_query_tcp(DNSQuery* question, DNSQuery*
-answer) </td>
+	<td colspan="3">
+int resolve_tcp(DNSQuery* question, DNSQuery* answer)
+	</td>
 </tr><tr>
 	<th rowspan="2">Parameter</th>
 		<td><tt> question </tt></td>
@@ -309,11 +454,11 @@ converted to TCP packet.
 </tr>
 </table>
 
-<h3><a name="Resolver::send_query"><tt> Resolver::send_query </tt></a></h3>
+<h3><a name="Resolver::resolve"><tt> Resolver::resolve </tt></a></h3>
 <table class="class-method">
 <tr>
 	<th>Code</th>
-	<td colspan="3"> int send_query(DNSQuery* question, DNSQuery* answer) </td>
+	<td colspan="3"> int resolve(DNSQuery* question, DNSQuery* answer) </td>
 </tr><tr>
 	<th rowspan="2">Parameter</th>
 		<td><tt> question </tt></td>

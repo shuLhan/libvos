@@ -20,13 +20,13 @@ unsigned int Resolver::N_TRY		= 0;
  *	This constructor initialize RNG for DNS transaction ID.
  */
 Resolver::Resolver() : Socket()
-,	_tcp()
+,	_maxfd(0)
 ,	_fd_all()
 ,	_fd_read()
-,	_maxfd(0)
 ,	_n_try(0)
 ,	_timeout()
 ,	_servers(NULL)
+,	_p_server(NULL)
 {
 	srand((unsigned int) time(NULL));
 }
@@ -45,21 +45,20 @@ Resolver::~Resolver()
 
 /**
  * @method	: Resolver::init
+ * @type	:
+ *	> type	: connection type, valid values:
+ *			- SOCK_STREAM for TCP, and
+ *			- SOCK_DGRAM for UDP
  * @return	:
  *	< 0	: success.
  *	< -1	: fail.
  * @desc	: initialize Resolver object.
  */
-int Resolver::init()
+int Resolver::init(const int type)
 {
 	int s;
 
-	s = _tcp.create();
-	if (s != 0) {
-		return -1;
-	}
-
-	s = create_udp();
+	s = create(PF_INET, type);
 	if (s < 0) {
 		return -1;
 	}
@@ -67,10 +66,7 @@ int Resolver::init()
 	FD_ZERO(&_fd_all);
 	FD_ZERO(&_fd_read);
 	FD_SET(_d, &_fd_all);
-	FD_SET(_tcp._d, &_fd_all);
-
-	_maxfd = _d > _tcp._d ? _d : _tcp._d;
-	_maxfd++;
+	_maxfd = _d + 1;
 
 	return s;
 }
@@ -170,7 +166,211 @@ int Resolver::add_server(char* server_list)
 }
 
 /**
- * @method		: Resolver::send_query_udp
+ * @method	: Resolver::rotate_server
+ * @desc	: switch or change parent server to another one in the list.
+ */
+void Resolver::rotate_server()
+{
+	if (!_p_server) {
+		_p_server = _servers;
+	} else {
+		_p_server = _p_server->_next;
+		if (!_p_server) {
+			_p_server = _servers;
+		}
+	}
+}
+
+/**
+ * @method		: Resolver::send_udp
+ * @param		:
+ *	> question	: pointer to DNS in UDP packet
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
+ * @desc		: send 'question' to one of DNS server.
+ */
+int Resolver::send_udp(DNSQuery* question)
+{
+	if (!question || _type != SOCK_DGRAM) {
+		return -1;
+	}
+	if (!_servers) {
+		fprintf(stderr, "[vos::Resolver] send_udp: no server!\n");
+		return -1;
+	}
+
+	rotate_server();
+
+	if (LIBVOS_DEBUG) {
+		printf("[vos::Resolver] send_udp: server '%s' ...\n"
+			, _p_server->v());
+	}
+
+	int s;
+
+	if (question->_bfr_type == BUFFER_IS_TCP) {
+		s = question->to_udp();
+		if (s < 0) {
+			return -1;
+		}
+	}
+
+	s = (int) Socket::send_udp(&_p_server->_in, question);
+
+	return s;
+}
+
+/**
+ * @method		: Resolver::recv_udp
+ * @param		:
+ *	> answer	: output, pointer to DNS answer packet.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
+ * @desc		: receive DNS UDP packet from parent server.
+ */
+int Resolver::recv_udp(DNSQuery* answer)
+{
+	if (!answer || _type != SOCK_DGRAM) {
+		return -1;
+	}
+
+	register int		s;
+	struct sockaddr_in	addr;
+
+	s = (int) Socket::recv_udp(&addr);
+	if (s <= 0) {
+		return s;
+	}
+
+	answer->reset(DNSQ_DO_ALL);
+	answer->set(this);
+	answer->extract_header();
+	answer->extract_question();
+
+	s = 0;
+
+	if ((answer->_flag & RCODE_FLAG) != 0) {
+		if (LIBVOS_DEBUG) {
+			printf("[vos::Resolver] recv_udp: reply flag is zero.\n");
+		}
+		s = -1;
+	} else if (answer->_n_ans <= 0) {
+		if (LIBVOS_DEBUG) {
+			printf("[vos::Resolver] recv_udp: number of RR answer '%d'\n"
+				, answer->_n_ans);
+		}
+		s = -1;
+	}
+
+	return s;
+}
+
+/**
+ * @method		: Resolver::send_tcp
+ * @param		:
+ *	> question	: pointer to DNS packet that will be send.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
+ * @desc		: send query through TCP channel.
+ */
+int Resolver::send_tcp(DNSQuery* question)
+{
+	if (!question || _type != SOCK_STREAM) {
+		return -1;
+	}
+	if (!_servers) {
+		fprintf(stderr, "[vos::Resolver] send_tcp: no server!\n");
+		return -1;
+	}
+
+	rotate_server();
+
+	if (LIBVOS_DEBUG) {
+		printf("[vos::Resolver] send_tcp: server '%s' ...\n"
+			, _p_server->v());
+	}
+
+	int		s;
+	unsigned int	n = 0;
+
+	do {
+		s = connect_to(&_p_server->_in);
+		if (s < 0) {
+			rotate_server();
+			n++;
+		}
+	} while (s != 0 && n < N_TRY);
+
+	if (s < 0) {
+		fprintf(stderr
+		, "[vos::Resolver] send_tcp: cannot connect to server!\n");
+		return -1;
+	}
+
+	if (question->_bfr_type == BUFFER_IS_UDP) {
+		s = question->to_tcp();
+		if (s < 0) {
+			goto out;
+		}
+	}
+
+	reset();
+	s = (int) write(question);
+out:
+	shutdown(_d, 2);
+	return s;
+}
+
+/**
+ * @method		: Resolver::recv_tcp
+ * @param		:
+ *	> answer	: output, pointer to DNS packet reply from parent
+ *                        server.
+ * @return		:
+ *	< 0		: success.
+ *	< -1		: fail.
+ * @desc		: receive a reply from parent server through TCP
+ * channel. DNS packet will be converted to UDP mode, without header length.
+ */
+int Resolver::recv_tcp(DNSQuery* answer)
+{
+	if (!answer || _type != SOCK_STREAM) {
+		return -1;
+	}
+
+	int s;
+
+	s = read();
+	if (s <= 0) {
+		return -1;
+	}
+
+	answer->reset(DNSQ_DO_ALL);
+	answer->to_udp(this);
+	answer->extract_header();
+	answer->extract_question();
+
+	if ((answer->_flag & RCODE_FLAG) != 0) {
+		if (LIBVOS_DEBUG) {
+			printf("[vos::Resolver] recv_tcp: reply flag is zero.\n");
+		}
+		s = -1;
+	} else if (answer->_n_ans <= 0) {
+		if (LIBVOS_DEBUG) {
+			printf("[vos::Resolver] recv_tcp: number of RR answer '%d'\n"
+				, answer->_n_ans);
+		}
+		s = -1;
+	}
+
+	return s;
+}
+
+/**
+ * @method		: Resolver::resolve_udp
  * @param		:
  *	> question	: query to be send to server.
  *	> answer	: return value, answer from server.
@@ -180,112 +380,74 @@ int Resolver::add_server(char* server_list)
  * @desc		:
  *	send 'question' to server to get an 'answer' using UDP protocol.
  */
-int Resolver::send_query_udp(DNSQuery* question, DNSQuery* answer)
+int Resolver::resolve_udp(DNSQuery* question, DNSQuery* answer)
 {
-	if (!question) {
+	if (!question || _type != SOCK_DGRAM) {
 		return 0;
 	}
 
-	int			s	= 0;
-	SockAddr*		server	= _servers;
-	struct sockaddr_in	addr;
+	int s = 0;
 
-	if (question->_bfr_type == BUFFER_IS_TCP) {
-		s = question->to_udp();
-		if (s < 0) {
-			return -1;
-		}
+	s = send_udp(question);
+	if (s < 0) {
+		return -1;
 	}
 
-	while (server) {
-		if (LIBVOS_DEBUG) {
-			printf("[vos::Resolver] send_query_udp: '%s' ...\n"
-				, server->v());
-		}
+	_n_try = 0;
 
-		_n_try = 0;
-		reset();
+	do {
+		_fd_read		= _fd_all;
+		_timeout.tv_sec		= TIMEOUT;
+		_timeout.tv_usec	= 0;
 
-		s = (int) send_udp(&server->_in, question);
+		s = select(_maxfd, &_fd_read, NULL, NULL, &_timeout);
 		if (s < 0) {
-			server = server->_next;
+			if (EINTR == errno) {
+				return -1;
+			}
+		}
+		if (0 == s || 0 == FD_ISSET(_d, &_fd_read)) {
+			++_n_try;
+			if (LIBVOS_DEBUG) {
+				printf(
+"[vos::Resolver] resolve_udp: timeout...(%d)\n", _n_try);
+			}
 			continue;
 		}
 
-		do {
-			_fd_read		= _fd_all;
-			_timeout.tv_sec		= TIMEOUT;
-			_timeout.tv_usec	= 0;
+		s = recv_udp(answer);
+		if (s < 0) {
+			continue;
+		}
 
-			s = select(_maxfd, &_fd_read, NULL, NULL, &_timeout);
-			if (s < 0) {
-				if (EINTR == errno) {
-					goto intr;
-				}
-			}
-			if (0 == s || 0 == FD_ISSET(_d, &_fd_read)) {
-				++_n_try;
-				if (LIBVOS_DEBUG) {
-					printf(
-"[vos::Resolver] send_query_udp: timeout...(%d)\n", _n_try);
-				}
-				continue;
-			}
-
-			s = (int) recv_udp(&addr);
-			if (s <= 0) {
-				return s;
-			}
-
-			answer->reset(DNSQ_DO_ALL);
-			answer->set(this);
-			answer->extract_header();
-			answer->extract_question();
-
-			if ((answer->_flag & RCODE_FLAG) != 0) {
-				if (LIBVOS_DEBUG) {
-					printf(
-"[vos::Resolver] send_query_udp: reply flag is zero.\n");
-				}
-				break;
-			}
-			if (answer->_n_ans <= 0) {
-				if (LIBVOS_DEBUG) {
-					printf(
-"[vos::Resolver] send_query_udp: number of RR answer '%d'\n", answer->_n_ans);
-				}
-				break;
-			}
-			s = question->_name.like(&answer->_name);
-			if (s != 0) {
-				if (LIBVOS_DEBUG) {
-					printf(
-"[vos::Resolver] send_query_udp: mismatch name [Q:%s] vs [A:%s]\n"
+		s = question->_name.like(&answer->_name);
+		if (s != 0) {
+			if (LIBVOS_DEBUG) {
+				printf(
+"[vos::Resolver] resolve_udp: mismatch name [Q:%s] vs [A:%s]\n"
 					, question->_name.v()
 					, answer->_name.v());
-				}
-				continue;
 			}
-			if (question->_id != answer->_id) {
-				if (LIBVOS_DEBUG) {
-					printf(
-"[vos::Resolver] send_query_udp: mismatch ID [Q:%d] vs [A:%d]\n"
+			continue;
+		}
+
+		if (question->_id != answer->_id) {
+			if (LIBVOS_DEBUG) {
+				printf(
+"[vos::Resolver] resolve_udp: mismatch ID [Q:%d] vs [A:%d]\n"
 					, question->_id, answer->_id);
-				}
-				answer->set_id(question->_id);
 			}
+			answer->set_id(question->_id);
+		}
 
-			return 0;
-		} while (_n_try < N_TRY);
+		return 0;
+	} while (_n_try < N_TRY);
 
-		server = server->_next;
-	}
-intr:
 	return -1;
 }
 
 /**
- * @method		: Resolver::send_query_tcp
+ * @method		: Resolver::resolve_tcp
  * @param		:
  *	> question	: query to be send to server.
  *	> answer	: return value, answer from server.
@@ -295,116 +457,73 @@ intr:
  * @desc		:
  *	send 'question' to server to get an 'answer' using TCP protocol.
  */
-int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
+int Resolver::resolve_tcp(DNSQuery* question, DNSQuery* answer)
 {
-	if (!question) {
+	if (!question || _type != SOCK_STREAM) {
 		return -1;
 	}
 
-	int		s	= 0;
-	SockAddr*	server	= _servers;
+	int s = 0;
 
-	if (question->_bfr_type == BUFFER_IS_UDP) {
-		s = question->to_tcp();
-		if (s < 0) {
-			return -1;
-		}
+	s = send_tcp(question);
+	if (s < 0) {
+		return -1;
 	}
 
-	while (server) {
-		if (LIBVOS_DEBUG) {
-			printf("[vos::Resolver] send_query_tcp: '%s' ...\n"
-				, server->v());
-		}
+	_n_try = 0;
 
-		/* send a question packet */
-		_n_try = 0;
-		_tcp.reset();
+	do {
+		_fd_read		= _fd_all;
+		_timeout.tv_sec		= TIMEOUT;
+		_timeout.tv_usec	= 0;
 
-		s = _tcp.connect_to(&server->_in);
+		s = select(_maxfd, &_fd_read, NULL, NULL, &_timeout);
 		if (s < 0) {
-			server = server->_next;
-			continue;
-		}
-
-		s = _tcp.write(question);
-		if (s < 0) {
-			server = server->_next;
-			continue;
-		}
-
-		do {
-			_fd_read		= _fd_all;
-			_timeout.tv_sec		= TIMEOUT;
-			_timeout.tv_usec	= 0;
-
-			s = select(_maxfd, &_fd_read, NULL, NULL, &_timeout);
-			if (s < 0) {
-				if (EINTR == errno) {
-					return -1;
-				}
-			}
-			if (0 == s || !FD_ISSET(_tcp._d, &_fd_read)) {
-				++_n_try;
-				if (LIBVOS_DEBUG) {
-					printf(
-"[vos::Resolver] send_query_tcp: timeout...(%d)\n", _n_try);
-				}
-				continue;
-			}
-
-			s = _tcp.read();
-			if (s <= 0) {
+			if (EINTR == errno) {
 				return -1;
 			}
-
-			answer->reset(DNSQ_DO_ALL);
-			answer->to_udp(&_tcp);
-			answer->extract_header();
-			answer->extract_question();
-
-			if ((answer->_flag & RCODE_FLAG) != 0) {
-				if (LIBVOS_DEBUG) {
-					printf(
-"[vos::Resolver] send_query_tcp: reply flag is zero.\n");
-				}
-				break;
+		}
+		if (0 == s || !FD_ISSET(_d, &_fd_read)) {
+			++_n_try;
+			if (LIBVOS_DEBUG) {
+				printf(
+"[vos::Resolver] resolve_tcp: timeout...(%d)\n", _n_try);
 			}
-			if (answer->_n_ans <= 0) {
-				if (LIBVOS_DEBUG) {
-					printf(
-"[vos::Resolver] send_query_tcp: number of RR answer '%d'\n", answer->_n_ans);
-				}
-				break;
-			}
-			s = question->_name.like(&answer->_name);
-			if (s != 0) {
-				if (LIBVOS_DEBUG) {
-					printf(
-"[vos::Resolver] send_query_tcp: mismatch name [Q:%s] vs [A:%s]\n"
+			continue;
+		}
+
+		s = recv_tcp(answer);
+		if (s < 0) {
+			continue;
+		}
+
+		s = question->_name.like(&answer->_name);
+		if (s != 0) {
+			if (LIBVOS_DEBUG) {
+				printf(
+"[vos::Resolver] resolve_tcp: mismatch name [Q:%s] vs [A:%s]\n"
 					, question->_name.v()
 					, answer->_name.v());
-				}
-				continue;
 			}
-			if (question->_id != answer->_id) {
-				if (LIBVOS_DEBUG) {
-					printf(
-"[vos::Resolver] send_query_tcp: mismatch ID [Q:%d] vs [A:%d]\n"
-					, question->_id, answer->_id);
-				}
-				answer->set_id(question->_id);
-			}
-			return 0;
-		} while (_n_try < N_TRY);
+			continue;
+		}
 
-		server = server->_next;
-	}
+		if (question->_id != answer->_id) {
+			if (LIBVOS_DEBUG) {
+				printf(
+"[vos::Resolver] resolve_tcp: mismatch ID [Q:%d] vs [A:%d]\n"
+					, question->_id, answer->_id);
+			}
+			answer->set_id(question->_id);
+		}
+		return 0;
+	} while (_n_try < N_TRY);
+
 	return -1;
 }
 
 /**
- * @method		: Resolver::send_query
+ * @method		: Resolver::resolve
  * @param		:
  *	> question	: query to be send to server.
  *	> answer	: return value, answer from server.
@@ -416,18 +535,18 @@ int Resolver::send_query_tcp(DNSQuery* question, DNSQuery* answer)
  *	of sending query, query send using protocol based on type of buffer in
  *	'question'.
  */
-int Resolver::send_query(DNSQuery* question, DNSQuery* answer)
+int Resolver::resolve(DNSQuery* question, DNSQuery* answer)
 {
-	if (!question) {
-		return 0;
+	if (!question || !answer) {
+		return -1;
 	}
 
 	register int s;
 
-	if (question->_bfr_type == BUFFER_IS_TCP) {
-		s = send_query_tcp(question, answer);
+	if (_type == SOCK_STREAM) {
+		s = resolve_tcp(question, answer);
 	} else {
-		s = send_query_udp(question, answer);
+		s = resolve_udp(question, answer);
 	}
 
 	return s;

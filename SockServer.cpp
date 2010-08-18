@@ -309,14 +309,18 @@ void SockServer::remove_client(Socket* client)
 
 	lock_client();
 
-	if (! client->_prev && client == _clients) {
-		_clients	= _clients->_next;
-		_clients->_prev	= NULL;
+	if (client == _clients) {
+		_clients = _clients->_next;
+		if (_clients) {
+			_clients->_prev	= NULL;
+		}
 	} else {
-		client->_prev->_next = client->_next;
-	}
-	if (client->_next) {
-		client->_next->_prev = client->_prev;
+		if (client->_prev) {
+			client->_prev->_next = client->_next;
+		}
+		if (client->_next) {
+			client->_next->_prev = client->_prev;
+		}
 	}
 
 	client->_next = NULL;

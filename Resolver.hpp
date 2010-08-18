@@ -16,10 +16,9 @@ namespace vos {
 /**
  * @class			: Resolver
  * @attr			:
- *	- _tcp			: Socket object for handling TCP connection.
+ *	- _maxfd		: maximum descriptor in this object.
  *	- _fd_all		: collection of all open descriptor.
  *	- _fd_read		: temporary collection.
- *	- _maxfd		: maximum descriptor in this object.
  *	- _n_try		: temporary counter.
  *	- _timeout		: temporary data for storing timeout value.
  *	- _servers		: list of parent DNS server addresses.
@@ -43,22 +42,29 @@ public:
 	Resolver();
 	~Resolver();
 
-	int init();
+	int init(const int type = SOCK_DGRAM);
 	void dump();
 	int set_server(char* server_list);
 	int add_server(char* server_list);
+	void rotate_server();
 
-	int send_query_udp(DNSQuery* question, DNSQuery* answer);
-	int send_query_tcp(DNSQuery* question, DNSQuery* answer);
-	int send_query(DNSQuery* question, DNSQuery* answer);
+	int send_udp(DNSQuery* question);
+	int recv_udp(DNSQuery* answer);
 
-	Socket		_tcp;
+	int send_tcp(DNSQuery* question);
+	int recv_tcp(DNSQuery* answer);
+
+	int resolve_udp(DNSQuery* question, DNSQuery* answer);
+	int resolve_tcp(DNSQuery* question, DNSQuery* answer);
+	int resolve(DNSQuery* question, DNSQuery* answer);
+
+	int		_maxfd;
 	fd_set		_fd_all;
 	fd_set		_fd_read;
-	int		_maxfd;
 	unsigned int	_n_try;
 	struct timeval	_timeout;
 	SockAddr*	_servers;
+	SockAddr*	_p_server;
 
 	static unsigned int PORT;
 	static unsigned int UDP_PACKET_SIZE;

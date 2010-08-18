@@ -18,6 +18,7 @@ namespace vos {
  * @class			: Socket
  * @attr			:
  *	- _family		: group or namespace this socket belong to.
+ *	- _type			: type of socket (SOCK_STREAM, SOCK_DGRAM)
  *	- _next			: pointer to the next client object.
  *	- _prev			: pointer to the previous client object.
  *	- DFLT_BUFFER_SIZE	: static, default size of buffer object.
@@ -46,6 +47,7 @@ public:
 	long int recv_udp(struct sockaddr_in* addr);
 
 	int	_family;
+	int	_type;
 	Socket*	_next;
 	Socket*	_prev;
 

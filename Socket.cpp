@@ -18,6 +18,7 @@ unsigned int Socket::DFLT_BUFFER_SIZE = 65536;
  */
 Socket::Socket(const int bfr_size) : File(bfr_size)
 ,	_family(0)
+,	_type(0)
 ,	_next(NULL)
 ,	_prev(NULL)
 {
@@ -50,6 +51,8 @@ int Socket::create(const int family, const int type)
 	}
 
 	_family	= family;
+	_type	= type;
+
 	if (type == SOCK_STREAM) {
 		_status = FILE_OPEN_NO;
 	} else {

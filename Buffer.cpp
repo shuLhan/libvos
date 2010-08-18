@@ -283,8 +283,9 @@ int Buffer::appendc(const char c)
 			return -1;
 		}
 	}
-	_v[_i]		= c;
-	_v[++_i]	= '\0';
+	_v[_i]	= c;
+	_i++;
+	_v[_i]	= '\0';
 	return 0;
 }
 
