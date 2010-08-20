@@ -717,6 +717,38 @@ void DNSQuery::set_id(const int id)
 }
 
 /**
+ * @method	: DNSQuery::set_rr_answer_ttl
+ * @param	:
+ *	> ttl	: time to live, in seconds. Default to UINT_MAX.
+ * @desc	: set TTL value in each RR Answer record to 'ttl'. DNSQuery
+ * object must be extracted before calling this function.
+ */
+void DNSQuery::set_rr_answer_ttl(unsigned int ttl)
+{
+	int	len	= 0;
+	DNS_rr* p	= _rr_ans;
+
+	ttl = htonl(ttl);
+
+	while (p) {
+		if (p->_type == QUERY_T_ADDRESS
+		||  p->_type == QUERY_T_CNAME
+		||  p->_type == QUERY_T_NAMESERVER) {
+			len += p->_name_len + 4;
+
+			memset((void*) &_rr_ans_p[len], 0, 4);
+			memcpy((void*) &_rr_ans_p[len], &ttl, 4);
+
+			len += 6 + p->_len;
+		} else {
+			len += p->_name_len + 10 + p->_len;
+		}
+
+		p = p->_next;
+	}
+}
+
+/**
  * @method		: DNSQuery::reset
  * @param		:
  *	> do_type	: reset type.

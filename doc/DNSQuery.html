@@ -26,6 +26,7 @@
 	<li><a href="#DNSQuery::remove_rr_aut"><tt> DNSQuery::remove_rr_aut </tt></a></li>
 	<li><a href="#DNSQuery::remove_rr_add"><tt> DNSQuery::remove_rr_add </tt></a></li>
 	<li><a href="#DNSQuery::set_id"><tt> DNSQuery::set_id </tt></a></li>
+	<li><a href="#DNSQuery::set_rr_answer_ttl"><tt> DNSQuery::set_rr_answer_ttl </tt></a></li>
 	<li><a href="#DNSQuery::reset"><tt> DNSQuery::reset </tt></a></li>
 	<li><a href="#DNSQuery::dump"><tt> DNSQuery::dump </tt></a></li>
 	<li><a href="#DNSQuery::INIT"><tt> DNSQuery::INIT </tt></a></li>
@@ -493,6 +494,31 @@ buffer. </td>
 	<td colspan="3"> Set new ID for this DNS packet. </td>
 </tr>
 </table>
+
+<h3><a name="DNSQuery::set_rr_answer_ttl"><tt> DNSQuery::set_rr_answer_ttl </tt></a></h3>
+<table class="class-method">
+<tr>
+	<th>Code</th>
+	<td colspan="3">
+void set_rr_answer_ttl(unsigned int ttl = UINT_MAX)
+	</td>
+</tr><tr>
+	<th>Parameter</th>
+	<td><tt> ttl </tt></td>
+	<td>:</td>
+	<td> time to live, in seconds. Default to <tt>UINT_MAX</tt>.</td>
+</tr><tr>
+	<th>Return Value</th>
+	<td>-</td>
+</tr><tr>
+	<th>Description</th>
+	<td colspan="3"> Set TTL value in each RR Answer to
+"<tt>ttl</tt>". DNSQuery object must be extracted before calling this
+function.
+	</td>
+</tr>
+</table>
+
 
 <h3><a name="DNSQuery::reset"><tt> DNSQuery::reset </tt></a></h3>
 <table class="class-method">

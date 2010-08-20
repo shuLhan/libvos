@@ -110,6 +110,7 @@ public:
 	void remove_rr_add();
 
 	void set_id(const int id);
+	void set_rr_answer_ttl(unsigned int ttl = UINT_MAX);
 
 	void reset(const int do_type = DNSQ_DO_DATA_ONLY);
 	void dump(const int do_type = DNSQ_DO_DATA_ONLY);
