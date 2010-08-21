@@ -65,7 +65,7 @@ LDFLAGS_ADD	+= -lsocket -lnsl
 endif
 
 
-.PHONY: all libvos-all libvos-all-32 libvos-all-64 libvos-debug libvos-clean
+.PHONY: libvos-all libvos-all-32 libvos-all-64 libvos-debug libvos-clean
 
 libvos-all: CXXFLAGS+=$(CXXFLAGS_ADD)
 libvos-all: LDFLAGS+=$(LDFLAGS_ADD)
