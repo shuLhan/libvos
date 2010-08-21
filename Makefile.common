@@ -34,10 +34,18 @@ do_install=\
 	rm -f $(2) 2&> /dev/null;\
 	cp -f $(1) $(2);
 
+do_install_dir=\
+	echo "[I] installing directory $(1) => $(2)";\
+	cp -rf $(1) $(2);
+
 do_link=\
 	echo "[S] linking $(1) => $(2)";\
 	rm -f $(2) 2&> /dev/null;\
 	ln -s $(1) $(2);
+
+do_rm=\
+	echo "[R] remove file $(1)";\
+	rm -f $(1) 2&> /dev/null;
 
 do_mkdir=\
 	echo "[M] mkdir $(1)";\
