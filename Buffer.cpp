@@ -75,11 +75,11 @@ int Buffer::resize(const int size)
  * @desc	: Reset Buffer object, keep an already allocated buffer and
  * start index from zero again.
  */
-void Buffer::reset()
+void Buffer::reset(int c)
 {
 	if (_i) {
 		_i = 0;
-		memset(_v, '\0', _l);
+		memset(_v, c, _l);
 	}
 }
 

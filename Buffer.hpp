@@ -36,7 +36,7 @@ public:
 	virtual ~Buffer();
 
 	int resize(const int len);
-	void reset();
+	void reset(int c = 0);
 	void trim();
 
 	int copy(const Buffer* bfr);

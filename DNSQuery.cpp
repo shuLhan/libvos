@@ -847,19 +847,24 @@ int DNSQuery::INIT(DNSQuery **o, const Buffer *bfr, const int type)
 	register int s = -1;
 
 	(*o) = new DNSQuery();
-	if ((*o)) {
-		if (type == BUFFER_IS_TCP) {
-			s = (*o)->to_udp(bfr);
-		} else {
-			s = (*o)->copy(bfr);
-		}
-		if (s != 0) {
-			delete (*o);
-			(*o) = NULL;
-		}
-		(*o)->_bfr_type = BUFFER_IS_UDP;
+	if (!(*o)) {
+		return -1;
 	}
-	return s;
+
+	if (type == BUFFER_IS_TCP) {
+		s = (*o)->to_udp(bfr);
+	} else {
+		s = (*o)->copy(bfr);
+	}
+	if (s != 0) {
+		delete (*o);
+		(*o) = NULL;
+		return -1;
+	}
+
+	(*o)->_bfr_type = BUFFER_IS_UDP;
+
+	return 0;
 }
 
 } /* namespace::vos */

@@ -136,7 +136,8 @@ public:
 	const char*	_rr_aut_p;
 	const char*	_rr_add_p;
 
-	static int INIT(DNSQuery** o, const Buffer* bfr, const int type);
+	static int INIT(DNSQuery** o, const Buffer* bfr
+			, const int type = BUFFER_IS_UDP);
 private:
 	DNSQuery(const DNSQuery&);
 	void operator=(const DNSQuery&);
