@@ -133,6 +133,33 @@ int Record::set_column_number(int n, const int number)
 }
 
 /**
+ * @method		: Record::set_column_ulong
+ * @param		:
+ *	> n		: index of column to set to, started from zero.
+ *	> number	: content for a new column value.
+ * @return		:
+ *	< 0		: success.
+ *	< <0		: fail.
+ * @desc		: set column 'n' value to 'number'.
+ */
+int Record::set_column_ulong(int n, const unsigned long number)
+{
+	register int	s	= 0;
+	Record*		p	= this;
+
+	for (; n > 0 && p; --n) {
+		p = p->_next_col;
+	}
+	if (n < 0 || NULL == p) {
+		return -1;
+	}
+	p->reset();
+	s = p->appendui(number);
+
+	return s;
+}
+
+/**
  * @method	: Record::columns_reset
  * @desc	: empties all columns.
  */

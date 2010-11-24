@@ -245,7 +245,7 @@ int Resolver::recv_udp(DNSQuery* answer)
 	}
 
 	answer->reset(DNSQ_DO_ALL);
-	answer->set(this);
+	answer->set((Buffer*) this);
 	answer->extract_header();
 	answer->extract_question();
 

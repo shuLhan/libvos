@@ -28,6 +28,7 @@ DNSQuery::DNSQuery() : Buffer()
 ,	_rr_ans_p(NULL)
 ,	_rr_aut_p(NULL)
 ,	_rr_add_p(NULL)
+,	_ans_ttl_max(0)
 {}
 
 /**
@@ -433,6 +434,16 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 	memcpy(&rr->_ttl, &_v[*offset], 4);
 	rr->_ttl	= ntohl(rr->_ttl);
 	*offset		+= 4;
+
+	switch (rr->_type) {
+	case QUERY_T_ADDRESS:
+	case QUERY_T_NAMESERVER:
+	case QUERY_T_CNAME:
+		if (rr->_ttl > _ans_ttl_max) {
+			_ans_ttl_max = rr->_ttl;
+		}
+		break;
+	}
 
 	s = *offset + 2;
 	if (s > _i) {

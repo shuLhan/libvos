@@ -31,6 +31,7 @@ public:
 	Record* get_column(int n);
 	int set_column(int n, Buffer* bfr);
 	int set_column_number(int n, const int number);
+	int set_column_ulong(int n, const unsigned long number);
 	void columns_reset();
 
 	static void ADD_COL(Record** row, Record* col);

@@ -84,6 +84,7 @@ enum _dnsq_do_type {
  *	                  buffer.
  *	- _rr_add_p	: pointer to the first byte of additional RR on
  *                        buffer.
+ *	- _ans_ttl_max	: maximum TTL in all of RR answer.
  * @desc		: module for processing DNS packet.
  *
  *	DNSQuery is ALWAYS in UDP packet mode, if you want to send the packet
@@ -135,6 +136,8 @@ public:
 	const char*	_rr_ans_p;
 	const char*	_rr_aut_p;
 	const char*	_rr_add_p;
+	/* additional attributes */
+	uint32_t	_ans_ttl_max;
 
 	static int INIT(DNSQuery** o, const Buffer* bfr
 			, const int type = BUFFER_IS_UDP);
