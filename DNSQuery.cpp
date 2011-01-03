@@ -185,6 +185,7 @@ int DNSQuery::create_question(const char* qname, const int type)
 	_n_add		= htons(0);
 	_q_type		= htons((uint16_t) type);
 	_q_class	= htons(QUERY_C_IN);
+
 	_name.copy_raw(qname);
 
 	len = _name._i + 16;
@@ -227,7 +228,6 @@ int DNSQuery::create_question(const char* qname, const int type)
 	appendc(0);
 	append_bin(&_q_type, 2);
 	append_bin(&_q_class, 2);
-	appendc(0);
 
 	_id		= ntohs(_id);
 	_flag		= ntohs(_flag);
@@ -280,11 +280,13 @@ int DNSQuery::extract()
 	}
 
 	_rr_ans_p = &_v[len];
+
 	for (i = 0; i < _n_ans; ++i) {
 		rr = extract_rr(&len, rr_type);
 		if (!rr) {
 			return -1;
 		}
+
 		rr_type	= rr->_type;
 		DNS_rr::ADD(&_rr_ans, rr);
 	}
@@ -383,8 +385,7 @@ int DNSQuery::extract_question()
 /**
  * @method		: DNSQuery::extract_rr
  * @param:
- *	> bfr		: pointer to the part of original buffer.
- *	> bfr_ret	: pointer to position of buffer after RR has been
+ *	> offset	: pointer to position of buffer after RR has been
  *                        extracted.
  *	> type		: type of the last extracted rr.
  * @return:
@@ -439,6 +440,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 	case QUERY_T_ADDRESS:
 	case QUERY_T_NAMESERVER:
 	case QUERY_T_CNAME:
+	case QUERY_T_SRV:
 		if (rr->_ttl > _ans_ttl_max) {
 			_ans_ttl_max = rr->_ttl;
 		}
@@ -490,6 +492,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 			goto err;
 		}
 		*offset += s;
+
 		s = extract_label(&rr->_data2, *offset);
 		if (s < 0) {
 			goto err;
@@ -544,8 +547,8 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 		break;
 
 	case QUERY_T_MX:
-		memcpy(&rr->_mx_pref, &_v[*offset], 2);
-		rr->_mx_pref	= ntohs(rr->_mx_pref);
+		memcpy(&rr->_priority, &_v[*offset], 2);
+		rr->_priority	= ntohs(rr->_priority);
 		*offset		+= 2;
 
 		s = extract_label(&rr->_data, *offset);
@@ -561,6 +564,27 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 			goto err;
 		}
 		*offset += s;
+		break;
+
+	case QUERY_T_SRV:
+		memcpy(&rr->_priority, &_v[*offset], 2);
+		rr->_priority	= ntohs(rr->_priority);
+		*offset		+= 2;
+
+		memcpy(&rr->_weight, &_v[*offset], 2);
+		rr->_weight	= ntohs(rr->_weight);
+		*offset		+= 2;
+
+		memcpy(&rr->_port, &_v[*offset], 2);
+		rr->_port	= ntohs(rr->_port);
+		*offset		+= 2;
+
+		s = extract_label(&rr->_data, *offset);
+		if (s < 0) {
+			goto err;
+		}
+		*offset += s;
+		break;
 
 	default:
 		fprintf(stderr

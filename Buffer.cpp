@@ -273,7 +273,7 @@ int Buffer::shiftr(const int nbyte, int c)
  */
 int Buffer::appendc(const char c)
 {
-	if (c <= 0) {
+	if (c < 0) {
 		return 0;
 	}
 	if (_i + CHAR_SIZE > _l) {

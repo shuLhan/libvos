@@ -193,10 +193,11 @@ whether recursive query support is available in name server.</td>
 <tr>
 	<td> QNAME </td>
 	<td> dynamic length </td>
-	<td> a domain name represented as sequence of labels, where each
-label consist of a length octet followed by that number of octets.</td>
-	Instruction on how to real label described in section
+	<td> A domain name represented as sequence of labels, where each
+label consist of a length octet followed by that number of octets.
+	Instruction on how to read label described in section
 <a href="#qname_read"> How-to Read Label </a>.
+	</td>
 </tr><tr>
 	<td> QTYPE </td>
 	<td> 16 (NBO) </td>
@@ -299,10 +300,6 @@ value mean that RR should not be cached. </td>
 	<td> 13 </td>
 	<td> host information. </td>
 </tr><tr>
-	<td> MINFO </td>
-	<td> 14 </td>
-	<td> mailbox or mail list information. </td>
-</tr><tr>
 	<td> MX </td>
 	<td> 15 </td>
 	<td> mail exchange. </td>
@@ -310,6 +307,10 @@ value mean that RR should not be cached. </td>
 	<td> TXT </td>
 	<td> 16 </td>
 	<td> text strings. </td>
+</tr><tr>
+	<td> SRV </td>
+	<td> 33 </td>
+	<td> RR for specifying the location of services. </td>
 </tr>
 </table>
 
@@ -332,7 +333,7 @@ ADDRESS	:	A 32 bit Internet address.
     /                                               /
     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 
-NSDNAME	:	A <domain-name> which specifies a host which should be
+NSDNAME	:	A &lt;domain-name&gt; which specifies a host which should be
 		authoritative for the specified class and domain.
 
 </pre>
@@ -345,12 +346,89 @@ NSDNAME	:	A <domain-name> which specifies a host which should be
     /                                               /
     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 
-CNAME	:	A <domain-name> which specifies the canonical or primary
+CNAME	:	A &lt;domain-name&gt; which specifies the canonical or primary
 		name for the owner.  The owner name is an alias.
 </pre>
 
 
-<li> MX format </li>
+<li> TYPE 6: SOA
+<pre>
+   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /                     MNAME                     /
+    /                                               /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /                     RNAME                     /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    SERIAL                     |
+    |                                               |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    REFRESH                    |
+    |                                               |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                     RETRY                     |
+    |                                               |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    EXPIRE                     |
+    |                                               |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    MINIMUM                    |
+    |                                               |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+MNAME           The &lt;domain-name&gt; of the name server that was the
+                original or primary source of data for this zone.
+
+RNAME           A &lt;domain-name&gt; which specifies the mailbox of the
+                person responsible for this zone.
+
+SERIAL          The unsigned 32 bit version number of the original copy
+                of the zone.  Zone transfers preserve this value.  This
+                value wraps and should be compared using sequence space
+                arithmetic.
+
+REFRESH         A 32 bit time interval before the zone should be
+                refreshed.
+
+RETRY           A 32 bit time interval that should elapse before a
+                failed refresh should be retried.
+
+EXPIRE          A 32 bit time value that specifies the upper limit on
+                the time interval that can elapse before the zone is no
+                longer authoritative.
+
+MINIMUM         The unsigned 32 bit minimum TTL field that should be
+                exported with any RR from this zone.
+</pre>
+
+
+<li> TYPE 12: PTR format </li>
+<pre>
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /                   PTRDNAME                    /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+PTRDNAME        A &lt;domain-name&gt; which points to some location in the
+                domain name space.
+</pre>
+
+
+<li> TYPE 13: HINFO format </li>
+<pre>
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /                      CPU                      /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /                       OS                      /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+CPU             A &lt;character-string&gt; which specifies the CPU type.
+
+OS              A &lt;character-string&gt; which specifies the operating
+                system type.
+
+Standard values for CPU and OS can be found in [RFC-1010].
+</pre>
+
+<li> TYPE 15: MX format </li>
 <pre>
     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
     |                  PREFERENCE                   |
@@ -363,8 +441,94 @@ PREFERENCE	:	A 16 bit integer which specifies the preference given
 			to this RR among others at the same owner.  Lower
 			values are preferred.
 
-EXCHANGE	:	A <domain-name> which specifies a host willing to act
+EXCHANGE	:	A &lt;domain-name&gt; which specifies a host willing to act
 			as a mail exchange for the owner name.
+</pre>
+
+
+<li> TYPE 16: TXT format </li>
+<pre>
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /                   TXT-DATA                    /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+TXT-DATA        One or more &lt;character-string&gt;s.
+
+TXT RRs are used to hold descriptive text.  The semantics of the text
+depends on the domain where it is found.
+</pre>
+
+
+<li> TYPE 33: SRV format </li>
+<pre>
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    PRIORITY                   |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    WEIGHT                     |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                    PORT                       |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /                    TARGET                     /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+PRIORITY
+        The priority of this target host.  A client MUST attempt to
+        contact the target host with the lowest-numbered priority it can
+        reach; target hosts with the same priority SHOULD be tried in an
+        order defined by the weight field.  The range is 0-65535.  This
+        is a 16 bit unsigned integer in network byte order.
+
+WEIGHT
+        A server selection mechanism.  The weight field specifies a
+        relative weight for entries with the same priority. Larger
+        weights SHOULD be given a proportionately higher probability of
+        being selected. The range of this number is 0-65535.  This is a
+        16 bit unsigned integer in network byte order.  Domain
+        administrators SHOULD use Weight 0 when there isn't any server
+        selection to do, to make the RR easier to read for humans (less
+        noisy).  In the presence of records containing weights greater
+        than 0, records with weight 0 should have a very small chance of
+        being selected.
+
+        In the absence of a protocol whose specification calls for the
+        use of other weighting information, a client arranges the SRV
+        RRs of the same Priority in the order in which target hosts,
+        specified by the SRV RRs, will be contacted. The following
+        algorithm SHOULD be used to order the SRV RRs of the same
+        priority:
+
+        To select a target to be contacted next, arrange all SRV RRs
+        (that have not been ordered yet) in any order, except that all
+        those with weight 0 are placed at the beginning of the list.
+
+        Compute the sum of the weights of those RRs, and with each RR
+        associate the running sum in the selected order. Then choose a
+        uniform random number between 0 and the sum computed
+        (inclusive), and select the RR whose running sum value is the
+        first in the selected order which is greater than or equal to
+        the random number selected. The target host specified in the
+        selected SRV RR is the next one to be contacted by the client.
+        Remove this SRV RR from the set of the unordered SRV RRs and
+        apply the described algorithm to the unordered SRV RRs to select
+        the next target host.  Continue the ordering process until there
+        are no unordered SRV RRs.  This process is repeated for each
+        Priority.
+
+PORT
+        The port on this target host of this service.  The range is 0-
+        65535.  This is a 16 bit unsigned integer in network byte order.
+        This is often as specified in Assigned Numbers but need not be.
+
+TARGET
+        The domain name of the target host.  There MUST be one or more
+        address records for this name, the name MUST NOT be an alias (in
+        the sense of RFC 1034 or RFC 2181).  Implementors are urged, but
+        not required, to return the address record(s) in the Additional
+        Data section.  Unless and until permitted by future standards
+        action, name compression is not to be used for this field.
+
+        A Target of "." means that the service is decidedly not
+        available at this domain.
 </pre>
 </ul>
 

@@ -29,6 +29,7 @@ enum _RR_TYPE {
 	QUERY_T_MINFO,
 	QUERY_T_MX,
 	QUERY_T_TXT,
+	QUERY_T_SRV		= 33,
 	QUERY_T_AXFR		= 252,
 	QUERY_T_MAILB,
 	QUERY_T_MAILA,
@@ -61,7 +62,11 @@ enum _RR_CLASS {
  *	- _retry	: SOA retry value.
  *	- _expire	: SOA expire value.
  *	- _minimum	: SOA minimum value.
- *	- _mx_pref	: priority of RR MX.
+ *	- _priority	: priority of RR MX.
+ *	- _weight	: SRV, a relative weight for records with the same
+ *			priority.
+ *	- _port		: SRV, the TCP or UDP port on which the service is to
+ *			be found.
  *	- _next		: pointer to the next RR.
  *	- RDATA_MAX_SIZE: static, maximum size for RR buffer.
  * @desc		:
@@ -92,8 +97,11 @@ public:
 	uint32_t	_retry;
 	uint32_t	_expire;
 	uint32_t	_minimum;
-	/* MX pref field */
-	uint16_t	_mx_pref;
+	/* MX, SRV priority  field */
+	uint16_t	_priority;
+	/* SRV */
+	uint16_t	_weight;
+	uint16_t	_port;
 
 	DNS_rr*		_next;
 

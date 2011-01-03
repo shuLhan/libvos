@@ -27,7 +27,9 @@ DNS_rr::DNS_rr(const int bfr_size) : Buffer(bfr_size)
 ,	_retry(0)
 ,	_expire(0)
 ,	_minimum(0)
-,	_mx_pref(0)
+,	_priority(0)
+,	_weight(0)
+,	_port(0)
 ,	_next(NULL)
 {}
 
@@ -75,41 +77,58 @@ void DNS_rr::dump()
 			" class      : %d\n"	\
 			" TTL        : %d\n"	\
 			" length     : %d\n"	\
-			" data       :\n", p->_name.v(), p->_type, p->_class
-			, p->_ttl, p->_len);
+			" data       :\n"
+			, p->_name.v(), p->_type, p->_class, p->_ttl, p->_len);
 
 		switch (p->_type) {
 		case QUERY_T_ADDRESS:
-			o.aprint(" address    : %s\n", p->_data.v());
+			o.aprint("   address  : %s\n", p->_data.v());
 			break;
 		case QUERY_T_NAMESERVER:
-			o.aprint(" nameserver : %s\n", p->_data.v());
+			o.aprint("   NS       : %s\n", p->_data.v());
 			break;
 		case QUERY_T_CNAME:
-			o.aprint(" c. name    : %s\n", p->_data.v());
+			o.aprint("   c. name  : %s\n", p->_data.v());
 			break;
 		case QUERY_T_SOA:
-			o.aprint(" mname      : %s\n", p->_data.v());
-			o.aprint(" rname      : %s\n", p->_data2.v());
-			o.aprint(" serial     : %d\n", p->_serial);
-			o.aprint(" refresh    : %d\n", p->_refresh);
-			o.aprint(" retry      : %d\n", p->_retry);
-			o.aprint(" expire     : %d\n", p->_expire);
-			o.aprint(" minimum    : %d\n", p->_minimum);
+			o.aprint(
+				"   mname    : %s\n"	\
+				"   rname    : %s\n"	\
+				"   serial   : %d\n"	\
+				"   refresh  : %d\n"	\
+				"   retry    : %d\n"	\
+				"   expire   : %d\n"	\
+				"   minimum  : %d\n"
+				, p->_data.v(), p->_data2.v(), p->_serial
+				, p->_refresh, p->_retry, p->_expire
+				, p->_minimum);
 			break;
 		case QUERY_T_PTR:
-			o.aprint(" PTRDNAME   : %s\n", p->_data.v());
+			o.aprint("   PTRDNAME : %s\n", p->_data.v());
 			break;
 		case QUERY_T_HINFO:
-			o.aprint(" CPU        : %s\n", p->_data.v());
-			o.aprint(" OS         : %s\n", p->_data2.v());
+			o.aprint(
+				"   CPU      : %s\n"	\
+				"   OS       : %s\n"
+				, p->_data.v(), p->_data2.v());
 			break;
 		case QUERY_T_MX:
-			o.aprint(" score      : %d\n", p->_mx_pref);
-			o.aprint(" exchange   : %s\n", p->_data.v());
+			o.aprint(
+				"   score    : %d\n"	\
+				"   exchange : %s\n"
+				, p->_priority, p->_data.v());
 			break;
 		case QUERY_T_TXT:
-			o.aprint(" TXT        : %s\n", p->_data.v());
+			o.aprint("   TXT      : %s\n", p->_data.v());
+			break;
+		case QUERY_T_SRV:
+			o.aprint(
+				"   priority : %d\n"	\
+				"   weight   : %d\n"	\
+				"   port     : %d\n"	\
+				"   target   : %s\n"
+				, p->_priority, p->_weight, p->_port
+				, p->_data.v());
 			break;
 		}
 		p = p->_next;

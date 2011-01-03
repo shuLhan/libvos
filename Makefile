@@ -59,7 +59,9 @@ CXXFLAGS_ADD	+=	-I$(ORACLE_HOME)/include -I$(ORACLE_HOME)/rdbms/public
 LDFLAGS_ADD	+=	-L$(ORACLE_HOME)/lib -lclntsh
 endif
 
-# link needed for FTP and OCI on Solaris system.
+#
+# library needed for FTP and OCI module on Solaris system.
+#
 ifeq ($(SYS),SunOS)
 LDFLAGS_ADD	+= -lsocket -lnsl
 endif
