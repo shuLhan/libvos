@@ -26,7 +26,7 @@ enum __print_flag {
 };
 
 /* default buffer size */
-int Buffer::DFLT_SIZE = 16;
+int Buffer::DFLT_SIZE = 15;
 int Buffer::CHAR_SIZE = sizeof(char);
 
 Buffer::Buffer(const int bfr_size) :

@@ -95,20 +95,21 @@ inline void Dlogger::add_timestamp()
  *	> fmt		: format of messages.
  * @desc		: The generic method of writing a log messages.
  */
-void Dlogger::_w(FILE* stream, const char* fmt)
+void Dlogger::_w(int fd, const char* fmt)
 {
 	add_timestamp();
+
 	_s = _tmp.vprint(fmt, _args);
 	if (_s <= 0) {
 		_tmp.reset();
 		return;
 	}
 
-	if (_d != STDERR_FILENO || !stream) {
-		_s = write(&_tmp);
+	if (_d != STDERR_FILENO || !fd) {
+		_s = write_raw(_tmp._v, _tmp._i);
 	}
-	if (stream) {
-		fprintf(stream, "%s", _tmp._v);
+	if (fd) {
+		::write(fd, _tmp._v, _tmp._i);
 	}
 	_tmp.reset();
 }
@@ -128,7 +129,7 @@ int Dlogger::er(const char* fmt, ...)
 	do { _s = pthread_mutex_trylock(&_lock); } while (_s != 0);
 
 	va_start(_args, fmt);
-	_w(stderr, fmt);
+	_w(STDERR_FILENO, fmt);
 	va_end(_args);
 
 	pthread_mutex_unlock(&_lock);
@@ -151,7 +152,7 @@ int Dlogger::out(const char* fmt, ...)
 	do { _s = pthread_mutex_trylock(&_lock); } while (_s != 0);
 
 	va_start(_args, fmt);
-	_w(stdout, fmt);
+	_w(STDOUT_FILENO, fmt);
 	va_end(_args);
 
 	pthread_mutex_unlock(&_lock);

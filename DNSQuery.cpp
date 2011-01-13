@@ -366,7 +366,7 @@ int DNSQuery::extract_question()
 	}
 	startp += len;
 
-	len = startp + 2 + 2;
+	len = startp + 4;
 	if (len > _i) {
 		return -1;
 	}
@@ -809,7 +809,7 @@ void DNSQuery::reset(const int do_type)
 
 	if (_rr_ans) {
 		delete _rr_ans;
-		_rr_ans = NULL;
+		_rr_ans	= NULL;
 	}
 	if (_rr_aut) {
 		delete _rr_aut;
@@ -819,6 +819,9 @@ void DNSQuery::reset(const int do_type)
 		delete _rr_add;
 		_rr_add = NULL;
 	}
+	_rr_ans_p	= NULL;
+	_rr_aut_p	= NULL;
+	_rr_add_p	= NULL;
 }
 
 /**

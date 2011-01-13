@@ -9,7 +9,6 @@
 
 #include <sys/stat.h>
 #include <time.h>
-#include <unistd.h>
 #include "Buffer.hpp"
 
 namespace vos {

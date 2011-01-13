@@ -8,7 +8,6 @@
 #define	_LIBVOS_FILE_HPP	1
 
 #include <fcntl.h>
-#include <unistd.h>
 #include <utime.h>
 #include "Buffer.hpp"
 

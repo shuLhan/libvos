@@ -4,7 +4,7 @@
  *	- m.shulhan (ms@kilabit.org)
  */
 
-#ifndef _LIBVOS_MACRO_HPP
+#ifndef	_LIBVOS_MACRO_HPP
 #define	_LIBVOS_MACRO_HPP	1
 
 #include <errno.h>
@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 namespace vos {
 

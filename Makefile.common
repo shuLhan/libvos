@@ -10,24 +10,26 @@ MAKEFLAGS	+= --warn-undefined-variables
 SYS		= $(shell uname)
 
 CXX		= g++
-CXXFLAGS_GLOBAL	= -fno-rtti -fno-exceptions -pipe
+LINKER		= gcc
+CXXFLAGS_GLOBAL	= -fno-rtti -fno-exceptions -pipe -nodefaultlibs
 
 ifndef CXXFLAGS
 CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os
 endif
 CXXFLAGS_DEBUG	= $(CXXFLAGS_GLOBAL) \
-			-Wall -Wextra -Weffc++ -Werror -Wconversion -g -O0
+			-Wall -Wextra -Weffc++ -Werror -Wconversion \
+			-g -O0
 CXXFLAGS_ADD	=
 LDFLAGS		= -lpthread
 LDFLAGS_ADD	=
 
 do_compile=\
 	echo "[C] $@";\
-	$(CXX) $(CXXFLAGS) -c $< -o $@;
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -c $< -o $@;
 
 do_build=\
 	echo "[B] $@";\
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@;
+	$(LINKER) $(LDFLAGS) $^ -o $@;
 
 do_install=\
 	echo "[I] installing $(1) => $(2)";\

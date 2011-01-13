@@ -35,7 +35,7 @@ private:
 	Dlogger(const Dlogger&);
 	void operator=(const Dlogger&);
 
-	void _w(FILE* stream, const char* fmt);
+	void _w(int fd, const char* fmt);
 
 	pthread_mutex_t	_lock;
 	Buffer		_tmp;
