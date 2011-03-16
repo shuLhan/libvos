@@ -2,6 +2,7 @@
  * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
+ *	- ranggaws@gmail.com
  */
 
 #include "File.hpp"
@@ -114,6 +115,20 @@ int File::open_ro(const char* path)
 int File::open_wo(const char* path)
 {
 	return _open(path, FILE_OPEN_W);
+}
+
+/**
+ * @method	: File::open_wx
+ * @param	:
+ *	> path	: path to a file.
+ * @return	:
+ *	< 0	: success.
+ *	< <0	: fail, if file exist make only one instances running
+ * @desc	: open file for write only.
+ */
+int File::open_wx(const char* path)
+{
+	return _open(path, FILE_OPEN_WX);
 }
 
 /**

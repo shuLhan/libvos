@@ -2,6 +2,7 @@
  * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
+ *	- ranggaws@gmail.com
  */
 
 #include "OCI.hpp"
@@ -72,18 +73,19 @@ OCI::~OCI()
 	}
 	if (_err) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::OCI_____] ~: free error handle\n");
+			fprintf(stderr, "[OCI] free error handle\n");
 		}
 		OCIHandleFree(_err, OCI_HTYPE_ERROR);
 		_err = 0;
 	}
 	if (_env) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::OCI_____] ~: free environment handle\n");
+			fprintf(stderr, "[OCI] free environment handle\n");
 		}
 		OCIHandleFree(_env, OCI_HTYPE_ENV);
 		_env = 0;
 	}
+
 	if (_v) {
 		free(_v);
 		_v = 0;
@@ -171,6 +173,10 @@ int OCI::check(void* handle, int type)
  */
 void OCI::create_env()
 {
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] create environment handle\n");
+	}
+
 	_stat = OCIEnvCreate(&_env, _env_mode, 0, 0, 0, 0, 0, 0);
 	check_env();
 }
@@ -181,7 +187,10 @@ void OCI::create_env()
  */
 void OCI::create_err()
 {
-	_stat = OCIHandleAlloc(_env, (void**) &_err, OCI_HTYPE_ERROR, 0, 0);
+	if (LIBVOS_DEBUG) {
+		fprintf(stderr, "[OCI] create error handle\n");
+	}
+	_stat = OCIHandleAlloc(_env, (void **) &_err, OCI_HTYPE_ERROR, 0, 0);
 	check_env();
 }
 
@@ -770,15 +779,15 @@ int OCI::stmt_fetch()
 void OCI::stmt_release()
 {
 	if (LIBVOS_DEBUG) {
-		printf("[vos::OCI_____] stmt_release\n");
+		fprintf(stderr, "[OCI] release statement\n");
 	}
 
 	if (_stmt) {
 		_stat = OCIStmtRelease(_stmt, _err, NULL, 0, OCI_DEFAULT);
 		check_err();
 		_stmt = 0;
-		release_buffer();
 	}
+	release_buffer();
 }
 
 /**
@@ -789,14 +798,14 @@ void OCI::logout()
 {
 	if (_service) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::OCI_____] logout: free session.\n");
+			fprintf(stderr, "[OCI] free session\n");
 		}
 		OCISessionRelease(_service, _err, NULL, 0, OCI_DEFAULT);
 		_service = 0;
 	}
 	if (_auth) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::OCI_____] logout: free auth.\n");
+			fprintf(stderr, "[OCI] free auth\n");
 		}
 		OCIHandleFree(_auth, OCI_HTYPE_AUTHINFO);
 		_auth = 0;
@@ -811,7 +820,7 @@ void OCI::disconnect()
 {
 	if (_spool) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::OCI_____] disconnect: free session pool handle\n");
+			fprintf(stderr, "[OCI] free session pool handle\n");
 		}
 
 		_stat = OCISessionPoolDestroy(_spool, _err, OCI_DEFAULT);
@@ -998,6 +1007,11 @@ int OCI::cursor_fetch()
 {
 	int s = 0;
 
+	for (int idx = 1; idx <= _value_i; idx++) {
+		if (_v[idx]) {
+			_v[idx]->reset();
+		}
+	}
 	_stat = OCIStmtFetch(_cursor, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
 	if (_stat == OCI_NO_DATA) {
 		return 1;
@@ -1253,6 +1267,7 @@ void OCI::release_buffer()
 			printf("[vos::OCI_____] release_buffer: free at %d\n"
 				, i);
 		}
+		_v[i]->reset();
 		delete _v[i];
 		_v[i] = 0;
 	}

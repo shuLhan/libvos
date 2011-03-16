@@ -2,14 +2,18 @@
  * Copyright (C) 2010 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
+ *	- ranggaws@gmail.com
  */
 
 #ifndef _LIBVOS_FILE_HPP
 #define	_LIBVOS_FILE_HPP	1
 
 #include <fcntl.h>
+#include <unistd.h>
 #include <utime.h>
 #include "Buffer.hpp"
+
+using vos::Buffer;
 
 namespace vos {
 
@@ -26,6 +30,7 @@ enum _file_open_type {
 ,	FILE_OPEN_W	= O_WRONLY | O_CREAT | O_TRUNC
 ,	FILE_OPEN_WA	= O_WRONLY | O_CREAT | O_APPEND
 ,	FILE_OPEN_RW	= O_RDWR | O_CREAT | O_APPEND
+,	FILE_OPEN_WX	= O_WRONLY | O_CREAT | O_EXCL
 ,	FILE_OPEN_SYNC	= O_SYNC
 };
 
@@ -61,6 +66,7 @@ public:
 	int open(const char* path);
 	int open_ro(const char* path);
 	int open_wo(const char* path);
+	int open_wx(const char* path);
 	int open_wa(const char* path);
 
 	off_t get_size();
