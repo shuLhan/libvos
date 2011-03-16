@@ -2,6 +2,7 @@
  * Copyright (C) 2009 kilabit.org
  * Author:
  *	- m.shulhan (ms@kilabit.org)
+ *	- ranggaws@gmail.com
  */
 
 #include "OCI.hpp"
@@ -980,6 +981,11 @@ int OCI::cursor_fetch()
 {
 	int s = 0;
 
+	for (int idx = 1; idx <= _value_i; idx++) {
+		if (_v[idx]) {
+			_v[idx]->reset();
+		}
+	}
 	_stat = OCIStmtFetch(_cursor, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
 	if (_stat == OCI_NO_DATA) {
 		return 1;
