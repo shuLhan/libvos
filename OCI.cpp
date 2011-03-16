@@ -763,8 +763,8 @@ void OCI::stmt_release()
 		_stat = OCIStmtRelease(_stmt, _err, NULL, 0, OCI_DEFAULT);
 		check_err();
 		_stmt = 0;
-		release_buffer();
 	}
+	release_buffer();
 }
 
 /**
@@ -1016,14 +1016,14 @@ void OCI::cursor_release()
  *	< 0	: fail.
  * @desc	: get a value of result set at column 'pos' as string.
  */
-char * OCI::get_value(const int pos)
+const char* OCI::get_value(const int pos)
 {
-	if (pos > _value_i || !_v[pos])
-		return 0;
-
-	if (_v[pos]->_p != pos)
-		return 0;
-
+	if (pos > _value_i || !_v[pos]) {
+		return "\0";
+	}
+	if (_v[pos]->_p != pos) {
+		return "\0";
+	}
 	return _v[pos]->_v;
 }
 
@@ -1234,6 +1234,7 @@ void OCI::release_buffer()
 		if (LIBVOS_DEBUG) {
 			fprintf(stderr, "[OCI] free buffer at %d\n", i);
 		}
+		_v[i]->reset();
 		delete _v[i];
 		_v[i] = 0;
 	}

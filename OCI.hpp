@@ -188,7 +188,7 @@ public:
 		stmt_define(pos, OCI_T_UROWID);
 	}
 
-	char * get_value(const int pos);
+	const char* get_value(const int pos);
 	long get_value_number(const int pos);
 
 	int get_notification_type(void *descriptor, unsigned int *type);
