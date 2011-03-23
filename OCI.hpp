@@ -7,6 +7,7 @@
 #ifndef _LIBVOS_OCI_HPP
 #define	_LIBVOS_OCI_HPP	1
 
+#include <pthread.h>
 #include "OCIValue.hpp"
 
 namespace vos {
@@ -83,15 +84,22 @@ public:
 		, const char *conn = NULL);
 	int login_new_session(const char* username, const char* password
 				, const char* conn = NULL);
+	int get_new_session(OCI* db, const char* username
+				, const char* password);
+
 	int stmt_describe(const char* stmt);
 	int stmt_prepare(const char* stmt);
+	int stmt_prepare_r(const char* stmt);
 
 	int stmt_subscribe(void* callback);
 	void stmt_unsubscribe();
 
 	int stmt_execute(const char* stmt = 0);
+	int stmt_execute_r(const char* stmt = 0);
+
 	int  stmt_fetch();
 	void stmt_release();
+	void stmt_release_r();
 	void logout();
 	void disconnect();
 
@@ -212,6 +220,7 @@ public:
 
 	int		_value_i;
 	int		_value_sz;
+	pthread_mutex_t	_lock;
 
 	OCIEnv*			_env;
 	OCIError*		_err;
@@ -239,6 +248,9 @@ private:
 	inline int check_err() {
 		return check(_err, OCI_HTYPE_ERROR);
 	}
+
+	void lock();
+	void unlock();
 
 	static int	_spool_min;
 	static int	_spool_max;

@@ -58,7 +58,7 @@ enum _file_open_type {
  */
 class File : public Buffer {
 public:
-	File(const unsigned int bfr_size = DFLT_SIZE);
+	File(const unsigned int bfr_size = File::DFLT_SIZE);
 	~File();
 
 	int _open(const char* path, const int mode,

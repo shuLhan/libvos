@@ -41,6 +41,7 @@ OCI::OCI() :
 ,	_v(NULL)
 ,	_value_i(0)
 ,	_value_sz(Buffer::DFLT_SIZE)
+,	_lock()
 ,	_env(NULL)
 ,	_err(NULL)
 ,	_server(NULL)
@@ -62,6 +63,8 @@ OCI::OCI() :
  */
 OCI::~OCI()
 {
+	lock();
+
 	cursor_release();
 	stmt_release();
 
@@ -90,6 +93,10 @@ OCI::~OCI()
 		free(_v);
 		_v = 0;
 	}
+
+	unlock();
+
+	pthread_mutex_destroy(&_lock);
 }
 
 /**
@@ -292,7 +299,6 @@ int OCI::create_session(const char *conn, int conn_len)
  *	create a connection to Oracle database, identified by connection
  *	string 'conn' with format: '//hostname:port/service-name'.
  */
-
 int OCI::create_session_pool(const char* conn, int conn_len)
 {
 	if (!conn) {
@@ -335,8 +341,10 @@ int OCI::create_session_pool(const char* conn, int conn_len)
 				, (ub4 *) &_spool_name_len
 				, (const OraText *) conn, conn_len
 				, OCI::_spool_min, OCI::_spool_max
-				, OCI::_spool_inc, (OraText *) "", 0
-				, (OraText *) "", 0, OCI_SPC_STMTCACHE);
+				, OCI::_spool_inc
+				, (OraText *) "", 0
+				, (OraText *) "", 0
+				, OCI_SPC_STMTCACHE);
 	s = check_err();
 	if (s < 0) {
 		return s;
@@ -352,7 +360,6 @@ int OCI::create_session_pool(const char* conn, int conn_len)
 	}
 
 	return 0;
-
 }
 
 /**
@@ -421,6 +428,9 @@ int OCI::login(const char* username, const char* password, const char* conn)
 		return -1;
 	}
 
+	/* database lock */
+	pthread_mutex_init(&_lock, NULL);
+
 	return 0;
 }
 
@@ -469,6 +479,62 @@ int OCI::login_new_session(const char* username, const char* password
 				, OCI_ATTR_SESSION, _err);
 	s = check_err();
 	if (s != 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int OCI::get_new_session(OCI* db, const char* username, const char* password)
+{
+	int s;
+
+	if (!db) {
+		printf("[OCI_____] OCI* is null\n");
+		return -1;
+	}
+
+	db->_v = (OCIValue**) calloc(_value_sz, sizeof(OCIValue *));
+	if (!db->_v) {
+		return -1;
+	}
+
+	db->_env = _env;
+	db->_err = _err;
+
+	_stat = OCIHandleAlloc(_env, (void **) &db->_auth, OCI_HTYPE_AUTHINFO
+				, 0, NULL);
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
+
+	_stat = OCIAttrSet(db->_auth, OCI_HTYPE_AUTHINFO, (void *) username
+			, (unsigned int) strlen(username), OCI_ATTR_USERNAME
+			, _err);
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
+
+	_stat = OCIAttrSet(db->_auth, OCI_HTYPE_AUTHINFO, (void *) password
+			, (unsigned int) strlen(password), OCI_ATTR_PASSWORD
+			, _err);
+	s = check_err();
+	if (s < 0) {
+		return -1;
+	}
+
+	if (LIBVOS_DEBUG) {
+		printf("[vos::OCI_____] get_new_session\n");
+	}
+
+	_stat = OCISessionGet(_env, _err, &db->_service, db->_auth
+			, (OraText *) _spool_name, _spool_name_len
+			, NULL, 0, NULL, NULL, NULL
+			, OCI_SESSGET_SPOOL);
+	s = check_err();
+	if (s < 0) {
 		return -1;
 	}
 
@@ -596,6 +662,7 @@ int OCI::stmt_prepare(const char* stmt)
 	if (!stmt) {
 		return -1;
 	}
+
 	register int s;
 
 	if (LIBVOS_DEBUG) {
@@ -606,8 +673,34 @@ int OCI::stmt_prepare(const char* stmt)
 				, (unsigned int) strlen(stmt), 0, 0
 				, OCI_NTV_SYNTAX, OCI_DEFAULT);
 	s = check_err();
+	if (s < 0) {
+		unlock();
+	}
 
 	return s;
+}
+
+/**
+ * @method	: OCI::stmt_prepare
+ * @param	:
+ *	> stmt	: Oracle SQL query (DDL or DML).
+ * @return	:
+ *	> 0	: success.
+ *	> -1	: fail.
+ * @desc	: prepare SQL query 'stmt' for execution.
+ *
+ * This is thread-safe version of stmt_prepare. If you use this method always
+ * call stmt_release() after end of statement.
+ */
+int OCI::stmt_prepare_r(const char* stmt)
+{
+	if (!stmt) {
+		return -1;
+	}
+
+	lock();
+
+	return stmt_prepare(stmt);
 }
 
 int OCI::stmt_subscribe(void* callback)
@@ -742,6 +835,12 @@ int OCI::stmt_execute(const char *stmt)
 	return 0;
 }
 
+int OCI::stmt_execute_r(const char* stmt)
+{
+	lock();
+	return stmt_execute(stmt);
+}
+
 /**
  * @method	: OCI::stmt_fetch
  * @return	:
@@ -788,6 +887,18 @@ void OCI::stmt_release()
 		_stmt = 0;
 	}
 	release_buffer();
+}
+
+/**
+ * @method	: OCI::stmt_release_r
+ * @desc	: release OCI Statement object.
+ * This is thread-safe version of stmt_release(), use this version only if
+ * you use stmt_prepare_r() at beginning of statement.
+ */
+void OCI::stmt_release_r()
+{
+	stmt_release();
+	unlock();
 }
 
 /**
@@ -1272,6 +1383,18 @@ void OCI::release_buffer()
 		_v[i] = 0;
 	}
 	_value_i = 0;
+}
+
+void OCI::lock()
+{
+	int s;
+
+	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
+}
+
+void OCI::unlock()
+{
+	pthread_mutex_unlock(&_lock);
 }
 
 } /* namespace::vos */

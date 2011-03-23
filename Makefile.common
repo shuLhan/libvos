@@ -29,7 +29,7 @@ do_compile=\
 
 do_build=\
 	echo "[B] $@";\
-	$(LINKER) $(LDFLAGS) $^ -o $@;
+	$(LINKER) $(CXXFLAGS_ADD) $(LDFLAGS) $^ -o $@;
 
 do_install=\
 	echo "[I] installing $(1) => $(2)";\

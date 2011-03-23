@@ -14,11 +14,14 @@ namespace vos {
  *                default output.
  */
 Dlogger::Dlogger() :
-	_lock(),
-	_tmp(),
-	_time_s(0),
-	_time(),
-	_s(0)
+	_lock()
+,	_tmp()
+,	_time_s(0)
+,	_time()
+,	_s(0)
+#if defined(sun) || defined(__sun)
+,	_args()
+#endif
 {
 	pthread_mutex_init(&_lock, NULL);
 

@@ -348,7 +348,7 @@ int File::get_line(Buffer* line)
 		return 0;
 	}
 
-	register int s;
+	register int s	= 0;
 	register int start;
 	register int len;
 
@@ -380,8 +380,12 @@ int File::get_line(Buffer* line)
 				if (s == 0) {
 					break;
 				}
+
 				_i	+= s;
 				len	-= s;
+			}
+			if (s == 0) {
+				break;
 			}
 
 			start	= 0;
