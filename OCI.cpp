@@ -485,7 +485,17 @@ int OCI::login_new_session(const char* username, const char* password
 	return 0;
 }
 
-int OCI::get_new_session(OCI* db, const char* username, const char* password)
+/**
+ * @method	: OCI::get_new_session
+ * @param	:
+ *	> db	: pointer to OCI object.
+ *	> user	: user for database connection.
+ *	> pass	: user identification for database connection.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ */
+int OCI::get_new_session(OCI* db, const char* user, const char* pswd)
 {
 	int s;
 
@@ -494,9 +504,11 @@ int OCI::get_new_session(OCI* db, const char* username, const char* password)
 		return -1;
 	}
 
-	db->_v = (OCIValue**) calloc(_value_sz, sizeof(OCIValue *));
 	if (!db->_v) {
-		return -1;
+		db->_v = (OCIValue**) calloc(_value_sz, sizeof(OCIValue *));
+		if (!db->_v) {
+			return -1;
+		}
 	}
 
 	db->_env = _env;
@@ -509,17 +521,15 @@ int OCI::get_new_session(OCI* db, const char* username, const char* password)
 		return -1;
 	}
 
-	_stat = OCIAttrSet(db->_auth, OCI_HTYPE_AUTHINFO, (void *) username
-			, (unsigned int) strlen(username), OCI_ATTR_USERNAME
-			, _err);
+	_stat = OCIAttrSet(db->_auth, OCI_HTYPE_AUTHINFO, (void *) user
+			, (unsigned int) strlen(user), OCI_ATTR_USERNAME, _err);
 	s = check_err();
 	if (s < 0) {
 		return -1;
 	}
 
-	_stat = OCIAttrSet(db->_auth, OCI_HTYPE_AUTHINFO, (void *) password
-			, (unsigned int) strlen(password), OCI_ATTR_PASSWORD
-			, _err);
+	_stat = OCIAttrSet(db->_auth, OCI_HTYPE_AUTHINFO, (void *) pswd
+			, (unsigned int) strlen(pswd), OCI_ATTR_PASSWORD, _err);
 	s = check_err();
 	if (s < 0) {
 		return -1;
@@ -804,7 +814,7 @@ int OCI::stmt_execute(const char *stmt)
 				, OCI_ATTR_STMT_TYPE, _err);
 	s = check_err();
 	if (s < 0) {
-		return s;
+		goto out;
 	}
 
 	if (stmt_type == OCI_STMT_SELECT) {
@@ -821,7 +831,7 @@ int OCI::stmt_execute(const char *stmt)
 				, OCI_DEFAULT | OCI_COMMIT_ON_SUCCESS);
 	s = check_err();
 	if (s < 0) {
-		return s;
+		goto out;
 	}
 
 	if (stmt_type != OCI_STMT_SELECT) {
@@ -831,14 +841,22 @@ int OCI::stmt_execute(const char *stmt)
 			}
 		}
 	}
-
-	return 0;
+out:
+	if (stmt) {
+		stmt_release();
+	}
+	return s;
 }
 
 int OCI::stmt_execute_r(const char* stmt)
 {
+	int s = 0;
+
 	lock();
-	return stmt_execute(stmt);
+	s = stmt_execute(stmt);
+	unlock();
+
+	return s;
 }
 
 /**
@@ -899,6 +917,30 @@ void OCI::stmt_release_r()
 {
 	stmt_release();
 	unlock();
+}
+
+/**
+ * @method	: OCI::logout
+ * @desc	: release connection back to session pool.
+ */
+void OCI::session_release()
+{
+	if (_service) {
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr, "[OCI] free session\n");
+		}
+		OCISessionRelease(_service, _err, NULL, 0, OCI_DEFAULT);
+		_service = 0;
+	}
+	if (_auth) {
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr, "[OCI] free auth\n");
+		}
+		OCIHandleFree(_auth, OCI_HTYPE_AUTHINFO);
+		_auth = 0;
+	}
+	_err = NULL;
+	_env = NULL;
 }
 
 /**

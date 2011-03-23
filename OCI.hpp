@@ -100,6 +100,7 @@ public:
 	int  stmt_fetch();
 	void stmt_release();
 	void stmt_release_r();
+	void session_release();
 	void logout();
 	void disconnect();
 
