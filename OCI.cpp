@@ -870,6 +870,12 @@ int OCI::stmt_fetch()
 {
 	register int s;
 
+	for (int idx = 1; idx <= _value_i; idx++) {
+		if (_v[idx]) {
+			memset(_v[idx]->_v, '\0', _v[idx]->_l);
+		}
+	}
+
 	_stat = OCIStmtFetch(_stmt, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
 	if (_stat == OCI_NO_DATA) {
 		return 1;
@@ -1162,9 +1168,10 @@ int OCI::cursor_fetch()
 
 	for (int idx = 1; idx <= _value_i; idx++) {
 		if (_v[idx]) {
-			_v[idx]->reset();
+			memset(_v[idx]->_v, '\0', _v[idx]->_l);
 		}
 	}
+
 	_stat = OCIStmtFetch(_cursor, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
 	if (_stat == OCI_NO_DATA) {
 		return 1;
