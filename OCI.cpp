@@ -146,7 +146,7 @@ int OCI::check(void* handle, int type)
 		break;
 	case OCI_NO_DATA:
 		errmsg = (char*)_oci_errmsg[E_OCI_NO_DATA];
-		return _stat;
+		return 0;
 		break;
 	case OCI_ERROR:
 		if (handle) {

@@ -770,9 +770,12 @@ long int Buffer::to_lint()
 
 	long int v;
 
+	errno = 0;
+
 	v = strtol(_v, NULL, 0);
-	if (errno) {
-		v = 0;
+
+	if (errno == ERANGE) {
+		perror(NULL);
 	}
 
 	return v;
