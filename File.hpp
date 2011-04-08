@@ -92,6 +92,7 @@ public:
 	static int BASENAME(Buffer* name, const char* path);
 	static int COPY(const char* src, const char* dst);
 	static int TOUCH(const char* file);
+	static int WRITE_PID(const char* file);
 
 	static unsigned int DFLT_SIZE;
 
