@@ -33,7 +33,7 @@ do_build=\
 
 do_install=\
 	echo "[I] installing $(1) => $(2)";\
-	rm -f $(2) 2&> /dev/null;\
+	rm -f $(2) 2> /dev/null;\
 	cp -f $(1) $(2);
 
 do_install_dir=\
@@ -42,12 +42,12 @@ do_install_dir=\
 
 do_link=\
 	echo "[S] linking $(1) => $(2)";\
-	rm -f $(2) 2&> /dev/null;\
+	rm -f $(2) 2> /dev/null;\
 	ln -s $(1) $(2);
 
 do_rm=\
 	echo "[R] remove file $(1)";\
-	rm -f $(1) 2&> /dev/null;
+	rm -f $(1) 2> /dev/null;
 
 do_mkdir=\
 	echo "[M] mkdir $(1)";\

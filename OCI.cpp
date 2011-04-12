@@ -132,23 +132,24 @@ int OCI::init()
  */
 int OCI::check(void* handle, int type)
 {
-	char*	errmsg = 0;
-	sb4	errcode = 0;
+	char*	errmsg	= 0;
+	sb4	errcode	= 0;
+	int	s	= 0;
 
 	switch (_stat) {
 	case OCI_SUCCESS:
 		return 0;
 	case OCI_SUCCESS_WITH_INFO:
 		errmsg = (char*)_oci_errmsg[E_OCI_SUCC_WITH_INFO];
-		return 0;
+		break;
 	case OCI_NEED_DATA:
 		errmsg = (char*)_oci_errmsg[E_OCI_NEED_DATA];
 		break;
 	case OCI_NO_DATA:
 		errmsg = (char*)_oci_errmsg[E_OCI_NO_DATA];
-		return 0;
 		break;
 	case OCI_ERROR:
+		s = -1;
 		if (handle) {
 			errmsg = (char*)calloc(2048, sizeof(errmsg));
 			OCIErrorGet(handle, 1, 0, &errcode, (text *) errmsg
@@ -158,20 +159,23 @@ int OCI::check(void* handle, int type)
 		}
 		break;
 	case OCI_INVALID_HANDLE:
-		errmsg = (char *)_oci_errmsg[E_OCI_INVLD_HNDL];
+		errmsg	= (char *)_oci_errmsg[E_OCI_INVLD_HNDL];
+		s	= -1;
 		break;
 	case OCI_STILL_EXECUTING:
-		errmsg = (char *)_oci_errmsg[E_OCI_STILL_EXEC];
+		errmsg	= (char *)_oci_errmsg[E_OCI_STILL_EXEC];
+		s	= -1;
 		break;
 	case OCI_CONTINUE:
-		errmsg = (char *)_oci_errmsg[E_OCI_CONT];
+		errmsg	= (char *)_oci_errmsg[E_OCI_CONT];
+		s	= -1;
 		break;
 	}
 
 	fprintf(stderr, "[vos::OCI_____] check: status '%d' code '%d'\n"
 		"  ERROR: %s\n", _stat, errcode, errmsg);
 
-	return -1;
+	return s;
 }
 
 /**
