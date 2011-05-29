@@ -104,7 +104,7 @@ public:
 	void logout();
 	void disconnect();
 
-	void stmt_new_value(const int pos, const int type);
+	void stmt_new_value(const int pos, const int type = 4);
 	void stmt_bind(const int pos, const int type = OCI_T_VARCHAR);
 	void stmt_define(const int pos, const int type = OCI_T_VARCHAR);
 

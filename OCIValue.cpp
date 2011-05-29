@@ -48,8 +48,11 @@ int OCIValue::init(const int pos, const int type, const int len)
 {
 	_p = pos;
 	_t = type;
+	if (resize(len)) {
+		return -1;
+	}
 	reset();
-	return resize(len);
+	return 0;
 }
 
 /**
@@ -76,6 +79,16 @@ OCIValue* OCIValue::INIT(const int pos, const int type, const int len)
 		}
 	}
 	return o;
+}
+
+const char* OCIValue::v()
+{
+	if (_t == OCI_T_VARCHAR || _t == OCI_T_RAW) {
+		_v[_l] = 0;
+		_l--;
+		_v[_l] = 0;
+	}
+	return _v;
 }
 
 } /* namespace::vos */

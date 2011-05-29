@@ -554,8 +554,8 @@ inline int Config::parsing()
 	return 0;
 bad_cfg:
 	fprintf(stderr
-	, "[vos::Config] parsing: line '%d', invalid config format.\n"
-	, _e_row);
+	, "[vos::Config] parsing: line '%d' column '%d', invalid config format.\n"
+	, _e_row, _e_col);
 
 	return -1;
 }

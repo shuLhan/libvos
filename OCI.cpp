@@ -695,7 +695,7 @@ int OCI::stmt_prepare(const char* stmt)
 }
 
 /**
- * @method	: OCI::stmt_prepare
+ * @method	: OCI::stmt_prepare_r
  * @param	:
  *	> stmt	: Oracle SQL query (DDL or DML).
  * @return	:
