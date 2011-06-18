@@ -14,7 +14,7 @@ const char* __eol[N_EOL_MODE] = {
 	"\r\n"
 };
 
-unsigned int File::DFLT_SIZE = 8192;
+unsigned int File::DFLT_SIZE = 512;
 
 File::File(const unsigned int bfr_size) : Buffer(bfr_size)
 ,	_d(0)

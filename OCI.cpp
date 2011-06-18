@@ -805,7 +805,8 @@ int OCI::stmt_execute(const char *stmt)
 {
 	register int	s		= 0;
 	register int	i		= 0;
-	int		stmt_type	= 0;
+	unsigned short	stmt_type	= 0;
+	unsigned int	size		= sizeof(stmt_type);
 
 	if (stmt) {
 		s = stmt_prepare(stmt);
@@ -814,7 +815,7 @@ int OCI::stmt_execute(const char *stmt)
 		}
 	}
 
-	_stat = OCIAttrGet(_stmt, OCI_HTYPE_STMT, &stmt_type, 0
+	_stat = OCIAttrGet(_stmt, OCI_HTYPE_STMT, &stmt_type, &size
 				, OCI_ATTR_STMT_TYPE, _err);
 	s = check_err();
 	if (s < 0) {
@@ -870,7 +871,7 @@ int OCI::stmt_execute_r(const char* stmt)
  *	< !0	: fail.
  * @desc	: get the next value from result set.
  */
-int OCI::stmt_fetch()
+int OCI::stmt_fetch(unsigned short orientation, int offset)
 {
 	register int s;
 
@@ -880,7 +881,7 @@ int OCI::stmt_fetch()
 		}
 	}
 
-	_stat = OCIStmtFetch(_stmt, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
+	_stat = OCIStmtFetch2(_stmt, _err, 1, orientation, offset, OCI_DEFAULT);
 	if (_stat == OCI_NO_DATA) {
 		return 1;
 	}
@@ -1166,7 +1167,7 @@ int OCI::cursor_define(const int pos, const int type)
 	return s;
 }
 
-int OCI::cursor_fetch()
+int OCI::cursor_fetch(unsigned short orientation, int offset)
 {
 	int s = 0;
 
@@ -1176,7 +1177,7 @@ int OCI::cursor_fetch()
 		}
 	}
 
-	_stat = OCIStmtFetch(_cursor, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
+	_stat = OCIStmtFetch2(_cursor, _err, 1, orientation, offset, OCI_DEFAULT);
 	if (_stat == OCI_NO_DATA) {
 		return 1;
 	}
