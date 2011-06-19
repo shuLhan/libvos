@@ -2,7 +2,6 @@ html {
 	background	: #EFEFEF;
 	font-family	: serif, Bitsream Vera Serif;
 	margin		: 0 auto 0 auto;
-	width		: 216mm;
 }
 
 body {
@@ -61,6 +60,14 @@ th, td {
 	font-size	: 12;
 	font-style	: italic;
 	margin		: -1em 0 2em 0;
+}
+
+.content-toc {
+	padding		:0px;
+	margin		:0px;
+}
+.content-toc li {
+	padding		:0px;
 }
 
 .toc {
