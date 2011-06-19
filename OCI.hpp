@@ -97,20 +97,20 @@ public:
 	int stmt_execute(const char* stmt = 0);
 	int stmt_execute_r(const char* stmt = 0);
 
-	int  stmt_fetch();
+	int  stmt_fetch(unsigned short orientation = OCI_FETCH_NEXT, int offset = 0);
 	void stmt_release();
 	void stmt_release_r();
 	void session_release();
 	void logout();
 	void disconnect();
 
-	void stmt_new_value(const int pos, const int type);
+	void stmt_new_value(const int pos, const int type = 4);
 	void stmt_bind(const int pos, const int type = OCI_T_VARCHAR);
 	void stmt_define(const int pos, const int type = OCI_T_VARCHAR);
 
 	int stmt_bind_cursor(const int pos);
 	int cursor_define(const int pos, const int type = OCI_T_VARCHAR);
-	int cursor_fetch();
+	int cursor_fetch(unsigned short orientation = OCI_FETCH_NEXT, int offset = 0);
 	void cursor_release();
 
 	void release_buffer();

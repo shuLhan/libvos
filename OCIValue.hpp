@@ -58,7 +58,7 @@ public:
 		return OCIValue::INIT(pos, OCI_T_DATE, 8);
 	}
 	static inline OCIValue * RAW(const int pos) {
-		return OCIValue::INIT(pos, OCI_T_RAW, 2002);
+		return OCIValue::INIT(pos, OCI_T_RAW, 2001);
 	}
 	static inline OCIValue * ROWID(const int pos) {
 		return OCIValue::INIT(pos, OCI_T_ROWID, 11);
@@ -90,6 +90,8 @@ public:
 	static inline OCIValue * UROWID(const int pos) {
 		return OCIValue::INIT(pos, OCI_T_UROWID, 3951);
 	}
+
+	const char* v();
 
 	int		_t;
 	int		_p;

@@ -10,8 +10,8 @@ MAKEFLAGS	+= --warn-undefined-variables
 SYS		= $(shell uname)
 
 CXX		= g++
-LINKER		= gcc
-CXXFLAGS_GLOBAL	= -fno-rtti -fno-exceptions -pipe -nodefaultlibs
+LINKER		= g++
+CXXFLAGS_GLOBAL	= -fno-rtti -fno-exceptions -pipe
 
 ifndef CXXFLAGS
 CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os
@@ -23,17 +23,20 @@ CXXFLAGS_ADD	=
 LDFLAGS		= -lpthread
 LDFLAGS_ADD	=
 
+LIBVOS_OPTS	=
+NO_DEFAULT_LIBS	= -nodefaultlibs -DNO_DEFAULT_LIBS
+
 do_compile=\
 	echo "[C] $@";\
-	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -c $< -o $@;
+	$(CXX) $(CXXFLAGS) -c $< -o $@;
 
 do_build=\
 	echo "[B] $@";\
-	$(LINKER) $(CXXFLAGS_ADD) $(LDFLAGS) $^ -o $@;
+	$(LINKER) $(LDFLAGS) $^ -o $@;
 
 do_install=\
 	echo "[I] installing $(1) => $(2)";\
-	rm -f $(2) 2&> /dev/null;\
+	rm -f $(2) 2> /dev/null;\
 	cp -f $(1) $(2);
 
 do_install_dir=\
@@ -42,12 +45,12 @@ do_install_dir=\
 
 do_link=\
 	echo "[S] linking $(1) => $(2)";\
-	rm -f $(2) 2&> /dev/null;\
+	rm -f $(2) 2> /dev/null;\
 	ln -s $(1) $(2);
 
 do_rm=\
 	echo "[R] remove file $(1)";\
-	rm -f $(1) 2&> /dev/null;
+	rm -f $(1) 2> /dev/null;
 
 do_mkdir=\
 	echo "[M] mkdir $(1)";\

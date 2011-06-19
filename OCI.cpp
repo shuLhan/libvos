@@ -132,23 +132,24 @@ int OCI::init()
  */
 int OCI::check(void* handle, int type)
 {
-	char*	errmsg = 0;
-	sb4	errcode = 0;
+	char*	errmsg	= 0;
+	sb4	errcode	= 0;
+	int	s	= 0;
 
 	switch (_stat) {
 	case OCI_SUCCESS:
 		return 0;
 	case OCI_SUCCESS_WITH_INFO:
 		errmsg = (char*)_oci_errmsg[E_OCI_SUCC_WITH_INFO];
-		return 0;
+		break;
 	case OCI_NEED_DATA:
 		errmsg = (char*)_oci_errmsg[E_OCI_NEED_DATA];
 		break;
 	case OCI_NO_DATA:
 		errmsg = (char*)_oci_errmsg[E_OCI_NO_DATA];
-		return 0;
 		break;
 	case OCI_ERROR:
+		s = -1;
 		if (handle) {
 			errmsg = (char*)calloc(2048, sizeof(errmsg));
 			OCIErrorGet(handle, 1, 0, &errcode, (text *) errmsg
@@ -158,20 +159,23 @@ int OCI::check(void* handle, int type)
 		}
 		break;
 	case OCI_INVALID_HANDLE:
-		errmsg = (char *)_oci_errmsg[E_OCI_INVLD_HNDL];
+		errmsg	= (char *)_oci_errmsg[E_OCI_INVLD_HNDL];
+		s	= -1;
 		break;
 	case OCI_STILL_EXECUTING:
-		errmsg = (char *)_oci_errmsg[E_OCI_STILL_EXEC];
+		errmsg	= (char *)_oci_errmsg[E_OCI_STILL_EXEC];
+		s	= -1;
 		break;
 	case OCI_CONTINUE:
-		errmsg = (char *)_oci_errmsg[E_OCI_CONT];
+		errmsg	= (char *)_oci_errmsg[E_OCI_CONT];
+		s	= -1;
 		break;
 	}
 
 	fprintf(stderr, "[vos::OCI_____] check: status '%d' code '%d'\n"
 		"  ERROR: %s\n", _stat, errcode, errmsg);
 
-	return -1;
+	return s;
 }
 
 /**
@@ -691,7 +695,7 @@ int OCI::stmt_prepare(const char* stmt)
 }
 
 /**
- * @method	: OCI::stmt_prepare
+ * @method	: OCI::stmt_prepare_r
  * @param	:
  *	> stmt	: Oracle SQL query (DDL or DML).
  * @return	:
@@ -801,7 +805,8 @@ int OCI::stmt_execute(const char *stmt)
 {
 	register int	s		= 0;
 	register int	i		= 0;
-	int		stmt_type	= 0;
+	unsigned short	stmt_type	= 0;
+	unsigned int	size		= sizeof(stmt_type);
 
 	if (stmt) {
 		s = stmt_prepare(stmt);
@@ -810,7 +815,7 @@ int OCI::stmt_execute(const char *stmt)
 		}
 	}
 
-	_stat = OCIAttrGet(_stmt, OCI_HTYPE_STMT, &stmt_type, 0
+	_stat = OCIAttrGet(_stmt, OCI_HTYPE_STMT, &stmt_type, &size
 				, OCI_ATTR_STMT_TYPE, _err);
 	s = check_err();
 	if (s < 0) {
@@ -866,7 +871,7 @@ int OCI::stmt_execute_r(const char* stmt)
  *	< !0	: fail.
  * @desc	: get the next value from result set.
  */
-int OCI::stmt_fetch()
+int OCI::stmt_fetch(unsigned short orientation, int offset)
 {
 	register int s;
 
@@ -876,7 +881,7 @@ int OCI::stmt_fetch()
 		}
 	}
 
-	_stat = OCIStmtFetch(_stmt, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
+	_stat = OCIStmtFetch2(_stmt, _err, 1, orientation, offset, OCI_DEFAULT);
 	if (_stat == OCI_NO_DATA) {
 		return 1;
 	}
@@ -1162,7 +1167,7 @@ int OCI::cursor_define(const int pos, const int type)
 	return s;
 }
 
-int OCI::cursor_fetch()
+int OCI::cursor_fetch(unsigned short orientation, int offset)
 {
 	int s = 0;
 
@@ -1172,7 +1177,7 @@ int OCI::cursor_fetch()
 		}
 	}
 
-	_stat = OCIStmtFetch(_cursor, _err, 1, OCI_FETCH_NEXT, OCI_DEFAULT);
+	_stat = OCIStmtFetch2(_cursor, _err, 1, orientation, offset, OCI_DEFAULT);
 	if (_stat == OCI_NO_DATA) {
 		return 1;
 	}

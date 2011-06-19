@@ -14,7 +14,7 @@ const char* __eol[N_EOL_MODE] = {
 	"\r\n"
 };
 
-unsigned int File::DFLT_SIZE = 8192;
+unsigned int File::DFLT_SIZE = 512;
 
 File::File(const unsigned int bfr_size) : Buffer(bfr_size)
 ,	_d(0)
@@ -546,6 +546,10 @@ int File::writes(const char* fmt, ...)
 	s = b.vprint(fmt, al);
 	va_end(al);
 
+	if (s < 0) {
+		return -1;
+	}
+
 	return write_raw(b._v, b._i);
 }
 
@@ -842,6 +846,37 @@ int File::TOUCH(const char* filename)
 			::close(s);
 			s = 0;
 		}
+	}
+
+	return s;
+}
+
+/**
+ * @method	: write_pid
+ * @param	:
+ *	> file	: path to a file, where PID will be written.
+ * @return	:
+ *	< 0	: success.
+ *	< -1	: fail.
+ * @desc	: function to write PID to 'file'.
+ *
+ *	This function usually used by process daemon.
+ *
+ *	When daemon started, daemon will write its process id to file, to :
+ *	- make user know that daemon is already running, so
+ *	- no other daemon running, just one, or
+ *	- if daemon is not running but PID file exist, that mean is
+ *	  last daemon is exit in abnormal state; so see log file for
+ *	  further information.
+ */
+int File::WRITE_PID(const char* file)
+{
+	register int	s;
+	File		f;
+
+	s = f.open_wx(file);
+	if (0 == s) {
+		s = f.writes("%d", getpid());
 	}
 
 	return s;
