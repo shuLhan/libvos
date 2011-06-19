@@ -66,12 +66,27 @@ ifeq ($(SYS),SunOS)
 LDFLAGS_ADD	+= -lsocket -lnsl
 endif
 
+all:
 
-.PHONY: libvos-all libvos-all-32 libvos-all-64 libvos-debug libvos-clean
+.PHONY: libvos
+.PHONY: libvos-opts EMPTY_OPTS NO_DEFAULT_LIBS
+.PHONY: libvos-all libvos-all-32 libvos-all-64
+.PHONY: libvos-debug libvos-debug-32 libvos-debug-64
+
+libvos: $$(PRE_TARGET) $$(TARGET_OBJS) $$(TARGET)
+
+libvos-opts: LIBVOS_OPTS+=EMPTY_OPTS
+libvos-opts: $$(LIBVOS_OPTS)
+
+EMPTY_OPTS: libvos
+
+NO_DEFAULT_LIBS: CXXFLAGS_ADD+=$(NO_DEFAULT_LIBS)
+NO_DEFAULT_LIBS: LINKER=gcc
+NO_DEFAULT_LIBS: libvos
 
 libvos-all: CXXFLAGS+=$(CXXFLAGS_ADD)
 libvos-all: LDFLAGS+=$(LDFLAGS_ADD)
-libvos-all: $$(PRE_TARGET) $$(TARGET_OBJS) $$(TARGET)
+libvos-all: libvos-opts
 
 libvos-all-32: CXXFLAGS_ADD+=-m32
 libvos-all-32: libvos-all
@@ -81,7 +96,7 @@ libvos-all-64: libvos-all
 
 libvos-debug: CXXFLAGS=$(CXXFLAGS_DEBUG) $(CXXFLAGS_ADD)
 libvos-debug: LDFLAGS+=$(LDFLAGS_ADD)
-libvos-debug: $$(PRE_TARGET) $$(TARGET_OBJS) $$(TARGET)
+libvos-debug: libvos-opts
 
 libvos-debug-32: CXXFLAGS_ADD+=$(CXXFLAGS_DEBUG) -m32
 libvos-debug-32: libvos-debug

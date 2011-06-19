@@ -6,6 +6,8 @@
 
 #include "libvos.hpp"
 
+#if (NO_DEFAULT_LIBS)
+
 extern "C" void* __my_cpp_new(size_t len) { \
 	void *p = calloc(1, len);
 	if (!p) {
@@ -27,6 +29,8 @@ void  operator delete(void* p)		__attribute__((alias("__my_cpp_delete")));
 void  operator delete[](void* p)	__attribute__((alias("__my_cpp_delete")));
 
 void* __cxa_pure_virtual = 0;
+
+#endif	/* NO_DEFAULT_LIBS */
 
 namespace vos {
 
