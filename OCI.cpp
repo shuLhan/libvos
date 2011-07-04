@@ -687,9 +687,6 @@ int OCI::stmt_prepare(const char* stmt)
 				, (unsigned int) strlen(stmt), 0, 0
 				, OCI_NTV_SYNTAX, OCI_DEFAULT);
 	s = check_err();
-	if (s < 0) {
-		unlock();
-	}
 
 	return s;
 }
@@ -712,9 +709,13 @@ int OCI::stmt_prepare_r(const char* stmt)
 		return -1;
 	}
 
-	lock();
+	int s = 0;
 
-	return stmt_prepare(stmt);
+	lock();
+	s = stmt_prepare(stmt);
+	unlock();
+
+	return s;
 }
 
 int OCI::stmt_subscribe(void* callback)
