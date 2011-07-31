@@ -40,7 +40,10 @@ int Reader::refill_buffer(const int read_min)
 	register int len	= 0;
 
 	move_len = _i - _p;
-	if (move_len > 0 && _p > 0) {
+	if (move_len > 0 && _p > ((_i / 2) + 1)) {
+		if (LIBVOS_DEBUG) {
+			printf("[libvos::Reader] refill_buffer: memmove: from %d of %d\n", _p, _i);
+		}
 		memmove(&_v[0], &_v[_p], move_len);
 	}
 
@@ -151,11 +154,10 @@ int Reader::read(Record* r, RecordMD* rmd)
 					goto reject;
 				}
 			}
+			/* get record blob size */
 			r->_i = 0;
 			memcpy(&r->_i, &_v[startp], RecordMD::BLOB_SIZE);
 			startp += RecordMD::BLOB_SIZE;
-
-			r->_i = r->_i - RecordMD::BLOB_SIZE;
 
 			if (r->_i > r->_l) {
 				r->resize(r->_i + 1);
@@ -177,6 +179,7 @@ int Reader::read(Record* r, RecordMD* rmd)
 				}
 			}
 
+			/* copy blob from file buffer to record buffer */
 			memcpy(r->_v, &_v[startp], r->_i);
 			r->_v[r->_i] = '\0';
 

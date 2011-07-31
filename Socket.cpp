@@ -19,6 +19,7 @@ unsigned int Socket::DFLT_BUFFER_SIZE = 65536;
 Socket::Socket(const int bfr_size) : File(bfr_size)
 ,	_family(0)
 ,	_type(0)
+,	_recv_addr_l (0)
 ,	_next(NULL)
 ,	_prev(NULL)
 {
@@ -244,9 +245,7 @@ long int Socket::recv_udp(struct sockaddr_in* addr)
 		return 0;
 	}
 
-	socklen_t addr_len = SockAddr::IN_SIZE;
-
-	_i = (int) ::recvfrom(_d, _v, _l, 0, (struct sockaddr*) addr, &addr_len);
+	_i = (int) ::recvfrom(_d, _v, _l, 0, (struct sockaddr*) addr, &_recv_addr_l);
 	if (_i >= 0) {
 		_v[_i] = '\0';
 	}

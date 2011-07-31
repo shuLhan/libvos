@@ -46,10 +46,11 @@ public:
 				, const char* bfr = NULL, int len = 0);
 	long int recv_udp(struct sockaddr_in* addr);
 
-	int	_family;
-	int	_type;
-	Socket*	_next;
-	Socket*	_prev;
+	int		_family;
+	int		_type;
+	socklen_t	_recv_addr_l;
+	Socket*		_next;
+	Socket*		_prev;
 
 	static unsigned int DFLT_BUFFER_SIZE;
 private:

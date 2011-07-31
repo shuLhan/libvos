@@ -62,12 +62,10 @@ int Writer::write(Record *row, RecordMD *rmd)
 			}
 			break;
 		case RMD_T_BLOB:
-			s = row->shiftr(RecordMD::BLOB_SIZE);
+			s = _line.append_bin (&row->_i, RecordMD::BLOB_SIZE);
 			if (s < 0) {
 				return -1;
 			}
-
-			memcpy(&row->_v[0], &row->_i, RecordMD::BLOB_SIZE);
 
 			s = _line.append_raw(row->_v, row->_i);
 			if (s < 0) {

@@ -253,7 +253,7 @@ int Buffer::shiftr(const int nbyte, int c)
 		}
 	}
 
-	memmove(&_v[nbyte], _v, _i);
+	memmove(&_v[nbyte], &_v[0], _i);
 	memset(_v, c, nbyte);
 
 	_i	+= nbyte;
@@ -464,7 +464,7 @@ int Buffer::append_bin(void *bin, int len)
 
 	memcpy(&_v[_i], bin, len);
 	_i += len;
-	_v[_i] = 0;;
+	_v[_i] = 0;
 
 	return len;
 }

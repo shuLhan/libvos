@@ -14,7 +14,7 @@ const char* __eol[N_EOL_MODE] = {
 	"\r\n"
 };
 
-unsigned int File::DFLT_SIZE = 512;
+unsigned int File::DFLT_SIZE = 4096;
 
 File::File(const unsigned int bfr_size) : Buffer(bfr_size)
 ,	_d(0)
@@ -876,7 +876,7 @@ int File::WRITE_PID(const char* file)
 
 	s = f.open_wx(file);
 	if (0 == s) {
-		s = f.writes("%d", getpid());
+		s = f.appendi(getpid());
 	}
 
 	return s;
