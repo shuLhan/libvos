@@ -121,7 +121,9 @@ int Resolver::add_server(char* server_list)
 	}
 
 	register int	s;
+	int		port_num;
 	Buffer		addr;
+	Buffer		port;
 	char*		p;
 	SockAddr*	saddr;
 
@@ -135,6 +137,13 @@ int Resolver::add_server(char* server_list)
 			addr.appendc(*p);
 			p++;
 		}
+		if (*p == ':') {
+			p++;
+			while (isalnum(*p)) {
+				port.appendc(*p);
+				p++;
+			}
+		}
 		while (isspace(*p)) {
 			p++;
 		}
@@ -142,11 +151,18 @@ int Resolver::add_server(char* server_list)
 			break;
 		}
 		if (*p != ',') {
+			fprintf(stderr
+			, "[Resolver::add_server] invalid character: '%c'\n"
+			, *p);
 			return -1;
 		}
 		p++;
 		if (!addr.is_empty()) {
-			s = SockAddr::INIT(&saddr, AF_INET, addr._v, PORT);
+			port_num = port.to_lint ();
+			if (port_num <= 0 || port_num > 65563) {
+				port_num = 53;
+			}
+			s = SockAddr::INIT(&saddr, AF_INET, addr._v, port_num);
 			if (s < 0) {
 				return -1;
 			}
@@ -155,7 +171,11 @@ int Resolver::add_server(char* server_list)
 		}
 	}
 	if (!addr.is_empty()) {
-		s = SockAddr::INIT(&saddr, AF_INET, addr._v, PORT);
+		port_num = port.to_lint ();
+		if (port_num <= 0 || port_num > 65563) {
+			port_num = 53;
+		}
+		s = SockAddr::INIT(&saddr, AF_INET, addr._v, port_num);
 		if (s < 0) {
 			return -1;
 		}
