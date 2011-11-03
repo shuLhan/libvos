@@ -19,7 +19,9 @@ Dlogger::Dlogger() :
 ,	_time_s(0)
 ,	_time()
 ,	_s(0)
+#if defined(sun) || defined(__sun) || defined(__i386__)
 ,	_args()
+#endif
 {
 	pthread_mutex_init(&_lock, NULL);
 

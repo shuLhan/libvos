@@ -158,9 +158,9 @@ int Resolver::add_server(char* server_list)
 		}
 		p++;
 		if (!addr.is_empty()) {
-			port_num = port.to_lint ();
-			if (port_num <= 0 || port_num > 65563) {
-				port_num = 53;
+			port_num = (int) port.to_lint ();
+			if (port_num <= 0 || port_num > 65534) {
+				port_num = PORT;
 			}
 			s = SockAddr::INIT(&saddr, AF_INET, addr._v, port_num);
 			if (s < 0) {
@@ -171,9 +171,9 @@ int Resolver::add_server(char* server_list)
 		}
 	}
 	if (!addr.is_empty()) {
-		port_num = port.to_lint ();
-		if (port_num <= 0 || port_num > 65563) {
-			port_num = 53;
+		port_num = (int) port.to_lint ();
+		if (port_num <= 0 || port_num > 65534) {
+			port_num = PORT;
 		}
 		s = SockAddr::INIT(&saddr, AF_INET, addr._v, port_num);
 		if (s < 0) {
