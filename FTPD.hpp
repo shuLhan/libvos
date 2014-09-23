@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2010 kilabit.org
+ * Copyright (C) 2014 kilabit.info
  * Author:
- *	- m.shulhan (ms@kilabit.org)
+ *	- mhd sulhan (ms@kilabit.info)
  */
 
 #ifndef _LIBVOS_FTP_DAEMON_HPP
