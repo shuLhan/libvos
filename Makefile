@@ -46,7 +46,8 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/FTPD_cmd.oo		\
 			$(LIBVOS_BLD_D)/FTPD_client.oo		\
 			$(LIBVOS_BLD_D)/FTPD_user.oo		\
-			$(LIBVOS_BLD_D)/FTPD.oo
+			$(LIBVOS_BLD_D)/FTPD.oo			\
+			$(LIBVOS_BLD_D)/SSVReader.oo
 
 #
 # with OCI library
@@ -126,6 +127,7 @@ $(LIBVOS_BLD_D)/Config.oo	: $(LIBVOS_BLD_D)/ConfigData.oo
 
 $(LIBVOS_BLD_D)/SockAddr.oo	: $(LIBVOS_BLD_D)/Buffer.oo
 
+$(LIBVOS_BLD_D)/SSVReader.oo	\
 $(LIBVOS_BLD_D)/RecordMD.oo	\
 $(LIBVOS_BLD_D)/Config.oo	\
 $(LIBVOS_BLD_D)/Dlogger.oo	\
@@ -145,6 +147,7 @@ $(LIBVOS_BLD_D)/Resolver.oo	: $(LIBVOS_BLD_D)/SockServer.oo
 $(LIBVOS_BLD_D)/Reader.oo	\
 $(LIBVOS_BLD_D)/Writer.oo	: $(LIBVOS_BLD_D)/RecordMD.oo
 
+$(LIBVOS_BLD_D)/SSVReader.oo	\
 $(LIBVOS_BLD_D)/Reader.oo	\
 $(LIBVOS_BLD_D)/Writer.oo	: $(LIBVOS_BLD_D)/Record.oo
 

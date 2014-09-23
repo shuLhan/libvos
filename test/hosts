@@ -1,0 +1,40 @@
+#
+# /etc/hosts: static lookup table for host names
+#
+
+#<ip-address>	<hostname.domain.org>	<hostname>
+127.0.0.1	localhost.localdomain	localhost	
+::1		localhost.localdomain	localhost	  
+127.0.0.1	bubu
+
+127.0.0.1	localhost.doc.php
+127.0.0.1	localhost.doc.librextjs
+127.0.0.1	localhost.doc.sencha.extjs411a
+127.0.0.1	localhost.doc.sencha.extjs421
+127.0.0.1	localhost.doc.sencha.extjs5
+127.0.0.1	localhost.doc.sencha.touch
+127.0.0.1	localhost.doc.phalcon
+127.0.0.1	localhost.doc.java
+127.0.0.1	localhost.doc.android
+127.0.0.1	localhost.doc.ant
+127.0.0.1	localhost.doc.bootstrap
+
+127.0.0.1	localhost.app.mail
+127.0.0.1	localhost.app.myreader
+
+127.0.0.1	localhost.app.wui
+127.0.0.1	localhost.app.jaring
+127.0.0.1	localhost.app.voyage
+127.0.0.1	localhost.app.quickcount
+127.0.0.1	localhost.app.siman
+127.0.0.1	localhost.app.arumbumi
+127.0.0.1	localhost.app.sima
+127.0.0.1	localhost.app.kemxtri
+127.0.0.1	localhost.app.sandbox
+127.0.0.1	localhost.app.globalukm
+127.0.0.1	localhost.app.mup
+127.0.0.1	localhost.app.otw-trans
+127.0.0.1	localhost.app.sigma
+127.0.0.1	localhost.app.menrva
+
+# End of file
