@@ -1,1 +1,3 @@
 *.oo
+test/valgrind.*
+test/*.test
