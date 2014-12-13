@@ -1008,12 +1008,15 @@ void OCI::disconnect()
  */
 void OCI::stmt_new_value(const int pos, const int type)
 {
+	char* newv = NULL;
+
 	if (pos >= _value_sz) {
 		_value_sz += Buffer::DFLT_SIZE;
-		_v = (OCIValue**) realloc(_v, _value_sz * sizeof(OCIValue*));
-		if (!_v) {
+		newv = (OCIValue**) realloc(_v, _value_sz * sizeof(OCIValue*));
+		if (!newv) {
 			return;
 		}
+		_v = newv;
 
 		memset(_v + _value_i + 1, 0,
 			Buffer::DFLT_SIZE * sizeof(OCIValue*));
