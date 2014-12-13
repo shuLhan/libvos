@@ -38,12 +38,15 @@ DNSQuery::~DNSQuery()
 {
 	if (_rr_ans) {
 		delete _rr_ans;
+		_rr_ans = NULL;
 	}
 	if (_rr_aut) {
 		delete _rr_aut;
+		_rr_aut = NULL;
 	}
 	if (_rr_add) {
 		delete _rr_add;
+		_rr_add = NULL;
 	}
 }
 
@@ -156,6 +159,33 @@ int DNSQuery::to_tcp(const Buffer* udp)
 	return 0;
 }
 
+void DNSQuery::set_header (uint16_t id, uint16_t flag, uint16_t n_qry
+		, uint16_t n_ans
+		, uint16_t n_aut
+		, uint16_t n_add)
+{
+	_id		= htons (id);
+	_flag		= htons (flag);
+	_n_qry		= htons (n_qry);
+	_n_ans		= htons (n_ans);
+	_n_aut		= htons (n_aut);
+	_n_add		= htons (n_add);
+
+	memcpy(_v	, &_id		, 2);
+	memcpy(&_v[2]	, &_flag	, 2);
+	memcpy(&_v[4]	, &_n_qry	, 2);
+	memcpy(&_v[6]	, &_n_ans	, 2);
+	memcpy(&_v[8]	, &_n_aut	, 2);
+	memcpy(&_v[10]	, &_n_add	, 2);
+
+	_id		= ntohs(_id);
+	_flag		= ntohs(_flag);
+	_n_qry		= ntohs(_n_qry);
+	_n_ans		= ntohs(_n_ans);
+	_n_aut		= ntohs(_n_aut);
+	_n_add		= ntohs(_n_add);
+}
+
 /**
  * @method	: DNSQuery::create_question
  * @param	:
@@ -177,12 +207,10 @@ int DNSQuery::create_question(const char* qname, const int type)
 
 	reset(DNSQ_DO_ALL);
 
-	_id		= htons((uint16_t)(rand() % 65536));
-	_flag		= htons(HDR_IS_QUERY | OPCODE_QUERY | RTYPE_RD);
-	_n_qry		= htons(1);
-	_n_ans		= htons(0);
-	_n_aut		= htons(0);
-	_n_add		= htons(0);
+	set_header ((uint16_t) (rand() % 65536)
+		, HDR_IS_QUERY | OPCODE_QUERY | RTYPE_RD
+		, 1, 0, 0, 0);
+
 	_q_type		= htons((uint16_t) type);
 	_q_class	= htons(QUERY_C_IN);
 
@@ -196,13 +224,6 @@ int DNSQuery::create_question(const char* qname, const int type)
 			return -1;
 		}
 	}
-
-	memcpy(_v	, &_id		, 2);
-	memcpy(&_v[2]	, &_flag	, 2);
-	memcpy(&_v[4]	, &_n_qry	, 2);
-	memcpy(&_v[6]	, &_n_ans	, 2);
-	memcpy(&_v[8]	, &_n_aut	, 2);
-	memcpy(&_v[10]	, &_n_add	, 2);
 
 	_i = DNS_HDR_SIZE;
 
@@ -229,12 +250,6 @@ int DNSQuery::create_question(const char* qname, const int type)
 	append_bin(&_q_type, 2);
 	append_bin(&_q_class, 2);
 
-	_id		= ntohs(_id);
-	_flag		= ntohs(_flag);
-	_n_qry		= ntohs(_n_qry);
-	_n_ans		= ntohs(_n_ans);
-	_n_aut		= ntohs(_n_aut);
-	_n_add		= ntohs(_n_add);
 	_q_type		= ntohs(_q_type);
 	_q_class	= ntohs(_q_class);
 
@@ -663,6 +678,30 @@ int DNSQuery::extract_label(Buffer* label, const int bfr_off)
 	return ret_len;
 }
 
+/**
+ @method	: DNSQuery::create_answer
+ @param		:
+ > hname	: host name.
+ > addrs	: list of IP addresses.
+ > n_addrs	: number of addrs.
+ @return	:
+ < 0		: success.
+ < -1		: fail.
+ @desc		: Create packet of DNS answer for hostname 'hname' with list of
+	address in 'addrs'.
+ */
+/*
+int DNSQuery::create_answer (const char* hname, const char** addrs, int n_addr)
+{
+	reset (DNSQ_DO_ALL);
+
+	set_header (0
+		, HDR_IS_RESPONSE | OPCODE_QUERY | RTYPE_RD
+		, 1, (uint16_t) n_addr, 0, 0);
+
+	return 0;
+}
+*/
 /**
  * @method	: DNSQuery::remove_rr_aut
  * @desc	: remove authority record from buffer.

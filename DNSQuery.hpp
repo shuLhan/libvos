@@ -93,11 +93,17 @@ enum _dnsq_do_type {
 class DNSQuery : public Buffer {
 public:
 	DNSQuery();
-	~DNSQuery();
+	virtual ~DNSQuery();
 
 	int set(const Buffer* bfr, const int type = BUFFER_IS_UDP);
 	int to_udp(const Buffer* tcp = NULL);
 	int to_tcp(const Buffer* udp = NULL);
+
+	void set_header (uint16_t id, uint16_t flag, uint16_t n_qry
+			, uint16_t n_ans
+			, uint16_t n_aut
+			, uint16_t n_add);
+
 	int create_question(const char* qname
 				, const int type = QUERY_T_ADDRESS);
 
@@ -106,6 +112,8 @@ public:
 	int extract_question();
 	DNS_rr* extract_rr(int* offset, const int last_type = 0);
 	int extract_label(Buffer* label, const int bfr_off);
+
+	int create_answer (const char* hostname, const char** address, int n_addr);
 
 	void remove_rr_aut();
 	void remove_rr_add();
@@ -137,7 +145,7 @@ public:
 	const char*	_rr_aut_p;
 	const char*	_rr_add_p;
 	/* additional attributes */
-	uint32_t	_ans_ttl_max;
+	int32_t		_ans_ttl_max;
 
 	static int INIT(DNSQuery** o, const Buffer* bfr
 			, const int type = BUFFER_IS_UDP);
