@@ -59,11 +59,14 @@ Buffer::~Buffer()
  */
 int Buffer::resize(const int size)
 {
+	char* newv = NULL;
+
 	if (_l < size) {
-		_v = (char *) realloc(_v, size + CHAR_SIZE);
-		if (!_v) {
+		newv = (char *) realloc(_v, size + CHAR_SIZE);
+		if (!newv) {
 			return -1;
 		}
+		_v	= newv;
 		_v[_i]	= '\0';
 		_l	= size;
 	}
@@ -79,7 +82,7 @@ void Buffer::reset(int c)
 {
 	if (_i) {
 		_i = 0;
-		memset(_v, c, _l);
+		_v = (char*) memset(_v, c, _l);
 	}
 }
 
@@ -245,16 +248,19 @@ int Buffer::move_to(Buffer** bfr)
  */
 int Buffer::shiftr(const int nbyte, int c)
 {
+	char* newv = NULL;
+
 	if (_i + nbyte > _l) {
 		_l += nbyte;
-		_v = (char *) realloc(_v, (_l + CHAR_SIZE));
-		if (!_v) {
+		newv = (char *) realloc(_v, (_l + CHAR_SIZE));
+		if (!newv) {
 			return -1;
 		}
+		_v = newv;
 	}
 
 	memmove(&_v[nbyte], &_v[0], _i);
-	memset(_v, c, nbyte);
+	_v = (char*) memset(_v, c, nbyte);
 
 	_i	+= nbyte;
 	_v[_i]	= '\0';
@@ -273,15 +279,18 @@ int Buffer::shiftr(const int nbyte, int c)
  */
 int Buffer::appendc(const char c)
 {
+	char* newv = NULL;
+
 	if (c < 0) {
 		return 0;
 	}
 	if (_i + CHAR_SIZE > _l) {
 		_l += DFLT_SIZE;
-		_v = (char *) realloc(_v, _l + CHAR_SIZE);
-		if (!_v) {
+		newv = (char *) realloc(_v, _l + CHAR_SIZE);
+		if (!newv) {
 			return -1;
 		}
+		_v = newv;
 	}
 	_v[_i]	= c;
 	_i++;
