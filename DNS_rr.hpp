@@ -83,7 +83,7 @@ public:
 
 	uint16_t	_type;
 	uint16_t	_class;
-	uint32_t	_ttl;
+	int32_t		_ttl;
 	uint16_t	_len;
 	uint16_t	_name_len;
 	Buffer		_name;
