@@ -245,6 +245,8 @@ long int Socket::recv_udp(struct sockaddr_in* addr)
 		return 0;
 	}
 
+	_recv_addr_l = SockAddr::IN_SIZE;
+
 	_i = (int) ::recvfrom(_d, _v, _l, 0, (struct sockaddr*) addr, &_recv_addr_l);
 	if (_i >= 0) {
 		_v[_i] = '\0';
