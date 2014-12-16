@@ -7,7 +7,7 @@
 #ifndef _LIBVOS_RESOLVER_DNS_RR_HPP
 #define	_LIBVOS_RESOLVER_DNS_RR_HPP	1
 
-#include <stdint.h>
+#include <arpa/inet.h>
 #include "Buffer.hpp"
 
 namespace vos {
@@ -77,13 +77,19 @@ public:
 	DNS_rr(int bfr_size = RDATA_MAX_SIZE);
 	~DNS_rr();
 
+	int create_packet ();
+
 	void reset();
 	void dump();
 	static void ADD(DNS_rr** root, DNS_rr* rr);
+	static DNS_rr* INIT (const char* name
+				, uint16_t type, uint16_t clas
+				, uint32_t ttl
+				, uint16_t data_len, const char* data);
 
 	uint16_t	_type;
 	uint16_t	_class;
-	int32_t		_ttl;
+	uint32_t	_ttl;
 	uint16_t	_len;
 	uint16_t	_name_len;
 	Buffer		_name;

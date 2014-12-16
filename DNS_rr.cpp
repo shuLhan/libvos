@@ -43,6 +43,45 @@ DNS_rr::~DNS_rr()
 	}
 }
 
+int DNS_rr::create_packet ()
+{
+	int s = 0;
+	uint16_t vs = 0;
+	uint32_t vl = 0;
+
+	/* Set NAME */
+	append_dns_label (_name._v, _name._i);
+	_name_len = (uint16_t) (_name._i + 1);
+
+	/* Set TYPE */
+	vs = htons (_type);
+	append_bin (&vs, 2);
+
+	/* Set CLASS */
+	vs = htons (_class);
+	append_bin (&vs, 2);
+
+	/* Set TTL */
+	vl = htonl (_ttl);
+	append_bin (&vl, 4);
+
+	/* Set DATALEN */
+	vs = htons (_len);
+	append_bin (&vs, 2);
+
+	switch (_type) {
+	case QUERY_T_ADDRESS:
+		s = inet_pton (AF_INET, _data._v, &_v[_i]);
+		if (s <= 0) {
+			return -1;
+		}
+		_i += 4;
+		break;
+	}
+
+	return 0;
+}
+
 /**
  * @method	: DNS_rr::reset
  * @desc	: reset DNS RR data.
@@ -75,7 +114,7 @@ void DNS_rr::dump()
 			" name       : %s\n"	\
 			" type       : %d\n"	\
 			" class      : %d\n"	\
-			" TTL        : %d\n"	\
+			" TTL        : %u\n"	\
 			" length     : %d\n"	\
 			" data       :\n"
 			, p->_name.v(), p->_type, p->_class, p->_ttl, p->_len);
@@ -158,6 +197,35 @@ void DNS_rr::ADD(DNS_rr** root, DNS_rr* rr)
 		}
 		p->_next = rr;
 	}
+}
+
+DNS_rr* DNS_rr::INIT (const char* name
+			, uint16_t type, uint16_t clas
+			, uint32_t ttl
+			, uint16_t data_len, const char* data)
+{
+	int	s	= 0;
+	DNS_rr*	rr	= new DNS_rr ();
+
+	if (! rr) {
+		return NULL;
+	}
+
+	rr->_name.copy_raw (name);
+	rr->_type	= type;
+	rr->_class	= clas;
+	rr->_ttl	= ttl;
+	rr->_len	= data_len;
+	rr->_data.copy_raw (data, data_len);
+
+	/* Convert all parameter to network packet */
+	s = rr->create_packet ();
+	if (s != 0) {
+		delete rr;
+		rr = NULL;
+	}
+
+	return rr;
 }
 
 } /* namespace::vos */
