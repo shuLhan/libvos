@@ -733,9 +733,7 @@ int DNSQuery::create_answer (const char* name
 	/* Create answer section */
 	_rr_ans = DNS_rr::INIT (name, type, clas, ttl, data_len, data);
 
-	_rr_ans->dump ();
-
-	append_bin (&_rr_ans->_v, _rr_ans->_i);
+	append_raw (_rr_ans->_v, _rr_ans->_i);
 
 	return 0;
 }
