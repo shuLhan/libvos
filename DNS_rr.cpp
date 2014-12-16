@@ -66,16 +66,17 @@ int DNS_rr::create_packet ()
 	append_bin (&vl, 4);
 
 	/* Set DATALEN */
-	vs = htons (_len);
+	vs = htons (4);
 	append_bin (&vs, 2);
 
 	switch (_type) {
 	case QUERY_T_ADDRESS:
-		s = inet_pton (AF_INET, _data._v, &_v[_i]);
+		vl = 0;
+		s = inet_pton (AF_INET, _data._v, &vl);
 		if (s <= 0) {
 			return -1;
 		}
-		_i += 4;
+		append_bin (&vl, 4);
 		break;
 	}
 
