@@ -177,6 +177,7 @@ void DNSQuery::set_header (uint16_t id, uint16_t flag, uint16_t n_qry
 	memcpy(&_v[6]	, &_n_ans	, 2);
 	memcpy(&_v[8]	, &_n_aut	, 2);
 	memcpy(&_v[10]	, &_n_add	, 2);
+	_i = DNS_HDR_SIZE;
 
 	_id		= ntohs(_id);
 	_flag		= ntohs(_flag);
@@ -226,27 +227,8 @@ int DNSQuery::create_question(const char* qname, const int type)
 	}
 
 	_i = DNS_HDR_SIZE;
+	append_dns_label (qname, strlen (qname));
 
-	while (*qname) {
-		if (*qname == '.') {
-			if (label._i) {
-				appendc((uint8_t) label._i);
-				append(&label);
-			}
-			label.reset();
-		} else {
-			label.appendc(*qname);
-		}
-		qname++;
-	}
-
-	if (label._i) {
-		appendc((uint8_t) label._i);
-		append(&label);
-	}
-
-	/* end of query */
-	appendc(0);
 	append_bin(&_q_type, 2);
 	append_bin(&_q_class, 2);
 
@@ -418,6 +400,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 		return NULL;
 	}
 
+	/* Get RR NAME */
 	if (last_type != QUERY_T_MX) {
 		s = extract_label(&rr->_name, *offset);
 		if (s < 0) {
@@ -427,26 +410,35 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 		*offset		+= s;
 	}
 
+	/* Check if buffer is wide enough to have rr type */
 	s = *offset + 2;
 	if (s > _i) {
 		return rr;
 	}
+
+	/* Get RR TYPE (2 bytes) */
 	memcpy(&rr->_type, &_v[*offset], 2);
 	rr->_type	= ntohs(rr->_type);
 	*offset		+= 2;
 
+	/* Check if buffer is wide enough to have rr class */
 	s = *offset + 2;
 	if (s > _i) {
 		return rr;
 	}
+
+	/* Get RR CLASS (2 bytes) */
 	memcpy(&rr->_class, &_v[*offset], 2);
 	rr->_class	= ntohs(rr->_class);
 	*offset		+= 2;
 
+	/* Check 4 byte TTL */
 	s = *offset + 4;
 	if (s > _i) {
 		return rr;
 	}
+
+	/* Get RR TTL */
 	memcpy(&rr->_ttl, &_v[*offset], 4);
 	rr->_ttl	= ntohl(rr->_ttl);
 	*offset		+= 4;
@@ -462,18 +454,24 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 		break;
 	}
 
+	/* Check 2 bytes for DATALEN */
 	s = *offset + 2;
 	if (s > _i) {
 		return rr;
 	}
+
+	/* Get RR DATALEN */
 	memcpy(&rr->_len, &_v[*offset], 2);
 	rr->_len	= ntohs(rr->_len);
 	*offset		+= 2;
 
+	/* Check if packet length is less equal than DATALEN */
 	s = *offset + rr->_len;
 	if (s > _i) {
 		return rr;
 	}
+
+	/* Check if buffer size is enough, if not resize it DATALEN */
 	if (rr->_len > rr->_l) {
 		s = rr->resize(rr->_len);
 		if (s < 0) {
@@ -481,6 +479,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 		}
 	}
 
+	/* Get RR DATA */
 	memcpy(rr->_v, &_v[*offset], rr->_len);
 	rr->_i = rr->_len;
 	rr->_v[rr->_i] = 0;
@@ -636,27 +635,37 @@ int DNSQuery::extract_label(Buffer* label, const int bfr_off)
 	uint16_t	offset	= 0;
 	const char*	p	= (const char*)&_v[bfr_off];
 
+	/* Check buffer offset overflow */
 	if (bfr_off > _i) {
 		return -1;
 	}
 
 	while (*p) {
+		/* Bitmask to check for POINTER */
 		if ((*p & 0xC0) == 0xC0) {
+			/* If we never used pointer before */
 			if (!offset) {
 				ret_len += 2;
 			}
 
+			/* Get POINTER */
 			memcpy(&offset, p, 2);
 			offset = ntohs(offset);
 			offset &= 0x3FFF;
 			if (offset > _i) {
 				return -1;
 			}
+
+			/* Jump to POINTER offset */
 			p = (const char*) &_v[offset];
+
+		/* If we never get length before */
 		} else if (len == 0) {
+			/* Get LENGTH of message (1 byte) */
 			len = *p;
 			p++;
 
+			/* If this is the last message LENGTH == 0 */
 			if (label->_i > 0) {
 				label->appendc('.');
 			}
@@ -664,6 +673,7 @@ int DNSQuery::extract_label(Buffer* label, const int bfr_off)
 				ret_len += len + 1;
 			}
 		} else {
+			/* Pick each character by LENGTH */
 			while (*p && len > 0) {
 				label->appendc(*p);
 				--len;
@@ -681,27 +691,55 @@ int DNSQuery::extract_label(Buffer* label, const int bfr_off)
 /**
  @method	: DNSQuery::create_answer
  @param		:
- > hname	: host name.
- > addrs	: list of IP addresses.
- > n_addrs	: number of addrs.
+ > name		: host name.
+ > type		: RR type.
+ > clas		: RR class.
+ > ttl		: time to live value for record.
+ > data_len	: length of data.
+ > data		: data.
  @return	:
  < 0		: success.
  < -1		: fail.
  @desc		: Create packet of DNS answer for hostname 'hname' with list of
 	address in 'addrs'.
  */
-/*
-int DNSQuery::create_answer (const char* hname, const char** addrs, int n_addr)
+int DNSQuery::create_answer (const char* name
+				, uint16_t type, uint16_t clas
+				, uint32_t ttl
+				, uint16_t data_len, const char* data)
 {
+	uint16_t v = 0;
+
 	reset (DNSQ_DO_ALL);
+
+	_bfr_type	= BUFFER_IS_UDP;
+	_name.copy_raw (name);
+	_q_type		= type;
+	_q_class	= clas;
 
 	set_header (0
 		, HDR_IS_RESPONSE | OPCODE_QUERY | RTYPE_RD
-		, 1, (uint16_t) n_addr, 0, 0);
+		, 1, (uint16_t) 1, 0, 0);
+
+	/* Create question section */
+	append_dns_label (name, strlen (name));
+
+	v = htons (_q_type);
+	append_bin (&v, 2);
+
+	v = htons (_q_class);
+	append_bin (&v, 2);
+
+	/* Create answer section */
+	_rr_ans = DNS_rr::INIT (name, type, clas, ttl, data_len, data);
+
+	_rr_ans->dump ();
+
+	append_bin (&_rr_ans->_v, _rr_ans->_i);
 
 	return 0;
 }
-*/
+
 /**
  * @method	: DNSQuery::remove_rr_aut
  * @desc	: remove authority record from buffer.

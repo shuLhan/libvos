@@ -113,7 +113,10 @@ public:
 	DNS_rr* extract_rr(int* offset, const int last_type = 0);
 	int extract_label(Buffer* label, const int bfr_off);
 
-	int create_answer (const char* hostname, const char** address, int n_addr);
+	int create_answer (const char* name
+			, uint16_t type, uint16_t clas
+			, uint32_t ttl
+			, uint16_t data_len, const char* data);
 
 	void remove_rr_aut();
 	void remove_rr_add();
@@ -145,7 +148,7 @@ public:
 	const char*	_rr_aut_p;
 	const char*	_rr_add_p;
 	/* additional attributes */
-	int32_t		_ans_ttl_max;
+	uint32_t	_ans_ttl_max;
 
 	static int INIT(DNSQuery** o, const Buffer* bfr
 			, const int type = BUFFER_IS_UDP);
