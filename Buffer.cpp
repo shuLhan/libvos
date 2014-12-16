@@ -478,6 +478,35 @@ int Buffer::append_bin(void *bin, int len)
 	return len;
 }
 
+int Buffer::append_dns_label (const char* label, int len)
+{
+	Buffer subl;
+
+	if ((_i + len + 1) > _l) {
+		resize (_i + len + 1);
+	}
+
+	while (*label) {
+		if (*label == '.') {
+			if (subl._i) {
+				append_bin (&subl._i, 1);
+				append (&subl);
+				subl.reset ();
+			}
+		} else {
+			subl.appendc (*label);
+		}
+		label++;
+	}
+	if (subl._i) {
+		append_bin (&subl._i, 1);
+		append (&subl);
+	}
+	appendc (0);
+
+	return 0;
+}
+
 /**
  * @method	: Buffer::concat
  * @param	:
