@@ -1107,7 +1107,7 @@ next:
 		case 'X':
 			flag |= FL_HEX | FL_NUMBER;
 			flag &= ~FL_SIGN;
-			if (flen > 2) {
+			if (flen >= 2) {
 				if (flag & FL_ALT_OUT) {
 					flen -= 2;
 				}
