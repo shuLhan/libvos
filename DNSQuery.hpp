@@ -96,6 +96,8 @@ public:
 	virtual ~DNSQuery();
 
 	int set(const Buffer* bfr, const int type = BUFFER_IS_UDP);
+	DNSQuery* duplicate ();
+
 	int to_udp(const Buffer* tcp = NULL);
 	int to_tcp(const Buffer* udp = NULL);
 
@@ -150,8 +152,12 @@ public:
 	/* additional attributes */
 	uint32_t	_ans_ttl_max;
 
+	/* pointer to query with different type */
+	DNSQuery*	_next;
+
 	static int INIT(DNSQuery** o, const Buffer* bfr
 			, const int type = BUFFER_IS_UDP);
+	static void ADD (DNSQuery** first, DNSQuery* nu);
 private:
 	DNSQuery(const DNSQuery&);
 	void operator=(const DNSQuery&);

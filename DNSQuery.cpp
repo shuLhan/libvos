@@ -29,6 +29,7 @@ DNSQuery::DNSQuery() : Buffer()
 ,	_rr_aut_p(NULL)
 ,	_rr_add_p(NULL)
 ,	_ans_ttl_max(0)
+,	_next (NULL)
 {}
 
 /**
@@ -47,6 +48,10 @@ DNSQuery::~DNSQuery()
 	if (_rr_add) {
 		delete _rr_add;
 		_rr_add = NULL;
+	}
+	if (_next) {
+		delete _next;
+		_next = NULL;
 	}
 }
 
@@ -74,6 +79,30 @@ int DNSQuery::set(const Buffer* bfr, const int type)
 
 	_bfr_type = type;
 	return copy(bfr);
+}
+
+DNSQuery* DNSQuery::duplicate ()
+{
+	int		s	= 0;
+	DNSQuery*	dup	= new DNSQuery ();
+
+	if (! dup) {
+		return NULL;
+	}
+
+	s = dup->copy_raw (_v, _i);
+	if (s != 0) {
+		delete dup;
+		dup = NULL;
+		return NULL;
+	}
+
+	dup->_q_type	= _q_type;
+	dup->_q_class	= _q_class;
+	dup->_name.copy (&_name);
+	dup->_next	= NULL;
+
+	return dup;
 }
 
 /**
@@ -978,6 +1007,27 @@ int DNSQuery::INIT(DNSQuery **o, const Buffer *bfr, const int type)
 	(*o)->_bfr_type = BUFFER_IS_UDP;
 
 	return 0;
+}
+
+/**
+ * @method	: DNSQuery::ADD
+ * @param first : Pointer to the list.
+ * @param nu	: Pointer to the object that will be added to the list.
+ * @desc	: Add 'nu' to the list of 'first'.
+ */
+void DNSQuery::ADD (DNSQuery** first, DNSQuery* nu)
+{
+	DNSQuery* p = NULL;
+
+	if (! (*first)) {
+		(*first) = nu;
+	} else {
+		p = (*first);
+		while (p->_next) {
+			p = p->_next;
+		}
+		p->_next = nu;
+	}
 }
 
 } /* namespace::vos */
