@@ -276,7 +276,7 @@ int Resolver::recv_udp(DNSQuery* answer)
 			printf("[vos::Resolver] recv_udp: reply flag is zero.\n");
 		}
 		s = -1;
-	} else if (answer->_n_ans <= 0) {
+	} else if (answer->_n_ans <= 0 && answer->_n_aut <= 0) {
 		if (LIBVOS_DEBUG) {
 			printf("[vos::Resolver] recv_udp: number of RR answer '%d'\n"
 				, answer->_n_ans);
