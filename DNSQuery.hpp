@@ -109,7 +109,7 @@ public:
 	int create_question(const char* qname
 				, const int type = QUERY_T_ADDRESS);
 
-	int extract();
+	int extract (char do_extract_rr);
 	int extract_header();
 	int extract_question();
 	DNS_rr* extract_rr(int* offset, const int last_type = 0);

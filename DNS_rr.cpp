@@ -122,6 +122,7 @@ void DNS_rr::dump()
 
 		switch (p->_type) {
 		case QUERY_T_ADDRESS:
+		case QUERY_T_AAAA:
 			o.aprint("   address  : %s\n", p->_data.v());
 			break;
 		case QUERY_T_NAMESERVER:

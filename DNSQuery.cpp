@@ -269,12 +269,12 @@ int DNSQuery::create_question(const char* qname, const int type)
 
 /**
  * @method	: DNSQuery::extract
- * @return	:
- *	< 0	: success, or buffer is empty.
- *	< -1	: fail.
+ * @param extract_rr	: if !0 extract RR also.
+ * @return 0	: success, or buffer is empty.
+ * @return -1	: fail.
  * @desc	: extract contents of buffer (DNS packet).
  */
-int DNSQuery::extract()
+int DNSQuery::extract (char do_extract_rr)
 {
 	if (is_empty()) {
 		return 0;
@@ -303,6 +303,11 @@ int DNSQuery::extract()
 	len = extract_question();
 	if (len <= 0) {
 		return -1;
+	}
+
+	// return immediately if user doesn't want to extract RR.
+	if (! do_extract_rr) {
+		return 0;
 	}
 
 	_rr_ans_p = &_v[len];
@@ -477,6 +482,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 	case QUERY_T_NAMESERVER:
 	case QUERY_T_CNAME:
 	case QUERY_T_SRV:
+	case QUERY_T_AAAA:
 		if (rr->_ttl > _ans_ttl_max) {
 			_ans_ttl_max = rr->_ttl;
 		}
@@ -627,6 +633,12 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 			goto err;
 		}
 		*offset += s;
+		break;
+
+	case QUERY_T_AAAA:
+		inet_ntop (AF_INET6, rr->_v, rr->_data._v, rr->_data._l);
+		rr->_data._i = (int) strlen (rr->_data._v);
+		*offset	+= 16;
 		break;
 
 	default:
@@ -872,7 +884,9 @@ void DNSQuery::set_rr_answer_ttl(unsigned int ttl)
 	while (p) {
 		if (p->_type == QUERY_T_ADDRESS
 		||  p->_type == QUERY_T_CNAME
-		||  p->_type == QUERY_T_NAMESERVER) {
+		||  p->_type == QUERY_T_NAMESERVER
+		||  p->_type == QUERY_T_AAAA
+		) {
 			len += p->_name_len + 4;
 
 			memset((void*) &_rr_ans_p[len], 0, 4);
