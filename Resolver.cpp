@@ -266,8 +266,7 @@ int Resolver::recv_udp(DNSQuery* answer)
 
 	answer->reset(DNSQ_DO_ALL);
 	answer->set((Buffer*) this);
-	answer->extract_header();
-	answer->extract_question();
+	answer->extract (vos::DNSQ_EXTRACT_RR_AUTH);
 
 	s = 0;
 
