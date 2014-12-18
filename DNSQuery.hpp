@@ -62,6 +62,12 @@ enum _dnsq_do_type {
 ,	DNSQ_DO_ALL		= 1
 };
 
+enum _DNSQ_EXTRACT_RR {
+	DNSQ_EXTRACT_RR_ANSWER	= 1
+,	DNSQ_EXTRACT_RR_AUTH	= 3
+,	DNSQ_EXTRACT_RR_ADD	= 7
+};
+
 /**
  * @class		: DNSQuery
  * @attr		:
@@ -74,6 +80,7 @@ enum _dnsq_do_type {
  *	- _q_type	: type of packet, if question.
  *	- _q_class	: class of packet, if question.
  *	- _name		: domain name that will be queried.
+ *	- _q_len	: length of question data.
  *	- _bfr_type	: type of packet (UDP or TCP).
  *	- _rr_ans	: list of answers record.
  *	- _rr_aut	: list of authority record.
@@ -109,9 +116,11 @@ public:
 	int create_question(const char* qname
 				, const int type = QUERY_T_ADDRESS);
 
-	int extract (char do_extract_rr);
+	int extract (const char extract_rr_flag);
 	int extract_header();
 	int extract_question();
+	int extract_resource_record (const char extract_flag);
+	void set_max_ttl_from_rr (const DNS_rr* rr);
 	DNS_rr* extract_rr(int* offset, const int last_type = 0);
 	int extract_label(Buffer* label, const int bfr_off);
 
@@ -137,6 +146,7 @@ public:
 	uint16_t	_n_aut;
 	uint16_t	_n_add;
 	/* DNS QUESTION Section */
+	uint16_t	_q_len;
 	uint16_t	_q_type;
 	uint16_t	_q_class;
 	Buffer		_name;

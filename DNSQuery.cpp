@@ -18,6 +18,7 @@ DNSQuery::DNSQuery() : Buffer()
 ,	_n_ans(0)
 ,	_n_aut(0)
 ,	_n_add(0)
+,	_q_len (0)
 ,	_q_type(0)
 ,	_q_class(0)
 ,	_name()
@@ -97,10 +98,12 @@ DNSQuery* DNSQuery::duplicate ()
 		return NULL;
 	}
 
-	dup->_q_type	= _q_type;
-	dup->_q_class	= _q_class;
+	dup->_q_len		= _q_len;
+	dup->_q_type		= _q_type;
+	dup->_q_class		= _q_class;
 	dup->_name.copy (&_name);
-	dup->_next	= NULL;
+	dup->_ans_ttl_max	= _ans_ttl_max;
+	dup->_next		= NULL;
 
 	return dup;
 }
@@ -271,20 +274,19 @@ int DNSQuery::create_question(const char* qname, const int type)
  * @method	: DNSQuery::extract
  * @param extract_rr	: if !0 extract RR also.
  * @return 0	: success, or buffer is empty.
- * @return -1	: fail.
+ * @return -1	: fail at extracting header.
+ * @return -2	: fail at extracting question.
+ * @return -3	: fail at extracting RR.
  * @desc	: extract contents of buffer (DNS packet).
  */
-int DNSQuery::extract (char do_extract_rr)
+int DNSQuery::extract (const char extract_rr_flag)
 {
 	if (is_empty()) {
 		return 0;
 	}
 
-	int		s		= 0;
-	int		i		= 0;
-	int		len		= 0;
-	int		rr_type		= 0;
-	DNS_rr*		rr		= NULL;
+	int	s	= 0;
+	int	len	= 0;
 
 	if (_bfr_type == BUFFER_IS_TCP) {
 		s = to_udp();
@@ -302,42 +304,12 @@ int DNSQuery::extract (char do_extract_rr)
 
 	len = extract_question();
 	if (len <= 0) {
-		return -1;
+		return -2;
 	}
 
-	// return immediately if user doesn't want to extract RR.
-	if (! do_extract_rr) {
-		return 0;
-	}
-
-	_rr_ans_p = &_v[len];
-
-	for (i = 0; i < _n_ans; ++i) {
-		rr = extract_rr(&len, rr_type);
-		if (!rr) {
-			return -1;
-		}
-
-		rr_type	= rr->_type;
-		DNS_rr::ADD(&_rr_ans, rr);
-	}
-
-	_rr_aut_p = &_v[len];
-	for (i = 0; i < _n_aut; ++i) {
-		rr = extract_rr(&len, 0);
-		if (!rr) {
-			return -1;
-		}
-		DNS_rr::ADD(&_rr_aut, rr);
-	}
-
-	_rr_add_p = &_v[len];
-	for (i = 0; i < _n_add; ++i) {
-		rr = extract_rr(&len, 0);
-		if (!rr) {
-			return -1;
-		}
-		DNS_rr::ADD(&_rr_add, rr);
+	s = extract_resource_record (extract_rr_flag);
+	if (s != 0) {
+		return -3;
 	}
 
 	return 0;
@@ -375,21 +347,23 @@ int DNSQuery::extract_header()
 
 /**
  * @method	: DNSQuery::extract_question
- * @return	:
- *	< >0	: success, length of question, from header + label + type +
+ * @return >0	: success, length of question, from header + label + type +
  *	class.
- *	< -1	: fail.
+ * @return -1	: fail.
  * @desc	: extract question data from buffer.
  */
 int DNSQuery::extract_question()
 {
-	int startp	= DNS_HDR_SIZE;
-	int len		= 0;
+	// start from header length.
+	int	startp	= DNS_HDR_SIZE;
+	int	len	= 0;
 
+	// check if buffer size is smaller
 	if (startp > _i) {
 		return -1;
 	}
 
+	// extract question label
 	_name.reset();
 	len = extract_label(&_name, startp);
 	if (len < 0) {
@@ -397,11 +371,13 @@ int DNSQuery::extract_question()
 	}
 	startp += len;
 
+	// check 4 byte more for question type and class
 	len = startp + 4;
 	if (len > _i) {
 		return -1;
 	}
 
+	// extract question type and class
 	memcpy(&_q_type, &_v[startp], 2);
 	startp += 2;
 
@@ -410,7 +386,100 @@ int DNSQuery::extract_question()
 	_q_type		= ntohs(_q_type);
 	_q_class	= ntohs(_q_class);
 
+	// set question length, label length + 4 byte
+	_q_len		= (uint16_t) (len - DNS_HDR_SIZE);
+
 	return len;
+}
+
+/**
+ * @method	: DNSQuery::extract_resource_record
+ * @desc	: Extract resourse record.
+ * @param extract_flag : what type of RR that will be extracted.
+ * @return 0	: success.
+ * @return -1	: fail, question is empty.
+ * @return -2	: fail at extracting RR answer.
+ * @return -3	: fail at extracting RR authority.
+ * @return -4	: fail at extracting RR additional.
+ */
+int DNSQuery::extract_resource_record (const char extract_flag)
+{
+	int	s	= 0;
+	int	i	= 0;
+	int	len	= 0;
+	int	rr_type	= 0;
+	DNS_rr*	rr	= NULL;
+
+	// check if question has been extracted.
+	if (_q_len <= 0) {
+		s = extract_question ();
+		if (s <= 0) {
+			return -1;
+		}
+	}
+
+	if (! extract_flag & DNSQ_EXTRACT_RR_ANSWER) {
+		// nothing to extract, flag is zero.
+		return 0;
+	}
+
+	// now that we got _q_len, start extracting from there.
+	len		= _q_len + DNS_HDR_SIZE;
+	_rr_ans_p	= &_v[len];
+
+	for (i = 0; i < _n_ans; ++i) {
+		rr = extract_rr (&len, rr_type);
+		if (!rr) {
+			return -2;
+		}
+
+		set_max_ttl_from_rr (rr);
+
+		rr_type	= rr->_type;
+		DNS_rr::ADD (&_rr_ans, rr);
+	}
+
+	if (extract_flag & DNSQ_EXTRACT_RR_AUTH) {
+		_rr_aut_p = &_v[len];
+		for (i = 0; i < _n_aut; ++i) {
+			rr = extract_rr (&len, 0);
+			if (!rr) {
+				return -3;
+			}
+
+			set_max_ttl_from_rr (rr);
+
+			DNS_rr::ADD (&_rr_aut, rr);
+		}
+
+		if (extract_flag & DNSQ_EXTRACT_RR_ADD) {
+			_rr_add_p = &_v[len];
+			for (i = 0; i < _n_add; ++i) {
+				rr = extract_rr (&len, 0);
+				if (!rr) {
+					return -4;
+				}
+				DNS_rr::ADD (&_rr_add, rr);
+			}
+		}
+	}
+
+	return 0;
+}
+
+void DNSQuery::set_max_ttl_from_rr (const DNS_rr* rr)
+{
+	switch (rr->_type) {
+	case QUERY_T_ADDRESS:
+	case QUERY_T_NAMESERVER:
+	case QUERY_T_CNAME:
+	case QUERY_T_SRV:
+	case QUERY_T_AAAA:
+		if (rr->_ttl > _ans_ttl_max) {
+			_ans_ttl_max = rr->_ttl;
+		}
+		break;
+	}
 }
 
 /**
@@ -476,18 +545,6 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 	memcpy(&rr->_ttl, &_v[*offset], 4);
 	rr->_ttl	= ntohl(rr->_ttl);
 	*offset		+= 4;
-
-	switch (rr->_type) {
-	case QUERY_T_ADDRESS:
-	case QUERY_T_NAMESERVER:
-	case QUERY_T_CNAME:
-	case QUERY_T_SRV:
-	case QUERY_T_AAAA:
-		if (rr->_ttl > _ans_ttl_max) {
-			_ans_ttl_max = rr->_ttl;
-		}
-		break;
-	}
 
 	/* Check 2 bytes for DATALEN */
 	s = *offset + 2;
@@ -1019,6 +1076,13 @@ int DNSQuery::INIT(DNSQuery **o, const Buffer *bfr, const int type)
 	}
 
 	(*o)->_bfr_type = BUFFER_IS_UDP;
+
+	s = (*o)->extract (DNSQ_EXTRACT_RR_AUTH);
+	if (s != 0) {
+		delete (*o);
+		(*o) = NULL;
+		return -2;
+	}
 
 	return 0;
 }
