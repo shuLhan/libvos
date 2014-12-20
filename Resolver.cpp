@@ -369,8 +369,7 @@ int Resolver::recv_tcp(DNSQuery* answer)
 
 	answer->reset(DNSQ_DO_ALL);
 	answer->to_udp(this);
-	answer->extract_header();
-	answer->extract_question();
+	answer->extract (vos::DNSQ_EXTRACT_RR_AUTH);
 
 	if ((answer->_flag & RCODE_FLAG) != 0) {
 		if (LIBVOS_DEBUG) {
