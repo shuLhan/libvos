@@ -92,6 +92,9 @@ enum _DNSQ_EXTRACT_RR {
  *	- _rr_add_p	: pointer to the first byte of additional RR on
  *                        buffer.
  *	- _ans_ttl_max	: maximum TTL in all of RR answer.
+ * @attr _is_local	: if 1, answer is from hosts file; if 0, answer is from
+ * 			parent DNS server.
+ * @attr _next		: pointer to next answer.
  * @desc		: module for processing DNS packet.
  *
  *	DNSQuery is ALWAYS in UDP packet mode, if you want to send the packet
@@ -161,6 +164,7 @@ public:
 	const char*	_rr_add_p;
 	/* additional attributes */
 	uint32_t	_ans_ttl_max;
+	uint8_t		_is_local;
 
 	/* pointer to query with different type */
 	DNSQuery*	_next;

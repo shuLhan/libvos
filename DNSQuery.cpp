@@ -30,6 +30,7 @@ DNSQuery::DNSQuery() : Buffer()
 ,	_rr_aut_p(NULL)
 ,	_rr_add_p(NULL)
 ,	_ans_ttl_max(0)
+,	_is_local (0)
 ,	_next (NULL)
 {}
 
@@ -103,6 +104,7 @@ DNSQuery* DNSQuery::duplicate ()
 	dup->_q_class		= _q_class;
 	dup->_name.copy (&_name);
 	dup->_ans_ttl_max	= _ans_ttl_max;
+	dup->_is_local		= 1;
 	dup->_next		= NULL;
 
 	return dup;
@@ -418,7 +420,7 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 		}
 	}
 
-	if (! extract_flag & DNSQ_EXTRACT_RR_ANSWER) {
+	if (! extract_flag >= DNSQ_EXTRACT_RR_ANSWER) {
 		// nothing to extract, flag is zero.
 		return 0;
 	}
@@ -439,7 +441,7 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 		DNS_rr::ADD (&_rr_ans, rr);
 	}
 
-	if (extract_flag & DNSQ_EXTRACT_RR_AUTH) {
+	if (extract_flag >= DNSQ_EXTRACT_RR_AUTH) {
 		_rr_aut_p = &_v[len];
 		for (i = 0; i < _n_aut; ++i) {
 			rr = extract_rr (&len, 0);
@@ -452,7 +454,7 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 			DNS_rr::ADD (&_rr_aut, rr);
 		}
 
-		if (extract_flag & DNSQ_EXTRACT_RR_ADD) {
+		if (extract_flag >= DNSQ_EXTRACT_RR_ADD) {
 			_rr_add_p = &_v[len];
 			for (i = 0; i < _n_add; ++i) {
 				rr = extract_rr (&len, 0);
@@ -814,6 +816,8 @@ int DNSQuery::create_answer (const char* name
 	_name.copy_raw (name);
 	_q_type		= type;
 	_q_class	= clas;
+	_ans_ttl_max	= ttl;
+	_is_local	= 1;
 
 	set_header (0
 		, HDR_IS_RESPONSE | OPCODE_QUERY | RTYPE_RD
