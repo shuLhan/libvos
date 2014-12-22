@@ -3,38 +3,47 @@
 #
 
 #<ip-address>	<hostname.domain.org>	<hostname>
-127.0.0.1	localhost.localdomain	localhost	
-::1		localhost.localdomain	localhost	  
+127.0.0.1	localhost.localdomain	localhost
+::1		localhost.localdomain	localhost
 127.0.0.1	bubu
 
-127.0.0.1	localhost.doc.php
-127.0.0.1	localhost.doc.librextjs
-127.0.0.1	localhost.doc.sencha.extjs411a
-127.0.0.1	localhost.doc.sencha.extjs421
-127.0.0.1	localhost.doc.sencha.extjs5
-127.0.0.1	localhost.doc.sencha.touch
-127.0.0.1	localhost.doc.phalcon
-127.0.0.1	localhost.doc.java
-127.0.0.1	localhost.doc.android
-127.0.0.1	localhost.doc.ant
-127.0.0.1	localhost.doc.bootstrap
+127.0.0.1	php.doc.localhost
+127.0.0.1	librextjs.doc.localhost
+127.0.0.1	extjs411a.doc.localhost
+127.0.0.1	extjs421.doc.localhost
+127.0.0.1	extjs5.doc.localhost
+127.0.0.1	touch.doc.localhost
+127.0.0.1	phalcon.doc.localhost
+127.0.0.1	java.doc.localhost
+127.0.0.1	android.doc.localhost
+127.0.0.1	ant.doc.localhost
+127.0.0.1	bootstrap.doc.localhost
 
-127.0.0.1	localhost.app.mail
-127.0.0.1	localhost.app.myreader
+127.0.0.1	mail.app.localhost
+127.0.0.1	myreader.app.localhost
 
-127.0.0.1	localhost.app.wui
-127.0.0.1	localhost.app.jaring
-127.0.0.1	localhost.app.voyage
-127.0.0.1	localhost.app.quickcount
-127.0.0.1	localhost.app.siman
-127.0.0.1	localhost.app.arumbumi
-127.0.0.1	localhost.app.sima
-127.0.0.1	localhost.app.kemxtri
-127.0.0.1	localhost.app.sandbox
-127.0.0.1	localhost.app.globalukm
-127.0.0.1	localhost.app.mup
-127.0.0.1	localhost.app.otw-trans
-127.0.0.1	localhost.app.sigma
-127.0.0.1	localhost.app.menrva
+127.0.0.1	wui.app.localhost
+127.0.0.1	jaring.app.localhost
+127.0.0.1	voyage.app.localhost
+127.0.0.1	quickcount.app.localhost
+127.0.0.1	siman.app.localhost
+127.0.0.1	arumbumi.app.localhost
+127.0.0.1	sima.app.localhost
+127.0.0.1	kemxtri.app.localhost
+127.0.0.1	sandbox.app.localhost
+127.0.0.1	globalukm.app.localhost
+127.0.0.1	mup.app.localhost
+127.0.0.1	mup2.app.localhost
+127.0.0.1	otw-trans.app.localhost
+127.0.0.1	sigma.app.localhost
+127.0.0.1	menrva.app.localhost
+
+# jquery-wp-content
+127.0.0.1 local.jquery.com local.api.jquery.com local.blog.jquery.com local.books.jquery.com local.codeorigin.jquery.com local.learn.jquery.com local.plugins.jquery.com
+127.0.0.1 local.jqueryui.com local.api.jqueryui.com local.blog.jqueryui.com
+127.0.0.1 local.jquerymobile.com local.api.jquerymobile.com local.blog.jquerymobile.com
+127.0.0.1 local.jquery.org local.brand.jquery.org local.contribute.jquery.org local.events.jquery.org local.irc.jquery.org local.meetings.jquery.org
+127.0.0.1 local.qunitjs.com local.api.qunitjs.com
+127.0.0.1 local.sizzlejs.com
 
 # End of file
