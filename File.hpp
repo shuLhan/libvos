@@ -34,6 +34,12 @@ enum _file_open_type {
 ,	FILE_OPEN_SYNC	= O_SYNC
 };
 
+enum _file_truncate_mode {
+	FILE_TRUNC_FLUSH_NO	= 0
+,	FILE_TRUNC_FLUSH_FIRST	= 1
+,	FILE_TRUNC_FLUSH_LAST	= 2
+};
+
 /**
  * @class		: File
  * @attr		:
@@ -68,6 +74,7 @@ public:
 	int open_wo(const char* path);
 	int open_wx(const char* path);
 	int open_wa(const char* path);
+	int truncate (uint8_t flush_mode = FILE_TRUNC_FLUSH_LAST);
 
 	off_t get_size();
 	void set_eol(const int mode);
@@ -99,6 +106,8 @@ public:
 	int		_d;
 	int		_p;
 	int		_status;
+	int		_perm;
+	off_t		_size;
 	int		_eol;
 	const char*	_eols;
 	Buffer		_name;

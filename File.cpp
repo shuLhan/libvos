@@ -20,6 +20,8 @@ File::File(const unsigned int bfr_size) : Buffer(bfr_size)
 ,	_d(0)
 ,	_p(0)
 ,	_status(FILE_OPEN_NO)
+,	_perm (0)
+,	_size (0)
 ,	_eol(__eol[EOL_NIX][0])
 ,	_eols(__eol[EOL_NIX])
 ,	_name()
@@ -68,7 +70,9 @@ int File::_open(const char* path, const int mode, const int perm)
 		return -1;
 	}
 
+	_size = get_size ();
 	_status = (mode & (O_RDONLY | O_WRONLY | O_RDWR));
+	_perm = perm;
 
 	return 0;
 
@@ -143,6 +147,49 @@ int File::open_wx(const char* path)
 int File::open_wa(const char* path)
 {
 	return _open(path, FILE_OPEN_WA);
+}
+
+/**
+ * @method	: File::truncate
+ * @desc	: reset file size to 0.
+ * @param flush_mode : if FILE_TRUNC_FLUSH_NO, buffer will not be flushed to file. If it FILE_TRUNC_FLUSH_FIRST, buffer will be reset first and then file will be truncated. If it FILE_TRUNC_FLUSH_LAST  then buffer will be flushed after file was truncated.
+ * @return 0	: success.
+ * @return -1	: fail to close.
+ * @return -2	: fail to open.
+ * @return -3	: fail at flushing the buffer;
+ */
+int File::truncate (uint8_t flush_mode)
+{
+	int s = 0;
+
+	if (flush_mode & FILE_TRUNC_FLUSH_FIRST) {
+		reset ();
+	}
+
+	// Try to close file.
+	if (_d && (_d != STDOUT_FILENO && _d != STDERR_FILENO)) {
+		s = ::close(_d);
+		if (s != 0) {
+			return -1;
+		}
+	}
+
+	// Reopen file by truncate.
+	s = _open (_name._v, _status | O_CREAT | O_TRUNC, _perm);
+	if (s != 0) {
+		return -2;
+	}
+
+	_size = 0;
+
+	if (flush_mode & FILE_TRUNC_FLUSH_LAST) {
+		s = flush ();
+		if (s != 0) {
+			return -3;
+		}
+	}
+
+	return 0;
 }
 
 /**
@@ -475,6 +522,7 @@ int File::write_raw(const char* bfr, int len)
 			len	-= s;
 		}
 		len = x;
+		_size += len;
 	} else {
 		if (_l < (_i + len)) {
 			s = flush();
@@ -612,6 +660,7 @@ int File::flush()
 		_i	-= s;
 	}
 	_i = x;
+	_size += _i;
 
 	reset();
 
@@ -631,7 +680,9 @@ void File::close()
 		::close(_d);
 	}
 
+	_size	= 0;
 	_status = FILE_OPEN_NO;
+	_perm	= 0;
 	_d	= 0;
 }
 
@@ -644,6 +695,7 @@ void File::dump()
 	printf("[vos::File____] dump:\n");
 	printf("  descriptor  : %d\n", _d);
 	printf("  name        : %s\n", _name.v());
+	printf("  size        : %ld\n", _size);
 	printf("  contents    :\n[%s]\n", v());
 }
 
