@@ -13,7 +13,7 @@ namespace vos {
  * @desc	: initialize all Dlogger attributes, set standard error as
  *                default output.
  */
-Dlogger::Dlogger() :
+Dlogger::Dlogger () :
 	_lock()
 ,	_tmp()
 ,	_time_s(0)
@@ -22,6 +22,7 @@ Dlogger::Dlogger() :
 #if defined(sun) || defined(__sun) || defined(__i386__)
 ,	_args()
 #endif
+,	_max_size (0)
 {
 	pthread_mutex_init(&_lock, NULL);
 
@@ -40,14 +41,13 @@ Dlogger::~Dlogger()
 
 /**
  * @method		: Dlogger::open
- * @param		:
- *	> logfile	: a log file name, with or without leading path.
- * @return		:
- *	< 0		: success.
- *	< -1		: fail.
+ * @param logfile	: a log file name, with or without leading path.
+ * @param max_size	: maximum of file size in byte.
+ * @return < 0		: success.
+ * @return < -1		: fail.
  * @desc		: start the log daemon on the file 'logfile'.
  */
-int Dlogger::open(const char* logfile)
+int Dlogger::open (const char* logfile, off_t max_size)
 {
 	if (logfile) {
 		close();
@@ -55,7 +55,10 @@ int Dlogger::open(const char* logfile)
 		_s = open_wa(logfile);
 		if (_s < 0) {
 			_d = STDERR_FILENO;
+		} else {
+			_max_size = max_size;
 		}
+
 		return _s;
 	}
 	return 0;
@@ -109,6 +112,12 @@ void Dlogger::_w(int fd, const char* fmt)
 	}
 
 	if (_d != STDERR_FILENO || !fd) {
+		// Check size of file
+		if (_max_size > 0
+		&& (_size + _i) > _max_size) {
+			truncate (FILE_TRUNC_FLUSH_NO);
+		}
+
 		_s = write_raw(_tmp._v, _tmp._i);
 	}
 	if (fd) {

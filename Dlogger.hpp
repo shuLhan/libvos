@@ -18,13 +18,14 @@ namespace vos {
  *	a module for writing formatted output log to a file or standard error,
  *	or both. If Dlogger object is not initialized, by calling open(), all
  *	log output from calling er() or it() will be printed to standard error.
+ * @attr _max_size : Maximum log file size.
  */
 class Dlogger : public File {
 public:
 	Dlogger();
 	~Dlogger();
 
-	int open(const char* logfile);
+	int open(const char* logfile, off_t max_size = 0);
 	void close();
 	void add_timestamp();
 
@@ -43,6 +44,7 @@ private:
 	struct tm	_time;
 	int		_s;
 	va_list		_args;
+	off_t		_max_size;
 };
 
 } /* namespace::vos */
