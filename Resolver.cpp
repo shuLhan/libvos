@@ -426,8 +426,9 @@ int Resolver::send_tcp(DNSQuery* question)
  *
  * (4) Make sure is socket is ready for reading.
  * (5) Read DNS packet.
- * (6) If read return 0, server closed the connection, close the socket and
- * remove socket descriptor from set.
+ * (6) If read return 0 (server closed the connection) remove socket
+ * descriptor from set.
+ * DO NOT close the socket, let upper layer handle closing connection.
  * (7) Convert packet to UDP and extract it.
  * (8) Check if reply header has REPLY flag.
  * (9) Check if number of records is greater than 0.
@@ -481,7 +482,6 @@ int Resolver::recv_tcp(DNSQuery* answer)
 			printf ("[vos::Resolver] recv_tcp: connection closed.\n");
 		}
 		FD_CLR (_d, &_fd_all);
-		close ();
 		return 0;
 	}
 
