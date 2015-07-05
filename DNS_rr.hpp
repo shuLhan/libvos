@@ -112,6 +112,8 @@ public:
 
 	DNS_rr*		_next;
 
+	static int APPEND_DNS_LABEL (Buffer* b, const char* label
+					, unsigned int len = 0);
 	static unsigned int RDATA_MAX_SIZE;
 private:
 	DNS_rr(const DNS_rr&);

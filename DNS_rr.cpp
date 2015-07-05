@@ -50,7 +50,7 @@ int DNS_rr::create_packet ()
 	uint32_t vl = 0;
 
 	/* Set NAME */
-	append_dns_label (_name._v, _name._i);
+	DNS_rr::APPEND_DNS_LABEL(this, _name._v, _name._i);
 	_name_len = (uint16_t) (_name._i + 1);
 
 	/* Set TYPE */
@@ -228,6 +228,40 @@ DNS_rr* DNS_rr::INIT (const char* name
 	}
 
 	return rr;
+}
+
+int DNS_rr::APPEND_DNS_LABEL (Buffer* b, const char* label
+				, unsigned int len)
+{
+	if (! b) {
+		return -1;
+	}
+
+	Buffer subl;
+
+	if (((int)(b->_i + len + 1)) > b->_l) {
+		b->resize (b->_i + len + 1);
+	}
+
+	while (*label) {
+		if (*label == '.') {
+			if (subl._i) {
+				b->append_bin (&subl._i, 1);
+				b->append (&subl);
+				subl.reset ();
+			}
+		} else {
+			subl.appendc (*label);
+		}
+		label++;
+	}
+	if (subl._i) {
+		b->append_bin (&subl._i, 1);
+		b->append (&subl);
+	}
+	b->appendc (0);
+
+	return 0;
 }
 
 } /* namespace::vos */

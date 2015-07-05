@@ -261,7 +261,8 @@ int DNSQuery::create_question(const char* qname, const int type)
 	}
 
 	_i = DNS_HDR_SIZE;
-	append_dns_label (qname, strlen (qname));
+	DNS_rr::APPEND_DNS_LABEL (this, qname
+				, (unsigned int) strlen (qname));
 
 	append_bin(&_q_type, 2);
 	append_bin(&_q_class, 2);
@@ -824,7 +825,8 @@ int DNSQuery::create_answer (const char* name
 		, 1, (uint16_t) 1, 0, 0);
 
 	/* Create question section */
-	append_dns_label (name, strlen (name));
+	DNS_rr::APPEND_DNS_LABEL (this, name
+			, (unsigned int) strlen (name));
 
 	v = htons (_q_type);
 	append_bin (&v, 2);

@@ -55,7 +55,6 @@ public:
 	int append(const Buffer* bfr);
 	int append_raw(const char* bfr, int len = 0);
 	int append_bin(void *bin, int len);
-	int append_dns_label (const char* label, int len = 0);
 
 	int concat(const char* bfr, ...);
 	int aprint(const char* fmt, ...);
