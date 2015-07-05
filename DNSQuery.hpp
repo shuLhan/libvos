@@ -68,6 +68,12 @@ enum _DNSQ_EXTRACT_RR {
 ,	DNSQ_EXTRACT_RR_ADD	= 7
 };
 
+enum _DNS_ATTR_TYPE {
+	DNS_IS_QUERY	= 0
+,	DNS_IS_LOCAL	= 1
+,	DNS_IS_ADS	= 3
+};
+
 /**
  * @class		: DNSQuery
  * @attr		:
@@ -92,8 +98,10 @@ enum _DNSQ_EXTRACT_RR {
  *	- _rr_add_p	: pointer to the first byte of additional RR on
  *                        buffer.
  *	- _ans_ttl_max	: maximum TTL in all of RR answer.
- * @attr _is_local	: if 1, answer is from hosts file; if 0, answer is from
- * 			parent DNS server.
+ * @attr _attrs		:
+ * 	- DNS_IS_QUERY	: answer is from parent DNS server.
+ * 	- DNS_IS_LOCAL	: answer is from hosts file.
+ * 	- DNS_IS_ADS	: answer is from hosts ads file.
  * @attr _next		: pointer to next answer.
  * @desc		: module for processing DNS packet.
  *
@@ -130,7 +138,8 @@ public:
 	int create_answer (const char* name
 			, uint16_t type, uint16_t clas
 			, uint32_t ttl
-			, uint16_t data_len, const char* data);
+			, uint16_t data_len, const char* data
+			, uint32_t attrs = DNS_IS_LOCAL);
 
 	void remove_rr_aut();
 	void remove_rr_add();
@@ -164,7 +173,7 @@ public:
 	const char*	_rr_add_p;
 	/* additional attributes */
 	uint32_t	_ans_ttl_max;
-	uint8_t		_is_local;
+	uint32_t	_attrs;
 
 	/* pointer to query with different type */
 	DNSQuery*	_next;

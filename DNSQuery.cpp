@@ -30,7 +30,7 @@ DNSQuery::DNSQuery() : Buffer()
 ,	_rr_aut_p(NULL)
 ,	_rr_add_p(NULL)
 ,	_ans_ttl_max(0)
-,	_is_local (0)
+,	_attrs (DNS_IS_QUERY)
 ,	_next (NULL)
 {}
 
@@ -104,7 +104,7 @@ DNSQuery* DNSQuery::duplicate ()
 	dup->_q_class		= _q_class;
 	dup->_name.copy (&_name);
 	dup->_ans_ttl_max	= _ans_ttl_max;
-	dup->_is_local		= 1;
+	dup->_attrs		= _attrs;
 	dup->_next		= NULL;
 
 	return dup;
@@ -798,6 +798,7 @@ int DNSQuery::extract_label(Buffer* label, const int bfr_off)
  > ttl		: time to live value for record.
  > data_len	: length of data.
  > data		: data.
+ > attrs	: additional attribute for dns object.
  @return	:
  < 0		: success.
  < -1		: fail.
@@ -807,7 +808,8 @@ int DNSQuery::extract_label(Buffer* label, const int bfr_off)
 int DNSQuery::create_answer (const char* name
 				, uint16_t type, uint16_t clas
 				, uint32_t ttl
-				, uint16_t data_len, const char* data)
+				, uint16_t data_len, const char* data
+				, uint32_t attrs)
 {
 	uint16_t v = 0;
 
@@ -818,7 +820,7 @@ int DNSQuery::create_answer (const char* name
 	_q_type		= type;
 	_q_class	= clas;
 	_ans_ttl_max	= ttl;
-	_is_local	= 1;
+	_attrs		= attrs;
 
 	set_header (0
 		, HDR_IS_RESPONSE | OPCODE_QUERY | RTYPE_RD
