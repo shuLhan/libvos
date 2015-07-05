@@ -32,6 +32,10 @@ public:
 
 	int create(const int family = PF_INET, const int type = SOCK_STREAM);
 
+	int set_socket_opt (int optname, int optval);
+	int set_keep_alive (int val = 1);
+	int set_reuse_address (int val = 1);
+
 	inline int create_udp()
 	{
 		return Socket::create(PF_INET, SOCK_DGRAM);

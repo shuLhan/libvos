@@ -63,6 +63,28 @@ int Socket::create(const int family, const int type)
 	return 0;
 }
 
+int Socket::set_socket_opt (int optname, int optval)
+{
+	int s;
+	int len = sizeof (optval);
+
+	s = setsockopt(_d, SOL_SOCKET, optname, &optval, len);
+	if (s < 0) {
+		return -1;
+	}
+	return 0;
+}
+
+int Socket::set_keep_alive (int val)
+{
+	return set_socket_opt (SO_KEEPALIVE, val);
+}
+
+int Socket::set_reuse_address (int val)
+{
+	return set_socket_opt (SO_REUSEADDR, val);
+}
+
 /**
  * @method	: Socket::connect_to
  * @param	:
