@@ -922,10 +922,16 @@ void DNSQuery::set_id(const int id)
 		return;
 	}
 
+	char* p = _v;
+
 	_id = htons((uint16_t) id);
 
-	memset(_v, 0, 2);
-	memcpy(_v, &_id, 2);
+	if (BUFFER_IS_TCP == _bfr_type) {
+		p = &_v[2];
+	}
+
+	memset(p, 0, 2);
+	memcpy(p, &_id, 2);
 
 	_id = (uint16_t) id;
 }
