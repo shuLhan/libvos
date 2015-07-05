@@ -53,20 +53,45 @@ Resolver::~Resolver()
  *	< 0	: success.
  *	< -1	: fail.
  * @desc	: initialize Resolver object.
+ *
+ * This assume that the server address list _servers already populated using
+ * add_server().
+ *
+ * (1) Create socket based on type.
+ * (2) If it is TCP (type is SOCK_STREAM) set socket option to reuse address.
+ * (3) If it is UDP, add socket descriptor to set of open socket list.
+ *     Socket descriptor for SOCK_STREAM will be added later after connection
+ *     to the server already established (see send_tcp()).
  */
 int Resolver::init(const int type)
 {
 	int s;
 
-	s = create(PF_INET, type);
-	if (s < 0) {
+	if (!_servers) {
+		fprintf(stderr, "[vos::Resolver] init: no server set!\n");
 		return -1;
 	}
 
 	FD_ZERO(&_fd_all);
 	FD_ZERO(&_fd_read);
-	FD_SET(_d, &_fd_all);
-	_maxfd = _d + 1;
+
+	// (1)
+	s = create(PF_INET, type);
+	if (s < 0) {
+		return -1;
+	}
+
+	if (type == SOCK_STREAM) {
+		// (2)
+		s = set_reuse_address ();
+		if (s < 0) {
+			return -1;
+		}
+	} else {
+		// (3)
+		FD_SET(_d, &_fd_all);
+		_maxfd = _d + 1;
+	}
 
 	return s;
 }
@@ -283,7 +308,7 @@ int Resolver::recv_udp(DNSQuery* answer)
 		s = -1;
 	}
 
-	return s;
+	return 1;
 }
 
 /**
@@ -294,53 +319,93 @@ int Resolver::recv_udp(DNSQuery* answer)
  *	< 0		: success.
  *	< -1		: fail.
  * @desc		: send query through TCP channel.
+ *
+ * (1) Question MUST NOT be empty.
+ * (2) Socket MUST HAVE created with SOCK_STREAM.
+ * (3) Servers MUST HAVE already set.
+ *
+ * (4) If socket is closed,
+ *	(4.1) create new socket descriptor,
+ *	(4.2) and connect to the server.
+ *	(4.3) If socket can't be opened because connection is already
+ *	established (probably because server already close the connection),
+ *	close the socket and try again.
+ *	(4.4) Add socket descriptor for further select.
+ *
+ * (5) If question is UDP, convert it to TCP.
  */
 int Resolver::send_tcp(DNSQuery* question)
 {
+	// (1),(2)
 	if (!question || _type != SOCK_STREAM) {
 		return -1;
 	}
+	// (3)
 	if (!_servers) {
 		fprintf(stderr, "[vos::Resolver] send_tcp: no server!\n");
 		return -1;
 	}
 
-	rotate_server();
+	int s;
 
-	if (LIBVOS_DEBUG) {
-		printf("[vos::Resolver] send_tcp: server '%s' ...\n"
-			, _p_server->v());
-	}
+	// (4)
+	if (_status < 0) {
+		// (4.1)
+		init (_type);
 
-	int		s;
-	unsigned int	n = 0;
-
-	do {
-		s = connect_to(&_p_server->_in);
-		if (s < 0) {
+		if (!_p_server) {
 			rotate_server();
-			n++;
 		}
-	} while (s != 0 && n < N_TRY);
 
-	if (s < 0) {
-		fprintf(stderr
-		, "[vos::Resolver] send_tcp: cannot connect to server!\n");
-		return -1;
+		_n_try = 0;
+		do {
+			// (4.2)
+			s = connect_to(&_p_server->_in);
+			if (s < 0) {
+				// (4.3)
+				if (EISCONN == errno) {
+					shutdown (_d, SHUT_RDWR);
+				}
+				rotate_server();
+				_n_try++;
+			} else {
+				// (4.4)
+				FD_SET(_d, &_fd_all);
+				_maxfd = (_d > _maxfd ? _d : _maxfd);
+
+				if (LIBVOS_DEBUG) {
+					fprintf(stderr
+					, "[vos::Resolver] send_tcp: connected to server '%s'\n"
+					, _p_server->v());
+				}
+			}
+		} while (s != 0 && _n_try < N_TRY);
+
+		if (s < 0) {
+			if (LIBVOS_DEBUG) {
+				fprintf(stderr
+				, "[vos::Resolver] send_tcp: cannot connect to server!\n");
+			}
+			return -1;
+		}
+
+		FD_SET (_d, &_fd_all);
 	}
 
+	// (5)
 	if (question->_bfr_type == BUFFER_IS_UDP) {
 		s = question->to_tcp();
 		if (s < 0) {
-			goto out;
+			return -1;
 		}
 	}
 
-	reset();
 	s = (int) write(question);
-out:
-	shutdown(_d, 2);
-	return s;
+	if (s < 0) {
+		return -1;
+	}
+
+	return 0;
 }
 
 /**
@@ -349,42 +414,100 @@ out:
  *	> answer	: output, pointer to DNS packet reply from parent
  *                        server.
  * @return		:
- *	< 0		: success.
+ * 	< 1		: success, one packet read.
+ *	< 0		: no packet read.
  *	< -1		: fail.
  * @desc		: receive a reply from parent server through TCP
  * channel. DNS packet will be converted to UDP mode, without header length.
+ *
+ * (1) answer MUST NOT be empty.
+ * (2) Socket MUST HAVE created with SOCK_STREAM.
+ * (3) Socket is not closed.
+ *
+ * (4) Make sure is socket is ready for reading.
+ * (5) Read DNS packet.
+ * (6) If read return 0, server closed the connection, close the socket and
+ * remove socket descriptor from set.
+ * (7) Convert packet to UDP and extract it.
+ * (8) Check if reply header has REPLY flag.
+ * (9) Check if number of records is greater than 0.
  */
 int Resolver::recv_tcp(DNSQuery* answer)
 {
+	// (1),(2)
 	if (!answer || _type != SOCK_STREAM) {
+		return -1;
+	}
+
+	// (3)
+	if (_status < 0) {
+		if (LIBVOS_DEBUG) {
+			fprintf (stderr
+				, "[vos::Resolver] recv_tcp: socket is not open.\n");
+		}
 		return -1;
 	}
 
 	int s;
 
-	s = read();
-	if (s <= 0) {
+	_fd_read		= _fd_all;
+	_timeout.tv_sec		= TIMEOUT;
+	_timeout.tv_usec	= 0;
+
+	// (4)
+	s = select(_d + 1, &_fd_read, 0, 0, &_timeout);
+	if (s < 0) {
 		return -1;
 	}
 
-	answer->reset(DNSQ_DO_ALL);
-	answer->to_udp(this);
-	answer->extract (vos::DNSQ_EXTRACT_RR_AUTH);
-
-	if ((answer->_flag & RCODE_FLAG) != 0) {
+	if (! FD_ISSET(_d, &_fd_read)) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::Resolver] recv_tcp: reply flag is zero.\n");
+			fprintf(stderr
+				, "[vos::Resolver] recv_tcp: timeout after '%d' seconds.\n"
+				, TIMEOUT);
 		}
-		s = -1;
-	} else if (answer->_n_ans <= 0) {
-		if (LIBVOS_DEBUG) {
-			printf("[vos::Resolver] recv_tcp: number of RR answer '%d'\n"
-				, answer->_n_ans);
-		}
-		s = -1;
+		return -1;
 	}
 
-	return s;
+	// (5)
+	s = read();
+	if (s < 0) {
+		return -1;
+	}
+
+	// (6)
+	if (s == 0) {
+		if (LIBVOS_DEBUG) {
+			printf ("[vos::Resolver] recv_tcp: connection closed.\n");
+		}
+		FD_CLR (_d, &_fd_all);
+		close ();
+		return 0;
+	}
+
+	// (7)
+	answer->reset(DNSQ_DO_ALL);
+	answer->to_udp((Buffer *) this);
+	answer->extract (vos::DNSQ_EXTRACT_RR_AUTH);
+
+	// (8)
+	if ((answer->_flag & RCODE_FLAG) != 0) {
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr
+				, "[vos::Resolver] recv_tcp: reply flag is zero.\n");
+		}
+		return -1;
+	// (9)
+	} else if (answer->_n_ans <= 0) {
+		if (LIBVOS_DEBUG) {
+			fprintf(stderr
+				, "[vos::Resolver] recv_tcp: number of RR answer '%d'\n"
+				, answer->_n_ans);
+		}
+		return -1;
+	}
+
+	return 1;
 }
 
 /**
