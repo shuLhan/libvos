@@ -421,7 +421,7 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 		}
 	}
 
-	if (! extract_flag >= DNSQ_EXTRACT_RR_ANSWER) {
+	if (! (extract_flag >= DNSQ_EXTRACT_RR_ANSWER)) {
 		// nothing to extract, flag is zero.
 		return 0;
 	}
