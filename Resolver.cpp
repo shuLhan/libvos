@@ -498,7 +498,7 @@ int Resolver::recv_tcp(DNSQuery* answer)
 		}
 		return -1;
 	// (9)
-	} else if (answer->_n_ans <= 0) {
+	} else if (answer->_n_ans <= 0 && answer->_n_aut <= 0) {
 		if (LIBVOS_DEBUG) {
 			fprintf(stderr
 				, "[vos::Resolver] recv_tcp: number of RR answer '%d'\n"
