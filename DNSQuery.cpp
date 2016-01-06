@@ -450,8 +450,6 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 				return -3;
 			}
 
-			set_max_ttl_from_rr (rr);
-
 			DNS_rr::ADD (&_rr_aut, rr);
 		}
 
