@@ -71,7 +71,7 @@ enum _DNSQ_EXTRACT_RR {
 enum _DNS_ATTR_TYPE {
 	DNS_IS_QUERY	= 0
 ,	DNS_IS_LOCAL	= 1
-,	DNS_IS_ADS	= 3
+,	DNS_IS_BLOCKED	= 3
 };
 
 /**
@@ -101,7 +101,7 @@ enum _DNS_ATTR_TYPE {
  * @attr _attrs		:
  * 	- DNS_IS_QUERY	: answer is from parent DNS server.
  * 	- DNS_IS_LOCAL	: answer is from hosts file.
- * 	- DNS_IS_ADS	: answer is from hosts ads file.
+ * 	- DNS_IS_BLOCKED: answer is from blocked hosts file.
  * @attr _next		: pointer to next answer.
  * @desc		: module for processing DNS packet.
  *
