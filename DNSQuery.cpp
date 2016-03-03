@@ -470,16 +470,15 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 
 void DNSQuery::set_max_ttl_from_rr (const DNS_rr* rr)
 {
-	switch (rr->_type) {
-	case QUERY_T_ADDRESS:
-	case QUERY_T_NAMESERVER:
-	case QUERY_T_CNAME:
-	case QUERY_T_SRV:
-	case QUERY_T_AAAA:
-		if (rr->_ttl > _ans_ttl_max) {
-			_ans_ttl_max = rr->_ttl;
-		}
-		break;
+	if (rr->_type != _q_type) {
+		return;
+	}
+	if (rr->_class != _q_class) {
+		return;
+	}
+
+	if (rr->_ttl > _ans_ttl_max) {
+		_ans_ttl_max = rr->_ttl;
 	}
 }
 
@@ -951,11 +950,7 @@ void DNSQuery::set_rr_answer_ttl(unsigned int ttl)
 	ttl = htonl(ttl);
 
 	while (p) {
-		if (p->_type == QUERY_T_ADDRESS
-		||  p->_type == QUERY_T_CNAME
-		||  p->_type == QUERY_T_NAMESERVER
-		||  p->_type == QUERY_T_AAAA
-		) {
+		if (p->_type == _q_type && p->_class == _q_class) {
 			len += p->_name_len + 4;
 
 			memset((void*) &_rr_ans_p[len], 0, 4);
@@ -1009,6 +1004,7 @@ void DNSQuery::reset(const int do_type)
 	_rr_ans_p	= NULL;
 	_rr_aut_p	= NULL;
 	_rr_add_p	= NULL;
+	_ans_ttl_max	= 0;
 }
 
 /**
