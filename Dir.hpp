@@ -29,13 +29,13 @@ public:
 	Dir();
 	~Dir();
 
-	int open(const char *path, int depth = 1);
+	int open(const char *path, int depth = -1);
 	void close();
 
 	DirNode* find(DirNode* dir, const char* name, int depth = 1);
 
 	int get_parent_path(Buffer *path, DirNode *ls, int depth = 1);
-	int get_list(DirNode* list, const char *path);
+	int get_list(DirNode* list, const char *path, int depth = -1);
 	int get_symlink(DirNode* list);
 	DirNode* get_node(Buffer* path, const char* root, int root_len);
 

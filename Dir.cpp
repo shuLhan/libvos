@@ -57,9 +57,9 @@ int Dir::open(const char *path, int depth)
 		return -1;
 	}
 
-	/* 1st pass: scan normal directory or any symlink of directory that 
+	/* 1st pass: scan normal directory or any symlink of directory that
 	 * does not have the same root path */
-	s = get_list(_ls, rpath);
+	s = get_list(_ls, rpath, depth);
 	if (s < 0) {
 		return s;
 	}
@@ -190,7 +190,7 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
  *	< -1	: fail.
  * @desc	: get list of all files in directory.
  */
-int Dir::get_list(DirNode* list, const char* path)
+int Dir::get_list(DirNode* list, const char* path, int depth)
 {
 	int		s	= 0;
 	int		n	= 0;
@@ -198,6 +198,10 @@ int Dir::get_list(DirNode* list, const char* path)
 	DIR*		dir	= NULL;
 	struct dirent*	dent	= NULL;
 	DirNode*	node	= NULL;
+
+	if (depth == 0) {
+		return 0;
+	}
 
 	if (LIBVOS_DEBUG) {
 		printf("[vos::Dir_____] get_list: scanning '%s' ...\n", path);
@@ -245,7 +249,7 @@ int Dir::get_list(DirNode* list, const char* path)
 
 		if (node->is_dir()) {
 			if (node->_linkname.is_empty()) {
-				s = get_list(node, rpath._v);
+				s = get_list(node, rpath._v, depth - 1);
 				if (s < 0) {
 					return s;
 				}
@@ -253,7 +257,8 @@ int Dir::get_list(DirNode* list, const char* path)
 				s = strncmp(node->_linkname._v, _name._v
 						, _name._i);
 				if (s != 0) {
-					s = get_list(node, node->_linkname._v);
+					s = get_list(node, node->_linkname._v
+						, depth - 1);
 					if (s < 0) {
 						return s;
 					}
