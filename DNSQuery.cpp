@@ -453,8 +453,8 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 			DNS_rr::ADD (&_rr_aut, rr);
 		}
 
+		_rr_add_p = &_v[len];
 		if (extract_flag >= DNSQ_EXTRACT_RR_ADD) {
-			_rr_add_p = &_v[len];
 			for (i = 0; i < _n_add; ++i) {
 				rr = extract_rr (&len, 0);
 				if (!rr) {
@@ -902,7 +902,7 @@ void DNSQuery::remove_rr_add()
 		_rr_add = NULL;
 	}
 
-	_i++;
+	_i;
 	_rr_add_p	= NULL;
 	_v[_i]		= 0;
 	_n_add		= 0;
@@ -923,7 +923,7 @@ void DNSQuery::set_id(const int id)
 
 	char* p = _v;
 
-	_id = htons((uint16_t) id);
+	_id = htons(id);
 
 	if (BUFFER_IS_TCP == _bfr_type) {
 		p = &_v[2];
