@@ -936,6 +936,42 @@ void DNSQuery::set_id(const int id)
 }
 
 /**
+ * set_tc will set TrunCated flag on header to `flag` value (0 for not
+ * truncated, 1 for truncated).
+ */
+void DNSQuery::set_tc(const int flag)
+{
+	if (is_empty()) {
+		return;
+	}
+
+	char* p = _v;
+
+	if (BUFFER_IS_TCP == _bfr_type) {
+		p = &_v[2];
+	}
+
+	// Move pointer to flag address.
+	p = p + 2;
+
+	// Get current flag.
+	memcpy(&_flag, p, 2);
+	_flag = ntohs(_flag);
+
+	// Set flag to on or off.
+	if (flag == 1) {
+		_flag = _flag | RTYPE_TC_ON;
+	} else {
+		_flag = _flag & RTYPE_TC_OFF;
+	}
+
+	// Set flag in header back.
+	_flag = htons(flag);
+	memcpy(p, &_flag, 2);
+	_flag = ntohs(_flag);
+}
+
+/**
  * @method	: DNSQuery::set_rr_answer_ttl
  * @param	:
  *	> ttl	: time to live, in seconds. Default to UINT_MAX.

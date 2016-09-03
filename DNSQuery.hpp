@@ -35,7 +35,8 @@ enum _DNS_HDR_RCODE {
 enum _DNS_HDR_RTYPE {
 	RTYPE_RA	= 0x0080	/* Recursion Available */
 ,	RTYPE_RD	= 0x0100	/* Recursion Desired */
-,	RTYPE_TC	= 0x0200	/* TrunCation */
+,	RTYPE_TC_ON	= 0x0200	/* TrunCation enable */
+,	RTYPE_TC_OFF	= 0xFDFF	/* TrunCation disable */
 ,	RTYPE_AA	= 0x0400	/* Authoritative Answer */
 ,	RTYPE_FLAG	= 0x0780
 };
@@ -145,6 +146,7 @@ public:
 	void remove_rr_add();
 
 	void set_id(const int id);
+	void set_tc(const int flag);
 	void set_rr_answer_ttl(unsigned int ttl = UINT_MAX);
 
 	void reset(const int do_type = DNSQ_DO_DATA_ONLY);
