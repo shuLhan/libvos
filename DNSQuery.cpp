@@ -605,7 +605,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 		}
 		*offset += s;
 
-		if ((*offset + 20) < _i) {
+		if ((*offset + 20) > _i) {
 			goto err;
 		}
 
