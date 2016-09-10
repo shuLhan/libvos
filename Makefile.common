@@ -1,6 +1,11 @@
 #!/usr/bin/make
-# @file: libvos::Makefile.common
-# @desc: common Makefile variable and function
+##
+## Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+## Use of this source code is governed by a BSD-style license that can be
+## found in the LICENSE file.
+##
+## Common Makefile variable and function
+##
 
 MAKEFLAGS	+= --no-builtin-rules
 MAKEFLAGS	+= --no-builtin-variables
@@ -9,12 +14,12 @@ MAKEFLAGS	+= --warn-undefined-variables
 
 SYS		= $(shell uname)
 
-CXX		= g++
-LINKER		= g++
+CXX		= gcc
+LINKER		= gcc
 CXXFLAGS_GLOBAL	= -fno-rtti -fno-exceptions -pipe
 
 ifndef CXXFLAGS
-CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os
+CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os -flto
 endif
 CXXFLAGS_DEBUG	= $(CXXFLAGS_GLOBAL) \
 			-Wall -Wextra -Weffc++ -Werror -Wconversion \
@@ -59,3 +64,5 @@ do_mkdir=\
 do_rmdir=\
 	echo "[R] remove dir $(1)";\
 	rm -rf $(1);
+
+# vi: ts=8 sw=8:

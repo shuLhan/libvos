@@ -1,8 +1,8 @@
 #!/usr/bin/make
 ##
-# Copyright (C) 2010 kilabit.org
-# Author:
-#	- m.shulhan (ms@kilabit.org)
+## Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+## Use of this source code is governed by a BSD-style license that can be
+## found in the LICENSE file.
 ##
 
 .SECONDEXPANSION:
@@ -82,7 +82,7 @@ libvos-opts: $$(LIBVOS_OPTS)
 EMPTY_OPTS: libvos
 
 NO_DEFAULT_LIBS: CXXFLAGS_ADD+=$(NO_DEFAULT_LIBS)
-NO_DEFAULT_LIBS: LINKER=g++
+NO_DEFAULT_LIBS: LINKER=gcc
 NO_DEFAULT_LIBS: libvos
 
 libvos-all: CXXFLAGS+=$(CXXFLAGS_ADD)
@@ -155,3 +155,5 @@ $(LIBVOS_BLD_D)/FTPUser.oo	: $(LIBVOS_BLD_D)/Dir.oo
 
 $(LIBVOS_BLD_D)/%.oo: $(LIBVOS_SRC_D)/%.cpp $(LIBVOS_SRC_D)/%.hpp
 	@$(do_compile)
+
+# vi: ts=8 sw=8:

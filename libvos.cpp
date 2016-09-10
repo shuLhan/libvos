@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2014 kilabit.info
- * Author:
- *	- mhd sulhan (ms@kilabit.info)
+ * Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be found
+ * in the LICENSE file.
  */
 
 #include "libvos.hpp"
@@ -28,8 +28,13 @@ void* operator new(size_t len)		__attribute__((alias("__my_cpp_new")));
 void* operator new[](size_t len)	__attribute__((alias("__my_cpp_new")));
 void  operator delete(void* p)		__attribute__((alias("__my_cpp_delete")));
 void  operator delete[](void* p)	__attribute__((alias("__my_cpp_delete")));
+void  operator delete(void* p, unsigned long)	\
+	__attribute__((alias("__my_cpp_delete")));
+void  operator delete[](void* p, unsigned long)	\
+	__attribute__((alias("__my_cpp_delete")));
 
 void* __cxa_pure_virtual = 0;
+void* __gxx_personality_v0 = 0;
 
 #endif	/* NO_DEFAULT_LIBS */
 
@@ -40,3 +45,4 @@ int LIBVOS_DEBUG = getenv("LIBVOS_DEBUG") == NULL
 			: atoi(getenv("LIBVOS_DEBUG"));
 
 } /* namespace::vos */
+// vi: ts=8 sw=8:
