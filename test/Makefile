@@ -57,25 +57,25 @@ all: libvos-debug
 clean: libvos-clean
 	@$(call do_rm,$(TARGET))
 
-$(BLD_D)/Object.test: Object.test.cpp $(OBJECT_OBJS)
+$(BLD_D)/Object.test: Object.test.cc $(OBJECT_OBJS)
 	@$(do_build)
 
-$(BLD_D)/Buffer.test: Buffer.test.cpp $(BUFFER_OBJS)
+$(BLD_D)/Buffer.test: Buffer.test.cc $(BUFFER_OBJS)
 	@$(do_build)
 
-$(BLD_D)/BNode.test: BNode.test.cpp $(BNODE_OBJS)
+$(BLD_D)/BNode.test: BNode.test.cc $(BNODE_OBJS)
 	@$(do_build)
 
-$(BLD_D)/List.test: List.test.cpp $(LIST_OBJS)
+$(BLD_D)/List.test: List.test.cc $(LIST_OBJS)
 	@$(do_build)
 
-$(BLD_D)/Dlogger.test: Dlogger.test.cpp $(DLOGGER_OBJS)
+$(BLD_D)/Dlogger.test: Dlogger.test.cc $(DLOGGER_OBJS)
 	@$(do_build)
 
-$(BLD_D)/SSVReader.test: SSVReader.test.cpp $(SSVREADER_OBJS)
+$(BLD_D)/SSVReader.test: SSVReader.test.cc $(SSVREADER_OBJS)
 	@$(do_build)
 
-$(BLD_D)/host_to_dnsquery.test: host_to_dnsquery.test.cpp $(DNSQUERY_OBJS)
+$(BLD_D)/host_to_dnsquery.test: host_to_dnsquery.test.cc $(DNSQUERY_OBJS)
 	@$(do_build)
 
 ## vi: ts=8 sw=8 tw=78:

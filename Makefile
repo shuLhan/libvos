@@ -162,7 +162,7 @@ $(LIBVOS_BLD_D)/Writer.oo	: $(LIBVOS_BLD_D)/Record.oo
 
 $(LIBVOS_BLD_D)/FTPUser.oo	: $(LIBVOS_BLD_D)/Dir.oo
 
-$(LIBVOS_BLD_D)/%.oo: $(LIBVOS_SRC_D)/%.cpp $(LIBVOS_SRC_D)/%.hpp
+$(LIBVOS_BLD_D)/%.oo: $(LIBVOS_SRC_D)/%.cc $(LIBVOS_SRC_D)/%.hh
 	@$(do_compile)
 
 # vi: ts=8 sw=8 tw=78:

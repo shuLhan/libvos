@@ -670,7 +670,7 @@ $(BLD_D):
 $(TARGET): $(TARGET_OBJS)
         @$(do_build)
 
-$(BLD_D)/%.oo: $(SRC_D)/%.cpp $(SRC_D)/%.hpp
+$(BLD_D)/%.oo: $(SRC_D)/%.cc $(SRC_D)/%.hh
         @$(do_compile)
 </pre>
 
