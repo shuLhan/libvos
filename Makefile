@@ -26,6 +26,7 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/libvos.oo		\
 			$(LIBVOS_BLD_D)/Object.oo		\
 			$(LIBVOS_BLD_D)/BNode.oo		\
+			$(LIBVOS_BLD_D)/List.oo			\
 			$(LIBVOS_BLD_D)/Buffer.oo		\
 			$(LIBVOS_BLD_D)/File.oo			\
 			$(LIBVOS_BLD_D)/Dlogger.oo		\
@@ -118,6 +119,9 @@ $(LIBVOS_BLD_D)/Object.oo	: $(LIBVOS_BLD_D)/libvos.oo
 $(LIBVOS_BLD_D)/BNode.oo	\
 $(LIBVOS_BLD_D)/Buffer.oo	: $(LIBVOS_BLD_D)/Object.oo
 
+$(LIBVOS_BLD_D)/List.oo		: $(LIBVOS_BLD_D)/BNode.oo
+
+$(LIBVOS_BLD_D)/List.oo		\
 $(LIBVOS_BLD_D)/FTPClient.oo	\
 $(LIBVOS_BLD_D)/Dir.oo		\
 $(LIBVOS_BLD_D)/DirNode.oo	\
@@ -161,4 +165,4 @@ $(LIBVOS_BLD_D)/FTPUser.oo	: $(LIBVOS_BLD_D)/Dir.oo
 $(LIBVOS_BLD_D)/%.oo: $(LIBVOS_SRC_D)/%.cpp $(LIBVOS_SRC_D)/%.hpp
 	@$(do_compile)
 
-# vi: ts=8 sw=8:
+# vi: ts=8 sw=8 tw=78:
