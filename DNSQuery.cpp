@@ -902,7 +902,6 @@ void DNSQuery::remove_rr_add()
 		_rr_add = NULL;
 	}
 
-	_i;
 	_rr_add_p	= NULL;
 	_v[_i]		= 0;
 	_n_add		= 0;
@@ -923,7 +922,7 @@ void DNSQuery::set_id(const int id)
 
 	char* p = _v;
 
-	_id = htons(id);
+	_id = htons((uint16_t) id);
 
 	if (BUFFER_IS_TCP == _bfr_type) {
 		p = &_v[2];
@@ -966,7 +965,7 @@ void DNSQuery::set_tc(const int flag)
 	}
 
 	// Set flag in header back.
-	_flag = htons(flag);
+	_flag = htons((uint16_t) flag);
 	memcpy(p, &_flag, 2);
 	_flag = ntohs(_flag);
 }
