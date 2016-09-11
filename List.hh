@@ -12,17 +12,20 @@
 namespace vos {
 
 //
-// List is generic implementation of double linked list.
+// List is generic implementation of circular double linked list.
 //
 class List : public Object {
 public:
 	List();
 	virtual ~List();
 
+	void first_push(BNode* node);
+	void push_circular(BNode** p, Object* item);
 	void push_head(Object* item);
 	void push_tail(Object* item);
 	Object* pop_head();
 	Object* pop_tail();
+	Object* at(int idx);
 	const char* chars();
 
 	// _head is pointer to the first node in the list.
