@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef _LIBVOS_BUFFER_HPP
-#define	_LIBVOS_BUFFER_HPP	1
+#ifndef _LIBVOS_BUFFER_HH
+#define _LIBVOS_BUFFER_HH 1
 
 #include "Object.hh"
 

@@ -1,5 +1,11 @@
-#ifndef _LIBVOS_FTP_COMMAND_LIST_HPP
-#define	_LIBVOS_FTP_COMMAND_LIST_HPP	1
+//
+// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
+
+#ifndef _LIBVOS_FTP_COMMAND_LIST_HH
+#define _LIBVOS_FTP_COMMAND_LIST_HH 1
 
 #include "Socket.hh"
 
@@ -45,3 +51,4 @@ enum _ftp_stat {
 } /* namespace::vos */
 
 #endif
+// vi: ts=8 sw=8 tw=78:

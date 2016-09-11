@@ -1,11 +1,11 @@
-/*
- * Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be
- * found in the LICENSE file.
- */
+//
+// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
 
-#ifndef _LIBVOS_BNODE_HPP
-#define _LIBVOS_BNODE_HPP 1
+#ifndef _LIBVOS_BNODE_HH
+#define _LIBVOS_BNODE_HH 1
 
 #include "Object.hh"
 
@@ -41,5 +41,5 @@ private:
 };
 
 } // namespace vos
-#endif // _LIBVOS_BNODE_HPP
-// vi: ts=8 sw=8:
+#endif // _LIBVOS_BNODE_HH
+// vi: ts=8 sw=8 tw=78:

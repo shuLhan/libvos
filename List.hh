@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef _LIBVOS_LIST_HPP
-#define _LIBVOS_LIST_HPP 1
+#ifndef _LIBVOS_LIST_HH
+#define _LIBVOS_LIST_HH 1
 
 #include "Buffer.hh"
 #include "BNode.hh"
@@ -46,5 +46,5 @@ private:
 };
 
 } // namespace vos
-#endif // _LIBVOS_LIST_HPP
+#endif // _LIBVOS_LIST_HH
 // vi: ts=8 sw=8 tw=78:

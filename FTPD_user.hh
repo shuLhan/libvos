@@ -1,11 +1,11 @@
-/*
- * Copyright (C) 2014 kilabit.info
- * Author:
- *	- mhd sulhan (ms@kilabit.info)
- */
+//
+// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
 
-#ifndef _LIBVOS_FTP_USER_HPP
-#define	_LIBVOS_FTP_USER_HPP	1
+#ifndef _LIBVOS_FTP_USER_HH
+#define _LIBVOS_FTP_USER_HH 1
 
 #include "Buffer.hh"
 
@@ -39,3 +39,4 @@ private:
 } /* namespace::vos */
 
 #endif
+// vi: ts=8 sw=8 tw=78:
