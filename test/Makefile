@@ -15,14 +15,13 @@ LIBVOS_OPTS     +=NO_DEFAULT_LIBS
 OBJECT_OBJS=	$(LIBVOS_BLD_D)/libvos.oo	\
 		$(LIBVOS_BLD_D)/Object.oo
 
-BUFFER_OBJS=	$(OBJECT_OBJS)			\
-		$(LIBVOS_BLD_D)/Buffer.oo
-
-BNODE_OBJS=	$(BUFFER_OBJS)			\
+BNODE_OBJS=	$(OBJECT_OBJS)			\
 		$(LIBVOS_BLD_D)/BNode.oo
 
-LIST_OBJS=	$(BNODE_OBJS)			\
-		$(LIBVOS_BLD_D)/List.oo
+BUFFER_OBJS=	$(BNODE_OBJS)			\
+		$(LIBVOS_BLD_D)/List.oo		\
+		$(LIBVOS_BLD_D)/Buffer.oo
+
 
 DLOGGER_OBJS=	$(BUFFER_OBJS)			\
 		$(LIBVOS_BLD_D)/File.oo		\
@@ -66,7 +65,7 @@ $(BLD_D)/Buffer.test: Buffer.test.cc $(BUFFER_OBJS)
 $(BLD_D)/BNode.test: BNode.test.cc $(BNODE_OBJS)
 	@$(do_build)
 
-$(BLD_D)/List.test: List.test.cc $(LIST_OBJS)
+$(BLD_D)/List.test: List.test.cc $(BUFFER_OBJS)
 	@$(do_build)
 
 $(BLD_D)/Dlogger.test: Dlogger.test.cc $(DLOGGER_OBJS)

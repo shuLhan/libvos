@@ -791,6 +791,66 @@ long int Buffer::to_lint()
 	return v;
 }
 
+void list_buffer_add(List* buffers, const char* v, int start, int end
+	, int trim)
+{
+	Buffer* b = NULL;
+
+	int len = end - start;
+	if (len <= 0) {
+		if (trim) {
+			return;
+		}
+
+		b = new Buffer(1);
+	} else {
+		b = new Buffer(len);
+		b->copy_raw(&v[start], len);
+
+		if (trim) {
+			b->trim();
+
+			if (b->is_empty()) {
+				delete b;
+				return;
+			}
+		}
+	}
+
+	buffers->push_tail(b);
+}
+
+//
+// `split_by_char()` will split buffer using separator `sep` and return list
+// of buffers.
+// * If buffer is empty it will return NULL.
+// * if `trim` is non zero value, splitted buffer will be trimmed,
+//   * if result of trimmed is empty then it would not be added to the list.
+//
+List* Buffer::split_by_char(const char sep, int trim)
+{
+	if (is_empty()) {
+		return NULL;
+	}
+
+	List* buffers = new List();
+	int x = 0;
+	int start = 0;
+
+	for (; x < _i; x++) {
+		if (_v[x] == sep) {
+			list_buffer_add(buffers, _v, start, x, trim);
+			start = x + 1;
+		}
+	}
+
+	if (x > start) {
+		list_buffer_add(buffers, _v, start, x, trim);
+	}
+
+	return buffers;
+}
+
 /**
  * @method	: Buffer::dump
  * @desc	: Dump buffer contents to standard output.

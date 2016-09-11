@@ -7,7 +7,6 @@
 #ifndef _LIBVOS_LIST_HH
 #define _LIBVOS_LIST_HH 1
 
-#include "Buffer.hh"
 #include "BNode.hh"
 
 namespace vos {

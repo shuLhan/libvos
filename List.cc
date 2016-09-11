@@ -5,6 +5,7 @@
 //
 
 #include "List.hh"
+#include "Buffer.hh"
 
 namespace vos {
 
