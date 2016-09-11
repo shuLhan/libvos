@@ -24,6 +24,7 @@ PRE_TARGET	= $(LIBVOS_BLD_D)
 TARGET		=
 TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/libvos.oo		\
+			$(LIBVOS_BLD_D)/Object.oo		\
 			$(LIBVOS_BLD_D)/Buffer.oo		\
 			$(LIBVOS_BLD_D)/File.oo			\
 			$(LIBVOS_BLD_D)/Dlogger.oo		\
@@ -111,7 +112,9 @@ libvos-clean:
 $(LIBVOS_BLD_D):
 	@$(call do_mkdir,$@)
 
-$(LIBVOS_BLD_D)/Buffer.oo	: $(LIBVOS_BLD_D)/libvos.oo
+$(LIBVOS_BLD_D)/Object.oo	: $(LIBVOS_BLD_D)/libvos.oo
+
+$(LIBVOS_BLD_D)/Buffer.oo	: $(LIBVOS_BLD_D)/Object.oo
 
 $(LIBVOS_BLD_D)/FTPClient.oo	\
 $(LIBVOS_BLD_D)/Dir.oo		\
