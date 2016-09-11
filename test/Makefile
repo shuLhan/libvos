@@ -1,13 +1,28 @@
+##
+## Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+## Use of this source code is governed by a BSD-style license that can be found
+## in the LICENSE file.
+##
+
 SRC_D	=.
 BLD_D	=.
 LIBVOS_D=..
 
 include $(LIBVOS_D)/Makefile
 
-TARGET_OBJS=	$(LIBVOS_BLD_D)/libvos.oo
+LIBVOS_OPTS     +=NO_DEFAULT_LIBS
 
-BUFFER_OBJS=	$(TARGET_OBJS)			\
+OBJECT_OBJS=	$(LIBVOS_BLD_D)/libvos.oo	\
+		$(LIBVOS_BLD_D)/Object.oo
+
+BUFFER_OBJS=	$(OBJECT_OBJS)			\
 		$(LIBVOS_BLD_D)/Buffer.oo
+
+BNODE_OBJS=	$(BUFFER_OBJS)			\
+		$(LIBVOS_BLD_D)/BNode.oo
+
+LIST_OBJS=	$(BNODE_OBJS)			\
+		$(LIBVOS_BLD_D)/List.oo
 
 DLOGGER_OBJS=	$(BUFFER_OBJS)			\
 		$(LIBVOS_BLD_D)/File.oo		\
@@ -22,21 +37,36 @@ DNSQUERY_OBJS=		$(SSVREADER_OBJS)		\
 			$(LIBVOS_BLD_D)/DNS_rr.oo	\
 			$(LIBVOS_BLD_D)/DNSQuery.oo
 
-TARGET=$(BLD_D)/SSVReader.test		\
-       $(BLD_D)/host_to_dnsquery.test	\
-       $(BLD_D)/Dlogger.test		\
-       $(BLD_D)/Buffer.test
 
-.PHONY: all debug clean
+TARGET=	$(BLD_D)/Object.test		\
+	$(BLD_D)/Buffer.test		\
+	$(BLD_D)/BNode.test		\
+	$(BLD_D)/List.test		\
+	$(BLD_D)/Dlogger.test		\
+	$(BLD_D)/SSVReader.test		\
+	$(BLD_D)/host_to_dnsquery.test
 
-all: libvos-all
+.PHONY: all clean
 
-debug: libvos-debug
+all: libvos-debug
+	@for test in ${TARGET}; do	\
+		echo "[T] $$test";	\
+		$$test || (echo "[T] FAIL: $$test" && exit 1); \
+	done
 
 clean: libvos-clean
 	@$(call do_rm,$(TARGET))
 
+$(BLD_D)/Object.test: Object.test.cpp $(OBJECT_OBJS)
+	@$(do_build)
+
 $(BLD_D)/Buffer.test: Buffer.test.cpp $(BUFFER_OBJS)
+	@$(do_build)
+
+$(BLD_D)/BNode.test: BNode.test.cpp $(BNODE_OBJS)
+	@$(do_build)
+
+$(BLD_D)/List.test: List.test.cpp $(LIST_OBJS)
 	@$(do_build)
 
 $(BLD_D)/Dlogger.test: Dlogger.test.cpp $(DLOGGER_OBJS)
@@ -47,3 +77,5 @@ $(BLD_D)/SSVReader.test: SSVReader.test.cpp $(SSVREADER_OBJS)
 
 $(BLD_D)/host_to_dnsquery.test: host_to_dnsquery.test.cpp $(DNSQUERY_OBJS)
 	@$(do_build)
+
+## vi: ts=8 sw=8 tw=78:
