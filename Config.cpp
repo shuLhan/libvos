@@ -128,7 +128,7 @@ int Config::save_as(const char* ini, const int mode)
 
 	while (phead) {
 		if (phead->like_raw(CONFIG_ROOT) != 0) {
-			s = fini.writes("[%s]\n", phead->v());
+			s = fini.writes("[%s]\n", phead->chars());
 			if (s < 0) {
 				return -1;
 			}
@@ -138,7 +138,7 @@ int Config::save_as(const char* ini, const int mode)
 		while (pkey) {
 			if (CONFIG_T_KEY == pkey->_t) {
 				s = fini.writes("\t%s = %s\n",
-						pkey->v(),
+						pkey->chars(),
 						pkey->_value ?
 						pkey->_value->_v : "");
 				if (s < 0) {

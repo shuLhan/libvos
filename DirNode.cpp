@@ -185,9 +185,10 @@ void DirNode::dump(int space)
 		printf("> - ");
 	}
 	printf("|%5d|%5d|%5d|%12ld|%ld|%ld|%s|%s|%s", _mode, _uid, _gid, _size
-		, _mtime, _ctime, _name.v(), _linkname.v(), ctime(&_mtime));
+		, _mtime, _ctime, _name.chars(), _linkname.chars()
+		, ctime(&_mtime));
 	if (_link) {
-		printf(" => %s\n", _link->_name.v());
+		printf(" => %s\n", _link->_name.chars());
 	}
 	if (_child) {
 		_child->dump(space + 2);

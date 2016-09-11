@@ -114,7 +114,7 @@ DirNode* Dir::find(DirNode* dir, const char* name, int depth)
 
 	if (LIBVOS_DEBUG) {
 		printf("[vos::Dir_____] find: scanning directory '%s'\n"
-			, dir->_name.v());
+			, dir->_name.chars());
 	}
 
 	ls = dir->_child;
@@ -308,7 +308,7 @@ int Dir::get_symlink(DirNode *list)
 			if (!list->_link) {
 				fprintf(stderr
 , "[vos::Dir_____] get_symlink: cannot get link to '%s'\n"
-					, list->_linkname.v());
+					, list->_linkname.chars());
 				return -1;
 			}
 		}
@@ -399,7 +399,7 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 			fprintf(stderr, "[vos::Dir_____] get_node:\n"
 					"  invalid path: %s\n"
 					"  node name   : %s\n"
-				, name, node.v());
+				, name, node.chars());
 		}
 		return NULL;
 	}
@@ -448,7 +448,7 @@ int Dir::refresh_by_path(Buffer* path)
 
 	if (LIBVOS_DEBUG) {
 		printf("[vos::Dir_____] refresh_by_path: refreshing '%s' ...\n"
-			, path->v());
+			, path->chars());
 	}
 
 	s = list->update_attr(list, rpath._v);

@@ -52,7 +52,7 @@ void Record::dump()
 		o.appendc('\n');
 		row = row->_next_row;
 	}
-	printf("%s", o.v());
+	printf("%s", o.chars());
 }
 
 /**

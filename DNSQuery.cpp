@@ -701,7 +701,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset, const int last_type)
 	default:
 		fprintf(stderr
 , "[vos::DNSQuery] extract_rr: (%s) Record type '%d' is not handle yet!\n"
-		, _name.v(), rr->_type);
+		, _name.chars(), rr->_type);
 		goto err;
 	}
 
@@ -1067,7 +1067,7 @@ void DNSQuery::dump(const int do_type)
 	printf("; QUESTION section\n");
 	printf(" type            : %d\n", _q_type);
 	printf(" class           : %d\n", _q_class);
-	printf(" name            : %s\n", _name.v());
+	printf(" name            : %s\n", _name.chars());
 
 	if (_rr_ans) {
 		printf("\n; ANSWER section\n");

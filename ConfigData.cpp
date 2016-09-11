@@ -246,10 +246,11 @@ void ConfigData::dump()
 		k = h->_next_key;
 		while (k) {
 			if (CONFIG_T_KEY == k->_t) {
-				o.aprint("\t%s = %s\n", k->v()
-					, k->_value ? k->_value->v() : "\0");
+				o.aprint("\t%s = %s\n", k->chars()
+					, k->_value ? k->_value->chars()
+						: "\0");
 			} else {
-				o.aprint("%s\n", k->v());
+				o.aprint("%s\n", k->chars());
 			}
 			k = k->_next_key;
 		}
@@ -257,7 +258,7 @@ void ConfigData::dump()
 	}
 	o.append_raw("--------------------------------------------------\n");
 
-	printf("%s", o.v());
+	printf("%s", o.chars());
 }
 
 /**

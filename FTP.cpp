@@ -321,7 +321,7 @@ int FTP::get_reply(const int timeout)
 	case 553: /* requested action not taken, file name not allowed */
 		fprintf(stderr
 			, "[vos::FTP_____] get_reply: server message: %s"
-			, v());
+			, chars());
 		return -1;
 	default:
 		fprintf(stderr
@@ -386,7 +386,7 @@ int FTP::parsing_pasv_reply(Buffer* addr, int* port)
 
 	if (LIBVOS_DEBUG) {
 		printf("[vos::FTP_____] parsing_pasv_reply: '%s:%d'\n"
-			, addr->v(), *port);
+			, addr->chars(), *port);
 	}
 
 	return 0;

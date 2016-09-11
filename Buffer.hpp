@@ -75,10 +75,6 @@ public:
 	void dump();
 	void dump_hex();
 
-	inline const char* v()
-	{
-		return (_v ? _v : "\0");
-	}
 	inline int is_empty()
 	{
 		return !_i;

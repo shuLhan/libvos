@@ -249,7 +249,7 @@ int Resolver::send_udp(DNSQuery* question)
 
 	if (LIBVOS_DEBUG) {
 		printf("[vos::Resolver] send_udp: server '%s' ...\n"
-			, _p_server->v());
+			, _p_server->chars());
 	}
 
 	int s;
@@ -376,7 +376,7 @@ int Resolver::send_tcp(DNSQuery* question)
 				if (LIBVOS_DEBUG) {
 					fprintf(stderr
 					, "[vos::Resolver] send_tcp: connected to server '%s'\n"
-					, _p_server->v());
+					, _p_server->chars());
 				}
 			}
 		} while (s != 0 && _n_try < N_TRY);
@@ -566,8 +566,8 @@ int Resolver::resolve_udp(DNSQuery* question, DNSQuery* answer)
 			if (LIBVOS_DEBUG) {
 				printf(
 "[vos::Resolver] resolve_udp: mismatch name [Q:%s] vs [A:%s]\n"
-					, question->_name.v()
-					, answer->_name.v());
+					, question->_name.chars()
+					, answer->_name.chars());
 			}
 			continue;
 		}
@@ -643,8 +643,8 @@ int Resolver::resolve_tcp(DNSQuery* question, DNSQuery* answer)
 			if (LIBVOS_DEBUG) {
 				printf(
 "[vos::Resolver] resolve_tcp: mismatch name [Q:%s] vs [A:%s]\n"
-					, question->_name.v()
-					, answer->_name.v());
+					, question->_name.chars()
+					, answer->_name.chars());
 			}
 			continue;
 		}

@@ -258,7 +258,7 @@ Socket* SockServer::accept_conn()
 	}
 	if (client && LIBVOS_DEBUG) {
 		printf("[vos::SockSrvr] accept_conn: from '%s'\n"
-			, client->_name.v());
+			, client->_name.chars());
 	}
 
 	return client;

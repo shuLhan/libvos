@@ -694,9 +694,9 @@ void File::dump()
 {
 	printf("[vos::File____] dump:\n");
 	printf("  descriptor  : %d\n", _d);
-	printf("  name        : %s\n", _name.v());
+	printf("  name        : %s\n", _name.chars());
 	printf("  size        : %ld\n", _size);
-	printf("  contents    :\n[%s]\n", v());
+	printf("  contents    :\n[%s]\n", chars());
 }
 
 /**

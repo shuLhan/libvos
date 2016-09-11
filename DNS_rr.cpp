@@ -118,18 +118,19 @@ void DNS_rr::dump()
 			" TTL        : %u\n"	\
 			" length     : %d\n"	\
 			" data       :\n"
-			, p->_name.v(), p->_type, p->_class, p->_ttl, p->_len);
+			, p->_name.chars(), p->_type, p->_class, p->_ttl
+			, p->_len);
 
 		switch (p->_type) {
 		case QUERY_T_ADDRESS:
 		case QUERY_T_AAAA:
-			o.aprint("   address  : %s\n", p->_data.v());
+			o.aprint("   address  : %s\n", p->_data.chars());
 			break;
 		case QUERY_T_NAMESERVER:
-			o.aprint("   NS       : %s\n", p->_data.v());
+			o.aprint("   NS       : %s\n", p->_data.chars());
 			break;
 		case QUERY_T_CNAME:
-			o.aprint("   c. name  : %s\n", p->_data.v());
+			o.aprint("   c. name  : %s\n", p->_data.chars());
 			break;
 		case QUERY_T_SOA:
 			o.aprint(
@@ -140,27 +141,28 @@ void DNS_rr::dump()
 				"   retry    : %d\n"	\
 				"   expire   : %d\n"	\
 				"   minimum  : %d\n"
-				, p->_data.v(), p->_data2.v(), p->_serial
+				, p->_data.chars(), p->_data2.chars()
+				, p->_serial
 				, p->_refresh, p->_retry, p->_expire
 				, p->_minimum);
 			break;
 		case QUERY_T_PTR:
-			o.aprint("   PTRDNAME : %s\n", p->_data.v());
+			o.aprint("   PTRDNAME : %s\n", p->_data.chars());
 			break;
 		case QUERY_T_HINFO:
 			o.aprint(
 				"   CPU      : %s\n"	\
 				"   OS       : %s\n"
-				, p->_data.v(), p->_data2.v());
+				, p->_data.chars(), p->_data2.chars());
 			break;
 		case QUERY_T_MX:
 			o.aprint(
 				"   score    : %d\n"	\
 				"   exchange : %s\n"
-				, p->_priority, p->_data.v());
+				, p->_priority, p->_data.chars());
 			break;
 		case QUERY_T_TXT:
-			o.aprint("   TXT      : %s\n", p->_data.v());
+			o.aprint("   TXT      : %s\n", p->_data.chars());
 			break;
 		case QUERY_T_SRV:
 			o.aprint(
@@ -169,12 +171,12 @@ void DNS_rr::dump()
 				"   port     : %d\n"	\
 				"   target   : %s\n"
 				, p->_priority, p->_weight, p->_port
-				, p->_data.v());
+				, p->_data.chars());
 			break;
 		}
 		p = p->_next;
 	}
-	printf("%s", o.v());
+	printf("%s", o.chars());
 }
 
 /**

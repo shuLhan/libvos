@@ -72,7 +72,8 @@ void RecordMD::dump()
 	o.append_raw("[vos::RecordMD] dump:\n");
 	while (p) {
 		o.aprint("'%c' : %s : '%c' : %3d : %3d | " 
-			, p->_left_q, p->_name.v(), p->_right_q, p->_start_p
+			, p->_left_q, p->_name.chars(), p->_right_q
+			, p->_start_p
 			, p->_end_p);
 
 		switch (p->_sep) {
@@ -102,7 +103,7 @@ void RecordMD::dump()
 
 		p = p->_next;
 	}
-	printf("%s", o.v());
+	printf("%s", o.chars());
 }
 
 /**
@@ -360,7 +361,7 @@ int RecordMD::INIT(RecordMD** o, const char* meta)
 				++i;
 			}
 
-			md->_start_p = (int) strtol(v.v(), 0, 0);
+			md->_start_p = (int) strtol(v.chars(), 0, 0);
 			v.reset();
 
 			todo		= MD_META_SEP;
@@ -374,7 +375,7 @@ int RecordMD::INIT(RecordMD** o, const char* meta)
 					++i;
 				}
 
-				md->_end_p = (int) strtol(v.v(), 0, 0);
+				md->_end_p = (int) strtol(v.chars(), 0, 0);
 				v.reset();
 			} else if (meta[i] == '\'') {
 				++i;
@@ -514,7 +515,7 @@ int RecordMD::INIT_FROM_FILE(RecordMD** o, const char* fmeta)
 		return -1;
 	}
 
-	return RecordMD::INIT(o, f.v());
+	return RecordMD::INIT(o, f.chars());
 }
 
 } /* namespace::vos */

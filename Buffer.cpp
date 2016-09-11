@@ -430,7 +430,7 @@ int Buffer::append(const Buffer* bfr)
  */
 int Buffer::append_raw(const char* bfr, int len)
 {
-	if (!bfr) { 
+	if (!bfr) {
 		if (len > 0) {
 			return resize(len);
 		}
@@ -797,7 +797,7 @@ long int Buffer::to_lint()
  */
 void Buffer::dump()
 {
-	printf("[vos::Buffer__] dump: [%d|%d|%s]\n", _i, _l, v());
+	printf("[vos::Buffer__] dump: [%d|%d|%s]\n", _i, _l, chars());
 }
 
 /**
