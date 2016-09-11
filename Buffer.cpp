@@ -1,12 +1,14 @@
-/*
- * Copyright (C) 2014 kilabit.info
- * Author:
- *	- mhd sulhan (ms@kilabit.info)
- */
+//
+// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
 
 #include "Buffer.hpp"
 
 namespace vos {
+
+const char* Buffer::__cname = "Buffer";
 
 /* a 16 characters for <= 16 base digits */
 static char __digits[17] = "0123456789ABCDEF";
@@ -29,10 +31,9 @@ enum __print_flag {
 int Buffer::DFLT_SIZE = 15;
 int Buffer::CHAR_SIZE = sizeof(char);
 
-Buffer::Buffer(const int bfr_size) :
-	_i(0)
+Buffer::Buffer(const int bfr_size) : Object()
+,	_i(0)
 ,	_l(0)
-,	_v(NULL)
 {
 	resize(bfr_size);
 }
@@ -1199,3 +1200,4 @@ int Buffer::TRIM(char *bfr, int len)
 }
 
 } /* namespace::vos */
+// vi: ts=8 sw=8 tw=78:

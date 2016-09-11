@@ -1,13 +1,13 @@
-/*
- * Copyright (C) 2014 kilabit.info
- * Author:
- *	- mhd sulhan (ms@kilabit.info)
- */
+//
+// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
 
 #ifndef _LIBVOS_BUFFER_HPP
 #define	_LIBVOS_BUFFER_HPP	1
 
-#include "libvos.hpp"
+#include "Object.hpp"
 
 namespace vos {
 
@@ -30,7 +30,7 @@ namespace vos {
  *	if you set '_l' to value other than zero, Buffer destructor will
  *	destroy any value in '_v' at exit.
  */
-class Buffer {
+class Buffer : public Object {
 public:
 	Buffer(const int bfr_size = DFLT_SIZE);
 	virtual ~Buffer();
@@ -84,9 +84,10 @@ public:
 		return !_i;
 	}
 
+	using Object::chars;
+
 	int	_i;
 	int	_l;
-	char*	_v;
 
 	static int INIT(Buffer** o, const Buffer* bfr);
 	static int INIT_RAW(Buffer** o, const char* bfr);
@@ -97,6 +98,8 @@ public:
 
 	static int	DFLT_SIZE;
 	static int	CHAR_SIZE;
+
+	static const char* __cname;
 private:
 	Buffer(const Buffer&);
 	void operator=(const Buffer&);
@@ -105,3 +108,4 @@ private:
 } /* namespace::vos */
 
 #endif
+// vi: ts=8 sw=8 tw=78:
