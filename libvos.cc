@@ -28,6 +28,13 @@ void* operator new(size_t len)		__attribute__((alias("__my_cpp_new")));
 void* operator new[](size_t len)	__attribute__((alias("__my_cpp_new")));
 void  operator delete(void* p)		__attribute__((alias("__my_cpp_delete")));
 void  operator delete[](void* p)	__attribute__((alias("__my_cpp_delete")));
+
+void  operator delete(void* p, unsigned int)	\
+	__attribute__((alias("__my_cpp_delete")));
+
+void  operator delete[](void* p, unsigned int)	\
+	__attribute__((alias("__my_cpp_delete")));
+
 void  operator delete(void* p, unsigned long)	\
 	__attribute__((alias("__my_cpp_delete")));
 void  operator delete[](void* p, unsigned long)	\
