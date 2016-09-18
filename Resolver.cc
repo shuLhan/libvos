@@ -92,23 +92,6 @@ int Resolver::init(const int type)
 	return s;
 }
 
-/**
- * @method	: Resolver::dump
- * @desc	: print content of this Resolver object.
- */
-void Resolver::dump()
-{
-	if (_servers.size() > 0) {
-		if (!_p_saddr) {
-			rotate_server();
-		}
-		if (_p_saddr) {
-			printf("\n[vos::Resolver] servers: %s\n"
-				, _servers._head->chars());
-		}
-	}
-}
-
 //
 // `servers_reset()` will clear all parent resolver addresses.
 //

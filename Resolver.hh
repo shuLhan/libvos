@@ -43,7 +43,6 @@ public:
 	~Resolver();
 
 	int init(const int type = SOCK_DGRAM);
-	void dump();
 	void servers_reset();
 	int set_server(const char* server_list);
 	int add_server(const char* server_list);
