@@ -25,8 +25,9 @@ Resolver::Resolver() : Socket()
 ,	_fd_read()
 ,	_n_try(0)
 ,	_timeout()
-,	_servers(NULL)
+,	_servers()
 ,	_p_server(NULL)
+,	_p_saddr(NULL)
 {
 	srand((unsigned int) time(NULL));
 }
@@ -36,12 +37,7 @@ Resolver::Resolver() : Socket()
  * @desc	: Resolver object destructor.
  */
 Resolver::~Resolver()
-{
-	if (_servers) {
-		delete _servers;
-		_servers = NULL;
-	}
-}
+{}
 
 /**
  * @method	: Resolver::init
@@ -67,7 +63,7 @@ int Resolver::init(const int type)
 {
 	int s;
 
-	if (!_servers) {
+	if (_servers.size() <= 0) {
 		fprintf(stderr, "[vos::Resolver] init: no server set!\n");
 		return -1;
 	}
@@ -102,10 +98,28 @@ int Resolver::init(const int type)
  */
 void Resolver::dump()
 {
-	if (_servers) {
-		printf("\n[vos::Resolver] dump:\n; Servers\n");
-		_servers->dump();
+	if (_servers.size() > 0) {
+		if (!_p_saddr) {
+			rotate_server();
+		}
+		if (_p_saddr) {
+			printf("\n[vos::Resolver] servers: %s\n"
+				, _servers._head->chars());
+		}
 	}
+}
+
+//
+// `servers_reset()` will clear all parent resolver addresses.
+//
+void Resolver::servers_reset()
+{
+	_p_saddr = (SockAddr*) _servers.pop_head();
+	while (_p_saddr) {
+		delete _p_saddr;
+		_p_saddr = (SockAddr*) _servers.pop_head();
+	}
+	_p_server = NULL;
 }
 
 /**
@@ -122,9 +136,8 @@ int Resolver::set_server(char* server_list)
 	if (!server_list) {
 		return 0;
 	}
-	if (_servers) {
-		delete _servers;
-		_servers = NULL;
+	if (_servers.size() > 0) {
+		servers_reset();
 	}
 
 	return add_server(server_list);
@@ -184,27 +197,28 @@ int Resolver::add_server(char* server_list)
 		p++;
 		if (!addr.is_empty()) {
 			port_num = (uint16_t) port.to_lint ();
-			if (port_num <= 0 || port_num > 65534) {
+			if (port_num == 0) {
 				port_num = PORT;
 			}
 			s = SockAddr::INIT(&saddr, AF_INET, addr._v, port_num);
 			if (s < 0) {
 				return -1;
 			}
-			SockAddr::ADD(&_servers, saddr);
+			_servers.push_tail(saddr);
 			addr.reset();
+			port.reset();
 		}
 	}
 	if (!addr.is_empty()) {
 		port_num = (uint16_t) port.to_lint ();
-		if (port_num <= 0 || port_num > 65534) {
+		if (port_num == 0) {
 			port_num = PORT;
 		}
 		s = SockAddr::INIT(&saddr, AF_INET, addr._v, port_num);
 		if (s < 0) {
 			return -1;
 		}
-		SockAddr::ADD(&_servers, saddr);
+		_servers.push_tail(saddr);
 	}
 
 	return 0;
@@ -217,12 +231,18 @@ int Resolver::add_server(char* server_list)
 void Resolver::rotate_server()
 {
 	if (!_p_server) {
-		_p_server = _servers;
-	} else {
-		_p_server = _p_server->_next;
-		if (!_p_server) {
-			_p_server = _servers;
+		_p_server = _servers._head;
+		if (_p_server) {
+			_p_saddr = (SockAddr*) _p_server->_item;
 		}
+	} else {
+		_p_server = _p_server->_right;
+		_p_saddr = (SockAddr*) _p_server->_item;
+	}
+
+	if (LIBVOS_DEBUG && _p_saddr) {
+		fprintf(stderr, "[vos::Resolver] server switch: %s\n"
+			, _p_saddr->chars());
 	}
 }
 
@@ -240,7 +260,7 @@ int Resolver::send_udp(DNSQuery* question)
 	if (!question || _type != SOCK_DGRAM) {
 		return -1;
 	}
-	if (!_servers) {
+	if (_servers.size() <= 0) {
 		fprintf(stderr, "[vos::Resolver] send_udp: no server!\n");
 		return -1;
 	}
@@ -249,7 +269,7 @@ int Resolver::send_udp(DNSQuery* question)
 
 	if (LIBVOS_DEBUG) {
 		printf("[vos::Resolver] send_udp: server '%s' ...\n"
-			, _p_server->chars());
+			, _p_saddr->chars());
 	}
 
 	int s;
@@ -261,7 +281,7 @@ int Resolver::send_udp(DNSQuery* question)
 		}
 	}
 
-	s = (int) Socket::send_udp(&_p_server->_in, question);
+	s = (int) Socket::send_udp(&_p_saddr->_in, question);
 
 	return s;
 }
@@ -341,7 +361,7 @@ int Resolver::send_tcp(DNSQuery* question)
 		return -1;
 	}
 	// (3)
-	if (!_servers) {
+	if (_servers.size() <= 0) {
 		fprintf(stderr, "[vos::Resolver] send_tcp: no server!\n");
 		return -1;
 	}
@@ -360,7 +380,7 @@ int Resolver::send_tcp(DNSQuery* question)
 		_n_try = 0;
 		do {
 			// (4.2)
-			s = connect_to(&_p_server->_in);
+			s = connect_to(&_p_saddr->_in);
 			if (s < 0) {
 				// (4.3)
 				if (EISCONN == errno) {
@@ -376,7 +396,7 @@ int Resolver::send_tcp(DNSQuery* question)
 				if (LIBVOS_DEBUG) {
 					fprintf(stderr
 					, "[vos::Resolver] send_tcp: connected to server '%s'\n"
-					, _p_server->chars());
+					, _p_saddr->chars());
 				}
 			}
 		} while (s != 0 && _n_try < N_TRY);

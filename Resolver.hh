@@ -44,6 +44,7 @@ public:
 
 	int init(const int type = SOCK_DGRAM);
 	void dump();
+	void servers_reset();
 	int set_server(char* server_list);
 	int add_server(char* server_list);
 	void rotate_server();
@@ -63,14 +64,19 @@ public:
 	fd_set		_fd_read;
 	unsigned int	_n_try;
 	struct timeval	_timeout;
-	SockAddr*	_servers;
-	SockAddr*	_p_server;
-
+	List		_servers;
 	static uint16_t PORT;
 	static unsigned int UDP_PACKET_SIZE;
 	static unsigned int TIMEOUT;
 	static unsigned int N_TRY;
 private:
+	// _p_server is a pointer to current (active) server in list of server
+	// (_servers)
+	BNode*		_p_server;
+	// _p_saddr is a pointer to current server address.
+	SockAddr*	_p_saddr;
+
+
 	Resolver(const Resolver&);
 	void operator=(const Resolver&);
 };
