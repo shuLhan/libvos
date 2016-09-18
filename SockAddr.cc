@@ -19,8 +19,6 @@ SockAddr::SockAddr() : Object()
 ,	_t(0)
 ,	_in()
 ,	_in6()
-,	_next(NULL)
-,	_last(this)
 ,	_p_address()
 {}
 
@@ -29,13 +27,7 @@ SockAddr::SockAddr() : Object()
  * @desc	: SockAddr object destructor.
  */
 SockAddr::~SockAddr()
-{
-	if (_next) {
-		delete _next;
-		_next = NULL;
-	}
-	_last = NULL;
-}
+{}
 
 //
 // `set_port()` will set port in address `type`.
@@ -139,40 +131,6 @@ const char* SockAddr::get_address(const int type)
 		break;
 	}
 	return p;
-}
-
-/**
- * @method	: SockAddr::dump
- * @desc	: print content of SockAddr object to standard output.
- */
-void SockAddr::dump()
-{
-	register int	i = 0;
-	SockAddr*	p = this;
-
-	printf("[vos::SockAddr] dump,\n");
-
-	while (p) {
-		printf( "[%02d]\n"	\
-			" family  : %d\n", i++, p->_t);
-
-		switch (p->_t) {
-		case AF_INET:
-			printf( " address : %s\n"	\
-				" port    : %d\n"
-				, p->get_address(AF_INET)
-				, ntohs(p->_in.sin_port));
-			break;
-		case AF_INET6:
-		case AF_INETS:
-			printf( " address : %s\n"	\
-				" port    : %d\n"
-				, p->get_address(AF_INET6)
-				, ntohs(p->_in6.sin6_port));
-			break;
-		}
-		p = p->_next;
-	}
 }
 
 //
@@ -400,26 +358,6 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 	sin6->sin6_port		= htons(port);
 
 	return 0;
-}
-
-/**
- * @method	: SockAddr::ADD
- * @param	:
- *	> head	: pointer to the head of list.
- *	> node	: a new SockAddr object that will be added to list.
- * @desc	: add 'node' to the list of 'head'.
- */
-void SockAddr::ADD(SockAddr** head, SockAddr* node)
-{
-	if (!node) {
-		return;
-	}
-	if (!(*head)) {
-		(*head) = node;
-	} else {
-		(*head)->_last->_next = node;
-	}
-	(*head)->_last = node;
 }
 
 } /* namespace::vos */
