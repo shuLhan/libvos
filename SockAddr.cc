@@ -15,12 +15,13 @@ unsigned int SockAddr::IN6_SIZE	= sizeof(struct sockaddr_in6);
  * @method	: SockAddr::SockAddr
  * @desc	: SockAddr object constructor.
  */
-SockAddr::SockAddr(const int bfr_size) : Buffer(bfr_size)
+SockAddr::SockAddr() : Object()
 ,	_t(0)
 ,	_in()
 ,	_in6()
 ,	_next(NULL)
 ,	_last(this)
+,	_p_address()
 {}
 
 /**
@@ -36,6 +37,27 @@ SockAddr::~SockAddr()
 	_last = NULL;
 }
 
+//
+// `set_port()` will set port in address `type`.
+//
+int SockAddr::set_port(const int type, const uint16_t port)
+{
+	switch (type) {
+	case AF_INET:
+		_in.sin_port = htons(port);
+		break;
+	case AF_INET6:
+		_in6.sin6_port = htons(port);
+		break;
+	case AF_INETS:
+		_in.sin_port	= htons(port);
+		_in6.sin6_port	= htons(port);
+		break;
+	}
+
+	return 0;
+}
+
 /**
  * @method	: SockAddr::set
  * @param	:
@@ -47,24 +69,10 @@ SockAddr::~SockAddr()
  *	< -1	: fail.
  * @desc	: set one of the network address using 'addr' and 'port'.
  */
-int SockAddr::set(const int type, const char* addr, const int port)
+int SockAddr::set(const int type, const char* addr, const uint16_t port)
 {
 	if (!addr) {
-		if (port > 0) {
-			switch (type) {
-			case AF_INET:
-				_in.sin_port = htons((uint16_t) port);
-				break;
-			case AF_INET6:
-				_in6.sin6_port = htons((uint16_t) port);
-				break;
-			case AF_INETS:
-				_in.sin_port	= htons((uint16_t) port);
-				_in6.sin6_port	= htons((uint16_t) port);
-				break;
-			}
-		}
-		return -1;
+		return set_port(type, port);
 	}
 
 	register int s;
@@ -79,16 +87,12 @@ int SockAddr::set(const int type, const char* addr, const int port)
 	default:
 		fprintf(stderr, "[vos::SockAddr] set: invalid type '%d'\n"
 			, type);
-		return -1;
-	}
-	if (s < 0) {
-		return -1;
+		s = -1;
 	}
 
 	_t |= type;
-	copy_raw(addr);
 
-	return 0;
+	return s;
 }
 
 /**
@@ -99,14 +103,14 @@ int SockAddr::set(const int type, const char* addr, const int port)
  *	< >=0	: any port number.
  * @desc	: return port number on specific network address.
  */
-int SockAddr::get_port(const int type)
+uint16_t SockAddr::get_port(const int type)
 {
 	switch (type) {
 	case AF_INET:
-		return _in.sin_port;
+		return ntohs(_in.sin_port);
 	case AF_INET6:
 	case AF_INETS:
-		return _in6.sin6_port;
+		return ntohs(_in6.sin6_port);
 	}
 	return 0;
 }
@@ -125,18 +129,14 @@ const char* SockAddr::get_address(const int type)
 
 	switch (type) {
 	case AF_INET:
-		p = inet_ntop(AF_INET, &_in.sin_addr, _v, _l);
+		p = inet_ntop(AF_INET, &_in.sin_addr, _p_address
+				, INET6_ADDRSTRLEN);
 		break;
 	case AF_INET6:
 	case AF_INETS:
-		p = inet_ntop(AF_INET6, &_in6.sin6_addr, _v, _l);
+		p = inet_ntop(AF_INET6, &_in6.sin6_addr, _p_address
+				, INET6_ADDRSTRLEN);
 		break;
-	}
-	if (p) {
-		_i = (int) strlen(_v);
-		_v[_i] = '\0';
-	} else {
-		reset();
 	}
 	return p;
 }
@@ -175,6 +175,33 @@ void SockAddr::dump()
 	}
 }
 
+//
+// `chars()` return string format of this object.
+//
+const char* SockAddr::chars()
+{
+	if (_v) {
+		free(_v);
+		_v = NULL;
+	}
+	Buffer b;
+
+	b.copy_raw(get_address());
+	b.appendc(':');
+	b.appendi(get_port());
+
+	b.appendc(' ');
+
+	b.append_raw(get_address(AF_INET6));
+	b.appendc(':');
+	b.appendi(get_port(AF_INET6));
+
+	_v = b._v;
+	b._v = NULL;
+
+	return _v;
+}
+
 /**
  * @method	: SockAddr::init
  * @param	:
@@ -186,7 +213,8 @@ void SockAddr::dump()
  *	< -1	: fail.
  * @desc	: create and initialize initialize SockAddr object.
  */
-int SockAddr::INIT(SockAddr** o, const int type, const char* addr, const int port)
+int SockAddr::INIT(SockAddr** o, const int type, const char* addr
+			, const uint16_t port)
 {
 	if (!addr) {
 		return -1;
@@ -275,7 +303,7 @@ int SockAddr::IS_IPV4(const char* str)
  *	'port', with address family default to network (AF_INET).
  */
 int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
-			, const int port)
+			, const uint16_t port)
 {
 	if (!sin || !addr) {
 		return -1;
@@ -312,7 +340,7 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
 	}
 
 	sin->sin_family	= AF_INET;
-	sin->sin_port	= htons((uint16_t) port);
+	sin->sin_port	= htons(port);
 
 	return 0;
 }
@@ -330,7 +358,7 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
  *	create IPv6 network address using 'address' and 'port'.
  */
 int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
-			, const char* addr, const int port)
+			, const char* addr, const uint16_t port)
 {
 	if (!sin6 || !addr) {
 		return -1;
@@ -369,7 +397,7 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 	}
 
 	sin6->sin6_family	= AF_INET6;
-	sin6->sin6_port		= htons((uint16_t) port);
+	sin6->sin6_port		= htons(port);
 
 	return 0;
 }

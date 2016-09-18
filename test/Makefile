@@ -35,6 +35,9 @@ SSVREADER_OBJS=		$(BUFFER_OBJS)			\
 			$(LIBVOS_BLD_D)/Record.oo	\
 			$(LIBVOS_BLD_D)/SSVReader.oo
 
+SockAddr_OBJS=	$(BUFFER_OBJS)			\
+		$(LIBVOS_BLD_D)/SockAddr.oo
+
 DNSQUERY_OBJS=		$(SSVREADER_OBJS)		\
 			$(LIBVOS_BLD_D)/DNS_rr.oo	\
 			$(LIBVOS_BLD_D)/DNSQuery.oo
@@ -46,6 +49,7 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/List.test		\
 	$(BLD_D)/Dlogger.test		\
 	$(BLD_D)/SSVReader.test		\
+	$(BLD_D)/SockAddr.test		\
 	$(BLD_D)/host_to_dnsquery.test
 
 .PHONY: all clean
@@ -75,6 +79,9 @@ $(BLD_D)/Dlogger.test: Dlogger.test.cc $(DLOGGER_OBJS)
 	@$(do_build)
 
 $(BLD_D)/SSVReader.test: SSVReader.test.cc $(SSVREADER_OBJS)
+	@$(do_build)
+
+$(BLD_D)/SockAddr.test: SockAddr.test.cc $(SockAddr_OBJS)
 	@$(do_build)
 
 $(BLD_D)/host_to_dnsquery.test: host_to_dnsquery.test.cc $(DNSQUERY_OBJS)

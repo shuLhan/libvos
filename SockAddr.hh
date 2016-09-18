@@ -29,15 +29,17 @@ namespace vos {
  * @desc		:
  *	module for handling socket address.
  */
-class SockAddr : public Buffer {
+class SockAddr : public Object {
 public:
-	SockAddr(const int bfr_size = INET6_ADDRSTRLEN);
+	SockAddr();
 	~SockAddr();
 
-	int set(const int type, const char* addr, const int port);
-	int get_port(const int type = AF_INET);
+	int set(const int type, const char* addr, const uint16_t port);
+	int set_port(const int type, const uint16_t port);
+	uint16_t get_port(const int type = AF_INET);
 	const char* get_address(const int type = AF_INET);
 	void dump();
+	const char* chars();
 
 	int			_t;
 	struct sockaddr_in	_in;
@@ -46,19 +48,25 @@ public:
 	SockAddr*		_last;
 
 	static int INIT(SockAddr** o, const int type, const char* addr
-			, const int port);
+			, const uint16_t port);
 	static int IS_IPV4(const char* str);
 
 	static int CREATE_ADDR(struct sockaddr_in* sin, const char* addr
-				, const int port);
+				, const uint16_t port);
 	static int CREATE_ADDR6(struct sockaddr_in6* sin6
-				, const char* address, const int port);
+				, const char* address, const uint16_t port);
 
 	static void ADD(SockAddr** head, SockAddr *node);
 
 	static unsigned int IN_SIZE;
 	static unsigned int IN6_SIZE;
 private:
+	//
+	// `_p_address` is a temporary buffer to hold address string when
+	// calling `get_address()`.
+	//
+	char _p_address[INET6_ADDRSTRLEN];
+
 	SockAddr(const SockAddr&);
 	void operator=(const SockAddr&);
 };
