@@ -10,11 +10,23 @@
 using vos::Object;
 using vos::List;
 
-#define EXP_PUSH_1	"[\"" STR_TEST_1 "\"]"
-#define EXP_PUSH_2	"[\"" STR_TEST_1 "\",\"" STR_TEST_2 "\"]"
-#define EXP_PUSH_3	"[\"" STR_TEST_0 "\",\"" STR_TEST_1 "\",\"" STR_TEST_2 "\"]"
-#define EXP_POP_1	"[\"" STR_TEST_0 "\",\"" STR_TEST_1 "\"]"
-#define EXP_POP_2	"[\"" STR_TEST_1 "\"]"
+#define EXP_PUSH_1	SB(V_STR(STR_TEST_1))
+#define EXP_PUSH_2	SB( \
+				V_STR(STR_TEST_1) SEP_ITEM \
+				V_STR(STR_TEST_2) \
+			)
+#define EXP_PUSH_3	SB( \
+				V_STR(STR_TEST_0) SEP_ITEM \
+				V_STR(STR_TEST_1) SEP_ITEM \
+				V_STR(STR_TEST_2) \
+			)
+#define EXP_POP_1	SB( \
+				V_STR(STR_TEST_0) SEP_ITEM \
+				V_STR(STR_TEST_1) \
+			)
+#define EXP_POP_2	SB( \
+				V_STR(STR_TEST_1) \
+			)
 
 List list;
 

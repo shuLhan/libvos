@@ -231,11 +231,11 @@ const char* List::chars()
 	BNode* node = _head;
 
 	if (_head == _tail) {
-		b.concat("[\"", _head->chars(), "\"]", NULL);
+		b.concat("[ \"", _head->chars(), "\" ]", NULL);
 		goto out;
 	}
 
-	b.appendc('[');
+	b.append_raw("[ ");
 	while (node != _tail) {
 		b.concat("\"", node->chars(), "\"", NULL);
 		b.appendc(_sep);
@@ -243,7 +243,7 @@ const char* List::chars()
 		node = node->_right;
 	}
 	b.concat("\"", node->chars(), "\"", NULL);
-	b.appendc(']');
+	b.append_raw(" ]");
 
 out:
 	_v = b._v;
