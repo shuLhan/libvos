@@ -152,7 +152,7 @@ int Socket::connect_to6(struct sockaddr_in6* sin6)
  *	< -1		: fail.
  * @desc		: connect socket to 'address' with 'port'.
  */
-int Socket::connect_to_raw(const char* address, const int port)
+int Socket::connect_to_raw(const char* address, const uint16_t port)
 {
 	if (!address) {
 		return -1;

@@ -90,7 +90,7 @@ public:
 	~FTPD();
 
 	int init(const char* address = FTPD_DEF_ADDRESS
-		, const int port = FTPD_DEF_PORT
+		, const uint16_t port = FTPD_DEF_PORT
 		, const char* path = FTPD_DEF_PATH
 		, const int auth_mode = AUTH_NOLOGIN);
 	int add_user(const char* name, const char* pass);
@@ -132,7 +132,7 @@ public:
 	static void on_cmd_CDUP(FTPD* s, FTPD_client* c);
 	static void on_cmd_PWD(FTPD* s, FTPD_client* c);
 
-	static int GET_PASV_PORT();
+	static uint16_t GET_PASV_PORT();
 	static void on_cmd_PASV(FTPD* s, FTPD_client* c);
 	static void on_cmd_LIST(FTPD* s, FTPD_client* c);
 	static void on_cmd_NLST(FTPD* s, FTPD_client* c);

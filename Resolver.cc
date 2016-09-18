@@ -8,7 +8,7 @@
 
 namespace vos {
 
-unsigned int Resolver::PORT		= 53;
+uint16_t Resolver::PORT = 53;
 unsigned int Resolver::UDP_PACKET_SIZE	= 512;
 unsigned int Resolver::TIMEOUT		= 6;
 unsigned int Resolver::N_TRY		= 0;
@@ -146,7 +146,7 @@ int Resolver::add_server(char* server_list)
 	}
 
 	register int	s;
-	int		port_num;
+	uint16_t	port_num;
 	Buffer		addr;
 	Buffer		port;
 	char*		p;
@@ -183,7 +183,7 @@ int Resolver::add_server(char* server_list)
 		}
 		p++;
 		if (!addr.is_empty()) {
-			port_num = (int) port.to_lint ();
+			port_num = (uint16_t) port.to_lint ();
 			if (port_num <= 0 || port_num > 65534) {
 				port_num = PORT;
 			}
@@ -196,7 +196,7 @@ int Resolver::add_server(char* server_list)
 		}
 	}
 	if (!addr.is_empty()) {
-		port_num = (int) port.to_lint ();
+		port_num = (uint16_t) port.to_lint ();
 		if (port_num <= 0 || port_num > 65534) {
 			port_num = PORT;
 		}

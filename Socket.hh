@@ -43,7 +43,7 @@ public:
 
 	int connect_to(struct sockaddr_in* sin);
 	int connect_to6(struct sockaddr_in6* sin6);
-	int connect_to_raw(const char* address, const int port);
+	int connect_to_raw(const char* address, const uint16_t port);
 
 	long int send_udp(struct sockaddr_in* addr, Buffer *bfr = NULL);
 	long int send_udp_raw(struct sockaddr_in* addr

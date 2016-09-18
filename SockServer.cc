@@ -64,7 +64,7 @@ void SockServer::unlock_client()
  *	< -1			: fail.
  * @desc			: bind socket to 'address' and 'port'.
  */
-int SockServer::bind(const char* address, const int port)
+int SockServer::bind(const char* address, const uint16_t port)
 {
 	int	s	= 0;
 	int	optval	= 1;
@@ -151,7 +151,7 @@ int SockServer::listen(const unsigned int queue_len)
  *	create a socket that accepting client connection at 'address' and
  *	'port'.
  */
-int SockServer::bind_listen(const char* address, const int port)
+int SockServer::bind_listen(const char* address, const uint16_t port)
 {
 	register int s;
 

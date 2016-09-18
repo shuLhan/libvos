@@ -115,7 +115,7 @@ FTPD::~FTPD()
  *	< -1		: fail.
  * @desc		: initialize FTP server environment.
  */
-int FTPD::init(const char* address, const int port, const char* path
+int FTPD::init(const char* address, const uint16_t port, const char* path
 		, const int auth_mode)
 {
 	int s;
@@ -917,9 +917,9 @@ void FTPD::on_cmd_PWD(FTPD* s, FTPD_client* c)
 	c->reply_raw(CODE_257, _FTP_reply_msg[CODE_257], c->_wd._v);
 }
 
-int FTPD::GET_PASV_PORT()
+uint16_t FTPD::GET_PASV_PORT()
 {
-	return ((rand() % 64511) + 1025);
+	return (uint16_t) ((rand() % 64511) + 1025);
 }
 
 void FTPD::on_cmd_PASV(FTPD* s, FTPD_client* c)
@@ -930,7 +930,7 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPD_client* c)
 
 	int		p1;
 	int		p2;
-	int		pasv_port	= GET_PASV_PORT();
+	uint16_t	pasv_port	= GET_PASV_PORT();
 	Buffer		pasv_addr;
 	SockServer*	pasv_sock	= NULL;
 

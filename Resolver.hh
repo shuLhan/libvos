@@ -66,7 +66,7 @@ public:
 	SockAddr*	_servers;
 	SockAddr*	_p_server;
 
-	static unsigned int PORT;
+	static uint16_t PORT;
 	static unsigned int UDP_PACKET_SIZE;
 	static unsigned int TIMEOUT;
 	static unsigned int N_TRY;

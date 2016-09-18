@@ -38,7 +38,7 @@ public:
 	FTP();
 	~FTP();
 
-	int connect(const char* host, const int port = PORT
+	int connect(const char* host, const uint16_t port = PORT
 			, const int mode = FTP_MODE_NORMAL);
 	int login(const char* username, const char* password);
 	void logout();
@@ -49,7 +49,7 @@ public:
 	int send_cmd(const char* cmd, const char* parm);
 	int get_reply(const int timeout);
 
-	int parsing_pasv_reply(Buffer* addr, int* port);
+	int parsing_pasv_reply(Buffer* addr, uint16_t* port);
 	int do_pasv(const char* cmd, const char* parm, const char* out);
 
 	int do_put(const char *path);
@@ -92,7 +92,7 @@ public:
 	fd_set		_fd_read;
 	struct timeval	_timeout;
 
-	static unsigned int PORT;
+	static uint16_t PORT;
 	static unsigned int TIMEOUT;
 private:
 	FTP(const FTP&);

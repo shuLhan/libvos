@@ -8,7 +8,7 @@
 
 namespace vos {
 
-unsigned int FTP::PORT		= 21;
+uint16_t FTP::PORT = 21;
 unsigned int FTP::TIMEOUT	= 3;
 
 /**
@@ -48,7 +48,7 @@ FTP::~FTP()
  *	< -1	: fail.
  * @desc	: create FTP connection to 'host:port'.
  */
-int FTP::connect(const char* host, const int port, const int mode)
+int FTP::connect(const char* host, const uint16_t port, const int mode)
 {
 	register int s;
 
@@ -343,9 +343,10 @@ int FTP::get_reply(const int timeout)
  *	< 0	: success.
  *	< -1	: fail.
  */
-int FTP::parsing_pasv_reply(Buffer* addr, int* port)
+int FTP::parsing_pasv_reply(Buffer* addr, uint16_t* port)
 {
 	register int	s;
+	register uint16_t tmp;
 	char*		p = _v;
 
 	/* get reply code : 227 */ 
@@ -378,11 +379,11 @@ int FTP::parsing_pasv_reply(Buffer* addr, int* port)
 	++p;
 
 	/* get port */
-	s	= (int) strtol(p, &p, 0);
-	*port	= s * 256;
+	tmp	= (uint16_t) strtol(p, &p, 0);
+	*port	= (uint16_t) (tmp * 256);
 	++p;
-	s	= (int) strtol(p, 0, 0);
-	*port	+= s;
+	tmp	= (uint16_t) strtol(p, 0, 0);
+	*port	= (uint16_t) (*port + tmp);
 
 	if (LIBVOS_DEBUG) {
 		printf("[vos::FTP_____] parsing_pasv_reply: '%s:%d'\n"
@@ -411,7 +412,7 @@ int FTP::parsing_pasv_reply(Buffer* addr, int* port)
  */
 int FTP::do_pasv(const char* cmd, const char* parm, const char* out)
 {
-	int	port	= 0;
+	uint16_t port = 0;
 	int	s;
 	Buffer	addr;
 	File	fout;
@@ -475,7 +476,7 @@ int FTP::do_put(const char* path)
 		return 0;
 	}
 
-	int	port	= 0;
+	uint16_t port = 0;
 	int	s;
 	Buffer	addr;
 	File	fput;

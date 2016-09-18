@@ -30,9 +30,9 @@ public:
 	void lock_client();
 	void unlock_client();
 
-	int bind(const char* address, const int port);
+	int bind(const char* address, const uint16_t port);
 	int listen(const unsigned int queue_len = 0);
-	int bind_listen(const char* address, const int port);
+	int bind_listen(const char* address, const uint16_t port);
 
 	Socket* accept();
 	Socket* accept6();
