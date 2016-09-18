@@ -131,7 +131,7 @@ void Resolver::servers_reset()
  *	< -1		: fail.
  * @desc		: create a new parent server list.
  */
-int Resolver::set_server(char* server_list)
+int Resolver::set_server(const char* server_list)
 {
 	if (!server_list) {
 		return 0;
@@ -152,7 +152,7 @@ int Resolver::set_server(char* server_list)
  *	< -1		: fail.
  * @desc		: add another server to list of server '_servers'.
  */
-int Resolver::add_server(char* server_list)
+int Resolver::add_server(const char* server_list)
 {
 	if (!server_list) {
 		return 0;
@@ -160,68 +160,53 @@ int Resolver::add_server(char* server_list)
 
 	register int	s;
 	uint16_t	port_num;
-	Buffer		addr;
-	Buffer		port;
-	char*		p;
-	SockAddr*	saddr;
 
-	p = server_list;
+	int x;
+	Buffer b;
+	List* addrs = NULL;
+	List* addr_port = NULL;
+	Buffer* b_addr = NULL;
+	Buffer* addr = NULL;
+	Buffer* port = NULL;
+	SockAddr* saddr = NULL;
 
-	while (*p) {
-		while (isspace(*p)) {
-			p++;
-		}
-		while (*p && (isalnum(*p) || *p == '.')) {
-			addr.appendc(*p);
-			p++;
-		}
-		if (*p == ':') {
-			p++;
-			while (isalnum(*p)) {
-				port.appendc(*p);
-				p++;
-			}
-		}
-		while (isspace(*p)) {
-			p++;
-		}
-		if (!*p) {
-			break;
-		}
-		if (*p != ',') {
-			fprintf(stderr
-			, "[Resolver::add_server] invalid character: '%c'\n"
-			, *p);
-			return -1;
-		}
-		p++;
-		if (!addr.is_empty()) {
-			port_num = (uint16_t) port.to_lint ();
+	b.copy_raw(server_list);
+	addrs = b.split_by_char(',', 1);
+
+	for (x = 0; x < addrs->size(); x++) {
+		b_addr = (Buffer*) addrs->at(x);
+
+		addr_port = b_addr->split_by_char(':');
+
+		addr = (Buffer*) addr_port->at(0);
+		port_num = PORT;
+
+		if (addr_port->size() == 2) {
+			port = (Buffer*) addr_port->at(1);
+
+			port_num = (uint16_t) port->to_lint();
 			if (port_num == 0) {
 				port_num = PORT;
 			}
-			s = SockAddr::INIT(&saddr, AF_INET, addr._v, port_num);
-			if (s < 0) {
-				return -1;
-			}
-			_servers.push_tail(saddr);
-			addr.reset();
-			port.reset();
 		}
-	}
-	if (!addr.is_empty()) {
-		port_num = (uint16_t) port.to_lint ();
-		if (port_num == 0) {
-			port_num = PORT;
-		}
-		s = SockAddr::INIT(&saddr, AF_INET, addr._v, port_num);
-		if (s < 0) {
-			return -1;
-		}
-		_servers.push_tail(saddr);
-	}
 
-	return 0;
+		s = SockAddr::INIT(&saddr, AF_INET, addr->chars(), port_num);
+		if (s < 0) {
+			goto err;
+		}
+
+		_servers.push_tail(saddr);
+
+		delete addr_port;
+		addr_port = NULL;
+	}
+err:
+	if (addr_port) {
+		delete addr_port;
+	}
+	delete addrs;
+
+	return s;
 }
 
 /**
@@ -711,6 +696,24 @@ int Resolver::resolve(DNSQuery* question, DNSQuery* answer)
 	}
 
 	return s;
+}
+
+//
+// `chars()` will return string representation of this object.
+//
+const char* Resolver::chars()
+{
+	if (_v) {
+		free(_v);
+	}
+
+	Buffer b;
+	b.aprint("{ \"servers\": %s }", _servers.chars());
+
+	_v = b._v;
+	b._v = NULL;
+
+	return _v;
 }
 
 } /* namespace::vos */

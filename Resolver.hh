@@ -45,8 +45,8 @@ public:
 	int init(const int type = SOCK_DGRAM);
 	void dump();
 	void servers_reset();
-	int set_server(char* server_list);
-	int add_server(char* server_list);
+	int set_server(const char* server_list);
+	int add_server(const char* server_list);
 	void rotate_server();
 
 	int send_udp(DNSQuery* question);
@@ -58,6 +58,8 @@ public:
 	int resolve_udp(DNSQuery* question, DNSQuery* answer);
 	int resolve_tcp(DNSQuery* question, DNSQuery* answer);
 	int resolve(DNSQuery* question, DNSQuery* answer);
+
+	const char* chars();
 
 	int		_maxfd;
 	fd_set		_fd_all;

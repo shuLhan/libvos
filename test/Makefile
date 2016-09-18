@@ -12,36 +12,46 @@ include $(LIBVOS_D)/Makefile
 
 LIBVOS_OPTS     +=NO_DEFAULT_LIBS
 
-OBJECT_OBJS=	$(LIBVOS_BLD_D)/libvos.oo	\
+Object_OBJS=	$(LIBVOS_BLD_D)/libvos.oo	\
 		$(LIBVOS_BLD_D)/Object.oo
 
-COMMON_OBJS=	$(OBJECT_OBJS)			\
+COMMON_OBJS=	$(Object_OBJS)			\
 		$(LIBVOS_BLD_D)/Buffer.oo
 
-BNODE_OBJS=	$(COMMON_OBJS)			\
+BNode_OBJS=	$(COMMON_OBJS)			\
 		$(LIBVOS_BLD_D)/BNode.oo	\
 		$(LIBVOS_BLD_D)/List.oo
 
-BUFFER_OBJS=	$(BNODE_OBJS)
+Buffer_OBJS=	$(BNode_OBJS)
 
-LIST_OBJS=	$(BUFFER_OBJS)
+List_OBJS=	$(Buffer_OBJS)
 
-DLOGGER_OBJS=	$(BUFFER_OBJS)			\
+Dlogger_OBJS=	$(Buffer_OBJS)			\
 		$(LIBVOS_BLD_D)/File.oo		\
 		$(LIBVOS_BLD_D)/Dlogger.oo
 
-SSVREADER_OBJS=		$(BUFFER_OBJS)			\
+SSVReader_OBJS=		$(Buffer_OBJS)			\
 			$(LIBVOS_BLD_D)/File.oo		\
 			$(LIBVOS_BLD_D)/Record.oo	\
 			$(LIBVOS_BLD_D)/SSVReader.oo
 
-SockAddr_OBJS=	$(BUFFER_OBJS)			\
+
+SockAddr_OBJS=	$(Buffer_OBJS)			\
 		$(LIBVOS_BLD_D)/SockAddr.oo
 
-DNSQUERY_OBJS=		$(SSVREADER_OBJS)		\
+DNSQuery_OBJS=		$(SSVReader_OBJS)		\
 			$(LIBVOS_BLD_D)/DNS_rr.oo	\
 			$(LIBVOS_BLD_D)/DNSQuery.oo
 
+host_to_dnsquery_OBJS=	$(SSVReader_OBJS)	\
+			$(DNSQuery_OBJS)
+
+Resolver_OBJS=	\
+		$(List_OBJS)			\
+		$(DNSQuery_OBJS)		\
+		$(SockAddr_OBJS)		\
+		$(LIBVOS_BLD_D)/Socket.oo	\
+		$(LIBVOS_BLD_D)/Resolver.oo
 
 TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Buffer.test		\
@@ -50,7 +60,8 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Dlogger.test		\
 	$(BLD_D)/SSVReader.test		\
 	$(BLD_D)/SockAddr.test		\
-	$(BLD_D)/host_to_dnsquery.test
+	$(BLD_D)/host_to_dnsquery.test	\
+	$(BLD_D)/Resolver.test
 
 .PHONY: all clean
 
@@ -63,28 +74,7 @@ all: libvos-debug
 clean: libvos-clean
 	@$(call do_rm,$(TARGET))
 
-$(BLD_D)/Object.test: Object.test.cc $(OBJECT_OBJS)
-	@$(do_build)
-
-$(BLD_D)/Buffer.test: Buffer.test.cc $(BUFFER_OBJS)
-	@$(do_build)
-
-$(BLD_D)/BNode.test: BNode.test.cc $(BNODE_OBJS)
-	@$(do_build)
-
-$(BLD_D)/List.test: List.test.cc $(BUFFER_OBJS)
-	@$(do_build)
-
-$(BLD_D)/Dlogger.test: Dlogger.test.cc $(DLOGGER_OBJS)
-	@$(do_build)
-
-$(BLD_D)/SSVReader.test: SSVReader.test.cc $(SSVREADER_OBJS)
-	@$(do_build)
-
-$(BLD_D)/SockAddr.test: SockAddr.test.cc $(SockAddr_OBJS)
-	@$(do_build)
-
-$(BLD_D)/host_to_dnsquery.test: host_to_dnsquery.test.cc $(DNSQUERY_OBJS)
+$(BLD_D)/%.test: %.test.cc $$(%_OBJS)
 	@$(do_build)
 
 ## vi: ts=8 sw=8 tw=78:
