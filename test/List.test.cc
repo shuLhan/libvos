@@ -27,7 +27,7 @@ void test_push_tail(const char *str, int exp_n, const char *exp_chars)
 	b->copy_raw(str);
 
 	list.push_tail(b);
-	assert(list._n == exp_n);
+	assert(list.size() == exp_n);
 
 	assert(strcmp(exp_chars, list.chars()) == 0);
 }
@@ -38,14 +38,14 @@ void test_push_head(const char *str, int exp_n, const char *exp_chars)
 	b->copy_raw(str);
 
 	list.push_head(b);
-	assert(list._n == exp_n);
+	assert(list.size() == exp_n);
 
 	assert(strcmp(exp_chars, list.chars()) == 0);
 }
 
 void test_at_0()
 {
-	assert(list._n == 0);
+	assert(list.size() == 0);
 
 	item = list.at(0);
 	assert(item == NULL);
@@ -56,7 +56,7 @@ void test_at_0()
 
 void test_at_1(const char* exp)
 {
-	assert(list._n == 1);
+	assert(list.size() == 1);
 
 	// REMEMBER: circular!
 	item = list.at(-1);
@@ -75,7 +75,7 @@ void test_at_1(const char* exp)
 
 void test_at_2(const char* exp1, const char* exp2)
 {
-	assert(list._n == 2);
+	assert(list.size() == 2);
 
 	item = list.at(-2);
 	assert(item != NULL);
@@ -100,7 +100,7 @@ void test_at_2(const char* exp1, const char* exp2)
 
 void test_at_3(const char* exp0, const char* exp1, const char* exp2)
 {
-	assert(list._n == 3);
+	assert(list.size() == 3);
 
 	item = list.at(-3);
 	assert(item != NULL);
@@ -135,7 +135,7 @@ void test_pop_tail(const char* exp_b, int exp_n, const char* exp_chars)
 {
 	b = (Buffer*) list.pop_tail();
 
-	assert(list._n == exp_n);
+	assert(list.size() == exp_n);
 
 	if (exp_chars) {
 		assert(strcmp(exp_chars, list.chars()) == 0);
@@ -149,7 +149,7 @@ void test_pop_head(const char* exp_b, int exp_n, const char* exp_chars)
 {
 	b = (Buffer*) list.pop_head();
 
-	assert(list._n == exp_n);
+	assert(list.size() == exp_n);
 
 	if (exp_chars) {
 		assert(strcmp(exp_chars, list.chars()) == 0);
@@ -161,7 +161,7 @@ void test_pop_head(const char* exp_b, int exp_n, const char* exp_chars)
 
 int main()
 {
-	assert(list._n == 0);
+	assert(list.size() == 0);
 	assert(NULL == list.chars());
 
 	test_at_0();

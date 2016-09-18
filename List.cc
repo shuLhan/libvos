@@ -204,6 +204,14 @@ Object* List::at(int idx)
 }
 
 //
+// `size()` will return number of node in list.
+//
+int List::size()
+{
+	return _n;
+}
+
+//
 // `chars()` will return string presentation of list where each node is
 // printed from left to right and separated by `_sep` character.
 // The returned string is in JSON array format.
