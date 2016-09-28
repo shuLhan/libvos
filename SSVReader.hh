@@ -8,7 +8,7 @@
 #define _LIBVOS_HOSTSREADER_HH 1
 
 #include "File.hh"
-#include "Record.hh"
+#include "Rowset.hh"
 
 namespace vos {
 
@@ -23,24 +23,22 @@ namespace vos {
  */
 class SSVReader : public File {
 public:
-	SSVReader (char comment = 0);
+	SSVReader (const char comment = 0);
 	~SSVReader ();
 
-	int parse (Record** rows, Buffer* line);
-	int get_row (Record** row);
-	int open (const char* file);
 	int load (const char* file);
-
 	void reset ();
 
-	Record* _rows;
+	Rowset* _rows;
 	char	_comment_c;
 private:
+	List* parse(Buffer* line);
+	int open(const char* file);
+
 	SSVReader (const SSVReader&);
 	void operator= (const SSVReader&);
 };
 
-} /* namespace::vos */
-
+} // namespace::vos
 #endif
 // vi: ts=8 sw=8 tw=78:

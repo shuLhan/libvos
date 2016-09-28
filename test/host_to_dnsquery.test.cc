@@ -5,51 +5,49 @@
 //
 
 #include "../DNSQuery.hh"
-#include "../DNS_rr.hh"
+#include "../List.hh"
 #include "../SSVReader.hh"
 
 int main (int argc, char** argv)
 {
 	register int s;
+	int x = 0;
+	int y = 0;
 	int d;
 	vos::SSVReader reader;
-	vos::Record* ip= NULL;
-	vos::Record* r = NULL;
-	vos::Record* c = NULL;
+	vos::Buffer* ip = NULL;
+	vos::List* row = NULL;
+	vos::Buffer* c = NULL;
 	vos::DNSQuery qanswer;
 
 	reader._comment_c = '#';
 
 	s = reader.load ("./hosts");
 
-	r = reader._rows;
-	while (r) {
-		ip = r;
+	for (; x < reader._rows->size(); x++) {
+		row = (vos::List*) reader._rows->at(x);
+		ip = (vos::Buffer*) row->at(0);
 
-		//printf ("IP : %s\n", ip->_v);
+		printf(">> IP: '%s'\n", ip->chars());
 
-		c = ip->_next_col;
-		while (c) {
-			//printf ("\t %s\n", c->_v);
-			s = inet_pton (AF_INET, ip->_v, &d);
+		for (y = 1; y < row->size(); y++) {
+			c = (vos::Buffer*) row->at(y);
+
+			printf(">>\thostname: '%s'\n", c->chars());
+
+			s = inet_pton (AF_INET, ip->chars(), &d);
 
 			if (s == 1) {
-				qanswer.create_answer (c->_v
+				qanswer.create_answer (c->chars()
 					, vos::QUERY_T_ADDRESS
 					, vos::QUERY_C_IN
 					, UINT_MAX
-					, ip->_i, ip->_v);
+					, ip->_i, ip->chars());
 
 				qanswer.extract (vos::DNSQ_EXTRACT_RR_AUTH);
 				//qanswer.dump ();
-
-				c = c->_next_col;
-			} else {
-				c = NULL;
 			}
 		}
-
-		r = r->_next_row;
 	}
 
 	return 0;

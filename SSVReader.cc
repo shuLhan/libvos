@@ -8,7 +8,7 @@
 
 namespace vos {
 
-SSVReader::SSVReader (char comment) : File ()
+SSVReader::SSVReader (const char comment) : File ()
 ,	_rows (NULL)
 ,	_comment_c (comment)
 {}
@@ -20,102 +20,30 @@ SSVReader::~SSVReader ()
 	}
 }
 
-/**
- @method	: SSVReader::parse
- @param		:
- > line		: string.
- @return	:
- < 0		: success.
- < 1		: skip.
- @desc		: parse one row of 'line' for strings.
- */
-int SSVReader::parse (Record** rows, Buffer* line)
+//
+// `parse()` will parse line by separating it with white spaces, return NULL
+// if its comment.
+//
+List* SSVReader::parse(Buffer* line)
 {
 	if (! line) {
-		return 1;
+		return NULL;
 	}
+
+	line->trim();
 
 	// skip empty line.
 	if (line->is_empty ()) {
-		return 1;
+		return NULL;
 	}
 
 	// skip line start with comment
 	if (_comment_c != 0
 	&& line->_v[0] == _comment_c) {
-		return 1;
+		return NULL;
 	}
 
-	register int s;
-	register int start = 0;
-	register int p = 0;
-	Record* row = 0;
-	Record* col = 0;
-
-	while (p < line->_i) {
-		if (isspace (line->_v[p])) {
-			col = new Record ();
-			if (! col) {
-				return -1;
-			}
-
-			s = col->copy_raw (&line->_v[start], p - start);
-			if (s != 0) {
-				return -1;
-			}
-
-			Record::ADD_COL (&row, col);
-
-			while (p < line->_i && isspace (line->_v[p])) {
-				p++;
-			}
-			start = p;
-		} else {
-			p++;
-		}
-	}
-	if (start < line->_i) {
-		col = new Record ();
-		if (! col) {
-			return -1;
-		}
-
-		s = col->copy_raw (&line->_v[start], p - start);
-		if (s != 0) {
-			return -1;
-		}
-
-		Record::ADD_COL (&row, col);
-	}
-
-	Record::ADD_ROW (rows, row);
-
-	return 0;
-}
-
-/**
- @method	: SSVReader::get_row
- @param		:
- > row		: list of strings.
- @return	:
- < 0		: success.
- < 1		: success, but no row read.
- < -1		: fail.
- @desc		: get list of string separated by space, per line/row in file.
- */
-int SSVReader::get_row (Record** row)
-{
-	register int s;
-	Buffer line;
-
-	s = File::get_line (&line);
-	if (s <= 0) {
-		return s;
-	}
-
-	s = parse (row, &line);
-
-	return s;
+	return line->split_by_whitespace();
 }
 
 /**
@@ -152,15 +80,30 @@ int SSVReader::open (const char* file)
 int SSVReader::load (const char* file)
 {
 	register int s;
+	Buffer line;
+	List* row = NULL;
 
 	s = open (file);
 	if (s != 0) {
 		return -1;
 	}
 
+	if (! _rows) {
+		_rows = new Rowset();
+	}
+
 	do {
-		s = get_row (&_rows);
-	} while (s >= 0);
+		s = File::get_line (&line);
+		if (s <= 0) {
+			break;
+		}
+
+		row = parse (&line);
+
+		if (row) {
+			_rows->push_tail(row);
+		}
+	} while (s > 0);
 
 	return 0;
 }

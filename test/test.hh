@@ -13,6 +13,7 @@
 
 #define SEP_KV		": "
 #define SEP_ITEM	","
+#define SEP_LINE	"\n"
 
 #define K(k)		"\"" #k "\""
 #define V_STR(v)	"\"" v "\""
