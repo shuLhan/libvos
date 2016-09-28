@@ -16,7 +16,7 @@ namespace vos {
 //
 class List : public Object {
 public:
-	List();
+	List(const char sep = ',');
 	virtual ~List();
 
 	void first_push(BNode* node);
@@ -37,16 +37,18 @@ public:
 
 	// `__cname` contain canonical name of this object.
 	static const char* __cname;
-private:
+protected:
 	// _n will contain number of node in the list.
 	int _n;
 
 	// _sep is used to separate node when calling `chars`.
 	char _sep;
-
+private:
 	List(const List&);
 	void operator=(const List&);
 };
+
+typedef List Queue;
 
 } // namespace vos
 #endif // _LIBVOS_LIST_HH

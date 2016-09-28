@@ -11,12 +11,16 @@ namespace vos {
 
 const char* List::__cname = "List";
 
-List::List() : Object()
+List::List(const char sep) : Object()
 ,	_head(NULL)
 ,	_tail(NULL)
 ,	_n(0)
 ,	_sep(',')
-{}
+{
+	if (sep > 0) {
+		_sep = sep;
+	}
+}
 
 List::~List()
 {
