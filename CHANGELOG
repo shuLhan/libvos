@@ -1,0 +1,79 @@
+v0.2.0 (2016-10-)
+===================
+
+Breaking Changes
+----------------
+
+* Buffer use Object as base class. This make the method `v()` is duplicate
+  with `chars()`, hence, the `v()` is removed.
+
+* Since we define this library as C-with-Class, all headers file now is `.hh`
+  to differentiate it with C and C++.
+
+* SockAddr, Socket, SockServer, FTP, FTPD, Resolver: change port type from
+  `int` to `uint16_t`
+
+* SockAddr: Remove _next, _last attributes, dump() and ADD() methods
+    
+  - User must use List to work with list of address now.
+  - Method dump() has been replaced by chars().
+
+* Resolver:
+
+  - Use List to replace SockAddr as list of parent server
+  - Method `dump()` has been replaced with `chars()`
+
+* SSVReader: has been refactored to use ``Buffer::split_by_whitespace()``
+
+  - Method `get_row()` has been removed.
+  - Method `open()` and `parse()` now private, user can only `reset()` and
+    `load()`
+
+Enhancements
+------------
+
+* Class Object for base class in all future classes
+
+* Implement binary node, which can be use for double linked list, queue,
+  or in binary tree (BNode.hh)
+
+* Implement circular double linked list (List.hh)
+
+* Buffer: add method to split buffer content by character
+
+Fixes
+-----
+
+* DNSQuery: fix SOA parsing
+* Remove linking to libstd++
+* Compilation error on 32 bit machine and ARM
+* Resolver: fix port not resetted if server list contain more than one
+  addresses.
+
+v0.1.0 (2016-09-04)
+===================
+
+Features:
+
+* Buffer module, very easy and simple module for processing sequence
+  byte of data. In example: string or network packet.
+
+* File module, module to talk to local file system, reading and writing
+  file.
+
+* Dir module, module to talk to local file system, listing and caching
+  directory content.
+
+* Reading and writing Delimited Separated Value (DSV) data.
+
+* Reading and writing INI file format.
+
+* Socket module, talk to network using UDP or TCP socket.
+
+* FTP module, very easy and simple module to talk to FTP server.
+
+* FTP server, module for serving file system or any hierarchy of data to
+  networks using FTP.
+
+* OCI module, Minimalist and simple module for sending a query to Oracle
+  Database server and receiving query data (not fully supported).
