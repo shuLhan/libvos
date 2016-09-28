@@ -851,6 +851,37 @@ List* Buffer::split_by_char(const char sep, int trim)
 	return buffers;
 }
 
+//
+// `split_by_whitespace()` will split buffer using whitespace and return list
+// of buffers.
+//
+List* Buffer::split_by_whitespace()
+{
+	trim();
+
+	// skip empty line.
+	if (is_empty()) {
+		return NULL;
+	}
+
+	List* buffers = new List();
+	int x = 0;
+	int start = 0;
+
+	for (; x < _i; x++) {
+		if (isspace(_v[x])) {
+			list_buffer_add(buffers, _v, start, x, 1);
+			start = x + 1;
+		}
+	}
+
+	if (x > start) {
+		list_buffer_add(buffers, _v, start, x, 1);
+	}
+
+	return buffers;
+}
+
 /**
  * @method	: Buffer::dump
  * @desc	: Dump buffer contents to standard output.

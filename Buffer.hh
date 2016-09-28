@@ -73,6 +73,7 @@ public:
 	long int to_lint();
 
 	List* split_by_char(const char sep, int trim = 0);
+	List* split_by_whitespace();
 
 	void dump();
 	void dump_hex();
