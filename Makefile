@@ -50,6 +50,7 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/FTPD_client.oo		\
 			$(LIBVOS_BLD_D)/FTPD_user.oo		\
 			$(LIBVOS_BLD_D)/FTPD.oo			\
+			$(LIBVOS_BLD_D)/Rowset.oo		\
 			$(LIBVOS_BLD_D)/SSVReader.oo
 
 #
@@ -120,6 +121,8 @@ $(LIBVOS_BLD_D)/BNode.oo	\
 $(LIBVOS_BLD_D)/Buffer.oo	: $(LIBVOS_BLD_D)/Object.oo
 
 $(LIBVOS_BLD_D)/List.oo		: $(LIBVOS_BLD_D)/BNode.oo
+
+$(LIBVOS_BLD_D)/Rowset.oo	: $(LIBVOS_BLD_D)/List.oo
 
 $(LIBVOS_BLD_D)/SockAddr.oo	\
 $(LIBVOS_BLD_D)/List.oo		\

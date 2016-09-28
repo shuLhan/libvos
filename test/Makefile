@@ -33,6 +33,7 @@ Dlogger_OBJS=	$(Buffer_OBJS)			\
 SSVReader_OBJS=		$(Buffer_OBJS)			\
 			$(LIBVOS_BLD_D)/File.oo		\
 			$(LIBVOS_BLD_D)/Record.oo	\
+			$(LIBVOS_BLD_D)/Rowset.oo	\
 			$(LIBVOS_BLD_D)/SSVReader.oo
 
 
@@ -45,6 +46,9 @@ DNSQuery_OBJS=		$(SSVReader_OBJS)		\
 
 host_to_dnsquery_OBJS=	$(SSVReader_OBJS)	\
 			$(DNSQuery_OBJS)
+
+Rowset_OBJS=	$(List_OBJS)			\
+		$(LIBVOS_BLD_D)/Rowset.oo
 
 Resolver_OBJS=	\
 		$(List_OBJS)			\
@@ -61,7 +65,8 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/SSVReader.test		\
 	$(BLD_D)/SockAddr.test		\
 	$(BLD_D)/host_to_dnsquery.test	\
-	$(BLD_D)/Resolver.test
+	$(BLD_D)/Resolver.test		\
+	$(BLD_D)/Rowset.test
 
 .PHONY: all clean
 
