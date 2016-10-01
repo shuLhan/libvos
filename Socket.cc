@@ -20,8 +20,6 @@ Socket::Socket(const int bfr_size) : File(bfr_size)
 ,	_family(0)
 ,	_type(0)
 ,	_recv_addr_l (0)
-,	_next(NULL)
-,	_prev(NULL)
 {
 	_name.resize(INET6_ADDRSTRLEN);
 }

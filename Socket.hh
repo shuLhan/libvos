@@ -19,8 +19,6 @@ namespace vos {
  * @attr			:
  *	- _family		: group or namespace this socket belong to.
  *	- _type			: type of socket (SOCK_STREAM, SOCK_DGRAM)
- *	- _next			: pointer to the next client object.
- *	- _prev			: pointer to the previous client object.
  *	- DFLT_BUFFER_SIZE	: static, default size of buffer object.
  * @desc			:
  *	module for handling Socket.
@@ -53,8 +51,6 @@ public:
 	int		_family;
 	int		_type;
 	socklen_t	_recv_addr_l;
-	Socket*		_next;
-	Socket*		_prev;
 
 	static unsigned int DFLT_BUFFER_SIZE;
 private:

@@ -40,8 +40,7 @@ public:
 	void remove_client(Socket* client);
 
 	struct timeval	_timeout;
-	Locker		_locker;
-	Socket*		_clients;
+	List*		_clients;
 
 	static const char* ADDR_WILCARD;
 	static const char* ADDR_WILCARD6;

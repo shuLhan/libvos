@@ -13,22 +13,15 @@ const char* SockServer::ADDR_WILCARD6	= "::";
 
 SockServer::SockServer() : Socket()
 ,	_timeout()
-,	_locker()
 ,	_clients(NULL)
 {}
 
 SockServer::~SockServer()
 {	
-	Socket* next = NULL;
-
-	while (_clients) {
-		next = _clients->_next;
+	if (_clients) {
 		delete _clients;
-		_clients = next;
+		_clients = NULL;
 	}
-
-	_next = NULL;
-	_prev = NULL;
 }
 
 /**
@@ -252,23 +245,11 @@ void SockServer::add_client(Socket* client)
 	if (!client) {
 		return;
 	}
-
-	_locker.lock();
-
 	if (!_clients) {
-		_clients = client;
-	} else {
-		Socket* p = _clients;
-
-		while (p->_next) {
-			p = p->_next;
-		}
-
-		p->_next	= client;
-		client->_prev	= p;
+		_clients = new List();
 	}
 
-	_locker.unlock();
+	_clients->push_tail(client);
 }
 
 /**
@@ -284,26 +265,7 @@ void SockServer::remove_client(Socket* client)
 		return;
 	}
 
-	_locker.lock();
-
-	if (client == _clients) {
-		_clients = _clients->_next;
-		if (_clients) {
-			_clients->_prev	= NULL;
-		}
-	} else {
-		if (client->_prev) {
-			client->_prev->_next = client->_next;
-		}
-		if (client->_next) {
-			client->_next->_prev = client->_prev;
-		}
-	}
-
-	client->_next = NULL;
-	client->_prev = NULL;
-
-	_locker.unlock();
+	_clients->remove(client);
 }
 
 } /* namespace::vos */
