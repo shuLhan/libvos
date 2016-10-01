@@ -57,6 +57,10 @@ Resolver_OBJS=	\
 		$(LIBVOS_BLD_D)/Socket.oo	\
 		$(LIBVOS_BLD_D)/Resolver.oo
 
+Locker_OBJS=	$(Object_OBJS)			\
+		$(BLD_D)/TestLocker.oo		\
+		$(LIBVOS_BLD_D)/Locker.oo
+
 TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Buffer.test		\
 	$(BLD_D)/BNode.test		\
@@ -66,7 +70,8 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/SockAddr.test		\
 	$(BLD_D)/host_to_dnsquery.test	\
 	$(BLD_D)/Resolver.test		\
-	$(BLD_D)/Rowset.test
+	$(BLD_D)/Rowset.test		\
+	$(BLD_D)/Locker.test
 
 .PHONY: all clean
 
@@ -78,6 +83,9 @@ all: libvos-debug
 
 clean: libvos-clean
 	@$(call do_rm,$(TARGET))
+
+$(BLD_D)/%.oo: $(SRC_D)/%.cc $(SRC_D)/%.hh
+	@$(do_compile)
 
 $(BLD_D)/%.test: %.test.cc $$(%_OBJS)
 	@$(do_build)
