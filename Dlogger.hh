@@ -7,8 +7,8 @@
 #ifndef _LIBVOS_DLOGGER_HH
 #define _LIBVOS_DLOGGER_HH 1
 
-#include <pthread.h>
 #include "File.hh"
+#include "Locker.hh"
 
 namespace vos {
 
@@ -38,7 +38,7 @@ private:
 
 	void _w(int fd, const char* fmt);
 
-	pthread_mutex_t	_lock;
+	Locker		_locker;
 	Buffer		_tmp;
 	time_t		_time_s;
 	struct tm	_time;

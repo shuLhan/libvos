@@ -63,6 +63,8 @@ TARGET_OBJS	+=	$(LIBVOS_BLD_D)/OCIValue.oo	\
 
 CXXFLAGS_ADD	+=	-I$(ORACLE_HOME)/include -I$(ORACLE_HOME)/rdbms/public
 LDFLAGS_ADD	+=	-L$(ORACLE_HOME)/lib -lclntsh
+
+$(LIBVOS_BLD_D)/OCI.oo: $(LIBVOS_BLD_D)/Locker.oo
 endif
 
 #
@@ -145,6 +147,9 @@ $(LIBVOS_BLD_D)/RecordMD.oo	\
 $(LIBVOS_BLD_D)/Config.oo	\
 $(LIBVOS_BLD_D)/Dlogger.oo	\
 $(LIBVOS_BLD_D)/Socket.oo	: $(LIBVOS_BLD_D)/File.oo
+
+$(LIBVOS_BLD_D)/Dlogger.oo	\
+$(LIBVOS_BLD_D)/SockServer.oo	: $(LIBVOS_BLD_D)/Locker.oo
 
 $(LIBVOS_BLD_D)/Socket.oo	: $(LIBVOS_BLD_D)/SockAddr.oo
 

@@ -13,11 +13,9 @@ const char* SockServer::ADDR_WILCARD6	= "::";
 
 SockServer::SockServer() : Socket()
 ,	_timeout()
-,	_client_lock()
+,	_locker()
 ,	_clients(NULL)
-{
-	pthread_mutex_init(&_client_lock, NULL);
-}
+{}
 
 SockServer::~SockServer()
 {	
@@ -31,27 +29,6 @@ SockServer::~SockServer()
 
 	_next = NULL;
 	_prev = NULL;
-	pthread_mutex_destroy(&_client_lock);
-}
-
-/**
- * @method	: SockServer::lock_client
- * @desc	: block other thread from accessing list of client objects.
- */
-void SockServer::lock_client()
-{
-	while (pthread_mutex_trylock(&_client_lock) != 0)
-		;
-}
-
-/**
- * @method	: SockServer::unlock_client
- * @desc	: allow other thread to access list of client objects.
- */
-void SockServer::unlock_client()
-{
-	while (pthread_mutex_unlock(&_client_lock) != 0)
-		;
 }
 
 /**
@@ -276,7 +253,7 @@ void SockServer::add_client(Socket* client)
 		return;
 	}
 
-	lock_client();
+	_locker.lock();
 
 	if (!_clients) {
 		_clients = client;
@@ -291,7 +268,7 @@ void SockServer::add_client(Socket* client)
 		client->_prev	= p;
 	}
 
-	unlock_client();
+	_locker.unlock();
 }
 
 /**
@@ -307,7 +284,7 @@ void SockServer::remove_client(Socket* client)
 		return;
 	}
 
-	lock_client();
+	_locker.lock();
 
 	if (client == _clients) {
 		_clients = _clients->_next;
@@ -326,7 +303,7 @@ void SockServer::remove_client(Socket* client)
 	client->_next = NULL;
 	client->_prev = NULL;
 
-	unlock_client();
+	_locker.unlock();
 }
 
 } /* namespace::vos */

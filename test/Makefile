@@ -27,6 +27,7 @@ Buffer_OBJS=	$(BNode_OBJS)
 List_OBJS=	$(Buffer_OBJS)
 
 Dlogger_OBJS=	$(Buffer_OBJS)			\
+		$(LIBVOS_BLD_D)/Locker.oo	\
 		$(LIBVOS_BLD_D)/File.oo		\
 		$(LIBVOS_BLD_D)/Dlogger.oo
 

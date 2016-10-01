@@ -7,7 +7,7 @@
 #ifndef _LIBVOS_OCI_HH
 #define _LIBVOS_OCI_HH 1
 
-#include <pthread.h>
+#include "Locker.hh"
 #include "OCIValue.hh"
 
 namespace vos {
@@ -221,7 +221,7 @@ public:
 
 	int		_value_i;
 	int		_value_sz;
-	pthread_mutex_t	_lock;
+	Locker		_locker;
 
 	OCIEnv*			_env;
 	OCIError*		_err;

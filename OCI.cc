@@ -40,7 +40,7 @@ OCI::OCI() :
 ,	_v(NULL)
 ,	_value_i(0)
 ,	_value_sz(Buffer::DFLT_SIZE)
-,	_lock()
+,	_locker()
 ,	_env(NULL)
 ,	_err(NULL)
 ,	_server(NULL)
@@ -62,7 +62,7 @@ OCI::OCI() :
  */
 OCI::~OCI()
 {
-	lock();
+	_locker.lock();
 
 	cursor_release();
 	stmt_release();
@@ -93,9 +93,7 @@ OCI::~OCI()
 		_v = 0;
 	}
 
-	unlock();
-
-	pthread_mutex_destroy(&_lock);
+	_locker.unlock();
 }
 
 /**
@@ -431,9 +429,6 @@ int OCI::login(const char* username, const char* password, const char* conn)
 		return -1;
 	}
 
-	/* database lock */
-	pthread_mutex_init(&_lock, NULL);
-
 	return 0;
 }
 
@@ -710,9 +705,9 @@ int OCI::stmt_prepare_r(const char* stmt)
 
 	int s = 0;
 
-	lock();
+	_locker.lock();
 	s = stmt_prepare(stmt);
-	unlock();
+	_locker.unlock();
 
 	return s;
 }
@@ -857,9 +852,9 @@ int OCI::stmt_execute_r(const char* stmt)
 {
 	int s = 0;
 
-	lock();
+	_locker.lock();
 	s = stmt_execute(stmt);
-	unlock();
+	_locker.unlock();
 
 	return s;
 }
@@ -927,7 +922,7 @@ void OCI::stmt_release()
 void OCI::stmt_release_r()
 {
 	stmt_release();
-	unlock();
+	_locker.unlock();
 }
 
 /**
@@ -1440,18 +1435,6 @@ void OCI::release_buffer()
 		_v[i] = 0;
 	}
 	_value_i = 0;
-}
-
-void OCI::lock()
-{
-	int s;
-
-	do { s = pthread_mutex_trylock(&_lock); } while (s != 0);
-}
-
-void OCI::unlock()
-{
-	pthread_mutex_unlock(&_lock);
 }
 
 } /* namespace::vos */

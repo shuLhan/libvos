@@ -14,8 +14,6 @@
 	<ul>
 	<li><a href="#SockServer::SockServer"><tt> SockServer::SockServer </tt></a></li>
 	<li><a href="#SockServer::~SockServer"><tt> SockServer::~SockServer </tt></a></li>
-	<li><a href="#SockServer::lock_client"><tt> SockServer::lock_client </tt></a></li>
-	<li><a href="#SockServer::unlock_client"><tt> SockServer::unlock_client </tt></a></li>
 	<li><a href="#SockServer::bind"><tt> SockServer::bind </tt></a></li>
 	<li><a href="#SockServer::listen"><tt> SockServer::listen </tt></a></li>
 	<li><a href="#SockServer::bind_listen"><tt> SockServer::bind_listen </tt></a></li>
@@ -67,8 +65,8 @@ listen and accept a new connection from other client in the network.
 connection or receiving new data.
 	</td>
 </tr><tr>
-	<td>pthread_mutex_t</td>
-	<td>_client_lock</td>
+	<td>Locker</td>
+	<td>_locker</td>
 	<td>lock when adding or removing client from the list.</td>
 </tr><tr>
 	<td>Socket*</td>
@@ -118,41 +116,6 @@ connection or receiving new data.
 </tr><tr>
 	<th>Description</th>
 	<td colspan="3"> SockServer destructor. </td>
-</tr>
-</table>
-
-<h3><a name="SockServer::lock_client"><tt> SockServer::lock_client </tt></a></h3>
-<table class="class-method">
-<tr>
-	<th>Code</th>
-	<td colspan="3"> void lock_client() </td>
-</tr><tr>
-	<th>Parameter</th>
-	<td>-</td>
-</tr><tr>
-	<th>Return Value</th>
-	<td>-</td>
-</tr><tr>
-	<th>Description</th>
-	<td colspan="3"> Block others threads from accessing list of client
-objects.</td>
-</tr>
-</table>
-
-<h3><a name="SockServer::unlock_client"><tt> SockServer::unlock_client </tt></a></h3>
-<table class="class-method">
-<tr>
-	<th>Code</th>
-	<td colspan="3"></td>
-</tr><tr>
-	<th>Parameter</th>
-	<td>-</td>
-</tr><tr>
-	<th>Return Value</th>
-	<td>-</td>
-</tr><tr>
-	<th>Description</th>
-	<td colspan="3"> allow others threads to access list of client objects. </td>
 </tr>
 </table>
 

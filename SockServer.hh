@@ -7,6 +7,7 @@
 #ifndef _LIBVOS_SOCKSERVER_HH
 #define _LIBVOS_SOCKSERVER_HH 1
 
+#include "Locker.hh"
 #include "Socket.hh"
 
 namespace vos {
@@ -27,9 +28,6 @@ public:
 	SockServer();
 	~SockServer();
 
-	void lock_client();
-	void unlock_client();
-
 	int bind(const char* address, const uint16_t port);
 	int listen(const unsigned int queue_len = 0);
 	int bind_listen(const char* address, const uint16_t port);
@@ -42,7 +40,7 @@ public:
 	void remove_client(Socket* client);
 
 	struct timeval	_timeout;
-	pthread_mutex_t	_client_lock;
+	Locker		_locker;
 	Socket*		_clients;
 
 	static const char* ADDR_WILCARD;

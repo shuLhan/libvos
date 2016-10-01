@@ -14,7 +14,7 @@ namespace vos {
  *                default output.
  */
 Dlogger::Dlogger () :
-	_lock()
+	_locker()
 ,	_tmp()
 ,	_time_s(0)
 ,	_time()
@@ -24,8 +24,6 @@ Dlogger::Dlogger () :
 #endif
 ,	_max_size (0)
 {
-	pthread_mutex_init(&_lock, NULL);
-
 	_d	= STDERR_FILENO;
 	_status	= O_WRONLY;
 }
@@ -35,9 +33,7 @@ Dlogger::Dlogger () :
  * @desc	: release Dlogger object to system.
  */
 Dlogger::~Dlogger()
-{
-	pthread_mutex_destroy(&_lock);
-}
+{}
 
 /**
  * @method		: Dlogger::open
@@ -138,13 +134,13 @@ void Dlogger::_w(int fd, const char* fmt)
  */
 int Dlogger::er(const char* fmt, ...)
 {
-	do { _s = pthread_mutex_trylock(&_lock); } while (_s != 0);
+	_locker.lock();
 
 	va_start(_args, fmt);
 	_w(STDERR_FILENO, fmt);
 	va_end(_args);
 
-	pthread_mutex_unlock(&_lock);
+	_locker.unlock();
 
 	return _s;
 }
@@ -161,13 +157,13 @@ int Dlogger::er(const char* fmt, ...)
  */
 int Dlogger::out(const char* fmt, ...)
 {
-	do { _s = pthread_mutex_trylock(&_lock); } while (_s != 0);
+	_locker.lock();
 
 	va_start(_args, fmt);
 	_w(STDOUT_FILENO, fmt);
 	va_end(_args);
 
-	pthread_mutex_unlock(&_lock);
+	_locker.unlock();
 
 	return _s;
 }
@@ -184,13 +180,13 @@ int Dlogger::out(const char* fmt, ...)
  */
 int Dlogger::it(const char* fmt, ...)
 {
-	do { _s = pthread_mutex_trylock(&_lock); } while (_s != 0);
+	_locker.lock();
 
 	va_start(_args, fmt);
 	_w(0, fmt);
 	va_end(_args);
 
-	pthread_mutex_unlock(&_lock);
+	_locker.unlock();
 
 	return _s;
 }
