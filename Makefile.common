@@ -16,14 +16,13 @@ SYS		= $(shell uname)
 
 CXX		= gcc
 LINKER		= gcc
-CXXFLAGS_GLOBAL	= -fno-rtti -fno-exceptions -pipe
+CXXFLAGS_GLOBAL	= -fno-rtti -fno-exceptions -pipe \
+		-Wall -Wextra -Weffc++ -Werror -Wconversion
 
 ifndef CXXFLAGS
 CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os -flto
 endif
-CXXFLAGS_DEBUG	= $(CXXFLAGS_GLOBAL) \
-			-Wall -Wextra -Weffc++ -Werror -Wconversion \
-			-g -O0
+CXXFLAGS_DEBUG	= $(CXXFLAGS_GLOBAL) -g -O0
 CXXFLAGS_ADD	=
 LDFLAGS		= -lpthread
 LDFLAGS_ADD	=

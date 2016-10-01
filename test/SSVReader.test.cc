@@ -55,7 +55,7 @@
 		V_STR("file") \
 	)
 
-int main (int argc, char** argv)
+int main()
 {
 	register int s;
 	vos::SSVReader reader;

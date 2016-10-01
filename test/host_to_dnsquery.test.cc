@@ -8,7 +8,7 @@
 #include "../List.hh"
 #include "../SSVReader.hh"
 
-int main (int argc, char** argv)
+int main()
 {
 	register int s;
 	int x = 0;
@@ -42,7 +42,7 @@ int main (int argc, char** argv)
 					, vos::QUERY_T_ADDRESS
 					, vos::QUERY_C_IN
 					, UINT_MAX
-					, ip->_i, ip->chars());
+					, (uint16_t) ip->_i, ip->chars());
 
 				qanswer.extract (vos::DNSQ_EXTRACT_RR_AUTH);
 				//qanswer.dump ();
