@@ -148,6 +148,7 @@ $(LIBVOS_BLD_D)/Config.oo	\
 $(LIBVOS_BLD_D)/Dlogger.oo	\
 $(LIBVOS_BLD_D)/Socket.oo	: $(LIBVOS_BLD_D)/File.oo
 
+$(LIBVOS_BLD_D)/List.oo		\
 $(LIBVOS_BLD_D)/Dlogger.oo	\
 $(LIBVOS_BLD_D)/SockServer.oo	: $(LIBVOS_BLD_D)/Locker.oo
 

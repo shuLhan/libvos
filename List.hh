@@ -7,6 +7,7 @@
 #ifndef _LIBVOS_LIST_HH
 #define _LIBVOS_LIST_HH 1
 
+#include "Locker.hh"
 #include "BNode.hh"
 
 namespace vos {
@@ -26,6 +27,7 @@ public:
 	Object* pop_head();
 	Object* pop_tail();
 	Object* at(int idx);
+	int remove(Object* item);
 	int size();
 	const char* chars();
 
@@ -43,6 +45,9 @@ protected:
 
 	// _sep is used to separate node when calling `chars`.
 	char _sep;
+
+	// _locker will lock list every call to push or pop.
+	Locker _locker;
 private:
 	List(const List&);
 	void operator=(const List&);

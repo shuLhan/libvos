@@ -37,7 +37,7 @@ Enhancements
 * Implement binary node, which can be use for double linked list, queue,
   or in binary tree (BNode.hh)
 
-* Implement circular double linked list (List.hh)
+* Implement circular double linked list (List.hh), thread safe.
 
 * Buffer: add method to split buffer content by character
 

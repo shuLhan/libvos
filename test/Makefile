@@ -20,7 +20,8 @@ COMMON_OBJS=	$(Object_OBJS)			\
 
 BNode_OBJS=	$(COMMON_OBJS)			\
 		$(LIBVOS_BLD_D)/BNode.oo	\
-		$(LIBVOS_BLD_D)/List.oo
+		$(LIBVOS_BLD_D)/List.oo		\
+		$(LIBVOS_BLD_D)/Locker.oo
 
 Buffer_OBJS=	$(BNode_OBJS)
 

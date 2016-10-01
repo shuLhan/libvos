@@ -28,12 +28,25 @@ using vos::List;
 				V_STR(STR_TEST_1) \
 			)
 
-List list;
+#define	EXP_REMOVE_N1	SB( \
+				V_STR(STR_TEST_0) \
+			)
+#define	EXP_REMOVE_N2	SB( \
+				V_STR(STR_TEST_0) SEP_ITEM \
+				V_STR(STR_TEST_0) \
+			)
+#define	EXP_REMOVE_N3	SB( \
+				V_STR(STR_TEST_0) SEP_ITEM \
+				V_STR(STR_TEST_0) SEP_ITEM \
+				V_STR(STR_TEST_0) \
+			)
 
+List list;
+int s;
 Object* item = NULL;
 Buffer* b = NULL;
 
-void test_push_tail(const char *str, int exp_n, const char *exp_chars)
+Buffer* test_push_tail(const char *str, int exp_n, const char *exp_chars)
 {
 	b = new Buffer();
 	b->copy_raw(str);
@@ -42,6 +55,8 @@ void test_push_tail(const char *str, int exp_n, const char *exp_chars)
 	assert(list.size() == exp_n);
 
 	assert(strcmp(exp_chars, list.chars()) == 0);
+
+	return b;
 }
 
 void test_push_head(const char *str, int exp_n, const char *exp_chars)
@@ -171,6 +186,106 @@ void test_pop_head(const char* exp_b, int exp_n, const char* exp_chars)
 	delete b;
 }
 
+void test_remove()
+{
+	Buffer* b0 = new Buffer();
+	b0->copy_raw(STR_TEST_0);
+
+	Buffer* b1 = new Buffer();
+	b1->copy_raw(STR_TEST_0);
+
+	Buffer* b2 = new Buffer();
+	b2->copy_raw(STR_TEST_0);
+
+	// (C0) Item not found, parameter is empty.
+	s = list.remove(NULL);
+	assert(s == 1);
+
+	// (C1) Item not found, list is empty.
+	s = list.remove(b0);
+	assert(s == 1);
+
+	// (C1) Item not found, when searching different item.
+	list.push_tail(b0);
+	assert(list.size() == 1);
+
+	s = list.remove(b1);
+	assert(s == 1);
+	assert(list.size() == 1);
+
+	// (C2) Item found, but its the only item in the list
+	s = list.remove(b0);
+	assert(s == 0);
+	assert(list.size() == 0);
+
+	// (C1) Item not found, because its already removed.
+	s = list.remove(b0);
+	assert(s == 1);
+
+	// (C3) Item found, and its also the head
+	list.push_tail(b0);
+	list.push_tail(b1);
+	list.push_tail(b2);
+	assert(list.size() == 3);
+
+	s = list.remove(b0);
+	assert(s == 0);
+	assert(list.size() == 2);
+	assert(strcmp(list.chars(), EXP_REMOVE_N2) == 0);
+
+	// (C1) Item not found
+	s = list.remove(b0);
+	assert(s == 1);
+
+	// (C4) Item found, and its also the tail
+	s = list.remove(b2);
+	assert(s == 0);
+	assert(list.size() == 1);
+	assert(strcmp(list.chars(), EXP_REMOVE_N1) == 0);
+
+	// (C1) Item not found
+	s = list.remove(b0);
+	assert(s == 1);
+	s = list.remove(b2);
+	assert(s == 1);
+
+	// (C2) Item found, but its the only item in the list
+	s = list.remove(b1);
+	assert(s == 0);
+	assert(list.size() == 0);
+
+	// (C1) Item not found
+	s = list.remove(b0);
+	assert(s == 1);
+	s = list.remove(b1);
+	assert(s == 1);
+	s = list.remove(b2);
+	assert(s == 1);
+
+	// (C5) Item found, and its in the middle
+	list.push_tail(b0);
+	list.push_tail(b1);
+	list.push_tail(b2);
+	assert(list.size() == 3);
+
+	s = list.remove(b1);
+	assert(s == 0);
+	assert(list.size() == 2);
+
+	s = list.remove(b0);
+	assert(s == 0);
+	assert(list.size() == 1);
+
+	s = list.remove(b2);
+	assert(s == 0);
+	assert(list.size() == 0);
+
+	// the end.
+	delete b2;
+	delete b1;
+	delete b0;
+}
+
 int main()
 {
 	assert(list.size() == 0);
@@ -199,6 +314,8 @@ int main()
 
 	test_pop_tail(STR_TEST_1, 0, NULL);
 	test_at_0();
+
+	test_remove();
 }
 
 // vi: ts=8 sw=8 tw=78:
