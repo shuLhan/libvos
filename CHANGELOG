@@ -29,6 +29,10 @@ Breaking Changes
   - Method `open()` and `parse()` now private, user can only `reset()` and
     `load()`
 
+* Socket: remove `_next` and `_prev` fields
+
+* SockServer: use List class to manage client sockets
+
 Enhancements
 ------------
 
@@ -49,6 +53,7 @@ Fixes
 * Compilation error on 32 bit machine and ARM
 * Resolver: fix port not resetted if server list contain more than one
   addresses.
+* SockServer: Increase socket listen backlog to 2048
 
 v0.1.0 (2016-09-04)
 ===================

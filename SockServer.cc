@@ -127,7 +127,7 @@ int SockServer::bind_listen(const char* address, const uint16_t port)
 
 	s = SockServer::bind(address, port);
 	if (0 == s) {
-		return SockServer::listen(0);
+		return SockServer::listen(2048);
 	}
 	return -1;
 }
