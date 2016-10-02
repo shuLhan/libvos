@@ -24,8 +24,8 @@ public:
 	Writer();
 	~Writer();
 
-	int write(Record* row, RecordMD* rmd);
-	int writes(Record* rows, RecordMD* rmd);
+	int write(Record* row, List* rmd);
+	int writes(Record* rows, List* list_md);
 
 	Buffer _line;
 private:

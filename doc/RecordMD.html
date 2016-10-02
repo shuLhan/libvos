@@ -110,10 +110,6 @@ does it use a fixed position.
 	<td> _fltr_v </td>
 	<td> Value of filter, if filter is in comparable mode. </td>
 </tr><tr>
-	<td> RecordMD* </td>
-	<td> _next </td>
-	<td> Pointer to the next meta-data. </td>
-</tr><tr>
 	<td> static int </td>
 	<td> BLOB_SIZE </td>
 	<td> Size of blob header. </td>
@@ -171,33 +167,6 @@ does it use a fixed position.
 </tr><tr>
 	<th>Description</th>
 	<td colspan="3"> Print content of RecordMD object to standard output. </td>
-</tr>
-</table>
-
-<h3><a name="RecordMD::ADD"><tt> RecordMD::ADD </tt></a></h3>
-<table class="class-method">
-<tr>
-	<th>Code</th>
-	<td colspan="3"> static void ADD(RecordMD** rmd, RecordMD* md) </td>
-</tr><tr>
-	<th rowspan="2">Parameter</th>
-		<td><tt> rmd </tt></td>
-		<td>:</td>
-		<td> pointer to the list of record meta-data. </td>
-	</tr><tr>
-		<td><tt> md </tt></td>
-		<td>:</td>
-		<td> pointer to the RecordMD object that will be added to the
-list.
-		</td>
-</tr><tr>
-	<th>Return Value</th>
-	<td>-</td>
-</tr><tr>
-	<th>Description</th>
-	<td colspan="3"> Add new RecordMD object, <tt> md </tt> to the list
-<tt>rmd</tt>.
-	</td>
 </tr>
 </table>
 

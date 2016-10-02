@@ -25,12 +25,18 @@ BNode_OBJS=	$(COMMON_OBJS)			\
 
 Buffer_OBJS=	$(BNode_OBJS)
 
+File_OBJS=	$(Buffer_OBJS)			\
+		$(LIBVOS_BLD_D)/File.oo
+
 List_OBJS=	$(Buffer_OBJS)
 
-Dlogger_OBJS=	$(Buffer_OBJS)			\
+Dlogger_OBJS=	$(File_OBJS)			\
 		$(LIBVOS_BLD_D)/Locker.oo	\
-		$(LIBVOS_BLD_D)/File.oo		\
 		$(LIBVOS_BLD_D)/Dlogger.oo
+
+RecordMD_OBJS=	$(List_OBJS)			\
+		$(File_OBJS)			\
+		$(LIBVOS_BLD_D)/RecordMD.oo
 
 SSVReader_OBJS=		$(Buffer_OBJS)			\
 			$(LIBVOS_BLD_D)/File.oo		\
@@ -94,7 +100,8 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Resolver.test		\
 	$(BLD_D)/Rowset.test		\
 	$(BLD_D)/Locker.test		\
-	$(BLD_D)/FTPD.test
+	$(BLD_D)/FTPD.test		\
+	$(BLD_D)/RecordMD.test
 
 .PHONY: all clean
 

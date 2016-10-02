@@ -28,7 +28,6 @@ int RecordMD::DEF_SEP	= ',';
  * @desc	: RecordMD object constructor.
  */
 RecordMD::RecordMD() :
-	_n_md(0),
 	_idx(0),
 	_flag(0),
 	_type(0),
@@ -42,8 +41,7 @@ RecordMD::RecordMD() :
 	_fop(NULL),
 	_name(),
 	_date_format(NULL),
-	_fltr_v(NULL),
-	_next(NULL)
+	_fltr_v(NULL)
 {}
 
 /**
@@ -56,88 +54,68 @@ RecordMD::~RecordMD()
 		delete _date_format;
 	if (_fltr_v)
 		delete _fltr_v;
-	if (_next)
-		delete _next;
 }
 
-/**
- * @method	: RecordMD::dump
- * @desc	: print content of RecordMD object to standard output.
- */
-void RecordMD::dump()
+//
+// `chars()` return JSON representation of this object in string.
+//
+const char* RecordMD::chars()
 {
-	Buffer		o;
-	RecordMD*	p = this;
+	Buffer o;
 
-	o.append_raw("[vos::RecordMD] dump:\n");
-	while (p) {
-		o.aprint("'%c' : %s : '%c' : %3d : %3d | " 
-			, p->_left_q, p->_name.chars(), p->_right_q
-			, p->_start_p
-			, p->_end_p);
+	o.aprint("{"			\
+		" \"type\": %d"		\
+		", \"left_q\": \"%c\""	\
+		", \"name\": \"%s\""	\
+		", \"right_q\": \"%c\""	\
+		", \"start_p\": %d"	\
+		", \"end_p\": %d"
+		, _type, _left_q, _name.chars(), _right_q
+		, _start_p, _end_p);
 
-		switch (p->_sep) {
-		case '\t':
-			o.append_raw("'\\t'");
-			break;
-		case '\n':
-			o.append_raw("'\\n'");
-			break;
-		case '\v':
-			o.append_raw("'\\v'");
-			break;
-		case '\r':
-			o.append_raw("'\\r'");
-			break;
-		case '\f':
-			o.append_raw("'\\f'");
-			break;
-		case '\b':
-			o.append_raw("'\\b'");
-			break;
-		default:
-			o.aprint("'%c'", p->_sep);
-		}
-
-		o.aprint(" : %2d\n", p->_type);
-
-		p = p->_next;
+	o.append_raw(", \"sep\": ");
+	switch (_sep) {
+	case '\t':
+		o.append_raw("\"\\t\"");
+		break;
+	case '\n':
+		o.append_raw("\"\\n\"");
+		break;
+	case '\v':
+		o.append_raw("\"\\v\"");
+		break;
+	case '\r':
+		o.append_raw("\"\\r\"");
+		break;
+	case '\f':
+		o.append_raw("\"\\f\"");
+		break;
+	case '\b':
+		o.append_raw("\"\\b\"");
+		break;
+	default:
+		o.aprint("\"%c\"", _sep);
 	}
-	printf("%s", o.chars());
-}
 
-/**
- * @method	: RecordMD::ADD
- * @param	:
- *	> rmd	: head of list.
- *	> md	: a new RecordMD object that will be added to list 'rmd'.
- * @desc	: add 'md' object to list 'rmd'.
- */
-void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
-{
-	if (! (*rmd)) {
-		(*rmd)		= md;
-		(*rmd)->_n_md	= 1;
-	} else {
-		RecordMD* p = (*rmd);
+	o.append_raw(" }");
 
-		while (p->_next) {
-			p = p->_next;
-		}
-
-		p->_next = md;
-		(*rmd)->_n_md++;
+	if (_v) {
+		free(_v);
 	}
+
+	_v = o._v;
+	o._v = NULL;
+
+	return _v;
 }
 
 /**
  * @method	: RecordMD::INIT
  * @param	:
- *	> o	: return value, list of RecordMD object.
  *	> meta	: formatted string of field declaration.
  * @return	:
- *	< 0	: success.
- *	< -1	: fail.
+ *	< o	: return value, list of RecordMD object
+ *	< NULL	: if fail.
  * @desc	:
  *	create and initialize meta data using field declaration in 'meta'.
  *
@@ -149,7 +127,7 @@ void RecordMD::ADD(RecordMD **rmd, RecordMD *md)
  *	[]	: optional field.
  *	<char>	: any single character, except characters: a-z,A-Z,0-9.
  */
-int RecordMD::INIT(RecordMD** o, const char* meta)
+List* RecordMD::INIT(const char* meta)
 {
 	if (! meta) {
 		return 0;
@@ -161,6 +139,7 @@ int RecordMD::INIT(RecordMD** o, const char* meta)
 	int		len		= (int) strlen(meta);
 	Buffer		v;
 	RecordMD*	md		= NULL;
+	List*		o		= new List();
 
 	while (todo != MD_DONE) {
 		while (i < len && isspace(meta[i])) {
@@ -179,7 +158,7 @@ int RecordMD::INIT(RecordMD** o, const char* meta)
 		case MD_START:
 			md	= new RecordMD();
 			todo	= MD_LEFT_Q;
-			RecordMD::ADD(o, md);
+			o->push_tail(md);
 			break;
 
 		case MD_META_SEP:
@@ -467,55 +446,54 @@ int RecordMD::INIT(RecordMD** o, const char* meta)
 		}
 	}
 
-	return 0;
+	return o;
 err:
 	fprintf(stderr
 	, "[vos::RecordMD] INIT: invalid field meta data : %s\n"	\
 	  "                at position '%d', at character '%c'.\n"
 	, &meta[i], i, meta[i]);
 
-	if ((*o)) {
-		delete (*o);
-		(*o) = NULL;
+	if (o) {
+		delete o;
+		o = NULL;
 	}
 
-	return -1;
+	return o;
 }
 
 /**
  * @method	: RecordMD::INIT_FROM_FILE
  * @param	:
- *	> o	: return value, list of RecordMD object.
  *	> fmeta	: a name of file contains meta-data, with or without leading
  *                path.
  * @return	:
- *	< 0	: success.
- *	< -1	: fail.
+ *	< o	: return value, list of RecordMD object.
+ *	< NULL	: fail.
  * @desc	:
  *	create and initialize meta-data object 'o' by loading meta-data from
  *	file 'fmeta'.
  */
-int RecordMD::INIT_FROM_FILE(RecordMD** o, const char* fmeta)
+List* RecordMD::INIT_FROM_FILE(const char* fmeta)
 {
 	register int	s;
 	File		f;
 
 	s = f.open_ro(fmeta);
 	if (s < 0) {
-		return -1;
+		return NULL;
 	}
 
 	s = f.resize((int) f.get_size());
 	if (s < 0) {
-		return -1;
+		return NULL;
 	}
 
 	s = f.read();
 	if (s < 0) {
-		return -1;
+		return NULL;
 	}
 
-	return RecordMD::INIT(o, f.chars());
+	return RecordMD::INIT(f.chars());
 }
 
 } /* namespace::vos */

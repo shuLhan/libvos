@@ -96,13 +96,15 @@ int Reader::refill_buffer(const int read_min)
  *	read one row from file, using 'r' as record buffer, and 'md' as record
  *	meta data.
  */
-int Reader::read(Record* r, RecordMD* rmd)
+int Reader::read(Record* r, List* list_md)
 {
+	int x		= 0;
 	int n		= 0;
 	int startp	= _p;
 	int len		= 0;
 	int s		= 0;
 	int chop_bgn	= 0;
+	RecordMD* rmd = NULL;
 
 	if (_i == 0) {
 		s = File::read();
@@ -120,7 +122,9 @@ int Reader::read(Record* r, RecordMD* rmd)
 		}
 	}
 
-	while (rmd && r) {
+	for (; x < list_md->size(); x++) {
+		rmd = (RecordMD*) list_md->at(x);
+
 		if (rmd->_start_p) {
 			len = _p + rmd->_start_p;
 			if (len > _i) {
@@ -364,14 +368,13 @@ int Reader::read(Record* r, RecordMD* rmd)
 			}
 		}
 		r	= r->_next_col;
-		rmd	= rmd->_next;
 		++n;
 	}
 	if (n == 0) {
 		_p = startp;
 		return 0;
 	}
-	if (rmd) {
+	if (x < list_md->size()) {
 		goto reject;
 	}
 	while (_v[startp] != _eol) {

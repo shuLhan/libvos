@@ -22,7 +22,7 @@ public:
 	~Reader();
 
 	int refill_buffer(const int read_min);
-	int read(Record* r, RecordMD* rmd);
+	int read(Record* r, List* list_md);
 private:
 	Reader(const Reader&);
 	void operator=(const Reader&);

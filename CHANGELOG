@@ -33,6 +33,18 @@ Breaking Changes
 
 * SockServer: use List class to manage client sockets
 
+* DNS_rr: remove `_next` field
+
+* FTPD_user: remove `_next` field
+* FTPD_client: remove `_next`, `_prev`, and `_last` fields
+* FTPD_cmd: remove `_next` field
+* FTPD: replace FTPD_user, FTPD_client, and FTPD_cmd with List
+
+* RecordMD: remove `_next` and `_n_md` fields
+
+  This change affect Reader and Writer, because we pass the meta data not
+  as pointer to RecordMD anymore but as pointer List object.
+
 Enhancements
 ------------
 
@@ -44,6 +56,10 @@ Enhancements
 * Implement circular double linked list (List.hh), thread safe.
 
 * Buffer: add method to split buffer content by character
+
+* Implement pthread mutex as Locker.
+
+* Dlogger,OCI,SockServer: replace pthread mutex with Locker object
 
 Fixes
 -----

@@ -8,6 +8,7 @@
 #define _LIBVOS_RECORD_METADATA_HH 1
 
 #include "File.hh"
+#include "List.hh"
 
 namespace vos {
 
@@ -21,7 +22,6 @@ enum _rmd_type {
 /**
  * @class		: RecordMD
  * @attr		:
- *	- _n_md		: number of meta-data record in list.
  *	- _idx		: index of current meta-data record.
  *	- _flag		: flag of current meta-data record.
  *	- _type		: type of record that this meta-data hold.
@@ -36,7 +36,6 @@ enum _rmd_type {
  *	- _name		: name of record.
  *	- _date_format	: format of date used in data.
  *	- _fltr_v	: value of filter, if filter is in comparable mode.
- *	- _next		: pointer to the next meta-data.
  *	- BLOB_SIZE	: static, size of blob header.
  * @desc		:
  *	Record meta-data hold each definition of records in DSV file, or in
@@ -48,18 +47,12 @@ enum _rmd_type {
  *	It's also defined type of filter that will be applied to record. A
  *	filter is used to accepting or rejecting record after parsed.
  */
-class RecordMD {
+class RecordMD : public Object {
 public:
 	RecordMD();
 	~RecordMD();
+	const char* chars();
 
-	void dump();
-
-	static void ADD(RecordMD** rmd, RecordMD* md);
-	static int INIT(RecordMD** o, const char* meta);
-	static int INIT_FROM_FILE(RecordMD** o, const char* fmeta);
-
-	int		_n_md;
 	int		_idx;
 	int		_flag;
 	int		_type;
@@ -74,10 +67,13 @@ public:
 	Buffer		_name;
 	Buffer*		_date_format;
 	Buffer*		_fltr_v;
-	RecordMD*	_next;
+
+	static List* INIT(const char* meta);
+	static List* INIT_FROM_FILE(const char* fmeta);
 
 	static int	BLOB_SIZE;
 	static int	DEF_SEP;
+	static const char* __cname;
 private:
 	RecordMD(const RecordMD&);
 	void operator=(const RecordMD&);

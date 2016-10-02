@@ -27,18 +27,22 @@ Writer::~Writer()
  * @method	: Writer::write
  * @param	:
  *	> row	: record buffer, list of column data that will be written.
- *	> rmd	: record meta-data.
+ *	> list_md: record meta-data.
  * @return	:
  *	< 0	: success.
  *	< -1	: fail.
- * @desc	: write one row using 'rmd' as meta-data to file.
+ * @desc	: write one row using 'list_md' as meta-data to file.
  */
-int Writer::write(Record *row, RecordMD *rmd)
+int Writer::write(Record *row, List *list_md)
 {
 	register int	s;
 	register int	len;
+	int x = 0;
+	RecordMD* rmd = NULL;
 
-	while (rmd && row) {
+	for (; x < list_md->size(); x++) {
+		rmd = (RecordMD*) list_md->at(x);
+
 		if (rmd->_start_p) {
 			s = _line.resize(rmd->_start_p);
 			if (s < 0) {
@@ -106,7 +110,6 @@ int Writer::write(Record *row, RecordMD *rmd)
 			}
 		}
 		row = row->_next_col;
-		rmd = rmd->_next;
 	}
 
 	_line.appendc((char) _eol);
@@ -130,18 +133,18 @@ int Writer::write(Record *row, RecordMD *rmd)
  * @method	: Writer::writes
  * @param	:
  *	> rows	: list of row of Record objects.
- *	> rmd	: Record meta-data.
+ *	> list_md: list of record meta-data.
  * @return	:
  *	< 0	: success.
  *	< -1	: fail.
  * @desc	: write all 'rows' to file.
  */
-int Writer::writes(Record *rows, RecordMD *rmd)
+int Writer::writes(Record *rows, List *list_md)
 {
 	register int s;
 
 	while (rows) {
-		s = write(rows, rmd);
+		s = write(rows, list_md);
 		if (s < 0) {
 			return -1;
 		}
