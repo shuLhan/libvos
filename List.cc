@@ -341,6 +341,7 @@ const char* List::chars()
 	_locker.lock();
 
 	Buffer b;
+	const char* p = NULL;
 	BNode* node = _head;
 
 	if (_v) {
@@ -349,29 +350,31 @@ const char* List::chars()
 	}
 
 	if (!_head) {
-		goto out_unlock;
-	}
-
-	if (_head == _tail) {
-		b.concat("[ \"", _head->chars(), "\" ]", NULL);
 		goto out;
 	}
 
 	b.append_raw("[ ");
-	while (node != _tail) {
-		b.concat("\"", node->chars(), "\"", NULL);
-		b.appendc(_sep);
+
+	do {
+		p = node->chars();
+		if (p && p[0] != '{' && p[0] != '[') {
+			b.concat("\"", p, "\"", NULL);
+		} else {
+			b.append_raw(p);
+		}
 
 		node = node->_right;
-	}
-	b.concat("\"", node->chars(), "\"", NULL);
+		if (node != _head) {
+			b.appendc(_sep);
+		}
+	} while (node != _head);
+
 	b.append_raw(" ]");
 
-out:
 	_v = b._v;
 	b._v = NULL;
 
-out_unlock:
+out:
 	_locker.unlock();
 	return _v;
 }
