@@ -68,7 +68,6 @@ enum _RR_CLASS {
  *			priority.
  *	- _port		: SRV, the TCP or UDP port on which the service is to
  *			be found.
- *	- _next		: pointer to the next RR.
  *	- RDATA_MAX_SIZE: static, maximum size for RR buffer.
  * @desc		:
  *	submodule of DNSQuery, for listing Resource Record of DNS packet.
@@ -77,12 +76,11 @@ class DNS_rr : public Buffer {
 public:
 	DNS_rr(int bfr_size = RDATA_MAX_SIZE);
 	~DNS_rr();
+	const char* chars();
 
 	int create_packet ();
 
 	void reset();
-	void dump();
-	static void ADD(DNS_rr** root, DNS_rr* rr);
 	static DNS_rr* INIT (const char* name
 				, uint16_t type, uint16_t clas
 				, uint32_t ttl
@@ -110,11 +108,11 @@ public:
 	uint16_t	_weight;
 	uint16_t	_port;
 
-	DNS_rr*		_next;
-
 	static int APPEND_DNS_LABEL (Buffer* b, const char* label
 					, unsigned int len = 0);
 	static unsigned int RDATA_MAX_SIZE;
+
+	static const char* __cname;
 private:
 	DNS_rr(const DNS_rr&);
 	void operator=(const DNS_rr&);

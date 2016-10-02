@@ -8,6 +8,8 @@
 
 namespace vos {
 
+const char* DNS_rr::__cname = "DNS_rr";
+
 unsigned int DNS_rr::RDATA_MAX_SIZE = 255;
 
 /**
@@ -30,18 +32,13 @@ DNS_rr::DNS_rr(const int bfr_size) : Buffer(bfr_size)
 ,	_priority(0)
 ,	_weight(0)
 ,	_port(0)
-,	_next(NULL)
 {}
 
 /**
  * @method	: DNS_rr::~DNS_rr
  */
 DNS_rr::~DNS_rr()
-{
-	if (_next) {
-		delete _next;
-	}
-}
+{}
 
 int DNS_rr::create_packet ()
 {
@@ -95,112 +92,81 @@ void DNS_rr::reset()
 	_len	= 0;
 	_name.reset();
 	reset();
-	if (_next) {
-		delete _next;
-	}
 }
 
-/**
- * @method	: DNS_rr::dump
- * @desc	: print content of DNS_rr buffer to standard output.
- */
-void DNS_rr::dump()
+//
+// `chars` will return content of DNS_rr as JSON representation.
+//
+const char* DNS_rr::chars()
 {
-	Buffer	o;
-	DNS_rr* p = this;
+	Buffer o;
 
-	o.append_raw("[vos::DNS_rr__] dump:\n");
-	while (p) {
-		o.aprint("\n[RR]\n"		\
-			" name       : %s\n"	\
-			" type       : %d\n"	\
-			" class      : %d\n"	\
-			" TTL        : %u\n"	\
-			" length     : %d\n"	\
-			" data       :\n"
-			, p->_name.chars(), p->_type, p->_class, p->_ttl
-			, p->_len);
+	o.aprint("{ \"name\": \"%s\""	\
+		", \"type\": %d"	\
+		", \"class\": %d"	\
+		", \"ttl\": %u"		\
+		", \"length\": %d"	\
+		", \"data\" : {"
+		, _name.chars(), _type, _class, _ttl, _len);
 
-		switch (p->_type) {
-		case QUERY_T_ADDRESS:
-		case QUERY_T_AAAA:
-			o.aprint("   address  : %s\n", p->_data.chars());
-			break;
-		case QUERY_T_NAMESERVER:
-			o.aprint("   NS       : %s\n", p->_data.chars());
-			break;
-		case QUERY_T_CNAME:
-			o.aprint("   c. name  : %s\n", p->_data.chars());
-			break;
-		case QUERY_T_SOA:
-			o.aprint(
-				"   mname    : %s\n"	\
-				"   rname    : %s\n"	\
-				"   serial   : %d\n"	\
-				"   refresh  : %d\n"	\
-				"   retry    : %d\n"	\
-				"   expire   : %d\n"	\
-				"   minimum  : %d\n"
-				, p->_data.chars(), p->_data2.chars()
-				, p->_serial
-				, p->_refresh, p->_retry, p->_expire
-				, p->_minimum);
-			break;
-		case QUERY_T_PTR:
-			o.aprint("   PTRDNAME : %s\n", p->_data.chars());
-			break;
-		case QUERY_T_HINFO:
-			o.aprint(
-				"   CPU      : %s\n"	\
-				"   OS       : %s\n"
-				, p->_data.chars(), p->_data2.chars());
-			break;
-		case QUERY_T_MX:
-			o.aprint(
-				"   score    : %d\n"	\
-				"   exchange : %s\n"
-				, p->_priority, p->_data.chars());
-			break;
-		case QUERY_T_TXT:
-			o.aprint("   TXT      : %s\n", p->_data.chars());
-			break;
-		case QUERY_T_SRV:
-			o.aprint(
-				"   priority : %d\n"	\
-				"   weight   : %d\n"	\
-				"   port     : %d\n"	\
-				"   target   : %s\n"
-				, p->_priority, p->_weight, p->_port
-				, p->_data.chars());
-			break;
-		}
-		p = p->_next;
+	switch (_type) {
+	case QUERY_T_ADDRESS:
+	case QUERY_T_AAAA:
+		o.aprint(" \"address\": \"%s\"", _data.chars());
+		break;
+	case QUERY_T_NAMESERVER:
+		o.aprint(" \"NS\": \"%s\"", _data.chars());
+		break;
+	case QUERY_T_CNAME:
+		o.aprint(" \"cname\": \"%s\"", _data.chars());
+		break;
+	case QUERY_T_SOA:
+		o.aprint(" \"mname\": \"%s\""	\
+			", \"rname\": \"%s\""	\
+			", \"serial\": %d"	\
+			", \"refresh\": %d"	\
+			", \"retry\": %d"	\
+			", \"expire\": %d"	\
+			", \"minimum\": %d"
+			, _data.chars(), _data2.chars()
+			, _serial
+			, _refresh, _retry, _expire
+			, _minimum);
+		break;
+	case QUERY_T_PTR:
+		o.aprint("\"PTRDNAME\": \"%s\"", _data.chars());
+		break;
+	case QUERY_T_HINFO:
+		o.aprint(" \"CPU\": \"%s\""	\
+			", \"OS\": \"%s\""
+			, _data.chars(), _data2.chars());
+		break;
+	case QUERY_T_MX:
+		o.aprint(" \"score\": %d\n"	\
+			", \"exchange\": \"%s\""
+			, _priority, _data.chars());
+		break;
+	case QUERY_T_TXT:
+		o.aprint(" \"TXT\": \"%s\"", _data.chars());
+		break;
+	case QUERY_T_SRV:
+		o.aprint(" \"priority\": %d"	\
+			", \"weight\": %d"	\
+			", \"port\": %d"	\
+			", \"target\": \"%s\""
+			, _priority, _weight, _port
+			, _data.chars());
+		break;
 	}
-	printf("%s", o.chars());
-}
+	o.append_raw(" } }");
 
-/**
- * @method	: DNS_rr::ADD
- * @param	:
- *	> root	: head of list.
- *	> rr	: a new node.
- * @desc	: add a new node 'rr' to the list of 'root'.
- */
-void DNS_rr::ADD(DNS_rr** root, DNS_rr* rr)
-{
-	if (!rr) {
-		return;
+	if (_v) {
+		free(_v);
 	}
-	if (! (*root)) {
-		(*root) = rr;
-	} else {
-		DNS_rr* p = (*root);
+	_v = o._v;
+	o._v = NULL;
 
-		while (p->_next) {
-			p = p->_next;
-		}
-		p->_next = rr;
-	}
+	return _v;
 }
 
 DNS_rr* DNS_rr::INIT (const char* name

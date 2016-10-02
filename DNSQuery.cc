@@ -23,9 +23,9 @@ DNSQuery::DNSQuery() : Buffer()
 ,	_q_class(0)
 ,	_name()
 ,	_bfr_type(BUFFER_IS_UDP)
-,	_rr_ans(NULL)
-,	_rr_aut(NULL)
-,	_rr_add(NULL)
+,	_rr_ans()
+,	_rr_aut()
+,	_rr_add()
 ,	_rr_ans_p(NULL)
 ,	_rr_aut_p(NULL)
 ,	_rr_add_p(NULL)
@@ -38,24 +38,7 @@ DNSQuery::DNSQuery() : Buffer()
  * @method	: DNSQuery::~DNSQuery
  */
 DNSQuery::~DNSQuery()
-{
-	if (_rr_ans) {
-		delete _rr_ans;
-		_rr_ans = NULL;
-	}
-	if (_rr_aut) {
-		delete _rr_aut;
-		_rr_aut = NULL;
-	}
-	if (_rr_add) {
-		delete _rr_add;
-		_rr_add = NULL;
-	}
-	if (_next) {
-		delete _next;
-		_next = NULL;
-	}
-}
+{}
 
 /**
  * @method	: DNSQuery::set_buffer
@@ -439,7 +422,8 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 		set_max_ttl_from_rr (rr);
 
 		rr_type	= rr->_type;
-		DNS_rr::ADD (&_rr_ans, rr);
+
+		_rr_ans.push_tail(rr);
 	}
 
 	if (extract_flag >= DNSQ_EXTRACT_RR_AUTH) {
@@ -450,7 +434,7 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 				return -3;
 			}
 
-			DNS_rr::ADD (&_rr_aut, rr);
+			_rr_aut.push_tail(rr);
 		}
 
 		_rr_add_p = &_v[len];
@@ -460,7 +444,7 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 				if (!rr) {
 					return -4;
 				}
-				DNS_rr::ADD (&_rr_add, rr);
+				_rr_add.push_tail(rr);
 			}
 		}
 	}
@@ -798,7 +782,7 @@ int DNSQuery::extract_label(Buffer* label, const int bfr_off)
  > attrs	: additional attribute for dns object.
  @return	:
  < 0		: success.
- < -1		: fail.
+ < 1		: fail.
  @desc		: Create packet of DNS answer for hostname 'hname' with list of
 	address in 'addrs'.
  */
@@ -834,9 +818,15 @@ int DNSQuery::create_answer (const char* name
 	append_bin (&v, 2);
 
 	/* Create answer section */
-	_rr_ans = DNS_rr::INIT (name, type, clas, ttl, data_len, data);
+	DNS_rr* rr_answer = DNS_rr::INIT (name, type, clas, ttl, data_len
+					, data);
+	if (!rr_answer) {
+		return 1;
+	}
 
-	append_raw (_rr_ans->_v, _rr_ans->_i);
+	append_raw(rr_answer->_v, rr_answer->_i);
+
+	_rr_ans.push_tail(rr_answer);
 
 	return 0;
 }
@@ -869,10 +859,9 @@ void DNSQuery::remove_rr_aut()
 			_i = 0;
 		}
 	}
-	if (_rr_aut) {
-		delete _rr_aut;
-		_rr_aut = NULL;
-	}
+
+	_rr_aut.reset();
+
 	_i++;
 	_rr_aut_p	= NULL;
 	_v[_i]		= 0;
@@ -897,10 +886,8 @@ void DNSQuery::remove_rr_add()
 	if (_i < 0) {
 		_i = 0;
 	}
-	if (_rr_add) {
-		delete _rr_add;
-		_rr_add = NULL;
-	}
+
+	_rr_add.reset();
 
 	_rr_add_p	= NULL;
 	_v[_i]		= 0;
@@ -980,11 +967,14 @@ void DNSQuery::set_tc(const int flag)
 void DNSQuery::set_rr_answer_ttl(unsigned int ttl)
 {
 	int	len	= 0;
-	DNS_rr* p	= _rr_ans;
+	DNS_rr* p	= NULL;
+	int	x	= 0;
 
 	ttl = htonl(ttl);
 
-	while (p) {
+	for (; x < _rr_ans.size(); x++) {
+		p = (DNS_rr*) _rr_ans.at(0);
+
 		if (p->_type == _q_type && p->_class == _q_class) {
 			len += p->_name_len + 4;
 
@@ -995,8 +985,6 @@ void DNSQuery::set_rr_answer_ttl(unsigned int ttl)
 		} else {
 			len += p->_name_len + 10 + p->_len;
 		}
-
-		p = p->_next;
 	}
 }
 
@@ -1024,18 +1012,10 @@ void DNSQuery::reset(const int do_type)
 		Buffer::reset();
 	}
 
-	if (_rr_ans) {
-		delete _rr_ans;
-		_rr_ans	= NULL;
-	}
-	if (_rr_aut) {
-		delete _rr_aut;
-		_rr_aut = NULL;
-	}
-	if (_rr_add) {
-		delete _rr_add;
-		_rr_add = NULL;
-	}
+	_rr_ans.reset();
+	_rr_aut.reset();
+	_rr_add.reset();
+
 	_rr_ans_p	= NULL;
 	_rr_aut_p	= NULL;
 	_rr_add_p	= NULL;
@@ -1069,17 +1049,14 @@ void DNSQuery::dump(const int do_type)
 	printf(" class           : %d\n", _q_class);
 	printf(" name            : %s\n", _name.chars());
 
-	if (_rr_ans) {
-		printf("\n; ANSWER section\n");
-		_rr_ans->dump();
+	if (_rr_ans.size() > 0) {
+		printf("\n; ANSWER section\n%s\n", _rr_ans.chars());
 	}
-	if (_rr_aut) {
-		printf("\n; AUTHENTICATION section\n");
-		_rr_aut->dump();
+	if (_rr_aut.size() > 0) {
+		printf("\n; AUTHENTICATION section\n%s\n", _rr_aut.chars());
 	}
-	if (_rr_add) {
-		printf("\n; ADDITIONAL section\n");
-		_rr_add->dump();
+	if (_rr_add.size() > 0) {
+		printf("\n; ADDITIONAL section\n%s\n", _rr_add.chars());
 	}
 }
 

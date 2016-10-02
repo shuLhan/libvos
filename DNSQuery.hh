@@ -167,9 +167,9 @@ public:
 	/* DNS Buffer for question & answer */
 	int		_bfr_type;
 	/* DNS resource records */
-	DNS_rr*		_rr_ans;
-	DNS_rr*		_rr_aut;
-	DNS_rr*		_rr_add;
+	List		_rr_ans;
+	List		_rr_aut;
+	List		_rr_add;
 	const char*	_rr_ans_p;
 	const char*	_rr_aut_p;
 	const char*	_rr_add_p;
