@@ -73,7 +73,7 @@ FTPD::FTPD() : SockServer()
 ,	_fd_all()
 ,	_fd_read()
 ,	_clients(NULL)
-,	_users(NULL)
+,	_users()
 ,	_cmds(NULL)
 {}
 
@@ -88,10 +88,6 @@ FTPD::~FTPD()
 		delete _clients;
 
 		_clients = next;
-	}
-	if (_users) {
-		delete _users;
-		_users = NULL;
 	}
 	if (_cmds) {
 		delete _cmds;
@@ -108,7 +104,7 @@ FTPD::~FTPD()
  *                        Default is 21.
  *	> path		: Path to be served to client.
  *                        Default to empty or NULL.
- *	> mode		: Is it anonymous server or authentication server.
+ *	> auth_mode	: Is it anonymous server or authentication server.
  *                        Default to no authentication, all user name allowed.
  * @return		:
  *	< 0		: success.
@@ -150,7 +146,7 @@ int FTPD::init(const char* address, const uint16_t port, const char* path
 }
 
 /**
- * @method	: FTPD::add_user
+ * @method	: FTPD::user_add
  * @param	:
  *	> name	: a name for new user.
  *	> pass	: a string for authentication user when login.
@@ -160,23 +156,65 @@ int FTPD::init(const char* address, const uint16_t port, const char* path
  *	< -2	: fail, system error.
  * @desc	: add new user that can login to this server.
  */
-int FTPD::add_user(const char* name, const char* pass)
+int FTPD::user_add(const char* name, const char* pass)
 {
-	if (!name || !pass) {
+	if (!name && !pass) {
 		return -2;
 	}
 
 	int		s;
 	FTPD_user*	user	= NULL;
 
+	s = user_is_exist(name, pass);
+	if (s) {
+		return -1;
+	}
+
 	s = FTPD_user::INIT(&user, name, pass);
 	if (s < 0) {
 		return -2;
 	}
 
-	s = FTPD_user::ADD(&_users, user);
-	if (s < 0) {
-		return -1;
+	_users.push_tail(user);
+
+	return 0;
+}
+
+//
+// `user_is_exist` will check if user with `name` and/or `pass` exist in
+// current server.
+//
+//  - `name` is required
+//  - If `pass` is NULL, then only check the `name`
+//  - `user` is not case sensitive while `pass` will be case sensitive
+//
+// Return 1 if user exist, otherwise return 0.
+//
+int FTPD::user_is_exist(const char* name, const char* pass)
+{
+	if (!name) {
+		return 0;
+	}
+
+	int x = 0;
+	FTPD_user* user = NULL;
+
+	for (; x < _users.size(); x++) {
+		user = (FTPD_user*) _users.at(x);
+
+		if (user->_name.like_raw(name) != 0) {
+			continue;
+		}
+
+		if (pass) {
+			if (user->_pass.cmp_raw(pass) == 0) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+
+		return 1;
 	}
 
 	return 0;
@@ -740,7 +778,7 @@ void FTPD::on_cmd_USER(FTPD* s, FTPD_client* c)
 		goto out;
 	}
 
-	x = FTPD_user::IS_EXIST(s->_users, &c->_cmd._parm);
+	x = s->user_is_exist(c->_cmd._parm.chars());
 	if (!x) {
 		c->_s = CODE_530;
 	} else {
@@ -764,8 +802,8 @@ void FTPD::on_cmd_PASS(FTPD* s, FTPD_client* c)
 		goto out;
 	}
 
-	x = FTPD_user::IS_EXIST(s->_users, &c->_cmd_last._parm
-				, &c->_cmd._parm);
+	x = s->user_is_exist(c->_cmd_last._parm.chars()
+				, c->_cmd._parm.chars());
 	if (!x) {
 		c->_s = CODE_530;
 	} else {

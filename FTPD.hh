@@ -8,6 +8,7 @@
 #define _LIBVOS_FTP_DAEMON_HH 1
 
 #include <signal.h>
+#include "List.hh"
 #include "FTPD_client.hh"
 #include "FTPD_user.hh"
 
@@ -93,7 +94,10 @@ public:
 		, const uint16_t port = FTPD_DEF_PORT
 		, const char* path = FTPD_DEF_PATH
 		, const int auth_mode = AUTH_NOLOGIN);
-	int add_user(const char* name, const char* pass);
+
+	int user_add(const char* name, const char* pass);
+	int user_is_exist(const char* name, const char* pass = NULL);
+
 	int add_command(const int code, const char* cmd_name
 			, void (*callback)(FTPD*, FTPD_client*));
 	int set_path(const char* path);
@@ -115,7 +119,7 @@ public:
 	fd_set		_fd_all;
 	fd_set		_fd_read;
 	FTPD_client*	_clients;
-	FTPD_user*	_users;
+	List		_users;
 	FTPD_cmd*	_cmds;
 
 	static void on_cmd_USER(FTPD* s, FTPD_client* c);

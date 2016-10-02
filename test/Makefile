@@ -63,6 +63,26 @@ Locker_OBJS=	$(Object_OBJS)			\
 		$(BLD_D)/TestLocker.oo		\
 		$(LIBVOS_BLD_D)/Locker.oo
 
+File_OBJS=	$(Buffer_OBJS)			\
+		$(LIBVOS_BLD_D)/File.oo
+
+Socket_OBJS=	$(File_OBJS)			\
+		$(LIBVOS_BLD_D)/SockAddr.oo	\
+		$(LIBVOS_BLD_D)/Socket.oo
+
+SockServer_OBJS=$(Socket_OBJS)			\
+		$(LIBVOS_BLD_D)/SockServer.oo
+
+FTPD_OBJS=	$(List_OBJS)			\
+		$(SockServer_OBJS)		\
+		$(LIBVOS_BLD_D)/Dir.oo		\
+		$(LIBVOS_BLD_D)/DirNode.oo	\
+		$(LIBVOS_BLD_D)/FTP_cmd.oo	\
+		$(LIBVOS_BLD_D)/FTPD_user.oo	\
+		$(LIBVOS_BLD_D)/FTPD_cmd.oo	\
+		$(LIBVOS_BLD_D)/FTPD_client.oo	\
+		$(LIBVOS_BLD_D)/FTPD.oo
+
 TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Buffer.test		\
 	$(BLD_D)/BNode.test		\
@@ -73,15 +93,12 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/host_to_dnsquery.test	\
 	$(BLD_D)/Resolver.test		\
 	$(BLD_D)/Rowset.test		\
-	$(BLD_D)/Locker.test
+	$(BLD_D)/Locker.test		\
+	$(BLD_D)/FTPD.test
 
 .PHONY: all clean
 
 all: libvos-debug
-	@for test in ${TARGET}; do	\
-		echo "[T] $$test";	\
-		$$test || (echo "[T] FAIL: $$test" && exit 1); \
-	done
 
 clean: libvos-clean
 	@$(call do_rm,$(TARGET))
@@ -90,6 +107,8 @@ $(BLD_D)/%.oo: $(SRC_D)/%.cc $(SRC_D)/%.hh
 	@$(do_compile)
 
 $(BLD_D)/%.test: %.test.cc $$(%_OBJS)
-	@$(do_build)
+	@$(do_build)				\
+	echo "[T] $@";				\
+	./$@ || (echo "[T] FAIL: $@" && exit 1);
 
 ## vi: ts=8 sw=8 tw=78:
