@@ -1056,6 +1056,7 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 	register int	flen	= 0;
 	register int	s;
 	register int	flag	= 0;
+	char		c	= 0;
 	char		*p	= (char *) fmt;
 	Buffer		b;
 	Buffer		o;
@@ -1114,9 +1115,12 @@ next:
 
 		switch (*p) {
 		case 'c':
-			s = o.appendc((char) va_arg(args, int));
-			if (s < 0) {
-				return -1;
+			c = (char) va_arg(args, int);
+			if (c > 0) {
+				s = o.appendc(c);
+				if (s < 0) {
+					return -1;
+				}
 			}
 			break;
 		case 'd':

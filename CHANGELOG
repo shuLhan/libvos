@@ -54,6 +54,8 @@ Fixes
 * Resolver: fix port not resetted if server list contain more than one
   addresses.
 * SockServer: Increase socket listen backlog to 2048
+* Buffer: VSNPRINTF, do not print empty character (0 or NULL), which caused
+  the string truncated when printed to stdout.
 
 v0.1.0 (2016-09-04)
 ===================
