@@ -19,12 +19,10 @@ namespace vos {
  *	- _name		: command name.
  *	- _parm		: command parameter.
  *	- _callback	: pointer to function callback.
- *	- _next		: pointer to the next FTPD_cmd object.
- *	- _prev		: pointer to the previos FTPD_cmd object.
  * @desc		:
  * This class contain command code and parameter.
  */
-class FTPD_cmd {
+class FTPD_cmd : public Object {
 public:
 	FTPD_cmd();
 	~FTPD_cmd();
@@ -37,12 +35,11 @@ public:
 	Buffer	_name;
 	Buffer	_parm;
 	void	(*_callback)(const void* FTPD_p, const void* FTPD_client_p);
-	FTPD_cmd*	_next;
-	FTPD_cmd*	_last;
 
 	static FTPD_cmd* INIT(const int code, const char* name
 				, void (*callback)(const void*, const void*));
-	static void ADD(FTPD_cmd** cmds, FTPD_cmd* cmd_new);
+
+	static const char* __cname;
 private:
 	FTPD_cmd(const FTPD_cmd&);
 	void operator=(const FTPD_cmd&);

@@ -74,16 +74,11 @@ FTPD::FTPD() : SockServer()
 ,	_fd_read()
 ,	_clients()
 ,	_users()
-,	_cmds(NULL)
+,	_cmds()
 {}
 
 FTPD::~FTPD()
-{
-	if (_cmds) {
-		delete _cmds;
-		_cmds = NULL;
-	}
-}
+{}
 
 /**
  * @method		: FTPD::init
@@ -231,16 +226,18 @@ int FTPD::add_command(const int code, const char* name
 		return -1;
 	}
 
-	FTPD_cmd* cmd = _cmds;
+	int x = 0;
+	FTPD_cmd* cmd = NULL;
 
-	while (cmd) {
+	for (; x < _cmds.size(); x++) {
+		cmd = (FTPD_cmd*) _cmds.at(x);
+
 		if (cmd->_code == code) {
 			cmd->_name.copy_raw(name);
 			cmd->_callback = (void (*)(const void*, const void*))
 					callback;
 			return 0;
 		}
-		cmd = cmd->_next;
 	}
 
 	cmd = FTPD_cmd::INIT(code, name
@@ -249,7 +246,7 @@ int FTPD::add_command(const int code, const char* name
 		return -1;
 	}
 
-	FTPD_cmd::ADD(&_cmds, cmd);
+	_cmds.push_tail(cmd);
 
 	return 0;
 }
@@ -518,8 +515,9 @@ int FTPD::client_get_command(Socket* c, FTPD_cmd* ftp_cmd)
 		return -1;
 	}
 
+	int x = 0;
 	int		s;
-	FTPD_cmd*	cmd_p = _cmds;
+	FTPD_cmd*	cmd_p = NULL;
 
 	ftp_cmd->reset();
 
@@ -539,14 +537,15 @@ int FTPD::client_get_command(Socket* c, FTPD_cmd* ftp_cmd)
 		ftp_cmd->_parm.trim();
 	}
 
-	while (cmd_p) {
+	for (; x < _cmds.size(); x++) {
+		cmd_p = (FTPD_cmd*) _cmds.at(x);
+
 		s = ftp_cmd->_name.like(&cmd_p->_name);
 		if (s == 0) {
 			ftp_cmd->_code = cmd_p->_code;
 			ftp_cmd->_callback = cmd_p->_callback;
 			return ftp_cmd->_code;
 		}
-		cmd_p = cmd_p->_next;
 	}
 
 	fprintf(stderr

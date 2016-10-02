@@ -120,7 +120,7 @@ public:
 	fd_set		_fd_read;
 	List		_clients;
 	List		_users;
-	FTPD_cmd*	_cmds;
+	List		_cmds;
 
 	static void on_cmd_USER(FTPD* s, FTPD_client* c);
 	static void on_cmd_PASS(FTPD* s, FTPD_client* c);

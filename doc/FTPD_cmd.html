@@ -18,7 +18,6 @@
 	<li><a href="#FTPD_cmd::set"><tt> FTPD_cmd::set </tt></a></li>
 	<li><a href="#FTPD_cmd::dump"><tt> FTPD_cmd::dump </tt></a></li>
 	<li><a href="#FTPD_cmd::INIT"><tt> FTPD_cmd::INIT </tt></a></li>
-	<li><a href="#FTPD_cmd::ADD"><tt> FTPD_cmd::ADD </tt></a></li>
 	</ul>
 </ul>
 
@@ -57,14 +56,6 @@ Legend:
 	<td> void (*)(const void*, const void*) </td>
 	<td> callback </td>
 	<td> pointer to function callback. </td>
-</tr><tr>
-	<td> FTPD_cmd* </td>
-	<td> _next </td>
-	<td> pointer to the next command in the list. </td>
-</tr><tr>
-	<td> FTPD_cmd* </td>
-	<td> _last </td>
-	<td> pointer to the last command in the list. </td>
 </tr>
 </table>
 
@@ -193,33 +184,6 @@ static FTPD_cmd* INIT(const int code, const char* name, void
 </tr><tr>
 	<th>Description</th>
 	<td colspan="3"> Create and initialize a new FTPD_cmd object.
-	</td>
-</tr>
-</table>
-
-<h3><a name="FTPD_cmd::ADD"><tt> FTPD_cmd::ADD </tt></a></h3>
-<table class="class-method">
-<tr>
-	<th>Code</th>
-	<td colspan="3">
-static void ADD(FTPD_cmd** cmds, FTPD_cmd* cmd_new)
-	</td>
-</tr><tr>
-	<th rowspan="2">Parameter</th>
-		<td><tt> cmds </tt></td>
-		<td>:</td>
-		<td> pointer to the list of FTPD_cmd objects. </td>
-	</tr><tr>
-		<td><tt> cmd_new </tt></td>
-		<td>:</td>
-		<td> pointer to the new FTPD_cmd object. </td>
-</tr><tr>
-	<th>Return Value</th>
-	<td>-</td>
-</tr><tr>
-	<th>Description</th>
-	<td colspan="3"> Add a new FTPD_cmd object, <tt>cmd_new</tt>, to the
-list <tt>cmds</tt>.
 	</td>
 </tr>
 </table>

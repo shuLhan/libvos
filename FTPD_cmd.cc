@@ -8,21 +8,18 @@
 
 namespace vos {
 
+const char* FTPD_cmd::__cname = "FTPD_cmd";
+
 FTPD_cmd::FTPD_cmd() :
 	_code(0)
 ,	_name()
 ,	_parm()
 ,	_callback(NULL)
-,	_next(NULL)
-,	_last(this)
 
 {}
 
 FTPD_cmd::~FTPD_cmd()
 {
-	if (_next) {
-		delete _next;
-	}
 	reset();
 }
 
@@ -82,26 +79,6 @@ FTPD_cmd* FTPD_cmd::INIT(const int code, const char* name
 		cmd->_name.copy_raw(name);
 	}
 	return cmd;
-}
-
-/**
- * @method		: FTPD_cmd::ADD
- * @param		:
- *	> cmds		: pointer to list of FTPD_cmd object.
- *	> cmd_new	: pointer to FTPD_cmd object.
- * @desc		: Add new command 'cmd_new' to list of command 'cmds'.
- */
-void FTPD_cmd::ADD(FTPD_cmd** cmds, FTPD_cmd* cmd_new)
-{
-	if (!cmd_new) {
-		return;
-	}
-	if (!(*cmds)) {
-		(*cmds) = cmd_new;
-	} else {
-		(*cmds)->_last->_next = cmd_new;
-	}
-	(*cmds)->_last = cmd_new;
 }
 
 } /* namespace::vos */
