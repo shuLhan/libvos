@@ -22,8 +22,6 @@ namespace vos {
  *	- _t		: type of address (IPv4, IPv6, or both).
  *	- _in		: the internet address.
  *	- _in6		: the internet address for IPv6.
- *	- _next		: pointer to the next SockAddr in the list.
- *	- _last		: pointer to the last SockAddr in the list.
  *	- IN_SIZE	: static, size of 'struct sockaddr_in'.
  *	- IN6_SIZE	: static, size of 'struct sockaddr_in6'.
  * @desc		:
