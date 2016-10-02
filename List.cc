@@ -25,19 +25,10 @@ List::List(const char sep) : Object()
 
 List::~List()
 {
+	reset();
+
 	_locker.lock();
 
-	_n = 0;
-	if (_tail) {
-		// break circular link.
-		_tail->_right = NULL;
-		_head->_left = NULL;
-	}
-	while (_head) {
-		_tail = _head->_right;
-		delete _head;
-		_head = _tail;
-	}
 	if (_v) {
 		free(_v);
 		_v = NULL;
@@ -106,6 +97,28 @@ void List::push_tail(Object* item)
 	}
 
 	push_circular(&_tail, item);
+}
+
+//
+// `reset()` will remove all items in the list.
+//
+void List::reset()
+{
+	_locker.lock();
+
+	if (_tail) {
+		// break circular link.
+		_tail->_right = NULL;
+		_head->_left = NULL;
+	}
+	while (_head) {
+		_tail = _head->_right;
+		delete _head;
+		_head = _tail;
+	}
+	_n = 0;
+
+	_locker.unlock();
 }
 
 //

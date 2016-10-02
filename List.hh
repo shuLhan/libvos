@@ -24,6 +24,7 @@ public:
 	void push_circular(BNode** p, Object* item);
 	void push_head(Object* item);
 	void push_tail(Object* item);
+	void reset();
 	Object* pop_head();
 	Object* pop_tail();
 	Object* at(int idx);
