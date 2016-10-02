@@ -17,8 +17,6 @@
 	<li><a href="#FTPD_client::reset"><tt> FTPD_client::reset </tt></a></li>
 	<li><a href="#FTPD_client::reply"><tt> FTPD_client::reply </tt></a></li>
 	<li><a href="#FTPD_client::reply_raw"><tt> FTPD_client::reply_raw </tt></a></li>
-	<li><a href="#FTPD_client::ADD"><tt> FTPD_client::ADD </tt></a></li>
-	<li><a href="#FTPD_client::REMOVE"><tt> FTPD_client::REMOVE </tt></a></li>
 	</ul>
 </ul>
 
@@ -112,18 +110,6 @@ based on the FTP root directory.
 	<td> const char* </td>
 	<td> _rmsg_plus </td>
 	<td> pointer to client additional reply message. </td>
-</tr><tr>
-	<td> FTPD_client* </td>
-	<td> _next </td>
-	<td> pointer to the next client in the list. </td>
-</tr><tr>
-	<td> FTPD_client* </td>
-	<td> _prev </td>
-	<td> pointer to the previous client in the list.</td>
-</tr><tr>
-	<td> FTPD_client* </td>
-	<td> _last </td>
-	<td> pointer to the last client in the list. </td>
 </tr>
 </table>
 
@@ -242,62 +228,6 @@ int reply_raw(int code, const char* msg, const char* msg_add)
 	<th>Description</th>
 	<td colspan="3"> Send message data in '<tt>msg</tt>' and
 '<tt>msg_add</tt>' to client.
-	</td>
-</tr>
-</table>
-
-<h3><a name="FTPD_client::ADD"><tt> FTPD_client::ADD </tt></a></h3>
-<table class="class-method">
-<tr>
-	<th>Code</th>
-	<td colspan="3">
-static void ADD(FTPD_client** list, FTPD_client* client)
-	</td>
-</tr><tr>
-	<th rowspan="2">Parameter</th>
-		<td><tt> list </tt></td>
-		<td>:</td>
-		<td> pointer to the list of FTPD_client objects.</td>
-	</tr><tr>
-		<td><tt> client </tt></td>
-		<td>:</td>
-		<td> pointer to the new FTPD_client object. </td>
-</tr><tr>
-	<th>Return Value</th>
-	<td>-</td>
-</tr><tr>
-	<th>Description</th>
-	<td colspan="3"> Add '<tt>client</tt>' to the '<tt>list</tt>'.
-	</td>
-</tr>
-</table>
-
-<h3><a name="FTPD_client::REMOVE"><tt> FTPD_client::REMOVE </tt></a></h3>
-<table class="class-method">
-<tr>
-	<th>Code</th>
-	<td colspan="3">
-static void REMOVE(FTPD_client** list, FTPD_client* client)
-	</td>
-</tr><tr>
-	<th rowspan="2">Parameter</th>
-		<td><tt> list </tt></td>
-		<td>:</td>
-		<td> pointer to the list of FTPD_client objects. </td>
-	</tr><tr>
-		<td><tt> client </tt></td>
-		<td>:</td>
-		<td> pointer to the FTPD_client object that will be removed
-from the '<tt>list</tt>'.
-		</td>
-</tr><tr>
-	<th>Return Value</th>
-	<td>-</td>
-</tr><tr>
-	<th>Description</th>
-	<td colspan="3"> Remove '<tt>client</tt>' from '<tt>list</tt>' and
-delete the client object from memory, even if client is not found or not a
-member of the list.
 	</td>
 </tr>
 </table>

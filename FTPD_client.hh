@@ -31,12 +31,10 @@ namespace vos {
  *	- _pclt		: pointer to PASV client connection.
  *	- _rmsg		: pointer to client reply message.
  *	- _rmsg_plus	: pointer to additional reply message.
- *	- _next		: pointer to the next FTP client.
- *	- _last		: pointer to the last FTP client.
  * @desc		:
  * This class represent status and connection of FTP client on the server.
  */
-class FTPD_client {
+class FTPD_client : public Object {
 public:
 	FTPD_client(Socket* socket = NULL);
 	~FTPD_client();
@@ -60,12 +58,8 @@ public:
 	Socket*		_pclt;
 	const char*	_rmsg;
 	const char*	_rmsg_plus;
-	FTPD_client*	_next;
-	FTPD_client*	_prev;
-	FTPD_client*	_last;
 
-	static void ADD(FTPD_client** list, FTPD_client* client);
-	static void REMOVE(FTPD_client** list, FTPD_client* client);
+	static const char* __cname;
 private:
 	FTPD_client(const FTPD_client&);
 	void operator=(const FTPD_client&);

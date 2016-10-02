@@ -8,6 +8,8 @@
 
 namespace vos {
 
+const char* FTPD_client::__cname = "FTPD_client";
+
 /**
  * @method		: FTPD_client::FTPD_client
  * @param		:
@@ -30,9 +32,6 @@ FTPD_client::FTPD_client(Socket *socket) :
 ,	_pclt(NULL)
 ,	_rmsg(NULL)
 ,	_rmsg_plus(NULL)
-,	_next(NULL)
-,	_prev(NULL)
-,	_last(this)
 {}
 
 /**
@@ -45,9 +44,6 @@ FTPD_client::~FTPD_client()
 		delete _psrv;
 		_psrv = NULL;
 	}
-	_next = NULL;
-	_prev = NULL;
-	_last = NULL;
 }
 
 /**
@@ -97,66 +93,6 @@ int FTPD_client::reply_raw(int code, const char* msg, const char* msg_add)
 	_rmsg		= msg;
 	_rmsg_plus	= msg_add;
 	return reply();
-}
-
-/**
- * @method		: FTPD_client::ADD
- * @param		:
- *	> list		: list of FTPD_client connection.
- *	> client	: pointer to a new FTPD_client object.
- * @desc		: add 'client' to the 'list' of connection.
- */
-void FTPD_client::ADD(FTPD_client** list, FTPD_client* client)
-{
-	if (!client) {
-		return;
-	}
-	if (!(*list)) {
-		(*list) = client;
-	} else {
-		(*list)->_last->_next	= client;
-		client->_prev		= (*list)->_last;
-		(*list)->_last		= client;
-	}
-}
-
-/**
- * @method		: FTPD_client::REMOVE
- * @param		:
- *	> list		: list of FTPD_client connection.
- * 	> client	: pointer to FTPD_client object that will be removed.
- * @desc		: Remove 'client' from the 'list', and delete the
- * client object from memory even if client is not found in the list.
- */
-void FTPD_client::REMOVE(FTPD_client** list, FTPD_client* client)
-{
-	if (!(*list) || !client) {
-		return;
-	}
-
-	if ((*list) == client) {
-		(*list) = client->_next;
-		if ((*list)) {
-			(*list)->_last = client->_last;
-			(*list)->_prev = NULL;
-		}
-	} else if ((*list)->_last == client) {
-		(*list)->_last		= client->_prev;
-		(*list)->_last->_next	= NULL;
-	} else {
-		FTPD_client* p = (*list);
-
-		/* make sure client is from the same list */
-		while (p && p->_next != client) {
-			p = p->_next;
-		}
-		if (p) {
-			p->_next		= client->_next;
-			client->_next->_prev	= p;
-		}
-	}
-
-	delete client;
 }
 
 } /* namespace::vos */

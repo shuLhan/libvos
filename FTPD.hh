@@ -118,7 +118,7 @@ public:
 	Dir		_dir;
 	fd_set		_fd_all;
 	fd_set		_fd_read;
-	FTPD_client*	_clients;
+	List		_clients;
 	List		_users;
 	FTPD_cmd*	_cmds;
 

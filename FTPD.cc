@@ -72,23 +72,13 @@ FTPD::FTPD() : SockServer()
 ,	_dir()
 ,	_fd_all()
 ,	_fd_read()
-,	_clients(NULL)
+,	_clients()
 ,	_users()
 ,	_cmds(NULL)
 {}
 
 FTPD::~FTPD()
 {
-	FTPD_client* next = NULL;
-
-	while (_clients) {
-		next = _clients->_next;
-
-		_clients->_next = NULL;
-		delete _clients;
-
-		_clients = next;
-	}
 	if (_cmds) {
 		delete _cmds;
 		_cmds = NULL;
@@ -452,14 +442,15 @@ err:
  */
 void FTPD::client_process()
 {
+	int x = 0;
 	int		s;
 	Socket*		csock	= NULL;
 	SockServer*	cpsvr	= NULL;
-	FTPD_client*	c	= _clients;
-	FTPD_client*	cnext	= NULL;
+	FTPD_client* c = NULL;
 
-	while (c) {
-		cnext	= c->_next;
+	for (; x < _clients.size(); x++) {
+		c = (FTPD_client*) _clients.at(x);
+
 		csock	= c->_sock;
 		cpsvr	= c->_psrv;
 
@@ -470,7 +461,7 @@ void FTPD::client_process()
 			}
 		}
 		if (!FD_ISSET(csock->_d, &_fd_read)) {
-			goto next;
+			continue;
 		}
 
 		c->reset();
@@ -481,7 +472,7 @@ void FTPD::client_process()
 				if (s == 0) {
 					client_del(c);
 				}
-				goto next;
+				continue;
 			}
 		}
 
@@ -507,8 +498,6 @@ void FTPD::client_process()
 				on_cmd_unknown(c);
 			}
 		}
-next:
-		c = cnext;
 	}
 }
 
@@ -575,7 +564,7 @@ int FTPD::client_get_command(Socket* c, FTPD_cmd* ftp_cmd)
  */
 void FTPD::client_add(FTPD_client* c)
 {
-	FTPD_client::ADD(&_clients, c);
+	_clients.push_tail(c);
 
 	FD_SET(c->_sock->_d, &_fd_all);
 	if (c->_sock->_d >= _maxfd) {
@@ -612,7 +601,7 @@ void FTPD::client_del(FTPD_client* c)
 		c->_sock = NULL;
 	}
 
-	FTPD_client::REMOVE(&_clients, c);
+	_clients.remove(c);
 }
 
 /**
