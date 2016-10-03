@@ -45,6 +45,12 @@ Breaking Changes
   This change affect Reader and Writer, because we pass the meta data not
   as pointer to RecordMD anymore but as pointer List object.
 
+* Add `DSV` prefix to Reader, Writer, Record, and RecordMD module
+
+  Reader, Writer, Record, and RecordMD are used for reading delimited
+  separated value, not to be confused with reading and writing normal file.
+
+
 Enhancements
 ------------
 

@@ -20,7 +20,7 @@ enum _rmd_type {
 };
 
 /**
- * @class		: RecordMD
+ * @class		: DSVRecordMD
  * @attr		:
  *	- _idx		: index of current meta-data record.
  *	- _flag		: flag of current meta-data record.
@@ -47,10 +47,10 @@ enum _rmd_type {
  *	It's also defined type of filter that will be applied to record. A
  *	filter is used to accepting or rejecting record after parsed.
  */
-class RecordMD : public Object {
+class DSVRecordMD : public Object {
 public:
-	RecordMD();
-	~RecordMD();
+	DSVRecordMD();
+	~DSVRecordMD();
 	const char* chars();
 
 	int		_idx;
@@ -75,8 +75,8 @@ public:
 	static int	DEF_SEP;
 	static const char* __cname;
 private:
-	RecordMD(const RecordMD&);
-	void operator=(const RecordMD&);
+	DSVRecordMD(const DSVRecordMD&);
+	void operator=(const DSVRecordMD&);
 };
 
 } /* namespace::vos */

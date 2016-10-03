@@ -34,13 +34,13 @@ Dlogger_OBJS=	$(File_OBJS)			\
 		$(LIBVOS_BLD_D)/Locker.oo	\
 		$(LIBVOS_BLD_D)/Dlogger.oo
 
-RecordMD_OBJS=	$(List_OBJS)			\
-		$(File_OBJS)			\
-		$(LIBVOS_BLD_D)/RecordMD.oo
+DSVRecordMD_OBJS=	$(List_OBJS)			\
+			$(File_OBJS)			\
+			$(LIBVOS_BLD_D)/DSVRecordMD.oo
 
 SSVReader_OBJS=		$(Buffer_OBJS)			\
 			$(LIBVOS_BLD_D)/File.oo		\
-			$(LIBVOS_BLD_D)/Record.oo	\
+			$(LIBVOS_BLD_D)/DSVRecord.oo	\
 			$(LIBVOS_BLD_D)/Rowset.oo	\
 			$(LIBVOS_BLD_D)/SSVReader.oo
 
@@ -101,7 +101,7 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Rowset.test		\
 	$(BLD_D)/Locker.test		\
 	$(BLD_D)/FTPD.test		\
-	$(BLD_D)/RecordMD.test
+	$(BLD_D)/DSVRecordMD.test
 
 .PHONY: all clean
 

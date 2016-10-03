@@ -4,26 +4,26 @@
 // found in the LICENSE file.
 //
 
-#include "Reader.hh"
+#include "DSVReader.hh"
 
 namespace vos {
 
 /**
- * @method	: Reader::Reader
- * @desc	: Reader object constructor.
+ * @method	: DSVReader::DSVReader
+ * @desc	: DSVReader object constructor.
  */
-Reader::Reader()
+DSVReader::DSVReader()
 {}
 
 /**
- * @method	: Reader::~Reader
- * @desc	: Reader object desctructor.
+ * @method	: DSVReader::~DSVReader
+ * @desc	: DSVReader object desctructor.
  */
-Reader::~Reader()
+DSVReader::~DSVReader()
 {}
 
 /**
- * @method		: Reader::refill_buffer
+ * @method		: DSVReader::refill_buffer
  * @param		:
  *	< read_min	: size to be read from descriptor and fill the buffer.
  * @return		:
@@ -34,7 +34,7 @@ Reader::~Reader()
  *	move unparsed line to the first position, and fill the rest with a new
  *	content.
  */
-int Reader::refill_buffer(const int read_min)
+int DSVReader::refill_buffer(const int read_min)
 {
 	register int move_len	= 0;
 	register int len	= 0;
@@ -42,7 +42,8 @@ int Reader::refill_buffer(const int read_min)
 	move_len = _i - _p;
 	if (move_len > 0 && _p > ((_i / 2) + 1)) {
 		if (LIBVOS_DEBUG) {
-			printf("[libvos::Reader] refill_buffer: memmove: from %d of %d\n", _p, _i);
+			printf("[libvos::DSVReader] refill_buffer: memmove from %d of %d\n"
+				, _p, _i);
 		}
 		memmove(&_v[0], &_v[_p], move_len);
 	}
@@ -84,7 +85,7 @@ int Reader::refill_buffer(const int read_min)
 }
 
 /**
- * @method	: Reader::read
+ * @method	: DSVReader::read
  * @param	:
  *	> r	: return value, record buffer; already allocated by user.
  *	> md	: record meta data, already set by user.
@@ -96,7 +97,7 @@ int Reader::refill_buffer(const int read_min)
  *	read one row from file, using 'r' as record buffer, and 'md' as record
  *	meta data.
  */
-int Reader::read(Record* r, List* list_md)
+int DSVReader::read(DSVRecord* r, List* list_md)
 {
 	int x		= 0;
 	int n		= 0;
@@ -104,7 +105,7 @@ int Reader::read(Record* r, List* list_md)
 	int len		= 0;
 	int s		= 0;
 	int chop_bgn	= 0;
-	RecordMD* rmd = NULL;
+	DSVRecordMD* rmd = NULL;
 
 	if (_i == 0) {
 		s = File::read();
@@ -123,7 +124,7 @@ int Reader::read(Record* r, List* list_md)
 	}
 
 	for (; x < list_md->size(); x++) {
-		rmd = (RecordMD*) list_md->at(x);
+		rmd = (DSVRecordMD*) list_md->at(x);
 
 		if (rmd->_start_p) {
 			len = _p + rmd->_start_p;
@@ -150,18 +151,18 @@ int Reader::read(Record* r, List* list_md)
 			}
 		}
 		if (rmd->_type == RMD_T_BLOB) {
-			len = startp + RecordMD::BLOB_SIZE;
+			len = startp + DSVRecordMD::BLOB_SIZE;
 			if (len >= _i) {
 				startp	= startp - _p;
-				s	= refill_buffer(RecordMD::BLOB_SIZE);
+				s	= refill_buffer(DSVRecordMD::BLOB_SIZE);
 				if (s <= 0) {
 					goto reject;
 				}
 			}
 			/* get record blob size */
 			r->_i = 0;
-			memcpy(&r->_i, &_v[startp], RecordMD::BLOB_SIZE);
-			startp += RecordMD::BLOB_SIZE;
+			memcpy(&r->_i, &_v[startp], DSVRecordMD::BLOB_SIZE);
+			startp += DSVRecordMD::BLOB_SIZE;
 
 			if (r->_i > r->_l) {
 				r->resize(r->_i + 1);

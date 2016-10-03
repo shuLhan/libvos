@@ -6,9 +6,9 @@
 
 #include "test.hh"
 #include "../List.hh"
-#include "../RecordMD.hh"
+#include "../DSVRecordMD.hh"
 
-using vos::RecordMD;
+using vos::DSVRecordMD;
 using vos::List;
 
 #define TEST_MD_0		\
@@ -21,8 +21,8 @@ void test_INIT()
 {
 	int x = 0;
 	List* list_md = NULL;
-	RecordMD* md = NULL;
-	RecordMD exp[4];
+	DSVRecordMD* md = NULL;
+	DSVRecordMD exp[4];
 
 	exp[0]._name.copy_raw("name");
 	exp[0]._sep = '|';
@@ -42,13 +42,13 @@ void test_INIT()
 	exp[3]._start_p = 3;
 	exp[3]._sep = '|';
 
-	list_md = RecordMD::INIT(TEST_MD_0);
+	list_md = DSVRecordMD::INIT(TEST_MD_0);
 
 	assert(list_md != NULL);
 	assert(list_md->size() == 4);
 
 	for (x = 0; x < list_md->size(); x++) {
-		md = (RecordMD*) list_md->at(x);
+		md = (DSVRecordMD*) list_md->at(x);
 		printf(">> exp: %s\n", exp[x].chars());
 		printf("   got: %s\n", md->chars());
 		assert(strcmp(exp[x].chars(), md->chars()) == 0);

@@ -4,15 +4,15 @@
 // found in the LICENSE file.
 //
 
-#include "Record.hh"
+#include "DSVRecord.hh"
 
 namespace vos {
 
 /**
- * @method	: Record::Record
- * @desc	: Record object constructor.
+ * @method	: DSVRecord::DSVRecord
+ * @desc	: DSVRecord object constructor.
  */
-Record::Record() : Buffer(),
+DSVRecord::DSVRecord() : Buffer(),
 	_next_col(NULL),
 	_last_col(this),
 	_next_row(NULL),
@@ -20,10 +20,10 @@ Record::Record() : Buffer(),
 {}
 
 /**
- * @method	: Record::~Record
- * @desc	: Record object destructor.
+ * @method	: DSVRecord::~DSVRecord
+ * @desc	: DSVRecord object destructor.
  */
-Record::~Record()
+DSVRecord::~DSVRecord()
 {
 	if (_next_col)
 		delete _next_col;
@@ -32,16 +32,16 @@ Record::~Record()
 }
 
 /**
- * @method	: Record::dump
- * @desc	: print content of Record object to standard output.
+ * @method	: DSVRecord::dump
+ * @desc	: print content of DSVRecord object to standard output.
  */
-void Record::dump()
+void DSVRecord::dump()
 {
 	Buffer	o;
-	Record* row = this;
-	Record* col = NULL;
+	DSVRecord* row = this;
+	DSVRecord* col = NULL;
 
-	o.append_raw("[vos::Record__] dump:\n");
+	o.append_raw("[vos::DSVRecord__] dump:\n");
 	while (row) {
 		col = row;
 		while (col) {
@@ -56,16 +56,16 @@ void Record::dump()
 }
 
 /**
- * @method		: Record::get_column
+ * @method		: DSVRecord::get_column
  * @param		:
  *	> n		: index of column, started from zero.
  * @return		:
- *	< Record	: pointer to Record at column 'n'.
+ *	< DSVRecord	: pointer to DSVRecord at column 'n'.
  * @desc		: get record in column 'n'.
  */
-Record* Record::get_column(int n)
+DSVRecord* DSVRecord::get_column(int n)
 {
-	Record* p = this;
+	DSVRecord* p = this;
 
 	for (; n > 0 && p; --n) {
 		p = p->_next_col;
@@ -75,7 +75,7 @@ Record* Record::get_column(int n)
 }
 
 /**
- * @method	: Record::set_column
+ * @method	: DSVRecord::set_column
  * @param	:
  *	> n	: index of column to set to, started from zero.
  *	> bfr	: content for new column value.
@@ -84,14 +84,14 @@ Record* Record::get_column(int n)
  *	< <0	: fail.
  * @desc	: set column 'n' value to 'bfr'.
  */
-int Record::set_column(int n, Buffer* bfr)
+int DSVRecord::set_column(int n, Buffer* bfr)
 {
 	if (!bfr) {
 		return 0;
 	}
 
 	register int	s	= 0;
-	Record*		p	= this;
+	DSVRecord*	p	= this;
 
 	for (; n > 0 && p; --n) {
 		p = p->_next_col;
@@ -106,7 +106,7 @@ int Record::set_column(int n, Buffer* bfr)
 }
 
 /**
- * @method		: Record::set_column_number
+ * @method		: DSVRecord::set_column_number
  * @param		:
  *	> n		: index of column to set to, started from zero.
  *	> number	: content for a new column value.
@@ -115,10 +115,10 @@ int Record::set_column(int n, Buffer* bfr)
  *	< <0		: fail.
  * @desc		: set column 'n' value to 'number'.
  */
-int Record::set_column_number(int n, const int number)
+int DSVRecord::set_column_number(int n, const int number)
 {
 	register int	s	= 0;
-	Record*		p	= this;
+	DSVRecord*	p	= this;
 
 	for (; n > 0 && p; --n) {
 		p = p->_next_col;
@@ -133,7 +133,7 @@ int Record::set_column_number(int n, const int number)
 }
 
 /**
- * @method		: Record::set_column_ulong
+ * @method		: DSVRecord::set_column_ulong
  * @param		:
  *	> n		: index of column to set to, started from zero.
  *	> number	: content for a new column value.
@@ -142,10 +142,10 @@ int Record::set_column_number(int n, const int number)
  *	< <0		: fail.
  * @desc		: set column 'n' value to 'number'.
  */
-int Record::set_column_ulong(int n, const unsigned long number)
+int DSVRecord::set_column_ulong(int n, const unsigned long number)
 {
 	register int	s	= 0;
-	Record*		p	= this;
+	DSVRecord*	p	= this;
 
 	for (; n > 0 && p; --n) {
 		p = p->_next_col;
@@ -160,12 +160,12 @@ int Record::set_column_ulong(int n, const unsigned long number)
 }
 
 /**
- * @method	: Record::columns_reset
+ * @method	: DSVRecord::columns_reset
  * @desc	: empties all columns.
  */
-void Record::columns_reset()
+void DSVRecord::columns_reset()
 {
-	Record* p = this;
+	DSVRecord* p = this;
 
 	while (p) {
 		p->reset();
@@ -174,13 +174,13 @@ void Record::columns_reset()
 }
 
 /**
- * @method	: Record::ADD_COL
+ * @method	: DSVRecord::ADD_COL
  * @param	:
  *	> row	: header or row.
  *	> col	: a new column to be added to 'row'.
  * @desc	: add a new column 'col' to 'row'.
  */
-void Record::ADD_COL(Record** row, Record* col)
+void DSVRecord::ADD_COL(DSVRecord** row, DSVRecord* col)
 {
 	if (! (*row)) {
 		(*row) = col;
@@ -191,13 +191,13 @@ void Record::ADD_COL(Record** row, Record* col)
 }
 
 /**
- * @method	: Record::ADD_ROW
+ * @method	: DSVRecord::ADD_ROW
  * @param	:
  *	> rows	: pointer to the first row.
  *	> row	: a new row to be added to list of 'rows'.
  * @desc	: add a new 'row' to the list of 'rows'.
  */
-void Record::ADD_ROW(Record** rows, Record* row)
+void DSVRecord::ADD_ROW(DSVRecord** rows, DSVRecord* row)
 {
 	if (! (*rows)) {
 		(*rows) = row;
@@ -208,7 +208,7 @@ void Record::ADD_ROW(Record** rows, Record* row)
 }
 
 /**
- * @method		: Record::INIT_ROW
+ * @method		: DSVRecord::INIT_ROW
  * @param		:
  *	> row		: head of row or pointer to first column.
  *	> n_col		: number of column to be added to 'row'
@@ -217,16 +217,16 @@ void Record::ADD_ROW(Record** rows, Record* row)
  *	< <0		: fail.
  * @desc		: add 'n_col' number of column to the 'row'.
  */
-int Record::INIT_ROW(Record** row, int n_col)
+int DSVRecord::INIT_ROW(DSVRecord** row, int n_col)
 {
 	if (0 == n_col) {
 		return 0;
 	}
 
-	Record* col = NULL;
+	DSVRecord* col = NULL;
 
 	for (; n_col > 0; --n_col) {
-		col = new Record();
+		col = new DSVRecord();
 		if (!col) {
 			delete row;
 			return -1;

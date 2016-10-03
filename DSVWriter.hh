@@ -7,30 +7,30 @@
 #ifndef _LIBVOS_WRITER_HH
 #define _LIBVOS_WRITER_HH 1
 
-#include "Record.hh"
-#include "RecordMD.hh"
+#include "DSVRecord.hh"
+#include "DSVRecordMD.hh"
 
 namespace vos {
 
 /**
- * @class	: Writer
+ * @class	: DSVWriter
  * @attr	:
  *	- _line	: temporary buffer for collecting row data in a single line.
  * @desc	:
- *	module for writing Record object into file using Record Meta-Data.
+ *	module for writing DSVRecord object into file using DSVRecord Meta-Data.
  */
-class Writer : public File {
+class DSVWriter : public File {
 public:
-	Writer();
-	~Writer();
+	DSVWriter();
+	~DSVWriter();
 
-	int write(Record* row, List* rmd);
-	int writes(Record* rows, List* list_md);
+	int write(DSVRecord* row, List* rmd);
+	int writes(DSVRecord* rows, List* list_md);
 
 	Buffer _line;
 private:
-	Writer(const Writer&);
-	void operator=(const Writer&);
+	DSVWriter(const DSVWriter&);
+	void operator=(const DSVWriter&);
 };
 
 } /* namespace::vos */

@@ -12,7 +12,7 @@
 namespace vos {
 
 /**
- * @class		: Record
+ * @class		: DSVRecord
  * @attr		:
  *	- _next_col	: pointer to the next column.
  *	- _last_col	: pointer to the last column.
@@ -21,30 +21,30 @@ namespace vos {
  * @desc		:
  *	module to handle field data when parsing DSV file.
  */
-class Record : public Buffer {
+class DSVRecord : public Buffer {
 public:
-	Record();
-	~Record();
+	DSVRecord();
+	~DSVRecord();
 
 	void dump();
 
-	Record* get_column(int n);
+	DSVRecord* get_column(int n);
 	int set_column(int n, Buffer* bfr);
 	int set_column_number(int n, const int number);
 	int set_column_ulong(int n, const unsigned long number);
 	void columns_reset();
 
-	static void ADD_COL(Record** row, Record* col);
-	static void ADD_ROW(Record** rows, Record* row);
-	static int INIT_ROW(Record** row, int n_col);
+	static void ADD_COL(DSVRecord** row, DSVRecord* col);
+	static void ADD_ROW(DSVRecord** rows, DSVRecord* row);
+	static int INIT_ROW(DSVRecord** row, int n_col);
 
-	Record* _next_col;
-	Record* _last_col;
-	Record* _next_row;
-	Record* _last_row;
+	DSVRecord* _next_col;
+	DSVRecord* _last_col;
+	DSVRecord* _next_row;
+	DSVRecord* _last_row;
 private:
-	Record(const Record&);
-	void operator=(const Record&);
+	DSVRecord(const DSVRecord&);
+	void operator=(const DSVRecord&);
 };
 
 } /* namespace::vos */

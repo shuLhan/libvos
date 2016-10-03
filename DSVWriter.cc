@@ -4,27 +4,27 @@
 // found in the LICENSE file.
 //
 
-#include "Writer.hh"
+#include "DSVWriter.hh"
 
 namespace vos {
 
 /**
- * @method	: Writer::Writer
- * @desc	: Writer object constructor.
+ * @method	: DSVWriter::DSVWriter
+ * @desc	: DSVWriter object constructor.
  */
-Writer::Writer() :
+DSVWriter::DSVWriter() :
 	_line()
 {}
 
 /**
- * @method	: Writer::~Writer
- * @desc	: Writer object destructor.
+ * @method	: DSVWriter::~DSVWriter
+ * @desc	: DSVWriter object destructor.
  */
-Writer::~Writer()
+DSVWriter::~DSVWriter()
 {}
 
 /**
- * @method	: Writer::write
+ * @method	: DSVWriter::write
  * @param	:
  *	> row	: record buffer, list of column data that will be written.
  *	> list_md: record meta-data.
@@ -33,15 +33,15 @@ Writer::~Writer()
  *	< -1	: fail.
  * @desc	: write one row using 'list_md' as meta-data to file.
  */
-int Writer::write(Record *row, List *list_md)
+int DSVWriter::write(DSVRecord *row, List *list_md)
 {
 	register int	s;
 	register int	len;
 	int x = 0;
-	RecordMD* rmd = NULL;
+	DSVRecordMD* rmd = NULL;
 
 	for (; x < list_md->size(); x++) {
-		rmd = (RecordMD*) list_md->at(x);
+		rmd = (DSVRecordMD*) list_md->at(x);
 
 		if (rmd->_start_p) {
 			s = _line.resize(rmd->_start_p);
@@ -66,7 +66,7 @@ int Writer::write(Record *row, List *list_md)
 			}
 			break;
 		case RMD_T_BLOB:
-			s = _line.append_bin (&row->_i, RecordMD::BLOB_SIZE);
+			s = _line.append_bin (&row->_i, DSVRecordMD::BLOB_SIZE);
 			if (s < 0) {
 				return -1;
 			}
@@ -130,16 +130,16 @@ int Writer::write(Record *row, List *list_md)
 }
 
 /**
- * @method	: Writer::writes
+ * @method	: DSVWriter::writes
  * @param	:
- *	> rows	: list of row of Record objects.
+ *	> rows	: list of row of DSVRecord objects.
  *	> list_md: list of record meta-data.
  * @return	:
  *	< 0	: success.
  *	< -1	: fail.
  * @desc	: write all 'rows' to file.
  */
-int Writer::writes(Record *rows, List *list_md)
+int DSVWriter::writes(DSVRecord *rows, List *list_md)
 {
 	register int s;
 

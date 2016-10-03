@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 
-#include "RecordMD.hh"
+#include "DSVRecordMD.hh"
 
 namespace vos {
 
@@ -20,14 +20,14 @@ enum _rmd_parser {
 	MD_TYPE
 };
 
-int RecordMD::BLOB_SIZE = sizeof(int);
-int RecordMD::DEF_SEP	= ',';
+int DSVRecordMD::BLOB_SIZE = sizeof(int);
+int DSVRecordMD::DEF_SEP	= ',';
 
 /**
- * @method	: RecordMD::RecordMD
- * @desc	: RecordMD object constructor.
+ * @method	: DSVRecordMD::DSVRecordMD
+ * @desc	: DSVRecordMD object constructor.
  */
-RecordMD::RecordMD() :
+DSVRecordMD::DSVRecordMD() :
 	_idx(0),
 	_flag(0),
 	_type(0),
@@ -45,10 +45,10 @@ RecordMD::RecordMD() :
 {}
 
 /**
- * @method	: RecordMD::~RecordMD
- * @desc	: RecordMD object destructor.
+ * @method	: DSVRecordMD::~DSVRecordMD
+ * @desc	: DSVRecordMD object destructor.
  */
-RecordMD::~RecordMD()
+DSVRecordMD::~DSVRecordMD()
 {
 	if (_date_format)
 		delete _date_format;
@@ -59,7 +59,7 @@ RecordMD::~RecordMD()
 //
 // `chars()` return JSON representation of this object in string.
 //
-const char* RecordMD::chars()
+const char* DSVRecordMD::chars()
 {
 	Buffer o;
 
@@ -110,11 +110,11 @@ const char* RecordMD::chars()
 }
 
 /**
- * @method	: RecordMD::INIT
+ * @method	: DSVRecordMD::INIT
  * @param	:
  *	> meta	: formatted string of field declaration.
  * @return	:
- *	< o	: return value, list of RecordMD object
+ *	< o	: return value, list of DSVRecordMD object
  *	< NULL	: if fail.
  * @desc	:
  *	create and initialize meta data using field declaration in 'meta'.
@@ -127,7 +127,7 @@ const char* RecordMD::chars()
  *	[]	: optional field.
  *	<char>	: any single character, except characters: a-z,A-Z,0-9.
  */
-List* RecordMD::INIT(const char* meta)
+List* DSVRecordMD::INIT(const char* meta)
 {
 	if (! meta) {
 		return 0;
@@ -138,7 +138,7 @@ List* RecordMD::INIT(const char* meta)
 	int		todo_next	= 0;
 	int		len		= (int) strlen(meta);
 	Buffer		v;
-	RecordMD*	md		= NULL;
+	DSVRecordMD*	md		= NULL;
 	List*		o		= new List();
 
 	while (todo != MD_DONE) {
@@ -156,7 +156,7 @@ List* RecordMD::INIT(const char* meta)
 
 		switch (todo) {
 		case MD_START:
-			md	= new RecordMD();
+			md	= new DSVRecordMD();
 			todo	= MD_LEFT_Q;
 			o->push_tail(md);
 			break;
@@ -449,7 +449,7 @@ List* RecordMD::INIT(const char* meta)
 	return o;
 err:
 	fprintf(stderr
-	, "[vos::RecordMD] INIT: invalid field meta data : %s\n"	\
+	, "[vos::DSVRecordMD] INIT: invalid field meta data : %s\n"	\
 	  "                at position '%d', at character '%c'.\n"
 	, &meta[i], i, meta[i]);
 
@@ -462,18 +462,18 @@ err:
 }
 
 /**
- * @method	: RecordMD::INIT_FROM_FILE
+ * @method	: DSVRecordMD::INIT_FROM_FILE
  * @param	:
  *	> fmeta	: a name of file contains meta-data, with or without leading
  *                path.
  * @return	:
- *	< o	: return value, list of RecordMD object.
+ *	< o	: return value, list of DSVRecordMD object.
  *	< NULL	: fail.
  * @desc	:
  *	create and initialize meta-data object 'o' by loading meta-data from
  *	file 'fmeta'.
  */
-List* RecordMD::INIT_FROM_FILE(const char* fmeta)
+List* DSVRecordMD::INIT_FROM_FILE(const char* fmeta)
 {
 	register int	s;
 	File		f;
@@ -493,7 +493,7 @@ List* RecordMD::INIT_FROM_FILE(const char* fmeta)
 		return NULL;
 	}
 
-	return RecordMD::INIT(f.chars());
+	return DSVRecordMD::INIT(f.chars());
 }
 
 } /* namespace::vos */

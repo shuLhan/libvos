@@ -33,10 +33,10 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/Dlogger.oo		\
 			$(LIBVOS_BLD_D)/Config.oo		\
 			$(LIBVOS_BLD_D)/ConfigData.oo		\
-			$(LIBVOS_BLD_D)/RecordMD.oo		\
-			$(LIBVOS_BLD_D)/Record.oo		\
-			$(LIBVOS_BLD_D)/Reader.oo		\
-			$(LIBVOS_BLD_D)/Writer.oo		\
+			$(LIBVOS_BLD_D)/DSVRecordMD.oo		\
+			$(LIBVOS_BLD_D)/DSVRecord.oo		\
+			$(LIBVOS_BLD_D)/DSVReader.oo		\
+			$(LIBVOS_BLD_D)/DSVWriter.oo		\
 			$(LIBVOS_BLD_D)/Dir.oo			\
 			$(LIBVOS_BLD_D)/DirNode.oo		\
 			$(LIBVOS_BLD_D)/SockAddr.oo		\
@@ -133,7 +133,7 @@ $(LIBVOS_BLD_D)/List.oo		\
 $(LIBVOS_BLD_D)/FTPClient.oo	\
 $(LIBVOS_BLD_D)/Dir.oo		\
 $(LIBVOS_BLD_D)/DirNode.oo	\
-$(LIBVOS_BLD_D)/Record.oo	\
+$(LIBVOS_BLD_D)/DSVRecord.oo	\
 $(LIBVOS_BLD_D)/DNS_rr.oo	\
 $(LIBVOS_BLD_D)/ConfigData.oo	\
 $(LIBVOS_BLD_D)/File.oo		: $(LIBVOS_BLD_D)/Buffer.oo
@@ -143,7 +143,7 @@ $(LIBVOS_BLD_D)/Dir.oo		: $(LIBVOS_BLD_D)/DirNode.oo
 $(LIBVOS_BLD_D)/Config.oo	: $(LIBVOS_BLD_D)/ConfigData.oo
 
 $(LIBVOS_BLD_D)/SSVReader.oo	\
-$(LIBVOS_BLD_D)/RecordMD.oo	\
+$(LIBVOS_BLD_D)/DSVRecordMD.oo	\
 $(LIBVOS_BLD_D)/Config.oo	\
 $(LIBVOS_BLD_D)/Dlogger.oo	\
 $(LIBVOS_BLD_D)/Socket.oo	: $(LIBVOS_BLD_D)/File.oo
@@ -163,12 +163,12 @@ $(LIBVOS_BLD_D)/FTPD.oo		\
 $(LIBVOS_BLD_D)/FTP.oo		\
 $(LIBVOS_BLD_D)/Resolver.oo	: $(LIBVOS_BLD_D)/SockServer.oo
 
-$(LIBVOS_BLD_D)/Reader.oo	\
-$(LIBVOS_BLD_D)/Writer.oo	: $(LIBVOS_BLD_D)/RecordMD.oo
+$(LIBVOS_BLD_D)/DSVReader.oo	\
+$(LIBVOS_BLD_D)/DSVWriter.oo	: $(LIBVOS_BLD_D)/DSVRecordMD.oo
 
 $(LIBVOS_BLD_D)/SSVReader.oo	\
-$(LIBVOS_BLD_D)/Reader.oo	\
-$(LIBVOS_BLD_D)/Writer.oo	: $(LIBVOS_BLD_D)/Record.oo
+$(LIBVOS_BLD_D)/DSVReader.oo	\
+$(LIBVOS_BLD_D)/DSVWriter.oo	: $(LIBVOS_BLD_D)/DSVRecord.oo
 
 $(LIBVOS_BLD_D)/FTPUser.oo	: $(LIBVOS_BLD_D)/Dir.oo
 

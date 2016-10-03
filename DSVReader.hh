@@ -7,25 +7,25 @@
 #ifndef _LIBVOS_READER_HH
 #define _LIBVOS_READER_HH 1
 
-#include "Record.hh"
-#include "RecordMD.hh"
+#include "DSVRecord.hh"
+#include "DSVRecordMD.hh"
 
 namespace vos {
 
 /**
- * @class	: Reader
+ * @class	: DSVReader
  * @desc	: a module for reading DSV file.
  */
-class Reader : public File {
+class DSVReader : public File {
 public:
-	Reader();
-	~Reader();
+	DSVReader();
+	~DSVReader();
 
 	int refill_buffer(const int read_min);
-	int read(Record* r, List* list_md);
+	int read(DSVRecord* r, List* list_md);
 private:
-	Reader(const Reader&);
-	void operator=(const Reader&);
+	DSVReader(const DSVReader&);
+	void operator=(const DSVReader&);
 };
 
 } /* namespace::vos */
