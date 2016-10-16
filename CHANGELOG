@@ -1,4 +1,4 @@
-v0.2.0 (2016-10-)
+v0.2.0 (2016-10-04)
 ===================
 
 Breaking Changes
@@ -14,7 +14,7 @@ Breaking Changes
   `int` to `uint16_t`
 
 * SockAddr: Remove _next, _last attributes, dump() and ADD() methods
-    
+
   - User must use List to work with list of address now.
   - Method dump() has been replaced by chars().
 
