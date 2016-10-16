@@ -113,7 +113,10 @@ clean: libvos-clean
 $(BLD_D)/%.oo: $(SRC_D)/%.cc $(SRC_D)/%.hh
 	@$(do_compile)
 
-$(BLD_D)/%.test: %.test.cc $$(%_OBJS)
+$(BLD_D)/%.test.oo: $(SRC_D)/%.test.cc
+	@$(do_compile)
+
+$(BLD_D)/%.test: $(BLD_D)/%.test.oo $$(%_OBJS)
 	@$(do_build)				\
 	echo "[T] $@";				\
 	./$@ || (echo "[T] FAIL: $@" && exit 1);
