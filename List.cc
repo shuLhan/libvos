@@ -122,6 +122,246 @@ void List::reset()
 }
 
 //
+// `swap_by_idx_unsafe` will swap content of node at index `x` with node at
+// index `y`.  This function is not thread safe.
+//
+// (0) If both node or one of the node is NULL, no swap will be happened.
+// (1) If both node point to the same object, due to circular linked list,
+//     no swap will be happened.
+//
+void List::swap_by_idx_unsafe(int x, int y)
+{
+	BNode* nx = node_at_unsafe(x);
+	BNode* ny = node_at_unsafe(y);
+	Object* item = NULL;
+
+	if (nx == NULL || ny == NULL) {
+		return;
+	}
+	if (nx == ny) {
+		return;
+	}
+
+	item = nx->_item;
+	nx->_item = ny->_item;
+	ny->_item = item;
+}
+
+//
+// `sort_conqueror()` will merge two sorted list, `left` and `right` into one
+// list.
+//
+void List::sort_conqueror(List* left, List* right
+			, int (*fn_compare)(Object*, Object*), int asc)
+
+{
+	int s = 0;
+	BNode* pleft = NULL;
+	BNode* pright = NULL;
+	BNode* endleft = NULL;
+	BNode* endright = NULL;
+	Object* tmp = NULL;
+
+	pleft = left->_head;
+	pright = right->_head;
+	endleft = right->_head;
+	endright = right->_tail->_right;
+
+	while (pleft != endleft && pright != endright && pleft != pright) {
+		s = fn_compare(pleft->_item, pright->_item);
+		if (s == 0) {
+			goto next;
+		}
+		if (asc) {
+			// left < right
+			if (s == -1) {
+				pleft = pleft->_right;
+				goto checkend;
+			}
+		} else {
+			// left > right
+			if (s == 1) {
+				pleft = pleft->_right;
+				goto checkend;
+			}
+		}
+
+		// swap
+		tmp = pleft->_item;
+		pleft->_item = pright->_item;
+		pright->_item = tmp;
+next:
+		pleft = pleft->_right;
+		pright = pright->_right;
+
+checkend:
+		if (pleft == endleft) {
+			if (pright != endright) {
+				pleft = pright;
+				pright = pright->_right;
+				endleft = endright;
+			}
+		}
+	}
+}
+
+//
+// `sort_divide()` will divide the list into two parts, left and right, where
+// left and right contain half of the list.
+//
+// This function assume that the list size is greater than 2.
+//
+void List::sort_divide(int (*fn_compare)(Object*, Object*), int asc)
+{
+	List left;
+	List right;
+	int mid = _n / 2;
+	int n = 1;
+
+	left._head = _head;
+	left._tail = _head;
+	left._n = mid;
+	for (; n < mid; n++) {
+		left._tail = left._tail->_right;
+	}
+
+	right._head = left._tail->_right;
+	right._tail = _tail;
+	right._n = _n - mid;
+
+	left.sort(fn_compare, asc);
+	right.sort(fn_compare, asc);
+
+	int s = fn_compare(left._tail->_item, right._head->_item);
+
+	if (s == 0) {
+		return;
+	}
+	if (asc) {
+		// left < right, its already sorted.
+		if (s == -1) {
+			return;
+		}
+	} else {
+		// left > right, its already sorted.
+		if (s == 1) {
+			return;
+		}
+	}
+
+	sort_conqueror(&left, &right, fn_compare, asc);
+
+	// Reset left and right so it does not get destroyed.
+	left._head = left._tail = NULL;
+	right._head = right._tail = NULL;
+}
+
+//
+// `sort()` will sort all items in ascending order using function pointed
+// by `fn_compare`.
+//
+void List::sort(int (*fn_compare)(Object*, Object*), int asc)
+{
+	_locker.lock();
+
+	int s = 0;
+
+	if (_n <= 0) {
+		goto out;
+	}
+	if (_n == 1) {
+		goto out;
+	}
+	if (_n == 2) {
+		s = (*fn_compare)(at_unsafe(0), at_unsafe(1));
+		if (s == 0) {
+			goto out;
+		}
+		if (asc) {
+			// 0 > 1
+			if (s == 1) {
+				swap_by_idx_unsafe(0, 1);
+			}
+		} else {
+			// 0 < 1
+			if (s == -1) {
+				swap_by_idx_unsafe(0, 1);
+			}
+		}
+		goto out;
+	}
+
+	sort_divide(fn_compare, asc);
+out:
+	_locker.unlock();
+}
+
+//
+// `node_at()` return node in list at index `idx`, started from head to tail.
+//  (0) It will return NULL if index is empty
+//  (1) Index 0 is equal with `_head`,
+//  (2) If `idx` is negative, node will be search in reverse order (from
+//  tail to head).
+//  (3) Index -1 is equal with `_tail`, and so on.
+//
+//	        _head <=> node <=> ... <=> _tail => _head
+//	+idx      0         +1     ...      n-1      n
+//	-idx     -n       -n+1     ...       -1      0
+//
+BNode* List::node_at(int idx)
+{
+	_locker.lock();
+
+	BNode *p = node_at_unsafe(idx);
+
+	_locker.unlock();
+
+	return p;
+}
+
+//
+// `node_at_unsafe` will return node in list at index `idx`. Unsafe operation
+// in multithread environment.
+//
+BNode* List::node_at_unsafe(int idx)
+{
+	uint8_t rev = 0;
+	BNode *p = NULL;
+
+	// (0)
+	if (_n == 0) {
+		return p;
+	}
+
+	// (1)
+	if (idx == 0) {
+		return _head;
+	}
+
+	p = _head;
+
+	// (2)
+	if (idx < 0) {
+		idx = idx * -1;
+		rev = 1;
+	}
+
+	if (rev) {
+		while (idx > 0) {
+			p = p->_left;
+			idx--;
+		}
+	} else {
+		while (idx > 0) {
+			p = p->_right;
+			idx--;
+		}
+	}
+
+	return p;
+}
+
+//
 // `pop_head()` will remove the first node in the list and return the item
 // that contains in it.
 //
@@ -280,47 +520,24 @@ out:
 //
 Object* List::at(int idx)
 {
-	_locker.lock();
+	BNode *p = node_at(idx);
 
-	uint8_t rev = 0;
-	Object* item = NULL;
-	BNode *p = NULL;
-
-	// (0)
-	if (_n == 0) {
-		goto out;
+	if (!p) {
+		return NULL;
 	}
 
-	// (1)
-	if (idx == 0) {
-		item = _head->_item;
-		goto out;
+	return p->_item;
+}
+
+Object* List::at_unsafe(int idx)
+{
+	BNode *p = node_at_unsafe(idx);
+
+	if (!p) {
+		return NULL;
 	}
 
-	p = _head;
-
-	// (2)
-	if (idx < 0) {
-		idx = idx * -1;
-		rev = 1;
-	}
-
-	if (rev) {
-		while (idx > 0) {
-			p = p->_left;
-			idx--;
-		}
-	} else {
-		while (idx > 0) {
-			p = p->_right;
-			idx--;
-		}
-	}
-
-	item = p->_item;
-out:
-	_locker.unlock();
-	return item;
+	return p->_item;
 }
 
 //
@@ -367,7 +584,7 @@ const char* List::chars()
 		if (node != _head) {
 			b.appendc(_sep);
 		}
-	} while (node != _head);
+	} while (node != _tail->_right);
 
 	b.append_raw(" ]");
 

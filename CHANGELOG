@@ -7,6 +7,17 @@ Enhancements
 * Buffer:
   - add static function to compare buffer from two Objects
 
+* List:
+  - add method to swap List item by index
+  - add method to get List node at specifix index
+  - add unsafe method to get List item at specific index
+
+Fixes
+-----
+
+* List:
+  - fix chars() when using List as pointer to another List
+
 
 v0.2.0 (2016-10-04)
 ===================

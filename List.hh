@@ -25,9 +25,14 @@ public:
 	void push_head(Object* item);
 	void push_tail(Object* item);
 	void reset();
+	void swap_by_idx_unsafe(int x, int y);
+	void sort(int (*fn_compare)(Object* x, Object* y), int asc=1);
+	BNode* node_at(int idx);
+	BNode* node_at_unsafe(int idx);
 	Object* pop_head();
 	Object* pop_tail();
 	Object* at(int idx);
+	Object* at_unsafe(int idx);
 	int remove(Object* item);
 	int size();
 	const char* chars();
@@ -50,6 +55,10 @@ protected:
 	// _locker will lock list every call to push or pop.
 	Locker _locker;
 private:
+	void sort_divide(int (*fn_compare)(Object*, Object*), int asc);
+	void sort_conqueror(List* left, List* right
+			, int (*fn_compare)(Object*, Object*), int asc);
+
 	List(const List&);
 	void operator=(const List&);
 };
