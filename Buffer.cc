@@ -1294,5 +1294,33 @@ int Buffer::TRIM(char *bfr, int len)
 	return len;
 }
 
+//
+// `CMP_OBJETS()` will compare object of buffer `x` and `y`.
+// It will return,
+// (0) 0 if x and y is NULL,
+// (1) 0 if x and y has the same content,
+// (2) -1 if x is NULL and y is not NULL,
+// (3) -1 if x is less than y
+// (4) 1 if x is not NULL and y is NULL
+// (5) 1 if x is greater than y
+//
+int Buffer::CMP_OBJECTS(Object* x, Object* y)
+{
+	if (x == y) {
+		return 0;
+	}
+	if (x == NULL && y != NULL) {
+		return -1;
+	}
+	if (x != NULL && y == NULL) {
+		return 1;
+	}
+
+	Buffer* bx = (Buffer*) x;
+	Buffer* by = (Buffer*) y;
+
+	return bx->cmp(by);
+}
+
 } /* namespace::vos */
 // vi: ts=8 sw=8 tw=78:

@@ -1,3 +1,13 @@
+v0.3.0 (2016-11-)
+===================
+
+Enhancements
+------------
+
+* Buffer:
+  - add static function to compare buffer from two Objects
+
+
 v0.2.0 (2016-10-04)
 ===================
 

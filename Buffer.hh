@@ -94,6 +94,7 @@ public:
 	static int VSNPRINTF(char *bfr, int len, const char *fmt,
 				va_list args);
 	static int TRIM(char *bfr, int len);
+	static int CMP_OBJECTS(Object* x, Object* y);
 
 	static int	DFLT_SIZE;
 	static int	CHAR_SIZE;
