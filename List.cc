@@ -11,10 +11,9 @@ namespace vos {
 
 const char* List::__cname = "List";
 
-List::List(const char sep) : Object()
+List::List(const char sep) : Locker()
 ,	_head(NULL)
 ,	_tail(NULL)
-,	_locker()
 ,	_n(0)
 ,	_sep(',')
 {
@@ -27,14 +26,14 @@ List::~List()
 {
 	reset();
 
-	_locker.lock();
+	lock();
 
 	if (_v) {
 		free(_v);
 		_v = NULL;
 	}
 
-	_locker.unlock();
+	unlock();
 }
 
 //
@@ -55,7 +54,7 @@ void List::first_push(BNode* node)
 //
 void List::push_circular(BNode** p, Object* item)
 {
-	_locker.lock();
+	lock();
 
 	BNode* node = new BNode(item);
 
@@ -72,7 +71,7 @@ void List::push_circular(BNode** p, Object* item)
 		(*p) = node;
 	}
 
-	_locker.unlock();
+	unlock();
 }
 
 //
@@ -104,7 +103,7 @@ void List::push_tail(Object* item)
 //
 void List::reset()
 {
-	_locker.lock();
+	lock();
 
 	if (_tail) {
 		// break circular link.
@@ -118,7 +117,7 @@ void List::reset()
 	}
 	_n = 0;
 
-	_locker.unlock();
+	unlock();
 }
 
 //
@@ -262,7 +261,7 @@ void List::sort_divide(int (*fn_compare)(Object*, Object*), int asc)
 //
 void List::sort(int (*fn_compare)(Object*, Object*), int asc)
 {
-	_locker.lock();
+	lock();
 
 	int s = 0;
 
@@ -293,7 +292,7 @@ void List::sort(int (*fn_compare)(Object*, Object*), int asc)
 
 	sort_divide(fn_compare, asc);
 out:
-	_locker.unlock();
+	unlock();
 }
 
 //
@@ -309,7 +308,7 @@ BNode* List::node_search(Object* item, int (*fn_compare)(Object*, Object*))
 		return NULL;
 	}
 
-	_locker.lock();
+	lock();
 
 	int s = 0;
 	BNode* bnode = _head;
@@ -329,7 +328,7 @@ BNode* List::node_search(Object* item, int (*fn_compare)(Object*, Object*))
 
 	bnode = NULL;
 out:
-	_locker.unlock();
+	unlock();
 
 	return bnode;
 }
@@ -339,7 +338,7 @@ out:
 //
 BNode* List::node_pop_head()
 {
-	_locker.lock();
+	lock();
 
 	BNode* oldhead = NULL;
 
@@ -361,7 +360,7 @@ BNode* List::node_pop_head()
 
 	_n--;
 out:
-	_locker.unlock();
+	unlock();
 	return oldhead;
 }
 
@@ -370,7 +369,7 @@ out:
 //
 BNode* List::node_pop_tail()
 {
-	_locker.lock();
+	lock();
 
 	BNode* oldtail = NULL;
 
@@ -392,7 +391,7 @@ BNode* List::node_pop_tail()
 
 	_n--;
 out:
-	_locker.unlock();
+	unlock();
 	return oldtail;
 
 }
@@ -411,11 +410,11 @@ out:
 //
 BNode* List::node_at(int idx)
 {
-	_locker.lock();
+	lock();
 
 	BNode *p = node_at_unsafe(idx);
 
-	_locker.unlock();
+	unlock();
 
 	return p;
 }
@@ -558,7 +557,7 @@ Object* List::node_remove_unsafe(BNode* bnode)
 //
 int List::remove(Object* item)
 {
-	_locker.lock();
+	lock();
 
 	register int s = 1;
 	register int x = 0;
@@ -587,7 +586,7 @@ int List::remove(Object* item)
 	node_remove_unsafe(p);
 	s = 0;
 out:
-	_locker.unlock();
+	unlock();
 	return s;
 }
 
@@ -640,7 +639,7 @@ int List::size()
 //
 const char* List::chars()
 {
-	_locker.lock();
+	lock();
 
 	Buffer b;
 	const char* p = NULL;
@@ -677,7 +676,7 @@ const char* List::chars()
 	b._v = NULL;
 
 out:
-	_locker.unlock();
+	unlock();
 	return _v;
 }
 

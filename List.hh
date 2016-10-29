@@ -15,7 +15,7 @@ namespace vos {
 //
 // List is generic implementation of circular double linked list.
 //
-class List : public Object {
+class List : public Locker {
 public:
 	List(const char sep = ',');
 	virtual ~List();
@@ -49,9 +49,6 @@ public:
 
 	// _tail is pointer to the last node in the list.
 	BNode* _tail;
-
-	// _locker will lock list every call to push or pop.
-	Locker _locker;
 
 	// `__cname` contain canonical name of this object.
 	static const char* __cname;
