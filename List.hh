@@ -27,6 +27,8 @@ public:
 	void reset();
 	void swap_by_idx_unsafe(int x, int y);
 	void sort(int (*fn_compare)(Object* x, Object* y), int asc=1);
+	BNode* node_pop_head();
+	BNode* node_pop_tail();
 	BNode* node_at(int idx);
 	BNode* node_at_unsafe(int idx);
 	Object* pop_head();

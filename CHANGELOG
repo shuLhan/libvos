@@ -1,6 +1,13 @@
 v0.3.0 (2016-11-)
 ===================
 
+Breaking Changes
+----------------
+
+* DNSQuery:
+  - remove `_next` attribute
+  - remove static `ADD` method
+
 Enhancements
 ------------
 
@@ -11,6 +18,7 @@ Enhancements
   - add method to swap List item by index
   - add method to get List node at specifix index
   - add unsafe method to get List item at specific index
+  - add method to pop node object from head or tail
 
 Fixes
 -----

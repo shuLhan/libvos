@@ -297,6 +297,69 @@ out:
 }
 
 //
+// `node_pop_head()` will remove the first node in the list and return it.
+//
+BNode* List::node_pop_head()
+{
+	_locker.lock();
+
+	BNode* oldhead = NULL;
+
+	if (!_head) {
+		goto out;
+	}
+
+	oldhead = _head;
+
+	if (_head == _tail) {
+		_head = NULL;
+		_tail = NULL;
+	} else {
+		_head = oldhead->_right;
+
+		_tail->_right = _head;
+		_head->_left = _tail;
+	}
+
+	_n--;
+out:
+	_locker.unlock();
+	return oldhead;
+}
+
+//
+// `node_pop_tail()` will remove that last node on the list and return it.
+//
+BNode* List::node_pop_tail()
+{
+	_locker.lock();
+
+	BNode* oldtail = NULL;
+
+	if (!_tail) {
+		goto out;
+	}
+
+	oldtail = _tail;
+
+	if (_head == _tail) {
+		_head = NULL;
+		_tail = NULL;
+	} else {
+		_tail = oldtail->_left;
+
+		_tail->_right = _head;
+		_head->_left = _tail;
+	}
+
+	_n--;
+out:
+	_locker.unlock();
+	return oldtail;
+
+}
+
+//
 // `node_at()` return node in list at index `idx`, started from head to tail.
 //  (0) It will return NULL if index is empty
 //  (1) Index 0 is equal with `_head`,
@@ -367,34 +430,17 @@ BNode* List::node_at_unsafe(int idx)
 //
 Object* List::pop_head()
 {
-	_locker.lock();
-
 	Object* item = NULL;
-	BNode* oldhead = NULL;
+	BNode* oldhead = node_pop_head();
 
-	if (!_head) {
-		goto out;
-	}
-
-	oldhead = _head;
-
-	if (_head == _tail) {
-		_head = NULL;
-		_tail = NULL;
-	} else {
-		_head = oldhead->_right;
-
-		_tail->_right = _head;
-		_head->_left = _tail;
+	if (!oldhead) {
+		return NULL;
 	}
 
 	item = oldhead->_item;
 	oldhead->_item = NULL;
 	delete oldhead;
-	_n--;
 
-out:
-	_locker.unlock();
 	return item;
 }
 
@@ -404,34 +450,17 @@ out:
 //
 Object* List::pop_tail()
 {
-	_locker.lock();
-
 	Object* item = NULL;
-	BNode* oldtail = NULL;
+	BNode* oldtail = node_pop_tail();
 
-	if (!_tail) {
-		goto out;
-	}
-
-	oldtail = _tail;
-
-	if (_head == _tail) {
-		_head = NULL;
-		_tail = NULL;
-	} else {
-		_tail = oldtail->_left;
-
-		_tail->_right = _head;
-		_head->_left = _tail;
+	if (!oldtail) {
+		return NULL;
 	}
 
 	item = oldtail->_item;
 	oldtail->_item = NULL;
 	delete oldtail;
-	_n--;
 
-out:
-	_locker.unlock();
 	return item;
 }
 
