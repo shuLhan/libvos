@@ -446,6 +446,42 @@ out:
 }
 
 //
+// `detach()` will detach `node` from the list.
+//
+// (0) If `node` is head then the right node will be the new head.
+// (1) If `node` is tail then the left node will be the new tail.
+//
+void List::detach(BNode* node)
+{
+	lock();
+
+	if (_head == _tail) {
+		_head = NULL;
+		_tail = NULL;
+		goto out;
+	}
+
+	node->_right->_left = node->_left;
+	node->_left->_right = node->_right;
+
+	// (0)
+	if (node == _head) {
+		_head = node->_right;
+	}
+
+	// (2)
+	if (node == _tail) {
+		_tail = node->_left;
+	}
+
+	node->_right = NULL;
+	node->_left = NULL;
+out:
+	_n--;
+	unlock();
+}
+
+//
 // `node_search()` will find the `item` in the list that match using
 // `fn_compare` as comparison. It will return node object on the first item
 // that match, or `NULL` otherwise.

@@ -23,6 +23,10 @@ using vos::BNode;
 				V_STR(STR_TEST_1) SEP_ITEM \
 				V_STR(STR_TEST_2) \
 			)
+#define EXP_0_2		SB( \
+				V_STR(STR_TEST_0) SEP_ITEM \
+				V_STR(STR_TEST_2) \
+			)
 #define EXP_0_1		SB( \
 				V_STR(STR_TEST_0) SEP_ITEM \
 				V_STR(STR_TEST_1) \
@@ -552,6 +556,60 @@ void test_push_tail_sorted_desc()
 	list.reset();
 }
 
+void test_detach()
+{
+	BNode* node = NULL;
+
+	Buffer* b0 = new Buffer();
+	b0->copy_raw(STR_TEST_0);
+
+	Buffer* b1 = new Buffer();
+	b1->copy_raw(STR_TEST_1);
+
+	Buffer* b2 = new Buffer();
+	b2->copy_raw(STR_TEST_2);
+
+	assert(list.size() == 0);
+
+	list.push_tail(b0);
+	list.push_tail(b1);
+	list.push_tail(b2);
+	assert(list.size() == 3);
+
+	node = list.node_at(0);
+	list.detach(node);
+	assert(list.size() == 2);
+	assert(strcmp(EXP_1_2, list.chars()) == 0);
+
+	node->_item = NULL;
+	delete node;
+
+	list.push_head(b0);
+	assert(list.size() == 3);
+	assert(strcmp(EXP_0_1_2, list.chars()) == 0);
+
+	node = list.node_at(1);
+	list.detach(node);
+	assert(list.size() == 2);
+	assert(strcmp(EXP_0_2, list.chars()) == 0);
+
+	delete node;
+
+	node = list.node_at(0);
+	list.detach(node);
+	assert(list.size() == 1);
+	assert(strcmp(EXP_2, list.chars()) == 0);
+
+	delete node;
+
+	node = list.node_at(0);
+	list.detach(node);
+	assert(list.size() == 0);
+	assert(list.chars() == 0);
+
+	delete node;
+}
+
 int main()
 {
 	assert(list.size() == 0);
@@ -592,6 +650,8 @@ int main()
 
 	test_push_tail_sorted_asc();
 	test_push_tail_sorted_desc();
+
+	test_detach();
 }
 
 // vi: ts=8 sw=8 tw=78:
