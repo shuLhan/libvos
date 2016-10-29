@@ -16,6 +16,7 @@ public:
 	Object();
 
 	virtual ~Object();
+	virtual int cmp(Object* that);
 	virtual const char* chars();
 
 	// `__cname` contain class name.

@@ -22,6 +22,17 @@ Object::~Object()
 	}
 }
 
+int Object::cmp(Object* that)
+{
+	if (!that) {
+		return 1;
+	}
+	if (this == that) {
+		return 0;
+	}
+	return strcmp(_v, that->chars());
+}
+
 const char* Object::chars()
 {
 	return _v;
