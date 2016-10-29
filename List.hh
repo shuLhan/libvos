@@ -26,15 +26,20 @@ public:
 	void push_tail(Object* item);
 	void reset();
 	void swap_by_idx_unsafe(int x, int y);
-	void sort(int (*fn_compare)(Object* x, Object* y), int asc=1);
+	void sort(int (*fn_compare)(Object*, Object*), int asc=1);
+
+	BNode* node_search(Object* item, int (*fn_compare)(Object*, Object*));
 	BNode* node_pop_head();
 	BNode* node_pop_tail();
 	BNode* node_at(int idx);
 	BNode* node_at_unsafe(int idx);
+
+	Object* node_remove_unsafe(BNode* bnode);
 	Object* pop_head();
 	Object* pop_tail();
 	Object* at(int idx);
 	Object* at_unsafe(int idx);
+
 	int remove(Object* item);
 	int size();
 	const char* chars();
@@ -45,6 +50,9 @@ public:
 	// _tail is pointer to the last node in the list.
 	BNode* _tail;
 
+	// _locker will lock list every call to push or pop.
+	Locker _locker;
+
 	// `__cname` contain canonical name of this object.
 	static const char* __cname;
 protected:
@@ -53,9 +61,6 @@ protected:
 
 	// _sep is used to separate node when calling `chars`.
 	char _sep;
-
-	// _locker will lock list every call to push or pop.
-	Locker _locker;
 private:
 	void sort_divide(int (*fn_compare)(Object*, Object*), int asc);
 	void sort_conqueror(List* left, List* right

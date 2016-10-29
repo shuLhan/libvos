@@ -9,6 +9,7 @@
 
 using vos::Object;
 using vos::List;
+using vos::BNode;
 
 #define EXP_0		SB(V_STR(STR_TEST_0))
 #define EXP_1		SB(V_STR(STR_TEST_1))
@@ -309,6 +310,52 @@ void test_sort()
 	list.sort(Buffer::CMP_OBJECTS);
 	assert(list.size() == 3);
 	assert(strcmp(EXP_0_1_2, list.chars()) == 0);
+
+	list.reset();
+}
+
+void test_search()
+{
+	BNode* node_found = NULL;
+	Buffer* bdel = NULL;
+
+	Buffer* b0 = new Buffer();
+	b0->copy_raw(STR_TEST_0);
+
+	Buffer* b1 = new Buffer();
+	b1->copy_raw(STR_TEST_1);
+
+	Buffer* b2 = new Buffer();
+	b2->copy_raw(STR_TEST_2);
+
+	assert(list.size() == 0);
+
+	node_found = list.node_search(b1, NULL);
+	assert(node_found == NULL);
+
+	list.push_tail(b0);
+	list.push_tail(b1);
+	list.push_tail(b2);
+
+	node_found = list.node_search(b1, NULL);
+	assert(node_found != NULL);
+	assert(node_found == list.node_at(1));
+
+	node_found = list.node_search(b2, Buffer::CMP_OBJECTS);
+	assert(node_found != NULL);
+	assert(node_found == list.node_at(2));
+
+	bdel = (Buffer*) list.node_remove_unsafe(node_found);
+
+	assert(list.size() == 2);
+	assert(bdel == b2);
+
+	node_found = list.node_search(b2, Buffer::CMP_OBJECTS);
+	assert(node_found == NULL);
+
+	list.reset();
+
+	delete b2;
 }
 
 int main()
@@ -343,6 +390,8 @@ int main()
 	test_remove();
 
 	test_sort();
+
+	test_search();
 }
 
 // vi: ts=8 sw=8 tw=78:

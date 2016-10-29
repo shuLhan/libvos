@@ -14,9 +14,9 @@ const char* List::__cname = "List";
 List::List(const char sep) : Object()
 ,	_head(NULL)
 ,	_tail(NULL)
+,	_locker()
 ,	_n(0)
 ,	_sep(',')
-,	_locker()
 {
 	if (sep > 0) {
 		_sep = sep;
@@ -297,6 +297,44 @@ out:
 }
 
 //
+// `node_search()` will find the `item` in the list that match using
+// `fn_compare` as comparison. It will return node object on the first item
+// that match, or `NULL` otherwise.
+//
+// Class that use List must pass compare function or implement `cmp()`.
+//
+BNode* List::node_search(Object* item, int (*fn_compare)(Object*, Object*))
+{
+	if (!_head) {
+		return NULL;
+	}
+
+	_locker.lock();
+
+	int s = 0;
+	BNode* bnode = _head;
+
+	do {
+		if (fn_compare) {
+			s = fn_compare(bnode->_item, item);
+		} else {
+			s = bnode->_item->cmp(item);
+		}
+		if (s == 0) {
+			goto out;
+		}
+
+		bnode = bnode->_right;
+	} while(bnode != _head);
+
+	bnode = NULL;
+out:
+	_locker.unlock();
+
+	return bnode;
+}
+
+//
 // `node_pop_head()` will remove the first node in the list and return it.
 //
 BNode* List::node_pop_head()
@@ -465,17 +503,58 @@ Object* List::pop_tail()
 }
 
 //
+// `node_remove_unsafe()` will remove node from list.
+// This is pthread unsafe operation, without locking/unlocking on list mutex.
+//
+// (C0) Node is the only item in the list
+// (C1) Node is the head
+// (C2) Node is also the tail
+// (C3) Node is in the middle
+//
+Object* List::node_remove_unsafe(BNode* bnode)
+{
+	if (!bnode) {
+		return NULL;
+	}
+
+	Object* item = bnode->_item;
+
+	// (C0)
+	if (_head == _tail) {
+		_head = NULL;
+		_tail = NULL;
+	} else {
+		// (C1)
+		if (bnode == _head) {
+			_head = _head->_right;
+		}
+		// (C2)
+		if (bnode == _tail) {
+			_tail = _tail->_left;
+		}
+		// (C3)
+		bnode->_left->_right = bnode->_right;
+		bnode->_right->_left = bnode->_left;
+	}
+
+	bnode->_left = NULL;
+	bnode->_right = NULL;
+	bnode->_item = NULL;
+
+	delete bnode;
+	_n--;
+
+	return item;
+}
+
+//
 // `remove()` will find object in list that matched with `item`, and remove
-// their item, the content of item will not be removed.
-// If object found and removed it will return 0, otherwise return 1.
+// their node object, the content of item will not be removed.
+// If `item` found it will return 0, otherwise return 1.
 //
 // Conditions,
 // (C0) Item is null or list is empty, return 1
 // (C1) No item found, return 1
-// (C2) Item found, but its the only item in the list
-// (C3) Item found, and its also the head
-// (C4) Item found, and its also the tail
-// (C5) Item found, and its maybe in the middle
 //
 int List::remove(Object* item)
 {
@@ -505,30 +584,7 @@ int List::remove(Object* item)
 		goto out;
 	}
 
-	// (C2)
-	if (_head == _tail) {
-		_head = NULL;
-		_tail = NULL;
-	} else {
-		// (C3)
-		if (p == _head) {
-			_head = _head->_right;
-		}
-		// (C4)
-		if (p == _tail) {
-			_tail = _tail->_left;
-		}
-		// (C5)
-		p->_left->_right = p->_right;
-		p->_right->_left = p->_left;
-	}
-
-	p->_left = NULL;
-	p->_right = NULL;
-	p->_item = NULL;
-
-	delete p;
-	_n--;
+	node_remove_unsafe(p);
 	s = 0;
 out:
 	_locker.unlock();
