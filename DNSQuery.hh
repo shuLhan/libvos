@@ -103,7 +103,6 @@ enum _DNS_ATTR_TYPE {
  * 	- DNS_IS_QUERY	: answer is from parent DNS server.
  * 	- DNS_IS_LOCAL	: answer is from hosts file.
  * 	- DNS_IS_BLOCKED: answer is from blocked hosts file.
- * @attr _next		: pointer to next answer.
  * @desc		: module for processing DNS packet.
  *
  *	DNSQuery is ALWAYS in UDP packet mode, if you want to send the packet
@@ -177,12 +176,8 @@ public:
 	uint32_t	_ans_ttl_max;
 	uint32_t	_attrs;
 
-	/* pointer to query with different type */
-	DNSQuery*	_next;
-
 	static int INIT(DNSQuery** o, const Buffer* bfr
 			, const int type = BUFFER_IS_UDP);
-	static void ADD (DNSQuery** first, DNSQuery* nu);
 private:
 	DNSQuery(const DNSQuery&);
 	void operator=(const DNSQuery&);

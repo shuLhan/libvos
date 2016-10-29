@@ -31,7 +31,6 @@ DNSQuery::DNSQuery() : Buffer()
 ,	_rr_add_p(NULL)
 ,	_ans_ttl_max(0)
 ,	_attrs (DNS_IS_QUERY)
-,	_next (NULL)
 {}
 
 /**
@@ -88,7 +87,6 @@ DNSQuery* DNSQuery::duplicate ()
 	dup->_name.copy (&_name);
 	dup->_ans_ttl_max	= _ans_ttl_max;
 	dup->_attrs		= _attrs;
-	dup->_next		= NULL;
 
 	return dup;
 }
@@ -1105,27 +1103,6 @@ int DNSQuery::INIT(DNSQuery **o, const Buffer *bfr, const int type)
 	}
 
 	return 0;
-}
-
-/**
- * @method	: DNSQuery::ADD
- * @param first : Pointer to the list.
- * @param nu	: Pointer to the object that will be added to the list.
- * @desc	: Add 'nu' to the list of 'first'.
- */
-void DNSQuery::ADD (DNSQuery** first, DNSQuery* nu)
-{
-	DNSQuery* p = NULL;
-
-	if (! (*first)) {
-		(*first) = nu;
-	} else {
-		p = (*first);
-		while (p->_next) {
-			p = p->_next;
-		}
-		p->_next = nu;
-	}
 }
 
 } /* namespace::vos */
