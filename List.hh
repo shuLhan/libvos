@@ -23,14 +23,15 @@ public:
 	void first_push(BNode* node);
 	void insert_before_unsafe(BNode* x, BNode* y);
 	void insert_after_unsafe(BNode* x, BNode* y);
-	void push_circular(BNode** p, Object* item);
 
-	void push_head(Object* item);
-	void push_head_sorted(Object* item, int asc = 1
+	BNode* push_circular(BNode** p, Object* item);
+
+	BNode* push_head(Object* item);
+	BNode* push_head_sorted(Object* item, int asc = 1
 				, int (*fn_cmp)(Object*, Object*) = NULL);
 
-	void push_tail(Object* item);
-	void push_tail_sorted(Object* item, int asc = 1
+	BNode* push_tail(Object* item);
+	BNode* push_tail_sorted(Object* item, int asc = 1
 				, int (*fn_cmp)(Object*, Object*) = NULL);
 
 	void reset();

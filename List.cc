@@ -87,8 +87,9 @@ void List::insert_after_unsafe(BNode* x, BNode* y)
 //
 // `push_circular()` will push an `item` into circular list, and set `p` point
 // to the node. `p` could be head or tail.
+// It will return node object that has been pushed to the list.
 //
-void List::push_circular(BNode** p, Object* item)
+BNode* List::push_circular(BNode** p, Object* item)
 {
 	lock();
 
@@ -108,18 +109,22 @@ void List::push_circular(BNode** p, Object* item)
 	}
 
 	unlock();
+
+	return node;
 }
 
 //
 // `push_head()` will add new `item` as the first node in the list.
+// It will return node object that has been pushed to the list, or NULL if
+// `item` itself is NULL.
 //
-void List::push_head(Object* item)
+BNode* List::push_head(Object* item)
 {
 	if (!item) {
-		return;
+		return NULL;
 	}
 
-	push_circular(&_head, item);
+	return push_circular(&_head, item);
 }
 
 //
@@ -127,7 +132,7 @@ void List::push_head(Object* item)
 // default to ascending, start from the head.
 // If `fn_cmp` is NULL, it will use the `Object.cmp` method.
 //
-void List::push_head_sorted(Object* item, int asc
+BNode* List::push_head_sorted(Object* item, int asc
 				, int (*fn_cmp)(Object*, Object*))
 {
 	int s = 0;
@@ -177,18 +182,22 @@ void List::push_head_sorted(Object* item, int asc
 	}
 out:
 	unlock();
+
+	return node;
 }
 
 //
 // `push_tail()` will add new `item` to the end of the list.
+// It will return node object that has been pushed to the list, or NULL if
+// `item` itself is NULL.
 //
-void List::push_tail(Object* item)
+BNode* List::push_tail(Object* item)
 {
 	if (!item) {
-		return;
+		return NULL;
 	}
 
-	push_circular(&_tail, item);
+	return push_circular(&_tail, item);
 }
 
 //
@@ -196,7 +205,7 @@ void List::push_tail(Object* item)
 // default to ascending, started from the tail.
 // If `fn_cmp` is NULL, it will use the `Object.cmp` method.
 //
-void List::push_tail_sorted(Object* item, int asc
+BNode* List::push_tail_sorted(Object* item, int asc
 				, int (*fn_cmp)(Object*, Object*))
 {
 	int s = 0;
@@ -246,6 +255,8 @@ void List::push_tail_sorted(Object* item, int asc
 	}
 out:
 	unlock();
+
+	return node;
 }
 
 //
@@ -474,10 +485,11 @@ void List::detach(BNode* node)
 		_tail = node->_left;
 	}
 
+out:
 	node->_right = NULL;
 	node->_left = NULL;
-out:
 	_n--;
+
 	unlock();
 }
 
