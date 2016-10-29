@@ -671,7 +671,7 @@ int Buffer::subc(int from, int to)
  * @desc	: Compare content of this buffer with content on 'bfr' object.
  * This is a case sensitive compare, where "A" != "a".
  */
-int Buffer::cmp(const Buffer* bfr)
+int Buffer::cmp(const Object* bfr)
 {
 	if (!bfr) {
 		return 1;
@@ -1317,9 +1317,8 @@ int Buffer::CMP_OBJECTS(Object* x, Object* y)
 	}
 
 	Buffer* bx = (Buffer*) x;
-	Buffer* by = (Buffer*) y;
 
-	return bx->cmp(by);
+	return bx->cmp(y);
 }
 
 } /* namespace::vos */

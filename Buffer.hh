@@ -65,7 +65,7 @@ public:
 
 	int subc(int from, int to);
 
-	int cmp(const Buffer* bfr);
+	int cmp(const Object* bfr);
 	int cmp_raw(const char* bfr, int len = 0);
 	int like(const Buffer* bfr);
 	int like_raw(const char* bfr, int len = 0);
