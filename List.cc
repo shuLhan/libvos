@@ -49,6 +49,42 @@ void List::first_push(BNode* node)
 }
 
 //
+// `insert_before_unsafe()` will insert node `x` before node `y` in the list.
+// If node `y` is head then `x` will be new head.
+//
+void List::insert_before_unsafe(BNode* x, BNode* y)
+{
+	x->_right = y;
+	x->_left = y->_left;
+
+	y->_left->_right = x;
+	y->_left = x;
+
+	if (y == _head) {
+		_head = x;
+	}
+	_n++;
+}
+
+//
+// `insert_after_unsafe()` will insert node `x` after node `y` in the list.
+// If node `y` is tail then `x` will be the new tail.
+//
+void List::insert_after_unsafe(BNode* x, BNode* y)
+{
+	x->_right = y->_right;
+	x->_left = y;
+
+	y->_right->_left = x;
+	y->_right = x;
+
+	if (y == _tail) {
+		_tail = x;
+	}
+	_n++;
+}
+
+//
 // `push_circular()` will push an `item` into circular list, and set `p` point
 // to the node. `p` could be head or tail.
 //
@@ -87,6 +123,63 @@ void List::push_head(Object* item)
 }
 
 //
+// `push_head_sorted()` will insert new item into list in sorted order,
+// default to ascending, start from the head.
+// If `fn_cmp` is NULL, it will use the `Object.cmp` method.
+//
+void List::push_head_sorted(Object* item, int asc
+				, int (*fn_cmp)(Object*, Object*))
+{
+	int s = 0;
+	BNode* p = NULL;
+	BNode* node = NULL;
+
+	lock();
+
+	node = new BNode(item);
+
+	if (!_head) {
+		first_push(node);
+		goto out;
+	}
+
+	p = _head;
+
+	do {
+		if (fn_cmp) {
+			s = fn_cmp(p->_item, item);
+		} else {
+			s = p->_item->cmp(item);
+		}
+
+		// P > ITEM
+		if (s > 0) {
+			if (asc) {
+				insert_before_unsafe(node, p);
+				break;
+			}
+		}
+
+		// ITEM > P
+		if (s < 0) {
+			if (!asc) { // desc
+				insert_before_unsafe(node, p);
+				break;
+			}
+		}
+
+		p = p->_right;
+	} while(p != _head);
+
+	// node has not been inserted, push it to the bottom.
+	if (!node->_left) {
+		insert_after_unsafe(node, _tail);
+	}
+out:
+	unlock();
+}
+
+//
 // `push_tail()` will add new `item` to the end of the list.
 //
 void List::push_tail(Object* item)
@@ -96,6 +189,63 @@ void List::push_tail(Object* item)
 	}
 
 	push_circular(&_tail, item);
+}
+
+//
+// `push_tail_sorted()` will insert new item into list in sorted order,
+// default to ascending, started from the tail.
+// If `fn_cmp` is NULL, it will use the `Object.cmp` method.
+//
+void List::push_tail_sorted(Object* item, int asc
+				, int (*fn_cmp)(Object*, Object*))
+{
+	int s = 0;
+	BNode* p = NULL;
+	BNode* node = NULL;
+
+	lock();
+
+	node = new BNode(item);
+
+	if (!_tail) {
+		first_push(node);
+		goto out;
+	}
+
+	p = _tail;
+
+	do {
+		if (fn_cmp) {
+			s = fn_cmp(p->_item, item);
+		} else {
+			s = p->_item->cmp(item);
+		}
+
+		// P > ITEM
+		if (s > 0) {
+			if (!asc) { // desc
+				insert_after_unsafe(node, p);
+				break;
+			}
+		}
+
+		// ITEM > P
+		if (s < 0) {
+			if (asc) { // desc
+				insert_after_unsafe(node, p);
+				break;
+			}
+		}
+
+		p = p->_left;
+	} while(p != _tail);
+
+	// node has not been inserted, push it to the top.
+	if (!node->_left) {
+		insert_before_unsafe(node, _head);
+	}
+out:
+	unlock();
 }
 
 //

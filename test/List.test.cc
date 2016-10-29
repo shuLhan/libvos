@@ -37,6 +37,12 @@ using vos::BNode;
 				V_STR(STR_TEST_0) SEP_ITEM \
 				V_STR(STR_TEST_0) \
 			)
+#define	EXP_2_1_0	SB( \
+				V_STR(STR_TEST_2) SEP_ITEM \
+				V_STR(STR_TEST_1) SEP_ITEM \
+				V_STR(STR_TEST_0) \
+			)
+
 
 List list;
 int s;
@@ -358,6 +364,194 @@ void test_search()
 	delete b2;
 }
 
+void test_push_head_sorted_asc()
+{
+	Buffer* b0 = new Buffer();
+	b0->copy_raw(STR_TEST_0);
+
+	Buffer* b1 = new Buffer();
+	b1->copy_raw(STR_TEST_1);
+
+	Buffer* b2 = new Buffer();
+	b2->copy_raw(STR_TEST_2);
+
+	assert(list.size() == 0);
+
+	list.push_head_sorted(b2);
+	list.push_head_sorted(b1);
+	list.push_head_sorted(b0);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_0_1_2, list.chars()) == 0);
+
+	list.pop_tail();
+	list.pop_tail();
+	list.pop_tail();
+	assert(list.size() == 0);
+
+	list.push_head_sorted(b0);
+	list.push_head_sorted(b1);
+	list.push_head_sorted(b2);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_0_1_2, list.chars()) == 0);
+
+	list.pop_tail();
+	list.pop_tail();
+	list.pop_tail();
+	assert(list.size() == 0);
+
+	list.push_head_sorted(b2);
+	list.push_head_sorted(b0);
+	list.push_head_sorted(b1);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_0_1_2, list.chars()) == 0);
+
+	list.reset();
+}
+
+void test_push_head_sorted_desc()
+{
+	Buffer* b0 = new Buffer();
+	b0->copy_raw(STR_TEST_0);
+
+	Buffer* b1 = new Buffer();
+	b1->copy_raw(STR_TEST_1);
+
+	Buffer* b2 = new Buffer();
+	b2->copy_raw(STR_TEST_2);
+
+	assert(list.size() == 0);
+
+	list.push_head_sorted(b2, 0);
+	list.push_head_sorted(b1, 0);
+	list.push_head_sorted(b0, 0);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_2_1_0, list.chars()) == 0);
+
+	list.pop_tail();
+	list.pop_tail();
+	list.pop_tail();
+	assert(list.size() == 0);
+
+	list.push_head_sorted(b0, 0);
+	list.push_head_sorted(b1, 0);
+	list.push_head_sorted(b2, 0);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_2_1_0, list.chars()) == 0);
+
+	list.pop_tail();
+	list.pop_tail();
+	list.pop_tail();
+	assert(list.size() == 0);
+
+	list.push_head_sorted(b0, 0);
+	list.push_head_sorted(b2, 0);
+	list.push_head_sorted(b1, 0);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_2_1_0, list.chars()) == 0);
+
+	list.reset();
+}
+
+void test_push_tail_sorted_asc()
+{
+	Buffer* b0 = new Buffer();
+	b0->copy_raw(STR_TEST_0);
+
+	Buffer* b1 = new Buffer();
+	b1->copy_raw(STR_TEST_1);
+
+	Buffer* b2 = new Buffer();
+	b2->copy_raw(STR_TEST_2);
+
+	assert(list.size() == 0);
+
+	list.push_tail_sorted(b2);
+	list.push_tail_sorted(b1);
+	list.push_tail_sorted(b0);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_0_1_2, list.chars()) == 0);
+
+	list.pop_tail();
+	list.pop_tail();
+	list.pop_tail();
+	assert(list.size() == 0);
+
+	list.push_tail_sorted(b0);
+	list.push_tail_sorted(b1);
+	list.push_tail_sorted(b2);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_0_1_2, list.chars()) == 0);
+
+	list.pop_tail();
+	list.pop_tail();
+	list.pop_tail();
+	assert(list.size() == 0);
+
+	list.push_tail_sorted(b0);
+	list.push_tail_sorted(b2);
+	list.push_tail_sorted(b1);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_0_1_2, list.chars()) == 0);
+
+	list.reset();
+}
+
+void test_push_tail_sorted_desc()
+{
+	Buffer* b0 = new Buffer();
+	b0->copy_raw(STR_TEST_0);
+
+	Buffer* b1 = new Buffer();
+	b1->copy_raw(STR_TEST_1);
+
+	Buffer* b2 = new Buffer();
+	b2->copy_raw(STR_TEST_2);
+
+	assert(list.size() == 0);
+
+	list.push_tail_sorted(b0, 0);
+	list.push_tail_sorted(b1, 0);
+	list.push_tail_sorted(b2, 0);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_2_1_0, list.chars()) == 0);
+
+	list.pop_tail();
+	list.pop_tail();
+	list.pop_tail();
+	assert(list.size() == 0);
+
+	list.push_tail_sorted(b2, 0);
+	list.push_tail_sorted(b1, 0);
+	list.push_tail_sorted(b0, 0);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_2_1_0, list.chars()) == 0);
+
+	list.pop_tail();
+	list.pop_tail();
+	list.pop_tail();
+	assert(list.size() == 0);
+
+	list.push_tail_sorted(b0, 0);
+	list.push_tail_sorted(b2, 0);
+	list.push_tail_sorted(b1, 0);
+
+	assert(list.size() == 3);
+	assert(strcmp(EXP_2_1_0, list.chars()) == 0);
+
+	list.reset();
+}
+
 int main()
 {
 	assert(list.size() == 0);
@@ -392,6 +586,12 @@ int main()
 	test_sort();
 
 	test_search();
+
+	test_push_head_sorted_asc();
+	test_push_head_sorted_desc();
+
+	test_push_tail_sorted_asc();
+	test_push_tail_sorted_desc();
 }
 
 // vi: ts=8 sw=8 tw=78:
