@@ -525,15 +525,17 @@ inline int Config::parsing()
 				++_p;
 			}
 
-			s = b.append_raw(&_v[start], _p - start);
-			if (s < 0) {
-				return -1;
-			}
+			if (_p > start) {
+				s = b.append_raw(&_v[start], _p - start);
+				if (s < 0) {
+					return -1;
+				}
 
-			b.trim();
-			if (b._i == 0) {
-				_e_col = _p - end;
-				goto bad_cfg;
+				b.trim();
+				if (b._i == 0) {
+					_e_col = _p - end;
+					goto bad_cfg;
+				}
 			}
 
 			s = _data.add_value_raw(b._v, b._i);
