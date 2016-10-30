@@ -579,9 +579,13 @@ BNode* List::node_pop_head()
 		_head->_left = _tail;
 	}
 
+	oldhead->_left = NULL;
+	oldhead->_right = NULL;
+
 	_n--;
 out:
 	unlock();
+
 	return oldhead;
 }
 
@@ -610,9 +614,13 @@ BNode* List::node_pop_tail()
 		_head->_left = _tail;
 	}
 
+	oldtail->_left = NULL;
+	oldtail->_right = NULL;
+
 	_n--;
 out:
 	unlock();
+
 	return oldtail;
 
 }
