@@ -135,53 +135,9 @@ BNode* List::push_head(Object* item)
 BNode* List::push_head_sorted(Object* item, int asc
 				, int (*fn_cmp)(Object*, Object*))
 {
-	int s = 0;
-	BNode* p = NULL;
-	BNode* node = NULL;
+	BNode* node = new BNode(item);
 
-	lock();
-
-	node = new BNode(item);
-
-	if (!_head) {
-		first_push(node);
-		goto out;
-	}
-
-	p = _head;
-
-	do {
-		if (fn_cmp) {
-			s = fn_cmp(p->_item, item);
-		} else {
-			s = p->_item->cmp(item);
-		}
-
-		// P > ITEM
-		if (s > 0) {
-			if (asc) {
-				insert_before_unsafe(node, p);
-				break;
-			}
-		}
-
-		// ITEM > P
-		if (s < 0) {
-			if (!asc) { // desc
-				insert_before_unsafe(node, p);
-				break;
-			}
-		}
-
-		p = p->_right;
-	} while(p != _head);
-
-	// node has not been inserted, push it to the bottom.
-	if (!node->_left) {
-		insert_after_unsafe(node, _tail);
-	}
-out:
-	unlock();
+	node_push_head_sorted(node, asc, fn_cmp);
 
 	return node;
 }
@@ -208,53 +164,9 @@ BNode* List::push_tail(Object* item)
 BNode* List::push_tail_sorted(Object* item, int asc
 				, int (*fn_cmp)(Object*, Object*))
 {
-	int s = 0;
-	BNode* p = NULL;
-	BNode* node = NULL;
+	BNode* node = new BNode(item);
 
-	lock();
-
-	node = new BNode(item);
-
-	if (!_tail) {
-		first_push(node);
-		goto out;
-	}
-
-	p = _tail;
-
-	do {
-		if (fn_cmp) {
-			s = fn_cmp(p->_item, item);
-		} else {
-			s = p->_item->cmp(item);
-		}
-
-		// P > ITEM
-		if (s > 0) {
-			if (!asc) { // desc
-				insert_after_unsafe(node, p);
-				break;
-			}
-		}
-
-		// ITEM > P
-		if (s < 0) {
-			if (asc) { // desc
-				insert_after_unsafe(node, p);
-				break;
-			}
-		}
-
-		p = p->_left;
-	} while(p != _tail);
-
-	// node has not been inserted, push it to the top.
-	if (!node->_left) {
-		insert_before_unsafe(node, _head);
-	}
-out:
-	unlock();
+	node_push_tail_sorted(node, asc, fn_cmp);
 
 	return node;
 }
@@ -492,6 +404,117 @@ out:
 
 	unlock();
 }
+
+
+//
+// `node_push_head_sorted()` will insert new node into the list in sorted
+// order, default to ascending (`asc` value 1), started from the head.
+// If `fn_cmp` is NULL, it will use the `Object.cmp` method.
+//
+void List::node_push_head_sorted(BNode* node, int asc
+				, int (*fn_cmp)(Object*, Object*))
+{
+	int s = 0;
+	BNode* p = NULL;
+
+	lock();
+
+	if (!_head) {
+		first_push(node);
+		goto out;
+	}
+
+	p = _head;
+
+	do {
+		if (fn_cmp) {
+			s = fn_cmp(p->_item, node->_item);
+		} else {
+			s = p->_item->cmp(node->_item);
+		}
+
+		// P > ITEM
+		if (s > 0) {
+			if (asc) {
+				insert_before_unsafe(node, p);
+				break;
+			}
+		}
+
+		// ITEM > P
+		if (s < 0) {
+			if (!asc) { // desc
+				insert_before_unsafe(node, p);
+				break;
+			}
+		}
+
+		p = p->_right;
+	} while(p != _head);
+
+	// node has not been inserted, push it to the bottom.
+	if (!node->_left) {
+		insert_after_unsafe(node, _tail);
+	}
+out:
+	unlock();
+}
+
+
+//
+// `node_push_tail_sorted()` will insert new node into the list in sorted
+// order, default to ascending (`asc` value 1), started from the tail.
+// If `fn_cmp` is NULL, it will use the `Object.cmp` method.
+//
+void List::node_push_tail_sorted(BNode* node, int asc
+				, int (*fn_cmp)(Object*, Object*))
+{
+	int s = 0;
+	BNode* p = NULL;
+
+	lock();
+
+	if (!_tail) {
+		first_push(node);
+		goto out;
+	}
+
+	p = _tail;
+
+	do {
+		if (fn_cmp) {
+			s = fn_cmp(p->_item, node->_item);
+		} else {
+			s = p->_item->cmp(node->_item);
+		}
+
+		// P > ITEM
+		if (s > 0) {
+			if (!asc) { // desc
+				insert_after_unsafe(node, p);
+				break;
+			}
+		}
+
+		// ITEM > P
+		if (s < 0) {
+			if (asc) { // desc
+				insert_after_unsafe(node, p);
+				break;
+			}
+		}
+
+		p = p->_left;
+	} while(p != _tail);
+
+	// node has not been inserted, push it to the top.
+	if (!node->_left) {
+		insert_before_unsafe(node, _head);
+	}
+out:
+	unlock();
+}
+
 
 //
 // `node_search()` will find the `item` in the list that match using

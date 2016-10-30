@@ -39,6 +39,11 @@ public:
 	void sort(int (*fn_compare)(Object*, Object*), int asc=1);
 	void detach(BNode* node);
 
+	void node_push_head_sorted(BNode* node, int asc = 1
+				, int (*fn_cmp)(Object*, Object*) = NULL);
+	void node_push_tail_sorted(BNode* node, int asc = 1
+				, int (*fn_cmp)(Object*, Object*) = NULL);
+
 	BNode* node_search(Object* item, int (*fn_compare)(Object*, Object*));
 	BNode* node_pop_head();
 	BNode* node_pop_tail();
