@@ -99,6 +99,8 @@ inline void Dlogger::add_timestamp()
  */
 void Dlogger::_w(int fd, const char* fmt)
 {
+	ssize_t ws = 0;
+
 	add_timestamp();
 
 	_s = _tmp.vprint(fmt, _args);
@@ -117,7 +119,12 @@ void Dlogger::_w(int fd, const char* fmt)
 		_s = write_raw(_tmp._v, _tmp._i);
 	}
 	if (fd) {
-		::write(fd, _tmp._v, _tmp._i);
+		do {
+			ws = ::write(fd, &_tmp._v[ws], _tmp._i - ws);
+			if (ws < 0) {
+				break;
+			}
+		} while(ws < _tmp._i);
 	}
 	_tmp.reset();
 }
