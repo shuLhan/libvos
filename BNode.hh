@@ -20,14 +20,31 @@ public:
 	BNode(Object* item);
 	virtual ~BNode();
 
+	void delete_content();
+	void replace_content(BNode* node);
+	void set_content(Object* item);
+	Object* get_content();
+
+	virtual void set_left(BNode* node);
+	virtual BNode* get_left();
 	BNode* get_left_edge();
+
+	virtual void set_right(BNode* node);
+	virtual BNode* get_right();
 	BNode* get_right_edge();
+
+	int is_left_of(BNode* node);
+	int is_right_of(BNode* node);
+
 	void push_left(BNode* node);
 	void push_right(BNode* node);
-	void insert_left(BNode* node);
-	void insert_right(BNode* node);
+
+	virtual void insert_left(BNode* node);
+	virtual void insert_right(BNode* node);
+
 	BNode* pop_left_edge();
 	BNode* pop_right_edge();
+
 	const char* chars();
 
 	BNode* _left;

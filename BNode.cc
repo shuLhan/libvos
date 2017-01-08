@@ -38,6 +38,58 @@ BNode::~BNode()
 }
 
 //
+// `delete_content()` will delete the content of node and set it to NULL.
+//
+void BNode::delete_content()
+{
+	delete _item;
+	_item = NULL;
+}
+
+//
+// `replace_content()` will replace content of current node with content in
+// `node`. Old content will be deleted and content of `node` will be removed.
+//
+void BNode::replace_content(BNode* node)
+{
+	delete_content();
+	set_content(node->get_content());
+	node->set_content(NULL);
+}
+
+//
+// `set_content()` will set node content to `item`.
+//
+void BNode::set_content(Object* item)
+{
+	_item = item;
+}
+
+//
+// `get_content()` will return the content of node.
+//
+Object* BNode::get_content()
+{
+	return _item;
+}
+
+//
+// `set_left()` will set the left child to `node`.
+//
+void BNode::set_left(BNode* node)
+{
+	_left = node;
+}
+
+//
+// `get_left()` will return the left node.
+//
+BNode* BNode::get_left()
+{
+	return _left;
+}
+
+//
 // `get_left_edge()` will return the outer left node of this node, or this
 // node if left is NULL.
 //
@@ -51,6 +103,22 @@ BNode* BNode::get_left_edge()
 }
 
 //
+// `set_right()` will set the right child to `node`.
+//
+void BNode::set_right(BNode* node)
+{
+	_right = node;
+}
+
+//
+// `get_right()` will return the right node.
+//
+BNode* BNode::get_right()
+{
+	return _right;
+}
+
+//
 // `get_right_edge()` will return the outer right node of this node, or this
 // node if right is NULL.
 //
@@ -61,6 +129,30 @@ BNode* BNode::get_right_edge()
 		p = p->_right;
 	}
 	return p;
+}
+
+//
+// `is_left_of()` will return `1` if current node is left child
+// of `node`.
+//
+int BNode::is_left_of(BNode* node)
+{
+	if (node->get_left() == this) {
+		return 1;
+	}
+	return 0;
+}
+
+//
+// `is_right_of()` will return `1` if current node is right child of
+// `node`.
+//
+int BNode::is_right_of(BNode* node)
+{
+	if (node->get_right() == this) {
+		return 1;
+	}
+	return 0;
 }
 
 //
