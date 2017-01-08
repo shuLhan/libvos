@@ -78,6 +78,22 @@ int test_n = 0;
 Buffer in;
 List* lbuf;
 
+void test_copy_raw()
+{
+	Buffer b;
+	const char* str = "a";
+
+	b.copy_raw(str);
+
+	assert(b._i == (int) strlen(str));
+	assert(strcmp(b.chars(), str) == 0);
+
+	b.copy_raw(STR_TEST_0);
+
+	assert(b._i == strlen(STR_TEST_0));
+	assert(strcmp(STR_TEST_0, b.chars()) == 0);
+}
+
 void test_split_by_char_n(const int x, const char* input, const char split
 	, const int trim, const char* exp, const int exp_size)
 {
@@ -154,10 +170,7 @@ int main()
 	assert(a._i == 0);
 	assert(strcmp("", a.chars()) == 0);
 
-	a.copy_raw(STR_TEST_0);
-
-	assert(a._i == strlen(STR_TEST_0));
-	assert(strcmp(STR_TEST_0, a.chars()) == 0);
+	test_copy_raw();
 
 	test_split_by_char();
 
