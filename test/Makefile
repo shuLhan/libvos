@@ -89,6 +89,13 @@ FTPD_OBJS=	$(List_OBJS)			\
 		$(LIBVOS_BLD_D)/FTPD_client.oo	\
 		$(LIBVOS_BLD_D)/FTPD.oo
 
+TreeNode_OBJS=	$(BNode_OBJS)			\
+		$(LIBVOS_BLD_D)/TreeNode.oo
+
+RBT_OBJS=	$(TreeNode_OBJS)		\
+		$(Locker_OBJS)			\
+		$(LIBVOS_BLD_D)/RBT.oo
+
 TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Buffer.test		\
 	$(BLD_D)/BNode.test		\
@@ -101,7 +108,8 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Rowset.test		\
 	$(BLD_D)/Locker.test		\
 	$(BLD_D)/FTPD.test		\
-	$(BLD_D)/DSVRecordMD.test
+	$(BLD_D)/DSVRecordMD.test	\
+	$(BLD_D)/RBT.test
 
 .PHONY: all clean
 

@@ -52,7 +52,9 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/FTPD_user.oo		\
 			$(LIBVOS_BLD_D)/FTPD.oo			\
 			$(LIBVOS_BLD_D)/Rowset.oo		\
-			$(LIBVOS_BLD_D)/SSVReader.oo
+			$(LIBVOS_BLD_D)/SSVReader.oo		\
+			$(LIBVOS_BLD_D)/TreeNode.oo		\
+			$(LIBVOS_BLD_D)/RBT.oo
 
 #
 # with OCI library
@@ -124,6 +126,7 @@ $(LIBVOS_BLD_D)/Locker.oo	\
 $(LIBVOS_BLD_D)/BNode.oo	\
 $(LIBVOS_BLD_D)/Buffer.oo	: $(LIBVOS_BLD_D)/Object.oo
 
+$(LIBVOS_BLD_D)/TreeNode.oo	\
 $(LIBVOS_BLD_D)/List.oo		: $(LIBVOS_BLD_D)/BNode.oo
 
 $(LIBVOS_BLD_D)/Rowset.oo	: $(LIBVOS_BLD_D)/List.oo
@@ -148,6 +151,9 @@ $(LIBVOS_BLD_D)/Config.oo	\
 $(LIBVOS_BLD_D)/Dlogger.oo	\
 $(LIBVOS_BLD_D)/Socket.oo	: $(LIBVOS_BLD_D)/File.oo
 
+$(LIBVOS_BLD_D)/RBT.oo		: $(LIBVOS_BLD_D)/TreeNode.oo
+
+$(LIBVOS_BLD_D)/RBT.oo		\
 $(LIBVOS_BLD_D)/List.oo		\
 $(LIBVOS_BLD_D)/Dlogger.oo	\
 $(LIBVOS_BLD_D)/SockServer.oo	: $(LIBVOS_BLD_D)/Locker.oo
