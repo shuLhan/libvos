@@ -1,4 +1,4 @@
-v0.3.0 (2016-11-)
+v0.3.0 (2017-01-DD)
 ===================
 
 Breaking Changes
@@ -13,6 +13,9 @@ Enhancements
 
 * Buffer:
   - add static function to compare buffer from two Objects
+
+* Dlogger:
+  - open(): add parameter to show or hide timestamp on log output
 
 * List:
   - add method to swap List item by index

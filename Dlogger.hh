@@ -25,7 +25,7 @@ public:
 	Dlogger();
 	~Dlogger();
 
-	int open(const char* logfile, off_t max_size = 0);
+	int open(const char* logfile, off_t max_size = 0, int show_timestamp = 1);
 	void close();
 	void add_timestamp();
 
@@ -42,6 +42,7 @@ private:
 	Buffer		_tmp;
 	time_t		_time_s;
 	struct tm	_time;
+	int		_time_show;
 	int		_s;
 	va_list		_args;
 	off_t		_max_size;

@@ -18,6 +18,7 @@ Dlogger::Dlogger () :
 ,	_tmp()
 ,	_time_s(0)
 ,	_time()
+,	_time_show(0)
 ,	_s(0)
 #if defined(sun) || defined(__sun) || defined(__i386__)
 ,	_args()
@@ -39,11 +40,12 @@ Dlogger::~Dlogger()
  * @method		: Dlogger::open
  * @param logfile	: a log file name, with or without leading path.
  * @param max_size	: maximum of file size in byte.
+ * @param show_timestamp: `0` to disable timestamp on log output.
  * @return < 0		: success.
  * @return < -1		: fail.
  * @desc		: start the log daemon on the file 'logfile'.
  */
-int Dlogger::open (const char* logfile, off_t max_size)
+int Dlogger::open (const char* logfile, off_t max_size, int show_timestamp)
 {
 	if (logfile) {
 		close();
@@ -57,6 +59,7 @@ int Dlogger::open (const char* logfile, off_t max_size)
 
 		return _s;
 	}
+	_time_show = show_timestamp;
 	return 0;
 }
 
@@ -82,6 +85,10 @@ void Dlogger::close()
  */
 inline void Dlogger::add_timestamp()
 {
+	if (!_time_show) {
+		return;
+	}
+
 	_time_s = time(NULL);
 	localtime_r(&_time_s, &_time);
 
