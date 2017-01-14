@@ -16,6 +16,7 @@ namespace vos {
 Dlogger::Dlogger () :
 	_locker()
 ,	_tmp()
+,	_prefix()
 ,	_time_s(0)
 ,	_time()
 ,	_time_show(0)
@@ -40,13 +41,19 @@ Dlogger::~Dlogger()
  * @method		: Dlogger::open
  * @param logfile	: a log file name, with or without leading path.
  * @param max_size	: maximum of file size in byte.
+ * @param prefix	: string to be inserted at the beginning of each
+ * line, after timestamp and before actual log output.
  * @param show_timestamp: `0` to disable timestamp on log output.
  * @return < 0		: success.
  * @return < -1		: fail.
  * @desc		: start the log daemon on the file 'logfile'.
  */
-int Dlogger::open (const char* logfile, off_t max_size, int show_timestamp)
+int Dlogger::open (const char* logfile, off_t max_size, const char* prefix
+	, int show_timestamp)
 {
+	_prefix.copy_raw(prefix);
+	_time_show = show_timestamp;
+
 	if (logfile) {
 		close();
 
@@ -59,7 +66,6 @@ int Dlogger::open (const char* logfile, off_t max_size, int show_timestamp)
 
 		return _s;
 	}
-	_time_show = show_timestamp;
 	return 0;
 }
 
@@ -74,6 +80,7 @@ void Dlogger::close()
 		File::close();
 		_d	= STDERR_FILENO;
 		_status	= O_WRONLY;
+		_prefix.reset();
 	}
 }
 
@@ -97,6 +104,11 @@ inline void Dlogger::add_timestamp()
 		_time.tm_hour, _time.tm_min, _time.tm_sec);
 }
 
+void Dlogger::add_prefix()
+{
+	_tmp.append(&_prefix);
+}
+
 /**
  * @method		: Dlogger::_w
  * @param		:
@@ -109,6 +121,7 @@ void Dlogger::_w(int fd, const char* fmt)
 	ssize_t ws = 0;
 
 	add_timestamp();
+	add_prefix();
 
 	_s = _tmp.vprint(fmt, _args);
 	if (_s <= 0) {

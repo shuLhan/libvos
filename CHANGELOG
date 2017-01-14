@@ -16,6 +16,7 @@ Enhancements
 
 * Dlogger:
   - open(): add parameter to show or hide timestamp on log output
+  - open(): add parameter to prefix-ing log with custom string
 
 * List:
   - add method to swap List item by index

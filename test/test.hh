@@ -8,6 +8,8 @@
 
 #include "../Buffer.hh"
 
+using vos::Buffer;
+
 #define CB(s)		"{ " s " }"
 #define SB(s)		"[ " s " ]"
 
@@ -22,6 +24,18 @@
 #define STR_TEST_1	"test 1"
 #define STR_TEST_2	"test 2"
 
-using vos::Buffer;
+int expectString(const char* exp, const char* got, int to)
+{
+	int s = strcmp(exp, got);
+
+	if (s == to) {
+		return 0;
+	}
+
+	printf("[T] >>> Expecting: %s\n", exp);
+	printf("[T] >>> Got: %s\n", got);
+
+	return 1;
+}
 
 // vi: ts=8 sw=8 tw=78:
