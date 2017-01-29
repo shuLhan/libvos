@@ -11,6 +11,11 @@
 
 namespace vos {
 
+enum _node_attr {
+	RBT_IS_RED	= 1
+,	RBT_IS_BLACK	= 2
+};
+
 //
 // `TreeNode` implement node for tree data structure, with
 //   - two pointers to child nodes: `_left` and `_right`,
@@ -22,9 +27,19 @@ class TreeNode : public BNode {
 public:
 	TreeNode(Object* item);
 	virtual ~TreeNode();
+	void detach();
 
 	void set_attr(int x);
+	void set_attr_to_red();
+	void set_attr_to_black();
+	int get_attr();
+	void swap_attr(TreeNode* node);
+
 	int have_attr(int x);
+	int is_red();
+	int is_black();
+	int is_left_red();
+	int is_right_red();
 
 	void set_left(TreeNode* node);
 	TreeNode* get_left();
@@ -36,7 +51,16 @@ public:
 	TreeNode* get_parent();
 	TreeNode* get_grand_parent();
 
+	int have_no_childs();
+	int have_red_childs();
+	int have_black_childs();
+
+	void set_childs_attr(int x);
+	void set_childs_attr_to_red();
+	void set_childs_attr_to_black();
+
 	void insert_left(TreeNode* node);
+	void insert_right(TreeNode* node);
 
 	const char* chars();
 

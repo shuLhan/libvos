@@ -29,9 +29,18 @@ TreeNode::TreeNode(Object* item) : BNode(item)
 TreeNode::~TreeNode()
 {
 	_attr = 0;
-	_left = NULL;
-	_right = NULL;
-	_top = NULL;
+	detach();
+}
+
+//
+// `detach()` will unlink all node pointers to other nodes, make it detached
+// from tree.
+//
+void TreeNode::detach()
+{
+	set_left(NULL);
+	set_right(NULL);
+	set_parent(NULL);
 }
 
 //
@@ -43,11 +52,84 @@ void TreeNode::set_attr(int x)
 }
 
 //
+// `set_attr_to_red` will set current attribute to RED.
+//
+void TreeNode::set_attr_to_red()
+{
+	set_attr(RBT_IS_RED);
+}
+
+//
+// `set_attr_to_black` will set current attribute to BLACK.
+//
+void TreeNode::set_attr_to_black()
+{
+	set_attr(RBT_IS_BLACK);
+}
+
+//
+// `get_attr()` will return current node attribute.
+//
+int TreeNode::get_attr()
+{
+	return _attr;
+}
+
+//
+// `swap_attr` will swap current attribute with `node`.
+//
+void TreeNode::swap_attr(TreeNode* node)
+{
+	int tmp = node->get_attr();
+	node->set_attr(get_attr());
+	set_attr(tmp);
+}
+
+//
 // `have_attr()` will return non-zero value if attribute contain `x`.
 //
 int TreeNode::have_attr(int x)
 {
 	return (_attr & x);
+}
+
+//
+// `is_red()` will return non-zero value if attribute is RBT RED.
+//
+int TreeNode::is_red()
+{
+	return (_attr & RBT_IS_RED);
+}
+
+//
+// `is_black()` will return non-zero value if attribute is RBT BLACK.
+//
+int TreeNode::is_black()
+{
+	return (_attr & RBT_IS_BLACK);
+}
+
+//
+// `is_left_red()` will return non-zero if left node is RED, or `0` otherwise.
+//
+int TreeNode::is_left_red()
+{
+	if (_left && _left->is_red()) {
+		return 1;
+	}
+	return 0;
+}
+
+//
+// `is_right_red()` will return non-zero if right node is RED, or `0`
+// otherwise.
+//
+int TreeNode::is_right_red()
+{
+	if (_right && _right->is_red()) {
+		return 1;
+	}
+	return 0;
 }
 
 //
@@ -110,19 +192,101 @@ TreeNode* TreeNode::get_grand_parent()
 }
 
 //
-// `insert_left()` will insert `o` to left child. If current left
-// child is not empty then it will be the left child of `o`.
+// `have_no_childs()` will return 1 if node does not any childs; or 0 if node
+// have one child or both childs.
 //
-void TreeNode::insert_left(TreeNode* o)
+int TreeNode::have_no_childs()
 {
-	o->set_left(_left);
-	o->set_parent(this);
+	if (_left || _right) {
+		return 0;
+	}
+	return 1;
+}
+
+//
+// `have_red_childs` will return 1 if both of its childs are RED, otherwise
+// it will return 0.
+//
+int TreeNode::have_red_childs()
+{
+	if ((_left && _left->is_red()) && (_right && _right->is_red())) {
+		return 1;
+	}
+	return 0;
+}
+
+//
+// `have_black_childs` will return 1 if both of its childs are BLACK,
+// otherwise it will return 0.
+//
+int TreeNode::have_black_childs()
+{
+	if ((_left && _left->is_black()) && (_right && _right->is_black())) {
+		return 1;
+	}
+	return 0;
+}
+
+//
+// `set_childs_attr` will set the attribute of both of child to `x`.
+//
+void TreeNode::set_childs_attr(int x)
+{
+	if (_left) {
+		_left->set_attr(x);
+	}
+	if (_right) {
+		_right->set_attr(x);
+	}
+}
+
+//
+// `set_childs_attr_to_red` will set the attribute of both of child to RED.
+//
+void TreeNode::set_childs_attr_to_red()
+{
+	set_childs_attr(RBT_IS_RED);
+}
+
+//
+// `set_childs_attr_to_black` will set the attribute of both of child to
+// BLACK.
+//
+void TreeNode::set_childs_attr_to_black()
+{
+	set_childs_attr(RBT_IS_BLACK);
+}
+
+//
+// `insert_left()` will insert `node` to left-child. If current left
+// child is not empty then it will be the left-child of `node`.
+//
+void TreeNode::insert_left(TreeNode* node)
+{
+	node->set_left(_left);
+	node->set_parent(this);
 
 	if (_left) {
-		_left->set_parent(o);
+		_left->set_parent(node);
 	}
 
-	_left = o;
+	_left = node;
+}
+
+//
+// `insert_right()` will insert `node` to right-child. If current right
+// child is not empty then it will be the right-child of `node`.
+//
+void TreeNode::insert_right(TreeNode* node)
+{
+	node->set_right(_right);
+	node->set_parent(this);
+
+	if (_right) {
+		_right->set_parent(node);
+	}
+
+	_right = node;
 }
 
 //

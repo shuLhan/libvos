@@ -15,8 +15,11 @@ const char* RBT::__cname = "RBT";
 // `fn_cmp` parameter is a pointer to function that will be used to compare
 // nodes when doing insertion.
 //
-RBT::RBT(int (*fn_cmp)(TreeNode*, TreeNode*)) : Locker()
+RBT::RBT(int (*fn_cmp)(Object*, Object*)) : Locker()
 ,	_root(NULL)
+,	_red_nodes()
+,	_n_black(-1)
+,	_n_black_valid(1)
 ,	_fn_cmp(fn_cmp)
 {}
 
@@ -47,23 +50,51 @@ RBT::~RBT()
 	unlock();
 }
 
-void RBT::_chars(Buffer* b, TreeNode* p, int level)
+void RBT::_chars(Buffer* b, TreeNode* p, int level, int n_black)
 {
 	int x = 0;
 
+	if (!p) {
+		return;
+	}
+
+	if (p->is_black()) {
+		n_black++;
+	}
+
 	if (p->_left) {
-		_chars(b, p->_left, level+1);
+		_chars(b, p->_left, level+1, n_black);
 	}
 
 	for (; x < level; x++) {
-		b->appendc(' ');
+		b->append_raw("..");
 	}
 
 	b->append_raw(p->chars());
+
+	if (!p->_left && !p->_right) {
+		b->aprint("  N Black (%d)", n_black);
+
+		if (_n_black < 0) {
+			_n_black = n_black;
+		} else {
+			if (_n_black != n_black) {
+				_n_black_valid = 0;
+			}
+		}
+	}
+
 	b->appendc('\n');
 
+	if (p->is_red()) {
+		if (_red_nodes._i > 0) {
+			_red_nodes.appendc(' ');
+		}
+		_red_nodes.append_raw(p->BNode::chars());
+	}
+
 	if (p->_right) {
-		_chars(b, p->_right, level+1);
+		_chars(b, p->_right, level+1, n_black);
 	}
 }
 
@@ -82,7 +113,12 @@ const char* RBT::chars()
 		_v = NULL;
 	}
 
-	_chars(&b, p, 0);
+	_red_nodes.reset();
+
+	_n_black = -1;
+	_n_black_valid = 1;
+
+	_chars(&b, p, 0, 0);
 
 	_v = b._v;
 	b._v = NULL;
@@ -90,6 +126,15 @@ const char* RBT::chars()
 	unlock();
 
 	return _v;
+}
+
+const char* RBT::get_red_node_chars()
+{
+	if (_red_nodes.is_empty()) {
+		return "\0";
+	}
+
+	return _red_nodes.chars();
 }
 
 //
@@ -100,100 +145,116 @@ void RBT::set_root_unsafe(TreeNode* node)
 	_root = node;
 }
 
-//
-// `get_root_unsafe()` will return the root of the tree as a node.
-//
+/**
+ * `get_root_unsafe()` will return the root of the tree as a node.
+ * This is a non-thread safe operation.
+ */
 TreeNode* RBT::get_root_unsafe()
 {
 	return _root;
 }
 
-//
-// `TREE_ROTATE_RIGHT()` will move the left-child (son) of `parent` as parent
-// of itself.
-// if son have daughter, then it will be the left child of `parent`.
-//
-// ```
-//   ...                ...                |
-//     \                  \                |
-//      parent             son             |
-//       / \                 \             |
-//    son   r-child  ==>      parent       |
-//     \                        / \        |
-//      g-daughter    g-daughter   r-chilf |
-// ```
-//
-static TreeNode* TREE_ROTATE_RIGHT(TreeNode* root, TreeNode* parent)
+/**
+ * `get_root()` will return the root of the tree.
+ * This is a thread safe operation.
+ */
+TreeNode* RBT::get_root()
 {
-	TreeNode* gp = parent->get_parent();
-	TreeNode* son = parent->get_left();
-	TreeNode* granddaughter = son->get_right();
+	TreeNode* r = NULL;
 
-	parent->set_left(granddaughter);
+	lock();
+	r = _root;
+	unlock();
+
+	return r;
+};
+
+/**
+ *
+ * `TREE_ROTATE_RIGHT()` will move the left-child of `x` as parent of
+ * itself.
+ * if left-child have right-child, then it will be the left child of `parent`
+ * replacing previous left-child.
+ *
+ * ```
+ *       ...               ...
+ *        |                 |
+ *        x                left
+ *       / \                 \
+ *    left  ...  ==>          x
+ *       \                   / \
+ *        gleft         gleft  ...
+ * ```
+ */
+static TreeNode* TREE_ROTATE_RIGHT(TreeNode* root, TreeNode* x)
+{
+	TreeNode* parent = x->get_parent();
+	TreeNode* left = x->get_left();
+	TreeNode* granddaughter = left->get_right();
+
+	x->set_left(granddaughter);
 
 	if (granddaughter) {
-		granddaughter->set_parent(parent);
+		granddaughter->set_parent(x);
 	}
 
-	son->set_parent(gp);
+	left->set_parent(parent);
 
-	if (!gp) {
-		root = son;
+	if (!parent) {
+		root = left;
 	} else {
-		if (gp->get_right() == parent) {
-			gp->set_right(son);
+		if (x->is_left_of(parent)) {
+			parent->set_left(left);
 		} else {
-			gp->set_left(son);
+			parent->set_right(left);
 		}
 	}
 
-	son->set_right(parent);
-	parent->set_parent(son);
+	left->set_right(x);
+	x->set_parent(left);
 
 	return root;
 }
 
-//
-// `TREE_ROTATE_LEFT()` will promote the right-child (daughter) of `parent` as
-// their parent.
-// If daughter have son, then it will be the right child of `parent`.
-//
-// ```
-//  ...                        ...            |
-//    \                          \            |
-//     parent                     daughter    |
-//      / \          ===>         /           |
-//   ...   daughter         parent            |
-//            /              / \              |
-//       g-son            ...   g-son         |
-// ```
-//
-static TreeNode* TREE_ROTATE_LEFT(TreeNode* root, TreeNode* parent)
+/**
+ * `TREE_ROTATE_LEFT()` will promote the right-child of `parent` as their
+ * parent.
+ * If right have son, then it will be the right child of `parent`.
+ *
+ *     ...                 ...
+ *      |                   |
+ *      x                right
+ *     / \          ===>   /
+ *  ...   right           x
+ *        /              / \
+ *      g-son          ...   g-son
+ */
+static TreeNode* TREE_ROTATE_LEFT(TreeNode* root, TreeNode* x)
 {
-	TreeNode* gp = parent->get_parent();
-	TreeNode* daughter = parent->get_right();
-	TreeNode* grandson = daughter->get_left();
+	TreeNode* parent = x->get_parent();
+	TreeNode* right = x->get_right();
+	TreeNode* gleft = right->get_left();
 
-	parent->set_right(grandson);
+	x->set_right(gleft);
 
-	if (grandson) {
-		grandson->set_parent(parent);
+	if (gleft) {
+		gleft->set_parent(x);
 	}
 
-	daughter->set_parent(gp);
+	right->set_parent(parent);
 
-	if (!gp) {
-		root = daughter;
+	if (!parent) {
+		root = right;
 	} else {
-		if (gp->get_left() == parent) {
-			gp->set_left(daughter);
+		if (x->is_left_of(parent)) {
+			parent->set_left(right);
 		} else {
-			gp->set_right(daughter);
+			parent->set_right(right);
 		}
 	}
 
-	daughter->set_left(parent);
-	parent->set_parent(daughter);
+	right->set_left(x);
+	x->set_parent(right);
 
 	return root;
 }
@@ -201,6 +262,7 @@ static TreeNode* TREE_ROTATE_LEFT(TreeNode* root, TreeNode* parent)
 //
 // 1. While parent is RED,
 // 1.1. get grand-parent.
+// 1.1.1. If grand-parent is NULL, stop.
 // 1.2. If parent is the left child of grand-parent,
 // 1.2.1. get sibling of parent (grand-parent's right child), lets call it
 // aunt.
@@ -216,21 +278,9 @@ static TreeNode* TREE_ROTATE_LEFT(TreeNode* root, TreeNode* parent)
 // 1.2.3.3. set grand-parent to RED
 // 1.2.3.4. rotate grand-parent's tree to right
 //
-// 1.3. If parent is the right child of grand-parent,
-// 1.3.1. set aunt as left child of grand-parent.
-// 1.3.2. If aunt is RED (parent is also RED),
-// 1.3.2.1. set aunt and parent to BLACK
-// 1.3.2.2. set grand-parent to RED
-// 1.3.2.3. set node as grand-parent
-// 1.3.3. otherwise, if aunt is BLACK,
-// 1.3.3.1. and node is left child of parent,
-// 1.3.3.1.1. set node to parent,
-// 1.3.3.1.2. rotate parent tree to the right.
-// 1.3.3.2. set parent to BLACK
-// 1.3.3.3. set grand-parent to RED
-// 1.3.3.4. rotate grand-parent's tree to left.
+// ... mirroring the left-side operation
 //
-// 1.4. Get node parent again.
+// 1.4. Get node parent again and go to step 1.1
 //
 static TreeNode* INSERT_FIXUP(TreeNode* root, TreeNode* node)
 {
@@ -240,9 +290,10 @@ static TreeNode* INSERT_FIXUP(TreeNode* root, TreeNode* node)
 
 	// (1)
 	parent = node->get_parent();
-	while (parent && parent->have_attr(RBT_IS_RED)) {
-		// (1.1)
+	while (parent && parent->is_red()) {
 		gp = node->get_grand_parent();
+
+		// (1.1.1)
 		if (!gp) {
 			break;
 		}
@@ -253,10 +304,10 @@ static TreeNode* INSERT_FIXUP(TreeNode* root, TreeNode* node)
 			aunt = gp->get_right();
 
 			// (1.2.2)
-			if (aunt && aunt->have_attr(RBT_IS_RED)) {
-				parent->set_attr(RBT_IS_BLACK);
-				aunt->set_attr(RBT_IS_BLACK);
-				gp->set_attr(RBT_IS_RED);
+			if (aunt && aunt->is_red()) {
+				parent->set_attr_to_black();
+				aunt->set_attr_to_black();
+				gp->set_attr_to_red();
 
 				node = gp;
 			} else {
@@ -267,8 +318,8 @@ static TreeNode* INSERT_FIXUP(TreeNode* root, TreeNode* node)
 					root = TREE_ROTATE_LEFT(root, node);
 				}
 
-				parent->set_attr(RBT_IS_BLACK);
-				gp->set_attr(RBT_IS_RED);
+				parent->set_attr_to_black();
+				gp->set_attr_to_red();
 
 				root = TREE_ROTATE_RIGHT(root, gp);
 			}
@@ -277,10 +328,10 @@ static TreeNode* INSERT_FIXUP(TreeNode* root, TreeNode* node)
 			aunt = gp->get_left();
 
 			// (1.3.2)
-			if (aunt && aunt->have_attr(RBT_IS_RED)) {
-				parent->set_attr(RBT_IS_BLACK);
-				aunt->set_attr(RBT_IS_BLACK);
-				gp->set_attr(RBT_IS_RED);
+			if (aunt && aunt->is_red()) {
+				parent->set_attr_to_black();
+				aunt->set_attr_to_black();
+				gp->set_attr_to_red();
 
 				node = gp;
 			} else {
@@ -291,8 +342,8 @@ static TreeNode* INSERT_FIXUP(TreeNode* root, TreeNode* node)
 					root = TREE_ROTATE_RIGHT(root, node);
 				}
 
-				parent->set_attr(RBT_IS_BLACK);
-				gp->set_attr(RBT_IS_RED);
+				parent->set_attr_to_black();
+				gp->set_attr_to_red();
 
 				root = TREE_ROTATE_LEFT(root, gp);
 			}
@@ -302,7 +353,7 @@ static TreeNode* INSERT_FIXUP(TreeNode* root, TreeNode* node)
 		parent = node->get_parent();
 	}
 
-	root->set_attr(RBT_IS_BLACK);
+	root->set_attr_to_black();
 
 	return root;
 }
@@ -327,16 +378,18 @@ TreeNode* RBT::insert(TreeNode* node, int replace)
 	TreeNode* top = NULL;
 
 	if (!p) {
-		node->set_attr(RBT_IS_RED);
+		node->set_attr_to_black();
 		set_root_unsafe(node);
 
 		unlock();
 		return node;
 	}
 
+	node->set_attr_to_red();
+
 	while (p) {
 		top = p;
-		s = _fn_cmp(p, node);
+		s = _fn_cmp(node->get_content(), p->get_content());
 
 		if (s == 0) {
 			if (replace) {
@@ -345,34 +398,266 @@ TreeNode* RBT::insert(TreeNode* node, int replace)
 				unlock();
 				return p;
 			}
+			s = 1;
+		}
 
-			p->insert_left(node);
-			node->set_attr(RBT_IS_RED);
-
-			set_root_unsafe(INSERT_FIXUP(_root, node));
-
-			unlock();
-			return node;
-		} else if (s < 0) {
-			p = p->get_right();
-		} else {
+		if (s < 0) {
 			p = p->get_left();
+		} else {
+			p = p->get_right();
 		}
 	}
 
 	if (s < 0) {
-		top->set_right(node);
-	} else {
 		top->set_left(node);
+	} else {
+		top->set_right(node);
 	}
 
 	node->set_parent(top);
-	node->set_attr(RBT_IS_RED);
-
 	set_root_unsafe(INSERT_FIXUP(_root, node));
-
 	unlock();
 	return node;
+}
+
+void RBT::_do_rebalance(TreeNode* x)
+{
+	TreeNode* parent = NULL;
+	TreeNode* sibling = NULL;
+	TreeNode* siblingr = NULL;
+	TreeNode* siblingl = NULL;
+
+	while (x != _root) {
+		parent = x->get_parent();
+
+		if (x->is_left_of(parent)) {
+			sibling = parent->get_right();
+
+			if (sibling->is_red()) {
+				set_root_unsafe(TREE_ROTATE_LEFT(_root, parent));
+
+				sibling->set_attr_to_black();
+
+				if (parent->_right) {
+					parent->_right->set_attr_to_red();
+				}
+
+				return;
+			}
+
+			if (sibling->is_right_red()) {
+				set_root_unsafe(TREE_ROTATE_LEFT(_root, parent));
+
+				if (sibling->have_red_childs()) {
+					sibling->set_attr_to_red();
+				} else {
+					sibling->set_attr_to_black();
+				}
+				sibling->set_childs_attr_to_black();
+
+				return;
+			}
+
+			siblingl = sibling->get_left();
+			if (siblingl && siblingl->is_red()) {
+				set_root_unsafe(TREE_ROTATE_RIGHT(_root, sibling));
+				sibling->swap_attr(siblingl);
+				parent = x;
+				continue;
+			}
+
+			if (sibling->have_no_childs()
+			||  sibling->have_black_childs()) {
+				sibling->set_attr_to_red();
+
+				if (parent->is_red()) {
+					parent->set_attr_to_black();
+					return;
+				}
+
+				if (parent == _root) {
+					return;
+				}
+			}
+		} else {
+			sibling = parent->get_left();
+
+			if (sibling->is_red()) {
+				set_root_unsafe(TREE_ROTATE_RIGHT(_root, parent));
+
+				sibling->set_attr_to_black();
+
+				if (parent->_left) {
+					parent->_left->set_attr_to_red();
+				}
+
+				return;
+			}
+
+			if (sibling->is_left_red()) {
+				set_root_unsafe(TREE_ROTATE_RIGHT(_root, parent));
+
+				if (sibling->have_red_childs()) {
+					sibling->set_attr_to_red();
+				} else {
+					sibling->set_attr_to_black();
+				}
+
+				sibling->set_childs_attr_to_black();
+
+				return;
+			}
+
+			siblingr = sibling->get_right();
+			if (siblingr && siblingr->is_red()) {
+				set_root_unsafe(TREE_ROTATE_LEFT(_root, sibling));
+				sibling->swap_attr(siblingr);
+				parent = x;
+				continue;
+			}
+
+			if (sibling->have_no_childs()
+			||  sibling->have_black_childs()) {
+				sibling->set_attr_to_red();
+
+				if (parent->is_red()) {
+					parent->set_attr_to_black();
+					return;
+				}
+
+				if (parent == _root) {
+					return;
+				}
+			}
+		}
+
+		x = parent;
+	}
+
+	_root->set_childs_attr_to_black();
+}
+
+void RBT::_removed_have_no_child(TreeNode* x)
+{
+	TreeNode* parent = x->get_parent();
+
+	if (!parent) {
+		set_root_unsafe(NULL);
+		x->detach();
+		return;
+	}
+
+	if (x->is_black()) {
+		_do_rebalance(x);
+	}
+
+	if (x->is_left_of(parent)) {
+		parent->set_left(NULL);
+	} else {
+		parent->set_right(NULL);
+	}
+
+	x->detach();
+}
+
+TreeNode* RBT::_removed_have_both_childs(TreeNode* x)
+{
+	TreeNode* heir = x->get_left();
+
+	// Find the largest on the left.
+	while (heir->get_right()) {
+		heir = heir->get_right();
+	}
+
+	heir->swap_content(x);
+
+	return _remove_unsafe(heir);
+}
+
+TreeNode* RBT::_remove_unsafe(TreeNode* x)
+{
+	if (!x) {
+		return NULL;
+	}
+
+	TreeNode* left = x->get_left();
+	TreeNode* right = x->get_right();
+
+	if (!left && !right) {
+		_removed_have_no_child(x);
+		return x;
+	}
+	if (left && !right) {
+		left->swap_content(x);
+		_removed_have_no_child(left);
+		return left;
+	}
+	if (right && !left) {
+		right->swap_content(x);
+		_removed_have_no_child(right);
+		return right;
+	}
+
+	return _removed_have_both_childs(x);
+}
+
+/**
+ * `remove(o)` will remove node `o` from tree and return it.
+ */
+TreeNode* RBT::remove(TreeNode* x)
+{
+	if (!x) {
+		return NULL;
+	}
+
+	lock();
+
+	x = _remove_unsafe(x);
+
+	unlock();
+	return x;
+}
+
+/**
+ * `find()` will search node in tree that have the same item. Return the node
+ * object if found or NULL if not found.
+ */
+TreeNode* RBT::find(Object* item)
+{
+	int s = 0;
+	TreeNode* p = NULL;
+
+	lock();
+
+	p = get_root_unsafe();
+
+	while (p) {
+		s = _fn_cmp(item, p->get_content());
+		if (s == 0) {
+			goto out;
+		}
+		if (s < 0) {
+			p = p->get_left();
+		} else {
+			p = p->get_right();
+		}
+	}
+out:
+	unlock();
+	return p;
+}
+
+/**
+ * `is_nblack_valid()` will return `1` if number of every path from root to
+ * each leave has the same number of black nodes; otherwise it will return
+ * `0`.
+ */
+int RBT::is_nblack_valid()
+{
+	if (_n_black < 0) {
+		chars();
+	}
+	return _n_black_valid;
 }
 
 } // namespace vos
