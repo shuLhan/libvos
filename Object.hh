@@ -19,6 +19,8 @@ public:
 	virtual int cmp(Object* that);
 	virtual const char* chars();
 
+	static int CMP(Object* x, Object* y);
+
 	// `__cname` contain class name.
 	static const char *__cname;
 
