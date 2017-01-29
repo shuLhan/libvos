@@ -74,6 +74,16 @@ Object* BNode::get_content()
 }
 
 //
+// `swap_content()` will swap the content of node `x` with `y`.
+//
+void BNode::swap_content(BNode* x)
+{
+	Object* x_item = x->get_content();
+	x->set_content(get_content());
+	set_content(x_item);
+}
+
+//
 // `set_left()` will set the left child to `node`.
 //
 void BNode::set_left(BNode* node)

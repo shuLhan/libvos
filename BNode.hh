@@ -24,17 +24,18 @@ public:
 	void replace_content(BNode* node);
 	void set_content(Object* item);
 	Object* get_content();
+	virtual void swap_content(BNode* x);
 
 	virtual void set_left(BNode* node);
 	virtual BNode* get_left();
-	BNode* get_left_edge();
+	virtual BNode* get_left_edge();
 
 	virtual void set_right(BNode* node);
 	virtual BNode* get_right();
-	BNode* get_right_edge();
+	virtual BNode* get_right_edge();
 
-	int is_left_of(BNode* node);
-	int is_right_of(BNode* node);
+	virtual int is_left_of(BNode* node);
+	virtual int is_right_of(BNode* node);
 
 	void push_left(BNode* node);
 	void push_right(BNode* node);
