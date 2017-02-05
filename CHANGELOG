@@ -1,8 +1,15 @@
-v0.3.0 (2017-01-DD)
+v0.3.0 (2017-02-05)
 ===================
 
 Breaking Changes
 ----------------
+
+* Buffer:
+  - cmp(): change parameter from Buffer* to Object*
+  - add constructor to create Buffer object from pointer to char
+  - add constructor to create Buffer object from pointer to Buffer
+  - remove INIT, INIT_RAW, and INIT_SIZE, because its duplicate with
+    constructors
 
 * DNSQuery:
   - remove `_next` attribute
@@ -10,6 +17,8 @@ Breaking Changes
 
 Enhancements
 ------------
+
+* RBT: new module as implementation of Red-Black Tree algorithm
 
 * Buffer:
   - add static function to compare buffer from two Objects
@@ -19,13 +28,30 @@ Enhancements
   - open(): add parameter to prefix-ing log with custom string
 
 * List:
-  - add method to swap List item by index
-  - add method to get List node at specifix index
+  - make it thread safe
+  - Return BNode object after pushing an item to the list
+  - add method to detach list item from the list
+  - add method to push node in head and tail in sorted order.
+  - add method to search list using Object with comparable function
+  - add method to sort list
+  - add method to swap list item by index
+  - add method to get list node at specifix index
   - add unsafe method to get List item at specific index
   - add method to pop node object from head or tail
 
+* Object:
+  - add static method `CMP` to compare two objects
+
+
 Fixes
 -----
+
+* Config:
+  - Allow empty key value
+
+* Dlogger:
+  - _w(): check write size and repeat until all buffer has been written to
+    disk
 
 * List:
   - fix chars() when using List as pointer to another List
