@@ -1,0 +1,72 @@
+# libvos Coding Style
+
+	The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+	"SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this
+	document are to be interpreted as described in RFC 2119.
+
+## Background
+
+After writing program long enough in C, I am started to developing some
+pattern in my code. Most recognizable pattern is, in example,
+
+	func(struct adt* obj, int param)
+
+where `struct adt` is a collection of data that is dependable whether it is
+mutual or not, and `func` is a function that change the content of data in
+`obj`.
+
+In C++ this pattern can be handled easily using `class` syntax, why
+make it complicated if a compiler can handle it.
+
+Unlike C, which is have a simple and minimalistic syntax, C++ offer a more
+grammar to their user, on this library I only use three of them,
+
+* `class`, including public and private section,
+* `namespace`, and
+* inheritance or class hierarchies.
+
+Rationale: First, C++ syntax is a mess. There is `<` for number comparison,
+and also for opening template declaration. There is `<<` for bitwise and `<<`
+for sending to stream. This, almost all time, make the code is unreadable.
+
+Second, there is a standard that not every compiler can catch up with it.
+
+
+## File naming
+
+* The file name for source file is `.cc` and for header file is `.hh`.
+
+* Each class must have its own `.cc` and `.hh` files.
+
+* File name for source and header must be the same with class name. For
+  example if class name is `ClassName` then source and header file would be
+  `ClassName.cc` and `ClassName.hh`.
+
+### Indentation
+
+* Indentation must use tab, not space
+* Tab width must be `8`
+* Text width must be `78`
+
+### Comment
+
+Comment should use `//` syntax instead of `/* */`, even in multiline
+comments, except for special case where comment contains many '/' characters.
+
+### Class
+
+* Class must inherited `Object`, so it must
+	* define `__cname`
+	* overwrite `chars()` method
+
+* Class must have private method for object copy and overwrite `=` operator,
+  example class with `ClassName.hh`
+
+	```
+	class ClassName : public Object {
+		...
+	private:
+		ClassName(const ClassName&);
+		void operator=(const ClassName&);
+	};
+	```
