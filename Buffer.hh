@@ -33,6 +33,8 @@ namespace vos {
 class Buffer : public Object {
 public:
 	Buffer(const int bfr_size = DFLT_SIZE);
+	Buffer(const char* v);
+	Buffer(const Buffer* v);
 	virtual ~Buffer();
 
 	int resize(const int len);
@@ -88,9 +90,6 @@ public:
 	int	_i;
 	int	_l;
 
-	static int INIT(Buffer** o, const Buffer* bfr);
-	static int INIT_RAW(Buffer** o, const char* bfr);
-	static int INIT_SIZE(Buffer** o, const int size);
 	static int VSNPRINTF(char *bfr, int len, const char *fmt,
 				va_list args);
 	static int TRIM(char *bfr, int len);

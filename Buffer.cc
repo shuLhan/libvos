@@ -38,6 +38,36 @@ Buffer::Buffer(const int bfr_size) : Object()
 	resize(bfr_size);
 }
 
+//
+// `Buffer(const char*)` will create a new Buffer object and initialize with
+// value from `v`.
+//
+Buffer::Buffer(const char* v) : Object()
+,	_i(0)
+,	_l(0)
+{
+	if (v) {
+		copy_raw(v);
+	} else {
+		resize(DFLT_SIZE);
+	}
+}
+
+//
+// `Buffer(const Buffer*)` will create a new Buffer object and initialize its
+// value from another Buffer `v`.
+//
+Buffer::Buffer(const Buffer* v) : Object()
+,	_i(0)
+,	_l(0)
+{
+	if (v) {
+		copy(v);
+	} else {
+		resize(DFLT_SIZE);
+	}
+}
+
 Buffer::~Buffer()
 {
 	if (_v && _l) {
@@ -943,97 +973,6 @@ void Buffer::dump_hex()
 	o.append_raw("\n\n", 2);
 
 	printf("%s", o._v);
-}
-
-/**
- * @method	: Buffer::INIT
- * @param	:
- *	> o	: output, a new Buffer object.
- *	> bfr	: pointer to Buffer object, to be copied to new object.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	:
- * Create and initialize a new Buffer object based on data on 'bfr' object.
- */
-int Buffer::INIT(Buffer** o, const Buffer* bfr)
-{
-	register int s = -1;
-
-	if ((*o)) {
-		s = (*o)->copy(bfr);
-	} else {
-		(*o) = new Buffer();
-		if ((*o)) {
-			s = (*o)->copy(bfr);
-			if (s != 0) {
-				delete (*o);
-				(*o) = NULL;
-			}
-		}
-	}
-	return s;
-}
-
-/**
- * @method	: Buffer::INIT_RAW
- * @param	:
- *	> o	: output, a new Buffer object.
- *	> bfr	: pointer to raw buffer.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	:
- * Create and initialized a new Buffer object based on raw buffer 'bfr'.
- */
-int Buffer::INIT_RAW(Buffer** o, const char* bfr)
-{
-	register int s = -1;
-
-	if ((*o)) {
-		(*o)->copy_raw(bfr);
-	} else {
-		(*o) = new Buffer();
-		if ((*o)) {
-			s = (*o)->copy_raw(bfr, 0);
-			if (s < 0) {
-				delete (*o);
-				(*o) = NULL;
-			}
-		}
-	}
-	return s;
-}
-
-/**
- * @method	: Buffer::INIT_SIZE
- * @param	:
- *	> o	: output, a new Buffer object.
- *	> size	: size of buffer, for a new Buffer object.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	:
- * Create and initialized a new Buffer object with buffer size is equal to
- * 'size'.
- */
-int Buffer::INIT_SIZE(Buffer** o, const int size)
-{
-	register int s = -1;
-
-	if ((*o)) {
-		s = (*o)->resize(size);
-	} else {
-		(*o) = new Buffer();
-		if ((*o)) {
-			s = (*o)->resize(size);
-			if (s < 0) {
-				delete (*o);
-				(*o) = NULL;
-			}
-		}
-	}
-	return s;
 }
 
 /**
