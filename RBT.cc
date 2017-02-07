@@ -15,12 +15,15 @@ const char* RBT::__cname = "RBT";
 // `fn_cmp` parameter is a pointer to function that will be used to compare
 // nodes when doing insertion.
 //
-RBT::RBT(int (*fn_cmp)(Object*, Object*)) : Locker()
+RBT::RBT(int (*fn_cmp)(Object*, Object*)
+	, void (*fn_swap)(Object*, Object*))
+:	Locker()
 ,	_root(NULL)
 ,	_red_nodes()
 ,	_n_black(-1)
 ,	_n_black_valid(1)
 ,	_fn_cmp(fn_cmp)
+,	_fn_swap(fn_swap)
 {}
 
 void RBT::_delete(TreeNode* p)
@@ -126,6 +129,18 @@ const char* RBT::chars()
 	unlock();
 
 	return _v;
+}
+
+void RBT::swap_content(TreeNode* x, TreeNode* y)
+{
+	Object* ox = x->get_content();
+	Object* oy = y->get_content();
+	x->set_content(oy);
+	y->set_content(ox);
+
+	if (_fn_swap) {
+		_fn_swap(ox, oy);
+	}
 }
 
 const char* RBT::get_red_node_chars()
@@ -318,7 +333,7 @@ static TreeNode* INSERT_FIXUP(TreeNode* root, TreeNode* node)
 					root = TREE_ROTATE_LEFT(root, node);
 				}
 
-				parent->set_attr_to_black();
+				node->get_parent()->set_attr_to_black();
 				gp->set_attr_to_red();
 
 				root = TREE_ROTATE_RIGHT(root, gp);
@@ -342,7 +357,7 @@ static TreeNode* INSERT_FIXUP(TreeNode* root, TreeNode* node)
 					root = TREE_ROTATE_RIGHT(root, node);
 				}
 
-				parent->set_attr_to_black();
+				node->get_parent()->set_attr_to_black();
 				gp->set_attr_to_red();
 
 				root = TREE_ROTATE_LEFT(root, gp);
@@ -433,6 +448,10 @@ void RBT::_do_rebalance(TreeNode* x)
 		if (x->is_left_of(parent)) {
 			sibling = parent->get_right();
 
+			if (!sibling) {
+				break;
+			}
+
 			if (sibling->is_red()) {
 				set_root_unsafe(TREE_ROTATE_LEFT(_root, parent));
 
@@ -445,7 +464,8 @@ void RBT::_do_rebalance(TreeNode* x)
 				return;
 			}
 
-			if (sibling->is_right_red()) {
+			siblingr = sibling->get_right();
+			if (siblingr && siblingr->is_red()) {
 				set_root_unsafe(TREE_ROTATE_LEFT(_root, parent));
 
 				if (sibling->have_red_childs()) {
@@ -482,6 +502,10 @@ void RBT::_do_rebalance(TreeNode* x)
 		} else {
 			sibling = parent->get_left();
 
+			if (!sibling) {
+				break;
+			}
+
 			if (sibling->is_red()) {
 				set_root_unsafe(TREE_ROTATE_RIGHT(_root, parent));
 
@@ -494,7 +518,8 @@ void RBT::_do_rebalance(TreeNode* x)
 				return;
 			}
 
-			if (sibling->is_left_red()) {
+			siblingl = sibling->get_left();
+			if (siblingl && siblingl->is_red()) {
 				set_root_unsafe(TREE_ROTATE_RIGHT(_root, parent));
 
 				if (sibling->have_red_childs()) {
@@ -502,7 +527,6 @@ void RBT::_do_rebalance(TreeNode* x)
 				} else {
 					sibling->set_attr_to_black();
 				}
-
 				sibling->set_childs_attr_to_black();
 
 				return;
@@ -537,14 +561,14 @@ void RBT::_do_rebalance(TreeNode* x)
 	_root->set_childs_attr_to_black();
 }
 
-void RBT::_removed_have_no_child(TreeNode* x)
+TreeNode* RBT::_removed_have_no_child(TreeNode* x)
 {
 	TreeNode* parent = x->get_parent();
 
 	if (!parent) {
 		set_root_unsafe(NULL);
 		x->detach();
-		return;
+		return x;
 	}
 
 	if (x->is_black()) {
@@ -558,6 +582,8 @@ void RBT::_removed_have_no_child(TreeNode* x)
 	}
 
 	x->detach();
+
+	return x;
 }
 
 TreeNode* RBT::_removed_have_both_childs(TreeNode* x)
@@ -569,7 +595,7 @@ TreeNode* RBT::_removed_have_both_childs(TreeNode* x)
 		heir = heir->get_right();
 	}
 
-	heir->swap_content(x);
+	swap_content(x, heir);
 
 	return _remove_unsafe(heir);
 }
@@ -584,18 +610,15 @@ TreeNode* RBT::_remove_unsafe(TreeNode* x)
 	TreeNode* right = x->get_right();
 
 	if (!left && !right) {
-		_removed_have_no_child(x);
-		return x;
+		return _removed_have_no_child(x);
 	}
 	if (left && !right) {
-		left->swap_content(x);
-		_removed_have_no_child(left);
-		return left;
+		swap_content(x, left);
+		return _removed_have_no_child(left);
 	}
 	if (right && !left) {
-		right->swap_content(x);
-		_removed_have_no_child(right);
-		return right;
+		swap_content(x, right);
+		return _removed_have_no_child(right);
 	}
 
 	return _removed_have_both_childs(x);
@@ -612,10 +635,10 @@ TreeNode* RBT::remove(TreeNode* x)
 
 	lock();
 
-	x = _remove_unsafe(x);
+	TreeNode* del = _remove_unsafe(x);
 
 	unlock();
-	return x;
+	return del;
 }
 
 /**
@@ -648,15 +671,52 @@ out:
 }
 
 /**
- * `is_nblack_valid()` will return `1` if number of every path from root to
+ * `_check_balance()` will count number of black node in each path. It will
+ * return 1, if all path is balanced or 0 otherwise.
+ */
+int RBT::_check_balance(TreeNode* p, int nblack)
+{
+	if (!p) {
+		return 1;
+	}
+
+	if (p->is_black()) {
+		nblack++;
+	}
+
+	if (p->_left) {
+		_check_balance(p->_left, nblack);
+	}
+
+	if (!p->_left && !p->_right) {
+		if (_n_black < 0) {
+			_n_black = nblack;
+		} else {
+			if (_n_black != nblack) {
+				_n_black_valid = 0;
+				return 0;
+			}
+		}
+	}
+
+	if (p->_right) {
+		_check_balance(p->_right, nblack);
+	}
+
+	return 1;
+};
+
+/**
+ * `is_balance()` will return `1` if number of every path from root to
  * each leave has the same number of black nodes; otherwise it will return
  * `0`.
  */
-int RBT::is_nblack_valid()
+int RBT::is_balance()
 {
-	if (_n_black < 0) {
-		chars();
-	}
+	lock();
+	_n_black = -1;
+	_n_black_valid = _check_balance(_root, 0);
+	unlock();
 	return _n_black_valid;
 }
 

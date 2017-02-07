@@ -18,10 +18,12 @@ namespace vos {
 //
 class RBT : public Locker {
 public:
-	RBT(int (*fn_cmp)(Object*, Object*));
+	RBT(int (*fn_cmp)(Object*, Object*)
+		, void (fn_swap)(Object*, Object*) = NULL);
 	virtual ~RBT();
 
 	const char* chars();
+	void swap_content(TreeNode* x, TreeNode* y);
 	const char* get_red_node_chars();
 
 	void set_root_unsafe(TreeNode* node);
@@ -32,7 +34,7 @@ public:
 	TreeNode* remove(TreeNode* node);
 	TreeNode* find(Object* item);
 
-	int is_nblack_valid();
+	int is_balance();
 
 	static const char* __cname;
 private:
@@ -47,11 +49,14 @@ private:
 	int _n_black_valid;
 
 	int (*_fn_cmp)(Object*, Object*);
-	void _delete(TreeNode* p);
+	void (*_fn_swap)(Object*, Object*);
+
 	void _chars(Buffer* b, TreeNode* node, int level = 0, int n_black = 0);
+	void _delete(TreeNode* p);
+	int _check_balance(TreeNode* p, int nblack);
 
 	void _do_rebalance(TreeNode* x);
-	void _removed_have_no_child(TreeNode* x);
+	TreeNode* _removed_have_no_child(TreeNode* x);
 	TreeNode* _removed_have_both_childs(TreeNode* x);
 	TreeNode* _remove_unsafe(TreeNode* x);
 

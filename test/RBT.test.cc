@@ -15,6 +15,10 @@ Buffer* b = NULL;
 
 int expect_red_nodes(RBT* rbt, const char* exp)
 {
+	if (!exp) {
+		return 0;
+	}
+
 	const char* got = rbt->get_red_node_chars();
 
 	int s = strcmp(exp, got);
@@ -89,6 +93,7 @@ void tree_populate(RBT* rbt)
 
 	while (v <= 'z') {
 		do_insert(rbt, v++, exps[exp_idx++]);
+		assert(rbt->is_balance());
 	}
 }
 
@@ -128,7 +133,7 @@ void do_remove(RBT* rbt, const char node_item, const char* exp)
 
 		exit(1);
 	} else {
-		if (! rbt->is_nblack_valid()) {
+		if (! rbt->is_balance()) {
 			printf("RBT: before:\n%s\n", tree_before.chars());
 			printf("RBT: remove: %c\n", node_item);
 			printf("RBT: after :\n%s\n", tree_after.chars());
@@ -145,31 +150,57 @@ void test_insert()
 	tree_populate(&rbt);
 
 	do_insert(&rbt, 'a', "a l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'b', "a b l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'c', "a b c l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'd', "a b c d l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'e', "a b c d e l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'f', "a b c d e f l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'g', "a b c d e f g l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'h', "a b c d e f g h l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'i', "a b c d e f g h i l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'j', "a b c d e f g h i j l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'k', "a b c d e f g h i j k l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'l', "a b c d e f g h i j k l l t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'm', "a b c d e f g h i j k l l m t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'n', "a b c d e f g h i j k l l m n t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'o', "a b c d e f g h i j k l l m n o t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'p', "a b c d e f g h i j k l l m n o p t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'q', "a b c d e f g h i j k l l m n o p q t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'r', "a b c d e f g h i j k l l m n o p q r t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 's', "a b c d e f g h i j k l l m n o p q r s t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 't', "a b c d e f g h i j k l l m n o p q r s t t x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'u', "a b c d e f g h i j k l l m n o p q r s t t u x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'v', "a b c d e f g h i j k l l m n o p q r s t t u v x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'w', "a b c d e f g h i j k l l m n o p q r s t t u v w x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'x', "a b c d e f g h i j k l l m n o p q r s t t u v w x x z");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'y', "a b c d e f g h i j k l l m n o p q r s t t u v v w y y");
+	assert(rbt.is_balance());
 	do_insert(&rbt, 'z', "a b c d e f g h i j k l l m n o p q r s t t u v v w y y z");
+	assert(rbt.is_balance());
 }
 
 //
@@ -217,6 +248,7 @@ void test_remove_ascending()
 	b = new Buffer();
 	while (v <= 'z') {
 		do_remove(&rbt, v++, exps[exp_idx++]);
+		assert(rbt.is_balance());
 	}
 	delete b;
 }
@@ -266,6 +298,7 @@ void test_remove_descending()
 	b = new Buffer();
 	while (v >= 'a') {
 		do_remove(&rbt, v--, exps[exp_idx++]);
+		assert(rbt.is_balance());
 	}
 	delete b;
 }
@@ -284,32 +317,59 @@ void test_remove_manual_01()
 	b = new Buffer();
 
 	do_remove(&rbt, 'x', "l t y");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'g', "b e l y");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'w', "b e l z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'm', "b e j o z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 's', "b e h j o q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'k', "b e h i o q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'j', "b e h o q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'c', "a e h o q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'n', "a e h q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'j', "a d e q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'l', "a d e o q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'i', "a d e q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'e', "a d q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'p', "a f q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'a', "f q v z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'u', "f q y");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'q', "f y");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'h', "y");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'b', "f");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'o', "\0");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'r', "d y");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'z', "d v");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'f', "v");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 't', "\0");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'd', "y");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'v', "\0");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'y', "\0");
+	assert(rbt.is_balance());
 
 	delete b;
 }
@@ -325,33 +385,60 @@ void test_remove_manual_02()
 	b = new Buffer();
 
 	do_remove(&rbt, 'c', "a f l x z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'k', "a f i n x z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'd', "f i n x z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'g', "e i n x z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'q', "e i n s z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'x', "e i n s");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'v', "e i n");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'b', "i n");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'n', "i o");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'p', "i");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'h', "a i l u");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 's', "a i l t y");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'u', "a i l y");
+	assert(rbt.is_balance());
 
 	do_remove(&rbt, 'w', "a i l z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'm', "a j z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'j', "a l z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'j', "z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'l', "a z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'i', "z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'e', "f t z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'a', "t z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'o', "r z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'r', "z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'z', "\0");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'f', "y");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 't', "\0");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'y', "\0");
+	assert(rbt.is_balance());
 
 	delete b;
 }
@@ -367,32 +454,59 @@ void test_remove_manual_03()
 	b = new Buffer();
 
 	do_remove(&rbt, 'g', "b e l x z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'u', "b e l w z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'e', "b l w z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 't', "b q w x z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'n', "b o q w z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'b', "c o q w z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'v', "c o q z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'm', "c q z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'a', "q z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'p', "z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'o', "h r x z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'l', "d i r x z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'j', "d r x z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'i', "f r x z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'y', "f r x");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'c', "r x");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'h', "d r");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 's', "d");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'x', "d k z");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'q', "f z");
+	assert(rbt.is_balance());
 
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'w', "f");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'k', "d");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'r', "\0");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'z', "d");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'f', "\0");
+	assert(rbt.is_balance());
 	do_remove(&rbt, 'd', "\0");
+	assert(rbt.is_balance());
 
 	delete b;
 }
@@ -414,8 +528,32 @@ void test_remove_random()
 
 	while (rbt.get_root_unsafe()) {
 		do_remove(&rbt, (char)('a' + (rand() % 26)), NULL);
+		assert(rbt.is_balance());
 	}
 
+	delete b;
+}
+
+void test_random_insert_remove()
+{
+	int nins = 0;
+	RBT rbt(Object::CMP);
+
+	printf("RBT: random insert and remove\n");
+
+	srand((unsigned int) time(NULL));
+
+	while (nins < 30) {
+		do_insert(&rbt, (char)('a' + (rand() % 26)), NULL);
+		assert(rbt.is_balance());
+		nins++;
+	}
+
+	b = new Buffer();
+	while (rbt.get_root_unsafe()) {
+		do_remove(&rbt, (char)('a' + (rand() % 26)), NULL);
+		assert(rbt.is_balance());
+	}
 	delete b;
 }
 
@@ -428,6 +566,9 @@ int main()
 	test_remove_manual_02();
 	test_remove_manual_03();
 	test_remove_random();
+	test_random_insert_remove();
+	test_random_insert_remove();
+	test_random_insert_remove();
 
 	return 0;
 }
