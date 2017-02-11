@@ -12,6 +12,24 @@ const char* DNS_rr::__cname = "DNS_rr";
 
 unsigned int DNS_rr::RDATA_MAX_SIZE = 255;
 
+const int RR_TYPE_SIZE = 22;
+
+const char* RR_TYPE_LIST[RR_TYPE_SIZE] = {
+		"A"	,"NS"	,"MD"	,"MF",	"CNAME"
+	,	"SOA"	,"MB"	,"MG"	,"MR",	"NULL"
+	,	"WKS"	,"PTR"	,"HINFO","MINFO","MX"
+	,	"TXT"	,"AAAA"	,"SRV"	,"AXFR"	,"MAILB"
+	,	"MAILA"	,"*"
+	};
+
+const int RR_TYPE_VALUE[RR_TYPE_SIZE] = {
+		1	,2	,3	,4	,5
+	,	6	,7	,8	,9	,10
+	,	11	,12	,13	,14	,15
+	,	16	,28	,33	,252	,253
+	,	254	,255
+	};
+
 /**
  * @method	: DNS_rr::DNS_rr
  */

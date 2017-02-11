@@ -1,6 +1,8 @@
 #include "test.hh"
 #include "../Resolver.hh"
 
+using vos::_RR_TYPE;
+
 vos::Resolver res;
 
 #define	DEF_IPV6	":::0"
@@ -33,28 +35,34 @@ void test_server_list()
 {
 	res.set_server(TEST_0);
 
-	printf("    got: %s\n", res.chars());
-	printf("    exp: %s\n", TEST_0_EXP);
-
-	assert(strcmp(TEST_0_EXP, res.chars()) == 0);
+	expectString(TEST_0_EXP, res.chars(), 0);
 
 	res.add_server(TEST_1);
 
-	printf("    got: %s\n", res.chars());
-	printf("    exp: %s\n", TEST_1_EXP);
-
-	assert(strcmp(TEST_1_EXP, res.chars()) == 0);
+	expectString(TEST_1_EXP, res.chars(), 0);
 
 	res.set_server(TEST_2);
 
-	printf("    got: %s\n", res.chars());
-	printf("    exp: %s\n", TEST_2_EXP);
+	expectString(TEST_2_EXP, res.chars(), 0);
+}
 
-	assert(strcmp(TEST_2_EXP, res.chars()) == 0);
+void test_CONVERT_TYPE()
+{
+	int s;
+
+	s = res.CONVERT_TYPE("A");
+	assert(s == _RR_TYPE::QUERY_T_ADDRESS);
+
+	s = res.CONVERT_TYPE("AAAA");
+	assert(s == _RR_TYPE::QUERY_T_AAAA);
+
+	s = res.CONVERT_TYPE("AA");
+	assert(s == -1);
 }
 
 int main()
 {
 	test_server_list();
+	test_CONVERT_TYPE();
 	return 0;
 }

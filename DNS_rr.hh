@@ -37,6 +37,10 @@ enum _RR_TYPE {
 	QUERY_T_ALL
 };
 
+extern const int RR_TYPE_SIZE;
+extern const char* RR_TYPE_LIST[];
+extern const int RR_TYPE_VALUE[];
+
 enum _RR_CLASS {
 	QUERY_C_IN	= 1,
 	QUERY_C_CS,

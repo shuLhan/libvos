@@ -28,6 +28,7 @@ Resolver::Resolver() : Socket()
 ,	_servers()
 ,	_p_server(NULL)
 ,	_p_saddr(NULL)
+,	_str(NULL)
 {
 	srand((unsigned int) time(NULL));
 }
@@ -37,7 +38,12 @@ Resolver::Resolver() : Socket()
  * @desc	: Resolver object destructor.
  */
 Resolver::~Resolver()
-{}
+{
+	if (_str) {
+		free(_str);
+		_str = NULL;
+	}
+}
 
 /**
  * @method	: Resolver::init
@@ -686,17 +692,41 @@ int Resolver::resolve(DNSQuery* question, DNSQuery* answer)
 //
 const char* Resolver::chars()
 {
-	if (_v) {
-		free(_v);
+	if (_str) {
+		free(_str);
+		_str = NULL;
 	}
 
 	Buffer b;
 	b.aprint("{ \"servers\": %s }", _servers.chars());
 
-	_v = b._v;
+	_str = b._v;
 	b._v = NULL;
 
-	return _v;
+	return _str;
+}
+
+/**
+ * `CONVERT_TYPE()` will convert string representation of type to their number
+ * value. For example, "A" will return 1, "TXT" will return 16.
+ *
+ * It will return -1 if no type is matched with our list.
+ */
+int Resolver::CONVERT_TYPE(const char* type)
+{
+	int s = 0;
+	int x = 0;
+	int found = -1;
+
+	for (; x < RR_TYPE_SIZE; x++) {
+		s = strcmp(RR_TYPE_LIST[x], type);
+		if (s == 0) {
+			found = RR_TYPE_VALUE[x];
+			break;
+		}
+	}
+
+	return found;
 }
 
 } /* namespace::vos */

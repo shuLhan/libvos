@@ -60,6 +60,8 @@ public:
 
 	const char* chars();
 
+	static int CONVERT_TYPE(const char* type);
+
 	int		_maxfd;
 	fd_set		_fd_all;
 	fd_set		_fd_read;
@@ -71,15 +73,16 @@ public:
 	static unsigned int TIMEOUT;
 	static unsigned int N_TRY;
 private:
+	Resolver(const Resolver&);
+	void operator=(const Resolver&);
+
 	// _p_server is a pointer to current (active) server in list of server
 	// (_servers)
 	BNode*		_p_server;
 	// _p_saddr is a pointer to current server address.
 	SockAddr*	_p_saddr;
 
-
-	Resolver(const Resolver&);
-	void operator=(const Resolver&);
+	char* _str;
 };
 
 }
