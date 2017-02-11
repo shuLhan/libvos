@@ -35,6 +35,7 @@ int Buffer::CHAR_SIZE = sizeof(char);
 Buffer::Buffer(const int bfr_size) : Object()
 ,	_i(0)
 ,	_l(0)
+,	_v(NULL)
 {
 	resize(bfr_size);
 }
@@ -46,6 +47,7 @@ Buffer::Buffer(const int bfr_size) : Object()
 Buffer::Buffer(const char* v) : Object()
 ,	_i(0)
 ,	_l(0)
+,	_v(NULL)
 {
 	if (v) {
 		copy_raw(v);
@@ -61,6 +63,7 @@ Buffer::Buffer(const char* v) : Object()
 Buffer::Buffer(const Buffer* v) : Object()
 ,	_i(0)
 ,	_l(0)
+,	_v(NULL)
 {
 	if (v) {
 		copy(v);
@@ -702,12 +705,12 @@ int Buffer::subc(int from, int to)
  * @desc	: Compare content of this buffer with content on 'bfr' object.
  * This is a case sensitive compare, where "A" != "a".
  */
-int Buffer::cmp(const Object* bfr)
+int Buffer::cmp(Object* bfr)
 {
 	if (!bfr) {
 		return 1;
 	}
-	return cmp_raw(bfr->_v);
+	return cmp_raw(bfr->chars());
 }
 
 /**
@@ -954,6 +957,11 @@ int Buffer::PARSE_INT(char** pp, int* v)
 	(*v) = (int) lv;
 
 	return 0;
+}
+
+const char* Buffer::chars()
+{
+	return _v;
 }
 
 /**

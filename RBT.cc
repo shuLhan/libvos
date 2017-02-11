@@ -111,9 +111,9 @@ const char* RBT::chars()
 	Buffer b;
 	TreeNode* p = _root;
 
-	if (_v) {
-		free(_v);
-		_v = NULL;
+	if (__str) {
+		free(__str);
+		__str = NULL;
 	}
 
 	_red_nodes.reset();
@@ -123,12 +123,12 @@ const char* RBT::chars()
 
 	_chars(&b, p, 0, 0);
 
-	_v = b._v;
+	__str = b._v;
 	b._v = NULL;
 
 	unlock();
 
-	return _v;
+	return __str;
 }
 
 void RBT::swap_content(TreeNode* x, TreeNode* y)

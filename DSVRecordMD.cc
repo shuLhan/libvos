@@ -99,14 +99,15 @@ const char* DSVRecordMD::chars()
 
 	o.append_raw(" }");
 
-	if (_v) {
-		free(_v);
+	if (__str) {
+		free(__str);
+		__str = NULL;
 	}
 
-	_v = o._v;
+	__str = o._v;
 	o._v = NULL;
 
-	return _v;
+	return __str;
 }
 
 /**

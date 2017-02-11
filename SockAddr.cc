@@ -138,9 +138,9 @@ const char* SockAddr::get_address(const int type)
 //
 const char* SockAddr::chars()
 {
-	if (_v) {
-		free(_v);
-		_v = NULL;
+	if (__str) {
+		free(__str);
+		__str = NULL;
 	}
 	Buffer b;
 
@@ -154,10 +154,10 @@ const char* SockAddr::chars()
 	b.appendc(':');
 	b.appendi(get_port(AF_INET6));
 
-	_v = b._v;
+	__str = b._v;
 	b._v = NULL;
 
-	return _v;
+	return __str;
 }
 
 /**

@@ -29,7 +29,7 @@ Locker::~Locker()
 
 const char* Locker::chars()
 {
-	return _v;
+	return __str;
 }
 
 //

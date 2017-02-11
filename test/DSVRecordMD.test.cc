@@ -49,9 +49,7 @@ void test_INIT()
 
 	for (x = 0; x < list_md->size(); x++) {
 		md = (DSVRecordMD*) list_md->at(x);
-		printf(">> exp: %s\n", exp[x].chars());
-		printf("   got: %s\n", md->chars());
-		assert(strcmp(exp[x].chars(), md->chars()) == 0);
+		expectString(exp[x].chars(), md->chars(), 0);
 	}
 }
 

@@ -83,16 +83,10 @@ int main()
 	row = create_row_0();
 	rowset.push_tail(row);
 
-	printf("exp: '%s'\n", EXP_0);
-	printf("got: '%s'\n", rowset.chars());
-
-	assert(strcmp(EXP_0, rowset.chars()) == 0);
+	expectString(EXP_0, rowset.chars(), 0);
 
 	row = create_row_1();
 	rowset.push_tail(row);
 
-	printf("exp: '%s'\n", EXP_1);
-	printf("got: '%s'\n", rowset.chars());
-
-	assert(strcmp(EXP_1, rowset.chars()) == 0);
+	expectString(EXP_1, rowset.chars(), 0);
 }

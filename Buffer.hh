@@ -67,7 +67,7 @@ public:
 
 	int subc(int from, int to);
 
-	int cmp(const Object* bfr);
+	int cmp(Object* bfr);
 	int cmp_raw(const char* bfr, int len = 0);
 	int like(const Buffer* bfr);
 	int like_raw(const char* bfr, int len = 0);
@@ -77,7 +77,7 @@ public:
 	List* split_by_char(const char sep, int trim = 0);
 	List* split_by_whitespace();
 
-
+	const char* chars();
 	void dump();
 	void dump_hex();
 
@@ -86,10 +86,9 @@ public:
 		return !_i;
 	}
 
-	using Object::chars;
-
 	int	_i;
 	int	_l;
+	char* _v;
 
 	static int PARSE_INT(char** pp, int* v);
 	static int VSNPRINTF(char *bfr, int len, const char *fmt,

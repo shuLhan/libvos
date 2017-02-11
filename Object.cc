@@ -11,14 +11,14 @@ namespace vos {
 const char *Object::__cname = "Object";
 
 Object::Object() :
-	_v(NULL)
+	__str(NULL)
 {}
 
 Object::~Object()
 {
-	if (_v != NULL) {
-		free(_v);
-		_v = NULL;
+	if (__str != NULL) {
+		free(__str);
+		__str = NULL;
 	}
 }
 
@@ -30,12 +30,12 @@ int Object::cmp(Object* that)
 	if (this == that) {
 		return 0;
 	}
-	return strcmp(_v, that->chars());
+	return strcmp(__str, that->chars());
 }
 
 const char* Object::chars()
 {
-	return _v;
+	return __str;
 }
 
 //

@@ -4,15 +4,34 @@
 // found in the LICENSE file.
 //
 
+#include "test.hh"
 #include "../DNSQuery.hh"
 #include "../List.hh"
 #include "../SSVReader.hh"
 
 int main()
 {
+	const char* exp_ips[] = {
+			"127.0.0.1"
+		,	"::1"
+		,	"127.0.0.1"
+		,	"127.0.0.1"
+		};
+	const char* exp_addr[] = {
+			"localhost.localdomain"
+		,	"localhost"
+		,	"localhost.localdomain"
+		,	"localhost"
+		,	"bubu"
+		,	"local.jquery.com"
+		,	"local.api.jquery.com"
+		,	"local.blog.jquery.com"
+		};
+
 	register int s;
 	int x = 0;
 	int y = 0;
+	int exp_addr_idx = 0;
 	int d;
 	vos::SSVReader reader;
 	vos::Buffer* ip = NULL;
@@ -28,12 +47,12 @@ int main()
 		row = (vos::List*) reader._rows->at(x);
 		ip = (vos::Buffer*) row->at(0);
 
-		printf(">> IP: '%s'\n", ip->chars());
+		expectString(exp_ips[x], ip->chars(), 0);
 
 		for (y = 1; y < row->size(); y++) {
 			c = (vos::Buffer*) row->at(y);
 
-			printf(">>\thostname: '%s'\n", c->chars());
+			expectString(exp_addr[exp_addr_idx++], c->chars(), 0);
 
 			s = inet_pton (AF_INET, ip->chars(), &d);
 

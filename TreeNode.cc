@@ -297,9 +297,9 @@ const char* TreeNode::chars()
 	if (!_item) {
 		return NULL;
 	}
-	if (_v) {
-		free(_v);
-		_v = 0;
+	if (__str) {
+		free(__str);
+		__str = 0;
 	}
 
 	Buffer b;
@@ -310,10 +310,10 @@ const char* TreeNode::chars()
 		b.append_raw(_item->chars());
 	}
 
-	_v = b._v;
+	__str = b._v;
 	b._v = NULL;
 
-	return _v;
+	return __str;
 }
 
 //

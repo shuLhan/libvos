@@ -81,8 +81,6 @@ private:
 	BNode*		_p_server;
 	// _p_saddr is a pointer to current server address.
 	SockAddr*	_p_saddr;
-
-	char* _str;
 };
 
 }

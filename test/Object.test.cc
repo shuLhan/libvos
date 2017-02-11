@@ -15,7 +15,7 @@ int main()
 	Object o;
 
 	assert(strcmp(o.__cname, "Object") == 0);
-	assert(o._v == NULL);
+	assert(o.__str == NULL);
 	assert(o.chars() == NULL);
 }
 

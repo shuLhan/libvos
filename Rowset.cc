@@ -31,13 +31,13 @@ Rowset::~Rowset()
 //
 const char* Rowset::chars()
 {
-	if (_v) {
-		free(_v);
-		_v = NULL;
+	if (__str) {
+		free(__str);
+		__str = NULL;
 	}
 
 	if (!_head) {
-		return _v;
+		return __str;
 	}
 
 	Buffer b;
@@ -59,10 +59,10 @@ const char* Rowset::chars()
 	b.append_raw(" ]");
 
 out:
-	_v = b._v;
+	__str = b._v;
 	b._v = NULL;
 
-	return _v;
+	return __str;
 }
 
 

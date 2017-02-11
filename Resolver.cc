@@ -28,7 +28,6 @@ Resolver::Resolver() : Socket()
 ,	_servers()
 ,	_p_server(NULL)
 ,	_p_saddr(NULL)
-,	_str(NULL)
 {
 	srand((unsigned int) time(NULL));
 }
@@ -38,12 +37,7 @@ Resolver::Resolver() : Socket()
  * @desc	: Resolver object destructor.
  */
 Resolver::~Resolver()
-{
-	if (_str) {
-		free(_str);
-		_str = NULL;
-	}
-}
+{}
 
 /**
  * @method	: Resolver::init
@@ -692,18 +686,18 @@ int Resolver::resolve(DNSQuery* question, DNSQuery* answer)
 //
 const char* Resolver::chars()
 {
-	if (_str) {
-		free(_str);
-		_str = NULL;
+	if (__str) {
+		free(__str);
+		__str = NULL;
 	}
 
 	Buffer b;
 	b.aprint("{ \"servers\": %s }", _servers.chars());
 
-	_str = b._v;
+	__str = b._v;
 	b._v = NULL;
 
-	return _str;
+	return __str;
 }
 
 /**

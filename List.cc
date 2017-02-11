@@ -28,9 +28,9 @@ List::~List()
 
 	lock();
 
-	if (_v) {
-		free(_v);
-		_v = NULL;
+	if (__str) {
+		free(__str);
+		__str = NULL;
 	}
 
 	unlock();
@@ -874,9 +874,9 @@ const char* List::chars()
 	const char* p = NULL;
 	BNode* node = _head;
 
-	if (_v) {
-		free(_v);
-		_v = NULL;
+	if (__str) {
+		free(__str);
+		__str = NULL;
 	}
 
 	if (!_head) {
@@ -901,12 +901,12 @@ const char* List::chars()
 
 	b.append_raw(" ]");
 
-	_v = b._v;
+	__str = b._v;
 	b._v = NULL;
 
 out:
 	unlock();
-	return _v;
+	return __str;
 }
 
 } // namespace vos

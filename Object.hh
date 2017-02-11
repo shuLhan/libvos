@@ -19,13 +19,13 @@ public:
 	virtual int cmp(Object* that);
 	virtual const char* chars();
 
+	// `__str` contain string representation of object.
+	char *__str;
+
 	static int CMP(Object* x, Object* y);
 
 	// `__cname` contain class name.
 	static const char *__cname;
-
-	// `_v` contain string representation of object.
-	char *_v;
 private:
 	Object(const Object&);
 	void operator=(const Object&);
