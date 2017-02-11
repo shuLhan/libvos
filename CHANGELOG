@@ -1,6 +1,20 @@
 next (2017-xx-xx)
 =================
 
+Breaking Changes
+----------------
+
+* Replace Object string representation attribute from `_v` to `__str`
+
+  We thought that we can use `_v` so other object that descended from
+  class Buffer does not have duplicate attribute.
+
+  Turn out we are wrong. We must differentiate between "what" the object is
+  and what the object content is. For example, a server have buffer `_v` to
+  read and write to client. When we want to know the information about server,
+  by printing it with `chars()`, it should not return or overwrite the content
+  of buffer but other information, e.g. IP address and port that they bind to.
+
 Enhancements
 ------------
 
@@ -10,7 +24,12 @@ Enhancements
   - VSNPRINTF: handle '.' with digit precision
 
 * DNSQuery:
-  - add method to get number of answer
+  - get_num_answer(): net method to get number of answer
+  - chars(): new method to get string representation of DNSQuery in JSON
+    format.
+
+* Resolver:
+  - add static method to convert DNS type from string to number
 
 v0.3.1 (2017-02-08)
 ===================

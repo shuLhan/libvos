@@ -8,6 +8,24 @@
 
 namespace vos {
 
+const char* _DNS_HDR_TYPE_NAME[] = {
+		"query"
+	,	"response"
+	};
+const char* _DNS_HDR_OPCODE_NAME[] = {
+		"QUERY"
+	,	"IQUERY"
+	,	"STATUS"
+	};
+const char* _DNS_HDR_RCODE_NAME[] = {
+		"OK"
+	,	"FORMAT_ERROR"
+	,	"SERVER_FAILURE"
+	,	"NAME_ERROR"
+	,	"NOT_IMPLEMENTED"
+	,	"REFUSED"
+	};
+
 /**
  * @method	: DNSQuery::DNSQuery
  */
@@ -1064,6 +1082,64 @@ void DNSQuery::dump(const int do_type)
 	if (_rr_add.size() > 0) {
 		printf("\n; ADDITIONAL section\n%s\n", _rr_add.chars());
 	}
+}
+
+const char* get_type(uint16_t flag)
+{
+	return _DNS_HDR_TYPE_NAME[(flag >> 15) & 0x0001];
+}
+
+const char* get_opcode(uint16_t flag)
+{
+	return _DNS_HDR_OPCODE_NAME[(flag >> 11) & 0x0003];
+}
+
+const char* get_rcode(uint16_t flag)
+{
+	return _DNS_HDR_RCODE_NAME[flag & RCODE_FLAG];
+}
+
+/**
+ * `chars()` will return string representation of this object as JSON
+ * notation.
+ */
+const char* DNSQuery::chars()
+{
+	if (__str) {
+		free(__str);
+		__str = NULL;
+	}
+
+	Buffer b;
+
+	b.append_raw("{\n");
+
+	b.aprint("\t" K(ID)     ": %d\n", _id);
+	b.aprint(",\t" K(TYPE)   ": " K(%s) "\n", get_type(_flag));
+	b.aprint(",\t" K(OPCODE) ": " K(%s) "\n", get_opcode(_flag));
+	b.aprint(",\t" K(AA)     ": %d\n", (_flag & RTYPE_AA) ? 1 : 0);
+	b.aprint(",\t" K(TC)     ": %d\n", (_flag & RTYPE_TC_ON) ? 1 : 0);
+	b.aprint(",\t" K(RD)     ": %d\n", (_flag & RTYPE_RD) ? 1 : 0);
+	b.aprint(",\t" K(RA)     ": %d\n", (_flag & RTYPE_RA) ? 1 : 0);
+	b.aprint(",\t" K(RCODE)  ": " K(%s) "\n", get_rcode(_flag));
+
+	b.append_raw(",\t" K(ANSWERS) ": ");
+	b.append_raw(_rr_ans.chars());
+	b.appendc('\n');
+
+	b.append_raw(",\t" K(AUTHORITY) ": ");
+	b.append_raw(_rr_aut.chars());
+	b.appendc('\n');
+
+	b.append_raw(",\t" K(ADDITIONAL) ": ");
+	b.append_raw(_rr_add.chars());
+	b.appendc('\n');
+
+	b.append_raw("}");
+
+	__str = b._v;
+	b._v = NULL;
+	return __str;
 }
 
 /**

@@ -153,6 +153,8 @@ public:
 	void reset(const int do_type = DNSQ_DO_DATA_ONLY);
 	void dump(const int do_type = DNSQ_DO_DATA_ONLY);
 
+	const char* chars();
+
 	/* DNS HEADER Section */
 	uint16_t	_id;
 	uint16_t	_flag;

@@ -9,6 +9,8 @@
 
 #include "libvos.hh"
 
+#define K(k) "\"" #k "\""
+
 namespace vos {
 
 class Object {
