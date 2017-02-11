@@ -713,7 +713,7 @@ int Resolver::CONVERT_TYPE(const char* type)
 	int found = -1;
 
 	for (; x < RR_TYPE_SIZE; x++) {
-		s = strcmp(RR_TYPE_LIST[x], type);
+		s = strcasecmp(RR_TYPE_LIST[x], type);
 		if (s == 0) {
 			found = RR_TYPE_VALUE[x];
 			break;
