@@ -987,6 +987,14 @@ void DNSQuery::set_rr_answer_ttl(unsigned int ttl)
 }
 
 /**
+ * `get_num_answer()` will return number of answer in RR.
+ */
+int DNSQuery::get_num_answer()
+{
+	return _rr_ans.size();
+}
+
+/**
  * @method		: DNSQuery::reset
  * @param		:
  *	> do_type	: reset type.
