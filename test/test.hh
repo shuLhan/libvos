@@ -35,7 +35,7 @@ int expectString(const char* exp, const char* got, int to)
 	printf("[T] >>> Expecting: %s\n", exp);
 	printf("[T] >>> Got: %s\n", got);
 
-	return 1;
+	exit(1);
 }
 
 // vi: ts=8 sw=8 tw=78:

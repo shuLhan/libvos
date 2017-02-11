@@ -14,17 +14,18 @@ const char* Buffer::__cname = "Buffer";
 static char __digits[17] = "0123456789ABCDEF";
 
 enum __print_flag {
-	FL_LEFT		= 1
-,	FL_SIGN		= 2
-,	FL_ZERO		= 4
-,	FL_OCTAL	= 8
-,	FL_HEX		= 16
-,	FL_NUMBER	= 32
-,	FL_WIDTH	= 64
-,	FL_ALT_OUT	= 128
-,	FL_SHORT	= 256
-,	FL_LONG		= 512
-,	FL_LONG_DBL	= 1024
+	FL_LEFT		= (1 << 0)
+,	FL_SIGN		= (1 << 1)
+,	FL_ZERO		= (1 << 2)
+,	FL_WIDTH	= (1 << 3)
+,	FL_PREC		= (1 << 4)
+,	FL_OCTAL	= (1 << 5)
+,	FL_HEX		= (1 << 6)
+,	FL_NUMBER	= (1 << 7)
+,	FL_ALT_OUT	= (1 << 8)
+,	FL_SHORT	= (1 << 9)
+,	FL_LONG		= (1 << 10)
+,	FL_LONG_DBL	= (1 << 11)
 };
 
 /* default buffer size */
@@ -417,11 +418,11 @@ int Buffer::appendui(long unsigned int i, int base)
  *
  *	Maximum digit in fraction is six digits.
  */
-int Buffer::appendd(double d)
+int Buffer::appendd(double d, int prec)
 {
 	char f[32];
 
-	if (::snprintf(f, 32, "%f", d) < 0) {
+	if (::snprintf(f, 32, "%.*f", prec, d) < 0) {
 		return -1;
 	}
 	return append_raw(f);
@@ -913,6 +914,49 @@ List* Buffer::split_by_whitespace()
 }
 
 /**
+ * `PARSE_INT()` will parse an integer in `pp`.
+ *
+ * It will return 0 if integer value successfully parsed and set `pp` to the
+ * next invalid character.
+ *
+ * It will return 0 if integer value successfully parsed and set `pp` to NULL
+ * if entire char is valid integer value.
+ *
+ * It will return `-1` if underflow/overflow or other error occured, value of
+ * `v` and `pp` will not change.
+ */
+int Buffer::PARSE_INT(char** pp, int* v)
+{
+	long int lv = 0;
+	char* p = (*pp);
+	char* end = p;
+
+	errno = 0;
+
+	lv = strtol(p, &end, 10);
+
+	// value out of range.
+	if ((errno == ERANGE && (lv == INT_MAX || lv == INT_MIN))
+	||  errno != 0
+	) {
+		perror(NULL);
+		return -1;
+	}
+
+	// value out of integer range.
+	if (lv > INT_MAX || lv < INT_MIN) {
+		errno = ERANGE;
+		(*pp) = p;
+		return -1;
+	}
+
+	(*pp) = end;
+	(*v) = (int) lv;
+
+	return 0;
+}
+
+/**
  * @method	: Buffer::dump
  * @desc	: Dump buffer contents to standard output.
  */
@@ -976,6 +1020,39 @@ void Buffer::dump_hex()
 }
 
 /**
+ * `get_flags()` will parse '-+#0' characters from `p`.
+ */
+int get_flags(Buffer* flags, char** pp)
+{
+	int flagv = 0;
+	char* p = (*pp);
+
+	while (*p) {
+		switch (*p) {
+		case '-':
+			flagv |= FL_LEFT;
+			break;
+		case '+':
+			flagv |= FL_SIGN;
+			break;
+		case '#':
+			flagv |= FL_ALT_OUT;
+			break;
+		case '0':
+			flagv |= FL_ZERO;
+			break;
+		default:
+			goto out;
+		}
+		flags->appendc(*p);
+		p++;
+	}
+out:
+	(*pp) = p;
+	return flagv;
+}
+
+/**
  * @method	: Buffer::VSNPRINTF
  * @param	:
  *	> bfr	: output, return value as string as in 'fmt'.
@@ -989,14 +1066,23 @@ void Buffer::dump_hex()
  *	create an output of formatted string 'fmt' and their arguments,
  *	'args', to buffer 'bfr'.
  *	user must have allocated buffer prior calling these function.
+ *
+ * '%' -> ['-'] ---> [digit] -> ['.'] -> [digit] -> ['h'] --> [format]
+ *     \- ['+'] -/                               \- ['l'] -/
+ *     \- ['#'] -/                               \- ['L'] -/
+ *     \- ['0'] -/
+ *
+ * If '.' exist but no precision given, then precision will set to 0.
  */
 int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 {
-	register int	flen	= 0;
-	register int	s;
-	register int	flag	= 0;
+	int flen = 0;
+	int prec = -1;
+	int s = 0;
+	int flagv = 0;
 	char		c	= 0;
 	char		*p	= (char *) fmt;
+	Buffer		flags;
 	Buffer		b;
 	Buffer		o;
 
@@ -1008,43 +1094,59 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 			}
 			p++;
 		}
+
 		if (!*p) {
 			break;
 		}
+
+		flags.appendc(*p);
 		p++;
-		while (*p) {
-			switch (*p) {
-			case '-':
-				flag |= FL_LEFT;
-				break;
-			case '+':
-				flag |= FL_SIGN;
-				break;
-			case '#':
-				flag |= FL_ALT_OUT;
-				break;
-			case '0':
-				flag |= FL_ZERO;
-				break;
-			default:
-				goto next;
-			}
-			p++;
+
+		flagv |= get_flags(&flags, &p);
+
+		if (!*p) {
+			b.append(&flags);
+			break;
 		}
-next:
+
 		if (isdigit(*p)) {
-			flag |= FL_WIDTH;
-			flen = (int) strtol(p, &p, 10);
+			flagv |= FL_WIDTH;
+			s = PARSE_INT(&p, &flen);
+
+			if (s < 0) {
+				b.append(&flags);
+				b.append_raw(p);
+				break;
+			}
+		}
+
+		if (*p == '.') {
+			flags.appendc(*p);
+
+			flagv |= FL_PREC;
+			p++;
+
+			if (isdigit(*p)) {
+				s = PARSE_INT(&p, &prec);
+
+				if (s < 0) {
+					b.append(&flags);
+					b.append_raw(p);
+					break;
+				}
+			} else {
+				prec = 0;
+			}
 		}
 
 		if (*p == 'h') {
-			flag |= FL_SHORT;
+			flagv |= FL_SHORT;
 			p++;
 		} else if (*p == 'l') {
-			flag |= FL_LONG;
+			flagv |= FL_LONG;
 			p++;
 		} else if (*p == 'L') {
-			flag |= FL_LONG_DBL;
+			flagv |= FL_LONG_DBL;
 			p++;
 		}
 
@@ -1064,15 +1166,15 @@ next:
 			break;
 		case 'd':
 		case 'i':
-			flag |= FL_NUMBER;
+			flagv |= FL_NUMBER;
 			s = o.appendi(va_arg(args, int));
 			if (s < 0) {
 				return -1;
 			}
 			break;
 		case 'u':
-			flag |= FL_NUMBER;
-			if (flag & FL_LONG) {
+			flagv |= FL_NUMBER;
+			if (flagv & FL_LONG) {
 				s = o.appendui(va_arg(args, long unsigned));
 			} else {
 				s = o.appendui(va_arg(args, unsigned int));
@@ -1088,17 +1190,17 @@ next:
 			}
 			break;
 		case 'f':
-			flag |= FL_NUMBER;
-			s = o.appendd(va_arg(args, double));
+			flagv |= FL_NUMBER;
+			s = o.appendd(va_arg(args, double), prec);
 			if (s < 0) {
 				return -1;
 			}
 			break;
 		case 'o':
-			flag |= FL_OCTAL | FL_NUMBER;
-			flag &= ~FL_SIGN;
+			flagv |= FL_OCTAL | FL_NUMBER;
+			flagv &= ~FL_SIGN;
 			if (flen) {
-				if (flag & FL_ALT_OUT) {
+				if (flagv & FL_ALT_OUT) {
 					--flen;
 				}
 			}
@@ -1108,13 +1210,13 @@ next:
 			}
 			break;
 		case 'p':
-			flag |= FL_ALT_OUT;
+			flagv |= FL_ALT_OUT;
 		case 'x':
 		case 'X':
-			flag |= FL_HEX | FL_NUMBER;
-			flag &= ~FL_SIGN;
+			flagv |= FL_HEX | FL_NUMBER;
+			flagv &= ~FL_SIGN;
 			if (flen >= 2) {
-				if (flag & FL_ALT_OUT) {
+				if (flagv & FL_ALT_OUT) {
 					flen -= 2;
 				}
 			} else {
@@ -1126,7 +1228,7 @@ next:
 			}
 			break;
 		default:
-			s = o.appendc('%');
+			s = o.append(&flags);
 			if (s < 0) {
 				return -1;
 			}
@@ -1136,13 +1238,13 @@ next:
 				return -1;
 			}
 
-			flag = 0;
+			flagv = 0;
 			break;
 		}
 
-		if (flag) {
-			if (flag & FL_WIDTH) {
-				if ((flag & FL_SIGN) && (flag & FL_NUMBER)) {
+		if (flagv) {
+			if (flagv & FL_WIDTH) {
+				if ((flagv & FL_SIGN) && (flagv & FL_NUMBER)) {
 					--flen;
 				}
 				if (flen > o._i) {
@@ -1151,34 +1253,37 @@ next:
 					flen = 0;
 				}
 			}
-			if ((flag & FL_NUMBER)) {
-				if ((flag & FL_ZERO) && flen) {
-					o.shiftr(flen, '0');
+			if ((flagv & FL_NUMBER)) {
+				if ((flagv & FL_ZERO) && flen) {
+					o.shiftr((int) flen, '0');
 					flen = 0;
 				}
-				if (flag & FL_SIGN) {
+				if (flagv & FL_SIGN) {
 					o.shiftr(1);
 					o._v[0] = '+';
 				}
 			}
 			if (flen) {
-				o.shiftr(flen, ' ');
+				o.shiftr((int) flen, ' ');
 			}
 
-			if (flag & FL_ALT_OUT) {
-				if (flag & FL_OCTAL) {
+			if (flagv & FL_ALT_OUT) {
+				if (flagv & FL_OCTAL) {
 					o.shiftr(1, '0');
-				} else if (flag & FL_HEX) {
+				} else if (flagv & FL_HEX) {
 					o.shiftr(2, 'x');
 					o._v[0] = '0';
 				}
 			}
-			flag = 0;
+			flagv = 0;
 			flen = 0;
 		}
 
 		b.append(&o);
 		o.reset();
+		flags.reset();
+		prec = -1;
+		flagv = 0;
 
 		p++;
 	}

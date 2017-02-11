@@ -94,13 +94,14 @@ void test_copy_raw()
 	assert(strcmp(STR_TEST_0, b.chars()) == 0);
 }
 
-void test_split_by_char_n(const int x, const char* input, const char split
+void test_split_by_char_n(const char* input, const char split
 	, const int trim, const char* exp, const int exp_size)
 {
 	in.copy_raw(input);
 	lbuf = in.split_by_char(split, trim);
-	printf("    test_split_by_char %d got: %s\n", x, lbuf->chars());
-	printf("    test_split_by_char %d exp: %s\n", x, exp);
+
+	expectString(exp, lbuf->chars(), 0);
+
 	assert(lbuf->size() == exp_size);
 	assert(strcmp(exp, lbuf->chars()) == 0);
 	delete lbuf;
@@ -112,32 +113,33 @@ void test_split_by_char()
 	lbuf = in.split_by_char(',');
 	assert(lbuf == NULL);
 
-	test_split_by_char_n(test_n, TEST_SPLIT_BY_00_IN, ',', 0
+	test_split_by_char_n(TEST_SPLIT_BY_00_IN, ',', 0
 		, TEST_SPLIT_BY_00_OUT, 1);
 
-	test_split_by_char_n(test_n++, TEST_SPLIT_BY_01_IN, ':', 0
+	test_split_by_char_n(TEST_SPLIT_BY_01_IN, ':', 0
 		, TEST_SPLIT_BY_01_OUT, 2);
 
-	test_split_by_char_n(test_n++, TEST_SPLIT_BY_02_IN, ',', 0
+	test_split_by_char_n(TEST_SPLIT_BY_02_IN, ',', 0
 		, TEST_SPLIT_BY_02_OUT, 4);
 
-	test_split_by_char_n(test_n++, TEST_SPLIT_BY_02_IN, ',', 1
+	test_split_by_char_n(TEST_SPLIT_BY_02_IN, ',', 1
 		, TEST_SPLIT_BY_02_OUT_TRIM, 3);
 
-	test_split_by_char_n(test_n++, TEST_SPLIT_BY_03_IN, ',', 0
+	test_split_by_char_n(TEST_SPLIT_BY_03_IN, ',', 0
 		, TEST_SPLIT_BY_03_OUT, 6);
 
-	test_split_by_char_n(test_n++, TEST_SPLIT_BY_03_IN, ',', 1
+	test_split_by_char_n(TEST_SPLIT_BY_03_IN, ',', 1
 		, TEST_SPLIT_BY_03_OUT_TRIM, 3);
 }
 
-void test_split_by_whitespace_n(const int x, const char* input
+void test_split_by_whitespace_n(const char* input
 	, const char* exp, const int exp_size)
 {
 	in.copy_raw(input);
 	lbuf = in.split_by_whitespace();
-	printf("    test_split_by_whitespace %d got: %s\n", x, lbuf->chars());
-	printf("    test_split_by_whitespace %d exp: %s\n", x, exp);
+
+	expectString(exp, lbuf->chars(), 0);
+
 	assert(lbuf->size() == exp_size);
 	assert(strcmp(exp, lbuf->chars()) == 0);
 	delete lbuf;
@@ -150,13 +152,151 @@ void test_split_by_whitespace()
 	lbuf = in.split_by_whitespace();
 	assert(lbuf == NULL);
 
-	test_split_by_whitespace_n(0, TEST_SPLIT_BY_00_IN
+	test_split_by_whitespace_n(TEST_SPLIT_BY_00_IN
 		, TEST_SPLIT_BY_WS_00_OUT, 1);
-	test_split_by_whitespace_n(0, TEST_SPLIT_BY_02_IN
+	test_split_by_whitespace_n(TEST_SPLIT_BY_02_IN
 		, TEST_SPLIT_BY_WS_02_OUT, 7);
-	test_split_by_whitespace_n(0, TEST_SPLIT_BY_03_IN
+	test_split_by_whitespace_n(TEST_SPLIT_BY_03_IN
 		, TEST_SPLIT_BY_WS_03_OUT, 8);
-	test_split_by_whitespace_n(0, TEST_04_IN, TEST_04_WS_OUT, 5);
+	test_split_by_whitespace_n(TEST_04_IN, TEST_04_WS_OUT, 5);
+}
+
+void test_PARSE_INT()
+{
+	int s = 0;
+	int v = 0;
+	char* str = (char*) calloc(64, sizeof(char));
+	char* p = NULL;
+
+	strcpy(str, "\0");
+	p = str;
+	s = Buffer::PARSE_INT(&p, &v);
+	assert(s == 0);
+	assert(v == 0);
+	assert(*p == 0);
+
+	strcpy(str, "-asdf");
+	p = str;
+	v = 0;
+	s = Buffer::PARSE_INT(&p, &v);
+	assert(s == 0);
+	assert(v == 0);
+	assert(*p == '-');
+
+	strcpy(str, "0");
+	p = str;
+	v = 0;
+	s = Buffer::PARSE_INT(&p, &v);
+	assert(s == 0);
+	assert(v == 0);
+	assert(*p == 0);
+
+	strcpy(str, "0123456");
+	p = str;
+	v = 0;
+	s = Buffer::PARSE_INT(&p, &v);
+	assert(s == 0);
+	assert(v == 123456);
+	assert(*p == 0);
+
+	strcpy(str, "-0123456");
+	p = str;
+	v = 0;
+	s = Buffer::PARSE_INT(&p, &v);
+	assert(s == 0);
+	assert(v == -123456);
+	assert(*p == 0);
+
+	strcpy(str, "0123as");
+	p = str;
+	v = 0;
+	s = Buffer::PARSE_INT(&p, &v);
+	assert(s == 0);
+	assert(v == 123);
+	assert(*p == 'a');
+
+	strcpy(str, "-0123as");
+	p = str;
+	v = 0;
+	s = Buffer::PARSE_INT(&p, &v);
+	assert(s == 0);
+	assert(v == -123);
+	assert(*p == 'a');
+
+	// overflow
+	strcpy(str, "9876543210as");
+	p = str;
+	v = 0;
+	s = Buffer::PARSE_INT(&p, &v);
+	assert(s == -1);
+	assert(v == 0);
+	assert(*p == '9');
+
+	// underflow
+	strcpy(str, "-9876543210as");
+	p = str;
+	v = 0;
+	s = Buffer::PARSE_INT(&p, &v);
+	assert(s == -1);
+	assert(v == 0);
+	assert(*p == '-');
+
+	free(str);
+}
+
+void test_aprint()
+{
+	const char* exps[] = {
+			"%11209876543210"
+		,	"%---##++"
+		,	"%---#1"
+		,	"%-.11209876543210"
+		,	"112.987654"
+		,	"  3"
+		,	"113.0"
+		,	"112.988"
+		};
+
+	Buffer b;
+	double d = 112.987654321;
+	int exp_idx = 0;
+
+	b.reset();
+	b.aprint("%11209876543210", d);
+	expectString(exps[exp_idx++], b.chars(), 0);
+
+	b.reset();
+	b.aprint("%---##++", d);
+	expectString(exps[exp_idx++], b.chars(), 0);
+
+
+	b.reset();
+	b.aprint("%---#1", d);
+	expectString(exps[exp_idx++], b.chars(), 0);
+
+	b.reset();
+	b.aprint("%-.11209876543210", d);
+	expectString(exps[exp_idx++], b.chars(), 0);
+
+	b.reset();
+	b.aprint("%f", d);
+
+	expectString(exps[exp_idx++], b.chars(), 0);
+
+	b.reset();
+	b.aprint("%3d", 3);
+
+	expectString(exps[exp_idx++], b.chars(), 0);
+
+	b.reset();
+	b.aprint("%.1f", d);
+
+	expectString(exps[exp_idx++], b.chars(), 0);
+
+	b.reset();
+	b.aprint("%.3f", d);
+
+	expectString(exps[exp_idx++], b.chars(), 0);
 }
 
 int main()
@@ -175,6 +315,10 @@ int main()
 	test_split_by_char();
 
 	test_split_by_whitespace();
+
+	test_PARSE_INT();
+
+	//test_aprint();
 
 	return 0;
 }

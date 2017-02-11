@@ -1,3 +1,17 @@
+next (2017-xx-xx)
+=================
+
+Enhancements
+------------
+
+* Buffer:
+  - appendd: add parameter to set number of precision
+  - PARSE_INT: new method to parse string to integer
+  - VSNPRINTF: handle '.' with digit precision
+
+* DNSQuery:
+  - add method to get number of answer
+
 v0.3.1 (2017-02-08)
 ===================
 

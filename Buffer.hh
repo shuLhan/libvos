@@ -53,7 +53,7 @@ public:
 	int appendc(const char c);
 	int appendi(long int i, int base = 10);
 	int appendui(long unsigned int i, int base = 10);
-	int appendd(double d);
+	int appendd(double d, int prec = 6);
 	int append(const Buffer* bfr);
 	int append_raw(const char* bfr, int len = 0);
 	int append_bin(void *bin, int len);
@@ -77,6 +77,7 @@ public:
 	List* split_by_char(const char sep, int trim = 0);
 	List* split_by_whitespace();
 
+
 	void dump();
 	void dump_hex();
 
@@ -90,6 +91,7 @@ public:
 	int	_i;
 	int	_l;
 
+	static int PARSE_INT(char** pp, int* v);
 	static int VSNPRINTF(char *bfr, int len, const char *fmt,
 				va_list args);
 	static int TRIM(char *bfr, int len);
