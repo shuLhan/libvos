@@ -132,7 +132,7 @@ public:
 	int extract_question();
 	int extract_resource_record (const char extract_flag);
 	void set_max_ttl_from_rr (const DNS_rr* rr);
-	DNS_rr* extract_rr(int* offset, const int last_type = 0);
+	DNS_rr* extract_rr(int* offset);
 	int extract_label(Buffer* label, const int bfr_off);
 
 	int create_answer (const char* name
@@ -185,6 +185,8 @@ public:
 private:
 	DNSQuery(const DNSQuery&);
 	void operator=(const DNSQuery&);
+
+	int _extract_TXT(DNS_rr* rr, const int offset);
 };
 
 } /* namespace::vos */
