@@ -42,6 +42,7 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/SockAddr.oo		\
 			$(LIBVOS_BLD_D)/Socket.oo		\
 			$(LIBVOS_BLD_D)/SockServer.oo		\
+			$(LIBVOS_BLD_D)/DNSRecordType.oo	\
 			$(LIBVOS_BLD_D)/DNS_rr.oo		\
 			$(LIBVOS_BLD_D)/DNSQuery.oo		\
 			$(LIBVOS_BLD_D)/Resolver.oo		\
@@ -122,6 +123,7 @@ $(LIBVOS_BLD_D):
 
 $(LIBVOS_BLD_D)/Object.oo	: $(LIBVOS_BLD_D)/libvos.oo
 
+$(LIBVOS_BLD_D)/DNSRecordType.oo\
 $(LIBVOS_BLD_D)/Locker.oo	\
 $(LIBVOS_BLD_D)/BNode.oo	\
 $(LIBVOS_BLD_D)/Buffer.oo	: $(LIBVOS_BLD_D)/Object.oo
@@ -161,6 +163,8 @@ $(LIBVOS_BLD_D)/SockServer.oo	: $(LIBVOS_BLD_D)/Locker.oo
 $(LIBVOS_BLD_D)/Socket.oo	: $(LIBVOS_BLD_D)/SockAddr.oo
 
 $(LIBVOS_BLD_D)/SockServer.oo	: $(LIBVOS_BLD_D)/Socket.oo
+
+$(LIBVOS_BLD_D)/DNS_rr.oo	: $(LIBVOS_BLD_D)/DNSRecordType.oo
 
 $(LIBVOS_BLD_D)/DNSQuery.oo	: $(LIBVOS_BLD_D)/DNS_rr.oo
 

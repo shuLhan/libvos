@@ -8,6 +8,8 @@
 
 namespace vos {
 
+const char* DNSRecordType::__cname = "DNSRecordType";
+
 const int DNSRecordType::SIZE = 22;
 
 const char* DNSRecordType::NAMES[DNSRecordType::SIZE] = {

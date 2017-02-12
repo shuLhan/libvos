@@ -700,28 +700,5 @@ const char* Resolver::chars()
 	return __str;
 }
 
-/**
- * `CONVERT_TYPE()` will convert string representation of type to their number
- * value. For example, "A" will return 1, "TXT" will return 16.
- *
- * It will return -1 if no type is matched with our list.
- */
-int Resolver::CONVERT_TYPE(const char* type)
-{
-	int s = 0;
-	int x = 0;
-	int found = -1;
-
-	for (; x < RR_TYPE_SIZE; x++) {
-		s = strcasecmp(RR_TYPE_LIST[x], type);
-		if (s == 0) {
-			found = RR_TYPE_VALUE[x];
-			break;
-		}
-	}
-
-	return found;
-}
-
 } /* namespace::vos */
 // vi: ts=8 sw=8 tw=78:

@@ -60,8 +60,6 @@ public:
 
 	const char* chars();
 
-	static int CONVERT_TYPE(const char* type);
-
 	int		_maxfd;
 	fd_set		_fd_all;
 	fd_set		_fd_read;

@@ -16,6 +16,7 @@ public:
 	DNSRecordType();
 	~DNSRecordType();
 
+	static const char* __cname;
 	static const int SIZE;
 	static const char* NAMES[];
 	static const int VALUES[];

@@ -46,23 +46,8 @@ void test_server_list()
 	expectString(TEST_2_EXP, res.chars(), 0);
 }
 
-void test_CONVERT_TYPE()
-{
-	int s;
-
-	s = res.CONVERT_TYPE("A");
-	assert(s == _RR_TYPE::QUERY_T_ADDRESS);
-
-	s = res.CONVERT_TYPE("AAAA");
-	assert(s == _RR_TYPE::QUERY_T_AAAA);
-
-	s = res.CONVERT_TYPE("AA");
-	assert(s == -1);
-}
-
 int main()
 {
 	test_server_list();
-	test_CONVERT_TYPE();
 	return 0;
 }

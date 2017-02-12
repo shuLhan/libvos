@@ -12,24 +12,6 @@ const char* DNS_rr::__cname = "DNS_rr";
 
 unsigned int DNS_rr::RDATA_MAX_SIZE = 255;
 
-const int RR_TYPE_SIZE = 22;
-
-const char* RR_TYPE_LIST[RR_TYPE_SIZE] = {
-		"A"	,"NS"	,"MD"	,"MF",	"CNAME"
-	,	"SOA"	,"MB"	,"MG"	,"MR",	"NULL"
-	,	"WKS"	,"PTR"	,"HINFO","MINFO","MX"
-	,	"TXT"	,"AAAA"	,"SRV"	,"AXFR"	,"MAILB"
-	,	"MAILA"	,"*"
-	};
-
-const int RR_TYPE_VALUE[RR_TYPE_SIZE] = {
-		1	,2	,3	,4	,5
-	,	6	,7	,8	,9	,10
-	,	11	,12	,13	,14	,15
-	,	16	,28	,33	,252	,253
-	,	254	,255
-	};
-
 /**
  * @method	: DNS_rr::DNS_rr
  */
@@ -120,64 +102,57 @@ const char* DNS_rr::chars()
 {
 	Buffer o;
 
-	o.aprint("{ \"name\": \"%s\""	\
-		", \"type\": %d"	\
-		", \"class\": %d"	\
-		", \"ttl\": %u"		\
-		", \"length\": %d"	\
-		", \"data\" : {"
-		, _name.chars(), _type, _class, _ttl, _len);
+	o.append_raw("{\n");
+	o.aprint("\t\t"  K(name)   ": " K(%s) "\n", _name.chars());
+	o.aprint("\t,\t" K(type)   ": " K(%s) "\n", DNSRecordType::GET_NAME(_type));
+	o.aprint("\t,\t" K(class)  ": %d\n", _class);
+	o.aprint("\t,\t" K(TTL)    ": %u\n", _ttl);
+	o.aprint("\t,\t" K(length) ": %d\n", _len);
 
 	switch (_type) {
 	case QUERY_T_ADDRESS:
+		o.aprint("\t,\t" K(IPv4) ": " K(%s) "\n", _data.chars());
+		break;
 	case QUERY_T_AAAA:
-		o.aprint(" \"address\": \"%s\"", _data.chars());
+		o.aprint("\t,\t" K(IPv6) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_NAMESERVER:
-		o.aprint(" \"NS\": \"%s\"", _data.chars());
+		o.aprint("\t,\t" K(NS) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_CNAME:
-		o.aprint(" \"cname\": \"%s\"", _data.chars());
+		o.aprint("\t,\t" K(CNAME) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_SOA:
-		o.aprint(" \"mname\": \"%s\""	\
-			", \"rname\": \"%s\""	\
-			", \"serial\": %d"	\
-			", \"refresh\": %d"	\
-			", \"retry\": %d"	\
-			", \"expire\": %d"	\
-			", \"minimum\": %d"
-			, _data.chars(), _data2.chars()
-			, _serial
-			, _refresh, _retry, _expire
-			, _minimum);
+		o.aprint("\t,\t" K(MNAME)   ": " K(%s) "\n", _data.chars());
+		o.aprint("\t,\t" K(RNAME)   ": " K(%s) "\n", _data2.chars());
+		o.aprint("\t,\t" K(serial)  ": %d\n", _serial);
+		o.aprint("\t,\t" K(refresh) ": %d\n", _refresh);
+		o.aprint("\t,\t" K(retry)   ": %d\n", _retry);
+		o.aprint("\t,\t" K(expire)  ": %d\n", _expire);
+		o.aprint("\t,\t" K(minimum) ": %d\n", _minimum);
 		break;
 	case QUERY_T_PTR:
-		o.aprint("\"PTRDNAME\": \"%s\"", _data.chars());
+		o.aprint("\t,\t" K(PTRDNAME) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_HINFO:
-		o.aprint(" \"CPU\": \"%s\""	\
-			", \"OS\": \"%s\""
-			, _data.chars(), _data2.chars());
+		o.aprint("\t,\t" K(CPU) ": " K(%s) "\n", _data.chars());
+		o.aprint("\t,\t" K(OS)  ": " K(%s) "\n", _data2.chars());
 		break;
 	case QUERY_T_MX:
-		o.aprint(" \"score\": %d\n"	\
-			", \"exchange\": \"%s\""
-			, _priority, _data.chars());
+		o.aprint("\t,\t" K(score)    ": %d\n", _priority);
+		o.aprint("\t,\t" K(exchange) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_TXT:
-		o.aprint(" \"TXT\": \"%s\"", _data.chars());
+		o.aprint("\t,\t" K(TXT) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_SRV:
-		o.aprint(" \"priority\": %d"	\
-			", \"weight\": %d"	\
-			", \"port\": %d"	\
-			", \"target\": \"%s\""
-			, _priority, _weight, _port
-			, _data.chars());
+		o.aprint("\t,\t" K(priority) ": %d\n", _priority);
+		o.aprint("\t,\t" K(weight)   ": %d\n", _weight);
+		o.aprint("\t,\t" K(port)     ": %d\n", _port);
+		o.aprint("\t,\t" K(target)   ": " K(%s) "\n", _data.chars());
 		break;
 	}
-	o.append_raw(" } }");
+	o.append_raw("\t}");
 
 	if (_v) {
 		free(_v);

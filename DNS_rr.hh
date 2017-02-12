@@ -9,6 +9,7 @@
 
 #include <arpa/inet.h>
 #include "Buffer.hh"
+#include "DNSRecordType.hh"
 
 namespace vos {
 
@@ -36,10 +37,6 @@ enum _RR_TYPE {
 	QUERY_T_MAILA,
 	QUERY_T_ALL
 };
-
-extern const int RR_TYPE_SIZE;
-extern const char* RR_TYPE_LIST[];
-extern const int RR_TYPE_VALUE[];
 
 enum _RR_CLASS {
 	QUERY_C_IN	= 1,

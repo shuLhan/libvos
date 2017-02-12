@@ -50,7 +50,8 @@ SockAddr_OBJS=	$(Buffer_OBJS)			\
 
 DNSQuery_OBJS=		$(SSVReader_OBJS)		\
 			$(LIBVOS_BLD_D)/DNS_rr.oo	\
-			$(LIBVOS_BLD_D)/DNSQuery.oo
+			$(LIBVOS_BLD_D)/DNSQuery.oo	\
+			$(LIBVOS_BLD_D)/DNSRecordType.oo
 
 host_to_dnsquery_OBJS=	$(SSVReader_OBJS)	\
 			$(DNSQuery_OBJS)
