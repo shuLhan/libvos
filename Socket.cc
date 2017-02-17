@@ -20,6 +20,7 @@ Socket::Socket(const int bfr_size) : File(bfr_size)
 ,	_family(0)
 ,	_type(0)
 ,	_recv_addr_l (0)
+,	_locker()
 {
 	_name.resize(INET6_ADDRSTRLEN);
 }
@@ -206,6 +207,8 @@ long int Socket::send_udp(struct sockaddr_in* addr, Buffer* bfr)
 
 	register ssize_t s = 0;
 
+	_locker.lock();
+
 	if (!bfr) {
 		if (_i > 0) {
 			s = ::sendto(_d, _v, _i, 0
@@ -215,6 +218,8 @@ long int Socket::send_udp(struct sockaddr_in* addr, Buffer* bfr)
 			s = ::sendto(_d, bfr->_v, bfr->_i, 0
 				, (struct sockaddr *) addr, SockAddr::IN_SIZE);
 	}
+
+	_locker.unlock();
 
 	return s;
 }
@@ -236,6 +241,9 @@ long int Socket::send_udp_raw(struct sockaddr_in* addr, const char* bfr
 	if (!addr) {
 		return -1;
 	}
+
+	_locker.lock();
+
 	if (!bfr) {
 		bfr = _v;
 		len = _i;
@@ -244,8 +252,12 @@ long int Socket::send_udp_raw(struct sockaddr_in* addr, const char* bfr
 		len = (int) strlen(bfr);
 	}
 
-	return ::sendto(_d, bfr, len, 0, (struct sockaddr*) addr
+	long int s = ::sendto(_d, bfr, len, 0, (struct sockaddr*) addr
 			, SockAddr::IN_SIZE);
+
+	_locker.unlock();
+
+	return s;
 }
 
 /**
@@ -265,12 +277,16 @@ long int Socket::recv_udp(struct sockaddr_in* addr)
 		return 0;
 	}
 
+	_locker.lock();
+
 	_recv_addr_l = SockAddr::IN_SIZE;
 
 	_i = (int) ::recvfrom(_d, _v, _l, 0, (struct sockaddr*) addr, &_recv_addr_l);
 	if (_i >= 0) {
 		_v[_i] = '\0';
 	}
+
+	_locker.unlock();
 
 	return _i;
 }

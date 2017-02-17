@@ -11,8 +11,15 @@
 #include <pthread.h>
 #include "File.hh"
 #include "SockAddr.hh"
+#include "Locker.hh"
 
 namespace vos {
+
+enum connection_type {
+	IS_UDP = 0
+,	IS_TCP = 1
+};
+
 
 /**
  * @class			: Socket
@@ -56,6 +63,8 @@ public:
 private:
 	Socket(const Socket&);
 	void operator=(const Socket&);
+
+	Locker _locker;
 };
 
 }
