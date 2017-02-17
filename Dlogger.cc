@@ -13,14 +13,13 @@ namespace vos {
  * @desc	: initialize all Dlogger attributes, set standard error as
  *                default output.
  */
-Dlogger::Dlogger () :
-	_locker()
+Dlogger::Dlogger () : File()
+,	_locker()
 ,	_tmp()
 ,	_prefix()
 ,	_time_s(0)
 ,	_time()
 ,	_time_show(0)
-,	_s(0)
 #if defined(sun) || defined(__sun) || defined(__i386__)
 ,	_args()
 #endif
@@ -51,20 +50,22 @@ Dlogger::~Dlogger()
 int Dlogger::open (const char* logfile, off_t max_size, const char* prefix
 	, int show_timestamp)
 {
+	int s = 0;
+
 	_prefix.copy_raw(prefix);
 	_time_show = show_timestamp;
 
 	if (logfile) {
 		close();
 
-		_s = open_wa(logfile);
-		if (_s < 0) {
+		s = open_wa(logfile);
+		if (s < 0) {
 			_d = STDERR_FILENO;
 		} else {
 			_max_size = max_size;
 		}
 
-		return _s;
+		return s;
 	}
 	return 0;
 }
@@ -116,17 +117,18 @@ void Dlogger::add_prefix()
  *	> fmt		: format of messages.
  * @desc		: The generic method of writing a log messages.
  */
-void Dlogger::_w(int fd, const char* fmt)
+int Dlogger::_w(int fd, const char* fmt)
 {
+	int s = 0;
 	ssize_t ws = 0;
 
 	add_timestamp();
 	add_prefix();
 
-	_s = _tmp.vprint(fmt, _args);
-	if (_s <= 0) {
+	s = _tmp.vprint(fmt, _args);
+	if (s <= 0) {
 		_tmp.reset();
-		return;
+		return s;
 	}
 
 	if (_d != STDERR_FILENO || !fd) {
@@ -136,17 +138,20 @@ void Dlogger::_w(int fd, const char* fmt)
 			truncate (FILE_TRUNC_FLUSH_NO);
 		}
 
-		_s = write_raw(_tmp._v, _tmp._i);
+		s = write_raw(_tmp._v, _tmp._i);
 	}
 	if (fd) {
 		do {
 			ws = ::write(fd, &_tmp._v[ws], _tmp._i - ws);
 			if (ws < 0) {
+				s = -1;
 				break;
 			}
 		} while(ws < _tmp._i);
 	}
 	_tmp.reset();
+
+	return s;
 }
 
 /**
@@ -161,15 +166,21 @@ void Dlogger::_w(int fd, const char* fmt)
  */
 int Dlogger::er(const char* fmt, ...)
 {
+	int s;
+
 	_locker.lock();
 
-	va_start(_args, fmt);
-	_w(STDERR_FILENO, fmt);
+	va_list args;
+	va_start(args, fmt);
+	va_copy(_args, args);
+
+	s = _w(STDERR_FILENO, fmt);
+
 	va_end(_args);
 
 	_locker.unlock();
 
-	return _s;
+	return s;
 }
 
 /**
@@ -184,15 +195,21 @@ int Dlogger::er(const char* fmt, ...)
  */
 int Dlogger::out(const char* fmt, ...)
 {
+	int s = 0;
+
 	_locker.lock();
 
-	va_start(_args, fmt);
-	_w(STDOUT_FILENO, fmt);
+	va_list args;
+	va_start(args, fmt);
+	va_copy(_args, args);
+
+	s = _w(STDOUT_FILENO, fmt);
+
 	va_end(_args);
 
 	_locker.unlock();
 
-	return _s;
+	return s;
 }
 
 /**
@@ -207,15 +224,21 @@ int Dlogger::out(const char* fmt, ...)
  */
 int Dlogger::it(const char* fmt, ...)
 {
+	int s = 0;
+
 	_locker.lock();
 
-	va_start(_args, fmt);
-	_w(0, fmt);
+	va_list args;
+	va_start(args, fmt);
+	va_copy(_args, args);
+
+	s = _w(0, fmt);
+
 	va_end(_args);
 
 	_locker.unlock();
 
-	return _s;
+	return s;
 }
 
 } /* namespace::vos */

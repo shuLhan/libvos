@@ -39,7 +39,7 @@ private:
 
 	void add_timestamp();
 	void add_prefix();
-	void _w(int fd, const char* fmt);
+	int _w(int fd, const char* fmt);
 
 	Locker		_locker;
 	Buffer		_tmp;
@@ -47,7 +47,6 @@ private:
 	time_t		_time_s;
 	struct tm	_time;
 	int		_time_show;
-	int		_s;
 	va_list		_args;
 	off_t		_max_size;
 };
