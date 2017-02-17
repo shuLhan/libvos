@@ -75,6 +75,8 @@ public:
 	int open_wa(const char* path);
 	int truncate (uint8_t flush_mode = FILE_TRUNC_FLUSH_LAST);
 
+	int is_open();
+
 	off_t get_size();
 	void set_eol(const int mode);
 

@@ -192,6 +192,15 @@ int File::truncate (uint8_t flush_mode)
 }
 
 /**
+ * `is_open()` will return positive integer if file descriptor is open, or `0`
+ * if closed.
+ */
+int File::is_open()
+{
+	return (_d > 0);
+}
+
+/**
  * @method	: File::get_size
  * @return	:
  *	< >0	: size of file.
