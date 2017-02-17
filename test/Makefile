@@ -97,6 +97,9 @@ RBT_OBJS=	$(TreeNode_OBJS)		\
 		$(Locker_OBJS)			\
 		$(LIBVOS_BLD_D)/RBT.oo
 
+Thread_OBJS=	$(Locker_OBJS)			\
+		$(LIBVOS_BLD_D)/Thread.oo
+
 TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Buffer.test		\
 	$(BLD_D)/BNode.test		\
@@ -110,7 +113,8 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Locker.test		\
 	$(BLD_D)/FTPD.test		\
 	$(BLD_D)/DSVRecordMD.test	\
-	$(BLD_D)/RBT.test
+	$(BLD_D)/RBT.test		\
+	$(BLD_D)/Thread.test
 
 .PHONY: all clean
 
