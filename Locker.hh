@@ -14,13 +14,15 @@ namespace vos {
 
 class Locker : public Object {
 public:
-	Locker();
+	Locker(int type = PTHREAD_MUTEX_NORMAL);
 	virtual ~Locker();
 	const char* chars();
 
 	void lock();
 	void unlock();
 
+	int _attr_type;
+	pthread_mutexattr_t _attr;
 	pthread_mutex_t _lock;
 
 	static const char* __cname;

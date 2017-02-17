@@ -13,10 +13,28 @@ const char* Locker::__cname = "Locker";
 //
 // `Locker()` constructor will initialize locker mutex.
 //
-Locker::Locker() : Object()
+Locker::Locker(int type)
+:	Object()
+,	_attr_type(type)
+,	_attr()
 ,	_lock()
 {
-	pthread_mutex_init(&_lock, NULL);
+	int s = 0;
+
+	s = pthread_mutexattr_init(&_attr);
+	if (s) {
+		perror(__cname);
+	}
+
+	s = pthread_mutexattr_settype(&_attr, type);
+	if (s) {
+		perror(__cname);
+	}
+
+	s = pthread_mutex_init(&_lock, &_attr);
+	if (s) {
+		perror(__cname);
+	}
 }
 
 //
@@ -24,6 +42,7 @@ Locker::Locker() : Object()
 //
 Locker::~Locker()
 {
+	pthread_mutexattr_destroy(&_attr);
 	pthread_mutex_destroy(&_lock);
 }
 
@@ -37,8 +56,30 @@ const char* Locker::chars()
 //
 void Locker::lock()
 {
-	while (pthread_mutex_trylock(&_lock) != 0)
-		;
+	int s = 0;
+	struct timespec interval;
+
+	do {
+		s = pthread_mutex_lock(&_lock);
+
+		if (s == 0) {
+			break;
+		}
+
+		switch(s) {
+		case EAGAIN:
+		case EBUSY:
+			interval.tv_sec = 0;
+			interval.tv_nsec = 100;
+			nanosleep(&interval, NULL);
+			break;
+		case EDEADLK:
+		case EOWNERDEAD:
+			perror(__cname);
+			unlock();
+			break;
+		}
+	} while (s);
 }
 
 //
@@ -46,8 +87,7 @@ void Locker::lock()
 //
 void Locker::unlock()
 {
-	while (pthread_mutex_unlock(&_lock) != 0)
-		;
+	pthread_mutex_unlock(&_lock);
 }
 
 } // namespace vos
