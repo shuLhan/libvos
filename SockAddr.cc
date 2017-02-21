@@ -206,21 +206,28 @@ int SockAddr::IS_IPV4(const char* str)
 
 	while (*str) {
 		if (isdigit(*str)) {
+			if (n >= 3) {
+				return 0;
+			}
 			x[n] = *str;
 			n++;
 		} else if (*str == '.') {
-			if (n == 0 || n > 4) {
+			if (n == 0) {
 				return 0;
 			}
 			if (n == 3) {
 				if (x[0] > '2') {
 					return 0;
 				}
-				if (x[1] > '5') {
-					return 0;
-				}
-				if (x[2] > '5') {
-					return 0;
+				if (x[0] == '2') {
+					if (x[1] > '5') {
+						return 0;
+					}
+					if (x[1] == '5') {
+						if (x[2] > '5') {
+							return 0;
+						}
+					}
 				}
 			}
 			n = 0;
@@ -230,19 +237,24 @@ int SockAddr::IS_IPV4(const char* str)
 		}
 		str++;
 	}
-	if (dot != 3 || n == 0 || n > 4)  {
+	if (dot != 3 || n == 0) {
 		return 0;
 	}
 	if (n == 3) {
 		if (x[0] > '2') {
 			return 0;
 		}
-		if (x[1] > '5') {
-			return 0;
+		if (x[0] == '2') {
+			if (x[1] > '5') {
+				return 0;
+			}
+			if (x[1] == '5') {
+				if (x[2] > '5') {
+					return 0;
+				}
+			}
 		}
-		if (x[2] > '5') {
-			return 0;
-		}
+
 	}
 	return 1;
 }
