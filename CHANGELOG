@@ -1,5 +1,5 @@
-next (2017-xx-xx)
-=================
+v0.3.2 (2017-02-24)
+===================
 
 Breaking Changes
 ----------------
@@ -31,6 +31,32 @@ Enhancements
 * Resolver:
   - add static method to convert DNS type from string to number
 
+* DNSRecordType: New class for managing DNS record type
+  - This class replace RR_TYPE_SIZE, RR_TYPE_LIST, and RR_TYPE_VALUE in
+    DNS_rr.
+  - This class replace Resolver::CONVERT_TYPE with DNSRecordType::GET_VALUE
+
+* Thread: new class for creating thread
+
+Fixes
+-----
+
+* DNSQuery:
+  - Fix on extracting TXT record
+  - Fix on setting TTL
+
+* Dlogger: fix for multithread
+
+* File: add method `is_open()` which return status of file descriptor
+
+* Locker: add parameter to constructor to set mutex attribute type
+
+* Socket: make sending/receiving UDP packet to be thread safe.
+
+* SockAddr:
+  - IS_IPV4: fix address check on certain format.
+
+
 v0.3.1 (2017-02-08)
 ===================
 
@@ -41,6 +67,7 @@ Fixes
   - Fix deletion
   - Add parameter to constructor for custom swap-content function when
     doing insertion with replace, or through deletion.
+
 
 v0.3.0 (2017-02-05)
 ===================
