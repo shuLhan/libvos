@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -24,7 +24,7 @@ namespace vos {
  * a module for handling task involving directory (listing,
  * creating, and removing directory).
  */
-class Dir {
+class Dir : public Object {
 public:
 	Dir();
 	~Dir();
@@ -48,6 +48,8 @@ public:
 	int		_depth;
 	Buffer		_name;
 	DirNode*	_ls;
+
+	static const char* __cname;
 private:
 	Dir(const Dir&);
 	void operator=(const Dir&);

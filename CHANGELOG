@@ -18,6 +18,10 @@ Internal
   * Make DirNode inherit from Object
   * dump(): print `f` for file and `l` for symbolic link
 
+* Dir:
+  * Inherit from Object
+  * Add unit test
+
 
 v0.3.2 (2017-02-24)
 ===================

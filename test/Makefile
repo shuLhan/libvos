@@ -103,6 +103,10 @@ Thread_OBJS=	$(Locker_OBJS)			\
 User_OBJS=	$(TEST_OBJS)			\
 		$(LIBVOS_BLD_D)/User.oo
 
+Dir_OBJS=	$(TEST_OBJS)			\
+		$(LIBVOS_BLD_D)/DirNode.oo	\
+		$(LIBVOS_BLD_D)/Dir.oo
+
 
 TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Buffer.test		\
@@ -119,7 +123,8 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/DSVRecordMD.test	\
 	$(BLD_D)/RBT.test		\
 	$(BLD_D)/Thread.test		\
-	$(BLD_D)/User.test
+	$(BLD_D)/User.test		\
+	$(BLD_D)/Dir.test
 
 .PHONY: all clean
 
