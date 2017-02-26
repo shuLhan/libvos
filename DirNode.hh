@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -41,7 +41,7 @@ enum _DirNode_upstat {
  * This class handling attributes and link of each node (regular file
  * or directory) in directory.
  */
-class DirNode {
+class DirNode : public Object {
 public:
 	DirNode();
 	virtual ~DirNode();
@@ -87,6 +87,8 @@ public:
 	DirNode*	_child;
 	DirNode*	_link;
 	DirNode*	_parent;
+
+	static const char* __cname;
 private:
 	DirNode(const DirNode&);
 	void operator=(const DirNode &);

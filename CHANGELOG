@@ -6,6 +6,18 @@ New Features
 
 * User: new class to manage user process real and/or effective ID.
 
+Fixes
+-----
+
+* DirNode: fix mode for symbolic link
+
+Internal
+--------
+
+* DirNode:
+  * Make DirNode inherit from Object
+  * dump(): print `f` for file and `l` for symbolic link
+
 
 v0.3.2 (2017-02-24)
 ===================

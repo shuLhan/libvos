@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -8,8 +8,11 @@
 
 namespace vos {
 
-DirNode::DirNode() :
-	_mode(0)
+const char* DirNode::__cname = "DirNode";
+
+DirNode::DirNode()
+:	Object()
+,	_mode(0)
 ,	_uid(0)
 ,	_gid(0)
 ,	_size(0)
@@ -69,6 +72,8 @@ int DirNode::get_attr(const char* rpath, const char* name)
 		return -1;
 	}
 
+	_mode = st.st_mode;
+
 	if (S_ISLNK(st.st_mode)) {
 		s = GET_LINK_NAME(&_linkname, rpath);
 		if (s < 0) {
@@ -83,7 +88,6 @@ int DirNode::get_attr(const char* rpath, const char* name)
 		}
 	}
 
-	_mode	= st.st_mode;
 	_uid	= st.st_uid;
 	_gid	= st.st_gid;
 	_size	= st.st_size;
@@ -181,6 +185,10 @@ void DirNode::dump(int space)
 	}
 	if (is_dir()) {
 		printf("> d ");
+	} else if (is_file()) {
+		printf("> f ");
+	} else if (is_link()) {
+		printf("> l ");
 	} else {
 		printf("> - ");
 	}
