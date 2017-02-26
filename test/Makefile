@@ -12,40 +12,41 @@ include $(LIBVOS_D)/Makefile
 
 LIBVOS_OPTS     +=NO_DEFAULT_LIBS
 
-Object_OBJS=	$(LIBVOS_BLD_D)/libvos.oo	\
-		$(LIBVOS_BLD_D)/Object.oo
-
-COMMON_OBJS=	$(Object_OBJS)			\
-		$(LIBVOS_BLD_D)/Buffer.oo
-
-BNode_OBJS=	$(COMMON_OBJS)			\
+TEST_OBJS=	$(BLD_D)/test.oo		\
+		$(LIBVOS_BLD_D)/libvos.oo	\
+		$(LIBVOS_BLD_D)/Object.oo	\
 		$(LIBVOS_BLD_D)/BNode.oo	\
 		$(LIBVOS_BLD_D)/List.oo		\
-		$(LIBVOS_BLD_D)/Locker.oo
-
-Buffer_OBJS=	$(BNode_OBJS)
-
-File_OBJS=	$(Buffer_OBJS)			\
-		$(LIBVOS_BLD_D)/File.oo
-
-List_OBJS=	$(Buffer_OBJS)
-
-Dlogger_OBJS=	$(File_OBJS)			\
 		$(LIBVOS_BLD_D)/Locker.oo	\
+		$(LIBVOS_BLD_D)/Buffer.oo	\
+		$(LIBVOS_BLD_D)/File.oo		\
 		$(LIBVOS_BLD_D)/Dlogger.oo
+
+Object_OBJS=	$(TEST_OBJS)
+
+BNode_OBJS=	$(TEST_OBJS)
+
+Buffer_OBJS=	$(TEST_OBJS)
+
+File_OBJS=	$(TEST_OBJS)
+
+List_OBJS=	$(TEST_OBJS)
+
+Dlogger_OBJS=	$(TEST_OBJS)
+
 
 DSVRecordMD_OBJS=	$(List_OBJS)			\
 			$(File_OBJS)			\
 			$(LIBVOS_BLD_D)/DSVRecordMD.oo
 
-SSVReader_OBJS=		$(Buffer_OBJS)			\
+SSVReader_OBJS=		$(TEST_OBJS)			\
 			$(LIBVOS_BLD_D)/File.oo		\
 			$(LIBVOS_BLD_D)/DSVRecord.oo	\
 			$(LIBVOS_BLD_D)/Rowset.oo	\
 			$(LIBVOS_BLD_D)/SSVReader.oo
 
 
-SockAddr_OBJS=	$(Buffer_OBJS)			\
+SockAddr_OBJS=	$(TEST_OBJS)			\
 		$(LIBVOS_BLD_D)/SockAddr.oo
 
 DNSQuery_OBJS=		$(SSVReader_OBJS)		\
@@ -66,11 +67,10 @@ Resolver_OBJS=	\
 		$(LIBVOS_BLD_D)/Socket.oo	\
 		$(LIBVOS_BLD_D)/Resolver.oo
 
-Locker_OBJS=	$(Object_OBJS)			\
-		$(BLD_D)/TestLocker.oo		\
-		$(LIBVOS_BLD_D)/Locker.oo
+Locker_OBJS=	$(TEST_OBJS)			\
+		$(BLD_D)/TestLocker.oo
 
-File_OBJS=	$(Buffer_OBJS)			\
+File_OBJS=	$(TEST_OBJS)			\
 		$(LIBVOS_BLD_D)/File.oo
 
 Socket_OBJS=	$(File_OBJS)			\
@@ -100,6 +100,10 @@ RBT_OBJS=	$(TreeNode_OBJS)		\
 Thread_OBJS=	$(Locker_OBJS)			\
 		$(LIBVOS_BLD_D)/Thread.oo
 
+User_OBJS=	$(TEST_OBJS)			\
+		$(LIBVOS_BLD_D)/User.oo
+
+
 TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Buffer.test		\
 	$(BLD_D)/BNode.test		\
@@ -114,7 +118,8 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/FTPD.test		\
 	$(BLD_D)/DSVRecordMD.test	\
 	$(BLD_D)/RBT.test		\
-	$(BLD_D)/Thread.test
+	$(BLD_D)/Thread.test		\
+	$(BLD_D)/User.test
 
 .PHONY: all clean
 
@@ -130,8 +135,14 @@ $(BLD_D)/%.test.oo: $(SRC_D)/%.test.cc
 	@$(do_compile)
 
 $(BLD_D)/%.test: $(BLD_D)/%.test.oo $$(%_OBJS)
-	@$(do_build)				\
-	echo "[T] $@";				\
-	./$@ || (echo "[T] FAIL: $@" && exit 1);
+	@$(do_build)
+	@echo "[T] $@"
+	-$(BLD_D)/$@
+
+$(BLD_D)/User.test: $(BLD_D)/User.test.oo $(User_OBJS)
+	@$(do_build)
+	@echo "[T] $@"
+	-sudo $(BLD_D)/$@
+
 
 ## vi: ts=8 sw=8 tw=78:

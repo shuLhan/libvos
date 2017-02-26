@@ -7,8 +7,10 @@
 #include <assert.h>
 
 #include "../Buffer.hh"
+#include "../Dlogger.hh"
 
 using vos::Buffer;
+using vos::Dlogger;
 
 #define CB(s)		"{ " s " }"
 #define SB(s)		"[ " s " ]"
@@ -24,18 +26,7 @@ using vos::Buffer;
 #define STR_TEST_1	"test 1"
 #define STR_TEST_2	"test 2"
 
-int expectString(const char* exp, const char* got, int to)
-{
-	int s = strcmp(exp, got);
-
-	if (s == to) {
-		return 0;
-	}
-
-	printf("[T] >>> Expecting: %s\n", exp);
-	printf("[T] >>> Got: %s\n", got);
-
-	exit(1);
-}
+extern Dlogger D;
+extern int expectString(const char* exp, const char* got, int to);
 
 // vi: ts=8 sw=8 tw=78:

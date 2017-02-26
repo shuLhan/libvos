@@ -1,3 +1,12 @@
+v0.3.2 (2017-03-xx)
+===================
+
+New Features
+------------
+
+* User: new class to manage user process real and/or effective ID.
+
+
 v0.3.2 (2017-02-24)
 ===================
 
