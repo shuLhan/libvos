@@ -182,7 +182,7 @@ TreeNode* RBT::get_root()
 	unlock();
 
 	return r;
-};
+}
 
 /**
  *
@@ -704,7 +704,7 @@ int RBT::_check_balance(TreeNode* p, int nblack)
 	}
 
 	return 1;
-};
+}
 
 /**
  * `is_balance()` will return `1` if number of every path from root to
