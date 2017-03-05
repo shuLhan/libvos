@@ -32,45 +32,50 @@ namespace vos {
  */
 class Buffer : public Object {
 public:
-	Buffer(const int bfr_size = DFLT_SIZE);
-	Buffer(const char* v);
+	Buffer(const size_t size = DFLT_SIZE);
+	Buffer(const char* v, const size_t vlen = 0);
 	Buffer(const Buffer* v);
 	virtual ~Buffer();
 
-	int resize(const int len);
+	int is_empty() const;
+	size_t len() const;
+	size_t size() const;
+	const char* v(size_t idx = 0) const;
+
+	int resize(size_t len);
 	void reset(int c = 0);
 	void trim();
 
 	int copy(const Buffer* bfr);
-	int copy_raw(const char* bfr, int len = 0);
+	int copy_raw(const char* bfr, size_t len = 0);
 
 	int set(const Buffer* bfr, const Buffer* dflt);
 	int set_raw(const char* bfr, const char* dflt);
 
 	int move_to(Buffer** bfr);
-	int shiftr(const int nbyte, int c = 0);
+	int shiftr(const size_t nbyte, int c = 0);
 
 	int appendc(const char c);
-	int appendi(long int i, int base = 10);
-	int appendui(long unsigned int i, int base = 10);
+	int appendi(long int i, unsigned int base = 10);
+	int appendui(long unsigned int i, size_t base = 10);
 	int appendd(double d, int prec = 6);
 	int append(const Buffer* bfr);
-	int append_raw(const char* bfr, int len = 0);
-	int append_bin(void *bin, int len);
+	int append_raw(const char* bfr, size_t len = 0);
+	int append_bin(void *bin, size_t len);
 
 	int concat(const char* bfr, ...);
 	int aprint(const char* fmt, ...);
 	int vprint(const char* fmt, va_list args);
 
 	int prepend(Buffer* bfr);
-	int prepend_raw(const char* bfr, int len = 0);
+	int prepend_raw(const char* bfr, size_t len = 0);
 
 	int subc(int from, int to);
 
 	int cmp(Object* bfr);
-	int cmp_raw(const char* bfr, int len = 0);
+	int cmp_raw(const char* bfr, size_t len = 0);
 	int like(const Buffer* bfr);
-	int like_raw(const char* bfr, int len = 0);
+	int like_raw(const char* bfr, size_t len = 0);
 
 	long int to_lint();
 
@@ -81,23 +86,18 @@ public:
 	void dump();
 	void dump_hex();
 
-	inline int is_empty()
-	{
-		return !_i;
-	}
-
-	int	_i;
-	int	_l;
+	size_t _i;
+	size_t _l;
 	char* _v;
 
 	static int PARSE_INT(char** pp, int* v);
 	static int VSNPRINTF(char *bfr, int len, const char *fmt,
 				va_list args);
-	static int TRIM(char *bfr, int len);
+	static size_t TRIM(char *bfr, size_t len);
 	static int CMP_OBJECTS(Object* x, Object* y);
 
-	static int	DFLT_SIZE;
-	static int	CHAR_SIZE;
+	static uint8_t	DFLT_SIZE;
+	static uint8_t	CHAR_SIZE;
 
 	static const char* __cname;
 private:

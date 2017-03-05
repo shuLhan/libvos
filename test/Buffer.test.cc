@@ -74,6 +74,54 @@ using vos::List;
 		V_STR("e") \
 	)
 
+void test_constructor_size()
+{
+	Buffer b(256);
+
+	assert(b.len() == 0);
+	assert(b.size() == 256);
+	expectString(b.v(), "", 0);
+}
+
+void test_constructor_raw()
+{
+	const char* exp = "Use of this source code is governed by a BSD-style";
+	size_t exp_len = strlen(exp);
+
+	Buffer b(exp);
+
+	assert(b.len() == exp_len);
+	assert(b.size() == exp_len);
+	expectString(b.v(), exp, 0);
+
+	Buffer c(exp, 6);
+
+	assert(c.len() == 6);
+	assert(c.size() == 6);
+	expectString(c.v(), "Use of", 0);
+}
+
+void test_constructor_buffer()
+{
+	const char* exp = "Use of this source code is governed by a BSD-style";
+	size_t exp_len = strlen(exp);
+
+	Buffer a(256);
+	Buffer b(&a);
+
+	assert(b.len() == 0);
+	assert(b.size() == a.size());
+	expectString(a.v(), b.v(), 0);
+
+	a.copy_raw(exp);
+
+	Buffer c(&a);
+
+	assert(c.len() == exp_len);
+	assert(c.size() == exp_len);
+	expectString(c.v(), exp, 0);
+}
+
 int test_n = 0;
 Buffer in;
 List* lbuf;
@@ -82,20 +130,22 @@ void test_copy_raw()
 {
 	Buffer b;
 	const char* str = "a";
+	size_t sz = 0;
 
 	b.copy_raw(str);
 
-	assert(b._i == (int) strlen(str));
-	assert(strcmp(b.chars(), str) == 0);
+	sz = strlen(str);
+	assert(b._i == sz);
+	expectString(str, b.v(), 0);
 
 	b.copy_raw(STR_TEST_0);
 
 	assert(b._i == strlen(STR_TEST_0));
-	assert(strcmp(STR_TEST_0, b.chars()) == 0);
+	expectString(STR_TEST_0, b.v(), 0);
 }
 
 void test_split_by_char_n(const char* input, const char split
-	, const int trim, const char* exp, const int exp_size)
+	, const uint8_t trim, const char* exp, const int exp_size)
 {
 	in.copy_raw(input);
 	lbuf = in.split_by_char(split, trim);
@@ -103,7 +153,7 @@ void test_split_by_char_n(const char* input, const char split
 	expectString(exp, lbuf->chars(), 0);
 
 	assert(lbuf->size() == exp_size);
-	assert(strcmp(exp, lbuf->chars()) == 0);
+	expectString(exp, lbuf->chars(), 0);
 	delete lbuf;
 }
 
@@ -141,7 +191,7 @@ void test_split_by_whitespace_n(const char* input
 	expectString(exp, lbuf->chars(), 0);
 
 	assert(lbuf->size() == exp_size);
-	assert(strcmp(exp, lbuf->chars()) == 0);
+	expectString(exp, lbuf->chars(), 0);
 	delete lbuf;
 }
 
@@ -303,12 +353,16 @@ int main()
 {
 	Buffer a;
 
-	assert(strcmp("Buffer", a.__cname) == 0);
-	assert(strcmp("Object", a.Object::__cname) == 0);
+	expectString(a.__cname, "Buffer", 0);
+	expectString(a.Object::__cname, "Object", 0);
 
 	assert(a._l == Buffer::DFLT_SIZE);
 	assert(a._i == 0);
-	assert(strcmp("", a.chars()) == 0);
+	expectString(a.v(), "", 0);
+
+	test_constructor_size();
+	test_constructor_raw();
+	test_constructor_buffer();
 
 	test_copy_raw();
 

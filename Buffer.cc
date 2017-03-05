@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -28,121 +28,163 @@ enum __print_flag {
 ,	FL_LONG_DBL	= (1 << 11)
 };
 
-/* default buffer size */
-int Buffer::DFLT_SIZE = 15;
-int Buffer::CHAR_SIZE = sizeof(char);
+/**
+ * Static DFLT_SIZE default buffer size
+ */
+uint8_t Buffer::DFLT_SIZE = 16;
 
-Buffer::Buffer(const int bfr_size) : Object()
+/**
+ * Static CHAR_SIZE size of char, to minimize calling the sizeof
+ */
+uint8_t Buffer::CHAR_SIZE = sizeof(char);
+
+/**
+ * Method `Buffer(size)` will allocated a buffer with `size`.
+ */
+Buffer::Buffer(const size_t size)
+:	Object()
 ,	_i(0)
 ,	_l(0)
 ,	_v(NULL)
 {
-	resize(bfr_size);
+	resize(size);
 }
 
-//
-// `Buffer(const char*)` will create a new Buffer object and initialize with
-// value from `v`.
-//
-Buffer::Buffer(const char* v) : Object()
-,	_i(0)
-,	_l(0)
-,	_v(NULL)
-{
-	if (v) {
-		copy_raw(v);
-	} else {
-		resize(DFLT_SIZE);
-	}
-}
-
-//
-// `Buffer(const Buffer*)` will create a new Buffer object and initialize its
-// value from another Buffer `v`.
-//
-Buffer::Buffer(const Buffer* v) : Object()
+/**
+ * Method `Buffer(v)` will create a new Buffer object and initialize
+ * its content from `v` with length of `v` is defined by `vlen`.
+ */
+Buffer::Buffer(const char* v, const size_t vlen)
+:	Object()
 ,	_i(0)
 ,	_l(0)
 ,	_v(NULL)
 {
 	if (v) {
-		copy(v);
+		copy_raw(v, vlen);
 	} else {
 		resize(DFLT_SIZE);
 	}
 }
 
+/**
+ * Method `Buffer(bfr)` will create a new Buffer object and initialize its
+ * content from another Buffer `bfr`.
+ *
+ * If `bfr` is empty, it will create the buffer with the same size as `bfr`.
+ */
+Buffer::Buffer(const Buffer* bfr)
+:	Object()
+,	_i(0)
+,	_l(0)
+,	_v(NULL)
+{
+	if (bfr) {
+		if (bfr->is_empty()) {
+			resize(bfr->size());
+		} else {
+			copy(bfr);
+		}
+	} else {
+		resize(DFLT_SIZE);
+	}
+}
+
+/**
+ * Method `~Buffer()` will release the allocated buffer to the system.
+ */
 Buffer::~Buffer()
 {
 	if (_v && _l) {
 		free(_v);
 		_v = NULL;
 	}
+	_i = 0;
+	_l = 0;
 }
 
 /**
- * @method	: Buffer::resize
- * @param	:
- *	> len	: the new length for buffer.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: Change the allocated size of buffer to 'size'.
- *
- * Keep the current buffer if 'size' is less than current length of allocated
- * data.
+ * Method `is_empty()` will return `0` if current buffer is empty or any
+ * positive integer if is not empty.
  */
-int Buffer::resize(const int size)
+int Buffer::is_empty() const
+{
+	return _i == 0;
+}
+
+/**
+ * Method `len()` will return the length of buffer that has been used.
+ */
+size_t Buffer::len() const
+{
+	return _i;
+}
+
+/**
+ * Method `size()` will return the size of buffer (used + unused).
+ */
+size_t Buffer::size() const
+{
+	return _l;
+}
+
+/**
+ * Method `v()` will return content of buffer at index `idx`.
+ *
+ * If `idx` is not defined, then it will default to zero.
+ */
+const char* Buffer::v(size_t idx) const
+{
+	return &_v[idx];
+}
+
+/**
+ * Method `resize(size)` will resize the buffer to `size`.
+ *
+ * If 'size' is less than current buffer size, no reallocation will be
+ * happenend.
+ *
+ * It will return `0` on success or `-1` when fail to reallocate more memory.
+ */
+int Buffer::resize(size_t size)
 {
 	char* newv = NULL;
 
-	if (_l < size) {
-		newv = (char *) realloc(_v, size + CHAR_SIZE);
-		if (!newv) {
-			return -1;
-		}
-		_v	= newv;
-		_v[_i]	= '\0';
-		_l	= size;
+	if (size <= _l) {
+		return 0;
 	}
+
+	newv = (char *) realloc(_v, size + CHAR_SIZE);
+	if (!newv) {
+		perror(__cname);
+		return -1;
+	}
+
+	_v	= newv;
+	_v[_i]	= '\0';
+	_l	= size;
+
 	return 0;
 }
 
 /**
- * @method	: Buffer::reset
- * @desc	: Reset Buffer object, keep an already allocated buffer and
- * start index from zero again.
+ * Method `reset(c)` will reset the content of buffer to `c`, all of them,
+ * keep an already allocated buffer and start index from zero again.
  */
 void Buffer::reset(int c)
 {
 	if (_i) {
 		_i = 0;
-		_v = (char*) memset(_v, c, _l);
+		memset(_v, c, _l);
 	}
 }
 
 /**
- * @method	: Buffer::trim
- * @desc	: Remove leading and trailing white-space in buffer.
+ * Method `trim()` will remove leading and trailing white-space in buffer.
  */
 void Buffer::trim()
 {
-	register int x = 0;
-
-	do {
-		--_i;
-	} while (_i >= 0 && isspace(_v[_i]));
-
-	while (x < _i && isspace(_v[x])) {
-		++x;
-	}
-	if (x > 0 && x <= _i) {
-		_i = _i - x + CHAR_SIZE;
-		memmove(_v, &_v[x], _i);
-	} else {
-		++_i;
-	}
-	_v[_i] = '\0';
+	_i = TRIM(_v, _i);
 }
 
 /**
@@ -172,7 +214,7 @@ int Buffer::copy(const Buffer* bfr)
  *	< -1	: fail.
  * @desc	: Copy the content of raw buffer.
  */
-int Buffer::copy_raw(const char* bfr, int len)
+int Buffer::copy_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
 		if (len > 0) {
@@ -180,8 +222,8 @@ int Buffer::copy_raw(const char* bfr, int len)
 		}
 		return 0;
 	}
-	if (len <= 0) {
-		len = (int) strlen(bfr);
+	if (len == 0) {
+		len = strlen(bfr);
 		if (!len) {
 			return 0;
 		}
@@ -234,9 +276,9 @@ int Buffer::set(const Buffer* bfr, const Buffer* dflt)
 int Buffer::set_raw(const char* bfr, const char* dflt)
 {
 	if (bfr) {
-		return copy_raw(bfr);
+		return copy_raw(bfr, strlen(bfr));
 	}
-	return copy_raw(dflt);
+	return copy_raw(dflt, strlen(dflt));
 }
 
 /**
@@ -256,7 +298,7 @@ int Buffer::move_to(Buffer** bfr)
 		delete (*bfr);
 	}
 
-	(*bfr) = new Buffer(0);
+	(*bfr) = new Buffer(size_t(0));
 	if (! (*bfr)) {
 		return -1;
 	}
@@ -281,11 +323,12 @@ int Buffer::move_to(Buffer** bfr)
  *	< -1	: fail.
  * @desc	: Move contents of buffer n bytes to the right.
  */
-int Buffer::shiftr(const int nbyte, int c)
+int Buffer::shiftr(const size_t nbyte, int c)
 {
+	size_t growth = _i + nbyte;
 	char* newv = NULL;
 
-	if (_i + nbyte > _l) {
+	if (growth > _l) {
 		_l += nbyte;
 		newv = (char *) realloc(_v, (_l + CHAR_SIZE));
 		if (!newv) {
@@ -295,7 +338,7 @@ int Buffer::shiftr(const int nbyte, int c)
 	}
 
 	memmove(&_v[nbyte], &_v[0], _i);
-	_v = (char*) memset(_v, c, nbyte);
+	memset(_v, c, nbyte);
 
 	_i	+= nbyte;
 	_v[_i]	= '\0';
@@ -343,11 +386,11 @@ int Buffer::appendc(const char c)
  *	< -1	: fail.
  * @desc	: Append an integer 'i' as a string to buffer.
  */
-int Buffer::appendi(long int i, int base)
+int Buffer::appendi(long int i, unsigned int base)
 {
-	register int	s	= 0;
-	register int	x	= 0;
-	char		rebmun[23];
+	int s = 0;
+	int x = 0;
+	char angka[23];
 
 	if (i < 0) {
 		s = appendc('-');
@@ -357,7 +400,7 @@ int Buffer::appendi(long int i, int base)
 		i = -(i);
 	}
 	while (i >= 0) {
-		rebmun[x]	= __digits[i % base];
+		angka[x]	= __digits[i % base];
 		i		= i / base;
 		if (0 == i) {
 			break;
@@ -365,7 +408,7 @@ int Buffer::appendi(long int i, int base)
 		++x;
 	}
 	while (x >= 0) {
-		s = appendc(rebmun[x]);
+		s = appendc(angka[x]);
 		if (s < 0) {
 			return -1;
 		}
@@ -384,16 +427,16 @@ int Buffer::appendi(long int i, int base)
  *	< -1	: fail.
  * @desc	: Append an unsigned integer 'i' to buffer.
  */
-int Buffer::appendui(long unsigned int i, int base)
+int Buffer::appendui(long unsigned int i, size_t base)
 {
-	register int	s	= 0;
-	register int	x	= 0;
-	char		rebmun[23];
+	int s = 0;
+	int x = 0;
+	char angka[23];
 
-	rebmun[0] = '0';
+	angka[0] = '0';
 
 	while (i > 0) {
-		rebmun[x]	= __digits[i % base];
+		angka[x]	= __digits[i % base];
 		i		= i / base;
 		if (0 == i) {
 			break;
@@ -401,7 +444,7 @@ int Buffer::appendui(long unsigned int i, int base)
 		++x;
 	}
 	while (x >= 0) {
-		s = appendc(rebmun[x]);
+		s = appendc(angka[x]);
 		if (s < 0) {
 			return -1;
 		}
@@ -428,7 +471,7 @@ int Buffer::appendd(double d, int prec)
 	if (::snprintf(f, 32, "%.*f", prec, d) < 0) {
 		return -1;
 	}
-	return append_raw(f);
+	return append_raw(f, strlen(f));
 }
 
 /**
@@ -462,7 +505,7 @@ int Buffer::append(const Buffer* bfr)
  * If 'bfr' is nil and len is greater than zero, than this method will behave
  * like resize() method, resizing the buffer to 'len'.
  */
-int Buffer::append_raw(const char* bfr, int len)
+int Buffer::append_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
 		if (len > 0) {
@@ -470,8 +513,8 @@ int Buffer::append_raw(const char* bfr, int len)
 		}
 		return 0;
 	}
-	if (len <= 0) {
-		len = (int) strlen(bfr);
+	if (len == 0) {
+		len = strlen(bfr);
 		if (!len) {
 			return 0;
 		}
@@ -484,7 +527,7 @@ int Buffer::append_raw(const char* bfr, int len)
 	_i	+= len;
 	_v[_i]	= '\0';
 
-	return len;
+	return (int) len;
 }
 
 /**
@@ -497,9 +540,9 @@ int Buffer::append_raw(const char* bfr, int len)
  *	< -1	: fail.
  * @desc	: append binary data to buffer.
  */
-int Buffer::append_bin(void *bin, int len)
+int Buffer::append_bin(void *bin, size_t len)
 {
-	if (!bin || len <= 0) {
+	if (!bin || len == 0) {
 		return 0;
 	}
 	if (resize(_i + len) < 0) {
@@ -510,7 +553,7 @@ int Buffer::append_bin(void *bin, int len)
 	_i += len;
 	_v[_i] = 0;
 
-	return len;
+	return (int) len;
 }
 
 /**
@@ -531,14 +574,14 @@ int Buffer::concat(const char* bfr, ...)
 		return 0;
 	}
 
-	register int		s;
-	va_list			al;
-	register const char	*p	= NULL;
+	int s = 0;
+	const char *p = NULL;
+	va_list al;
 
 	va_start(al, bfr);
 	p = bfr;
 	while (p) {
-		s = append_raw(p);
+		s = append_raw(p, strlen(p));
 		if (s < 0) {
 			return -1;
 		}
@@ -563,7 +606,7 @@ int Buffer::concat(const char* bfr, ...)
  */
 int Buffer::aprint(const char* fmt, ...)
 {
-	register int	s;
+	int s = 0;
 	va_list		args;
 
 	va_start(args, fmt);
@@ -591,8 +634,8 @@ int Buffer::vprint(const char* fmt, va_list args)
 		return 0;
 	}
 
-	register int	s;
-	register int	len;
+	int s = 0;
+	int len = 0;
 	va_list		args2;
 
 	va_copy(args2, args);
@@ -604,7 +647,7 @@ int Buffer::vprint(const char* fmt, va_list args)
 	}
 
 	++len;
-	s = resize(_i + len);
+	s = resize(_i + size_t(len));
 	if (s < 0) {
 		return -1;
 	}
@@ -614,7 +657,7 @@ int Buffer::vprint(const char* fmt, va_list args)
 		return -1;
 	}
 
-	_i	+= len;
+	_i	+= size_t(len);
 	_v[_i]	= '\0';
 
 	return len;
@@ -648,7 +691,7 @@ int Buffer::prepend(Buffer* bfr)
  *	< -1	: fail.
  * @desc	: Add raw buffer 'bfr' to the beginning of Buffer object.
  */
-int Buffer::prepend_raw(const char* bfr, int len)
+int Buffer::prepend_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
 		if (len > 0) {
@@ -656,8 +699,8 @@ int Buffer::prepend_raw(const char* bfr, int len)
 		}
 		return 0;
 	}
-	if (len <= 0) {
-		len = (int) strlen(bfr);
+	if (len == 0) {
+		len = strlen(bfr);
 		if (!len) {
 			return 0;
 		}
@@ -668,7 +711,7 @@ int Buffer::prepend_raw(const char* bfr, int len)
 
 	memcpy(_v, bfr, len);
 
-	return len;
+	return (int) len;
 }
 
 /**
@@ -682,7 +725,7 @@ int Buffer::prepend_raw(const char* bfr, int len)
  */
 int Buffer::subc(int from, int to)
 {
-	int i = 0;
+	size_t i = 0;
 	int n = 0;
 
 	for (; i < _i; i++) {
@@ -727,15 +770,15 @@ int Buffer::cmp(Object* bfr)
  * compare is 'len'.
  * This is case sensitive compare, where "A" != "a".
  */
-int Buffer::cmp_raw(const char* bfr, int len)
+int Buffer::cmp_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
 		return 1;
 	}
 
-	register int s;
+	int s = 0;
 
-	if (len <= 0) {
+	if (len == 0) {
 		s = strcmp(_v, bfr);
 	} else {
 		s = strncmp(_v, bfr, len);
@@ -764,7 +807,7 @@ int Buffer::like(const Buffer* bfr)
 	if (!bfr) {
 		return 1;
 	}
-	return like_raw(bfr->_v);
+	return like_raw(bfr->_v, bfr->_i);
 }
 
 /**
@@ -778,15 +821,15 @@ int Buffer::like(const Buffer* bfr)
  *	< -1	: if this < bfr.
  * @desc	: Case not sentisive compare, where "A" == "a".
  */
-int Buffer::like_raw(const char* bfr, int len)
+int Buffer::like_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
 		return 1;
 	}
 
-	register int s;
+	int s = 0;
 
-	if (len <= 0) {
+	if (len == 0) {
 		s = strcasecmp(_v, bfr);
 	} else {
 		s = strncasecmp(_v, bfr, len);
@@ -825,13 +868,13 @@ long int Buffer::to_lint()
 	return v;
 }
 
-void list_buffer_add(List* buffers, const char* v, int start, int end
+void list_buffer_add(List* buffers, const char* v, size_t start, size_t end
 	, int trim)
 {
 	Buffer* b = NULL;
 
-	int len = end - start;
-	if (len <= 0) {
+	size_t len = end - start;
+	if (len == 0) {
 		if (trim) {
 			return;
 		}
@@ -868,8 +911,8 @@ List* Buffer::split_by_char(const char sep, int trim)
 	}
 
 	List* buffers = new List();
-	int x = 0;
-	int start = 0;
+	size_t x = 0;
+	size_t start = 0;
 
 	for (; x < _i; x++) {
 		if (_v[x] == sep) {
@@ -899,8 +942,8 @@ List* Buffer::split_by_whitespace()
 	}
 
 	List* buffers = new List();
-	int x = 0;
-	int start = 0;
+	size_t x = 0;
+	size_t start = 0;
 
 	for (; x < _i; x++) {
 		if (isspace(_v[x])) {
@@ -970,7 +1013,7 @@ const char* Buffer::chars()
  */
 void Buffer::dump()
 {
-	printf("[vos::Buffer__] dump: [%d|%d|%s]\n", _i, _l, chars());
+	printf("[vos::Buffer__] dump: [%ld|%ld|%s]\n", _i, _l, _v);
 }
 
 /**
@@ -981,10 +1024,10 @@ void Buffer::dump()
  */
 void Buffer::dump_hex()
 {
-	register int	i = 0;
-	register int	j = 0;
-	register int	k = 0;
-	Buffer		o(_i * 6);
+	size_t i = 0;
+	size_t j = 0;
+	int k = 0;
+	Buffer o(_i * 6);
 
 	o.append_raw("[vos::Buffer__] dump_hex:\n");
 
@@ -1123,7 +1166,7 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 
 			if (s < 0) {
 				b.append(&flags);
-				b.append_raw(p);
+				b.append_raw(p, strlen(p));
 				break;
 			}
 		}
@@ -1139,7 +1182,7 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 
 				if (s < 0) {
 					b.append(&flags);
-					b.append_raw(p);
+					b.append_raw(p, strlen(p));
 					break;
 				}
 			} else {
@@ -1255,15 +1298,15 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 				if ((flagv & FL_SIGN) && (flagv & FL_NUMBER)) {
 					--flen;
 				}
-				if (flen > o._i) {
-					flen = flen - o._i;
+				if (flen > int(o._i)) {
+					flen = flen - int(o._i);
 				} else {
 					flen = 0;
 				}
 			}
 			if ((flagv & FL_NUMBER)) {
 				if ((flagv & FL_ZERO) && flen) {
-					o.shiftr((int) flen, '0');
+					o.shiftr(size_t(flen), '0');
 					flen = 0;
 				}
 				if (flagv & FL_SIGN) {
@@ -1272,7 +1315,7 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 				}
 			}
 			if (flen) {
-				o.shiftr((int) flen, ' ');
+				o.shiftr(size_t(flen), ' ');
 			}
 
 			if (flagv & FL_ALT_OUT) {
@@ -1297,11 +1340,11 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 	}
 
 	if (bfr) {
-		len = len < b._i ? len : b._i;
-		memcpy(bfr, b._v, len);
+		len = len < int(b._i) ? len : int(b._i);
+		memcpy(bfr, b._v, size_t(len));
 	}
 
-	return b._i;
+	return int(b._i);
 }
 
 /**
@@ -1313,32 +1356,38 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
  *	< >=0	: success, length of 'bfr' after trimmed left and right.
  * @desc	: remove leading and trailing white-space from buffer.
  */
-int Buffer::TRIM(char *bfr, int len)
+size_t Buffer::TRIM(char *bfr, size_t len)
 {
 	if (! bfr) {
 		return 0;
 	}
 	if (! len) {
-		len = (int) strlen(bfr);
+		len = strlen(bfr);
 		if (! len) {
 			return 0;
 		}
 	}
 
+	size_t x = 0;
+
 	do {
 		--len;
-	} while (len >= 0 && isspace(bfr[len]));
+	} while (len > 0 && isspace(bfr[len]));
 
-	register int x = 0;
-
-	while (x < len && isspace(bfr[x])) {
-		++x;
-	}
-	if (x > 0 && x <= len) {
-		len = len - x + CHAR_SIZE;
-		memmove(bfr, &bfr[x], len);
+	if (len == 0) {
+		if (! isspace(bfr[len])) {
+			++len;
+		}
 	} else {
-		++len;
+		while (x < len && isspace(bfr[x])) {
+			++x;
+		}
+		if (x > 0 && x <= len) {
+			len = len - x + CHAR_SIZE;
+			memmove(bfr, &bfr[x], len);
+		} else {
+			++len;
+		}
 	}
 
 	bfr[len] = '\0';
