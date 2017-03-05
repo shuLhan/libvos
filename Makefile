@@ -1,6 +1,5 @@
-#!/usr/bin/make
 ##
-## Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+## Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 ## Use of this source code is governed by a BSD-style license that can be
 ## found in the LICENSE file.
 ##
@@ -92,7 +91,7 @@ libvos-opts: $$(LIBVOS_OPTS)
 EMPTY_OPTS: libvos
 
 NO_DEFAULT_LIBS: CXXFLAGS_ADD+=$(NO_DEFAULT_LIBS)
-NO_DEFAULT_LIBS: LINKER=gcc
+NO_DEFAULT_LIBS: LINKER=$(LIBVOS_LINKER)
 NO_DEFAULT_LIBS: libvos
 
 libvos-all: CXXFLAGS+=$(CXXFLAGS_ADD)

@@ -1,6 +1,5 @@
-#!/usr/bin/make
 ##
-## Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+## Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 ## Use of this source code is governed by a BSD-style license that can be
 ## found in the LICENSE file.
 ##
@@ -14,17 +13,28 @@ MAKEFLAGS	+= --warn-undefined-variables
 
 SYS		= $(shell uname)
 
-CXX		= gcc
-LINKER		= gcc
+ifdef CXX
+LIBVOS_CXX	:= $(CXX)
+else
+LIBVOS_CXX	:= gcc
+endif
+
+ifdef LINKER
+LIBVOS_LINKER	:= $(LINKER)
+else
+LIBVOS_LINKER	:= gcc
+endif
+
 CXXFLAGS_GLOBAL	= -fno-rtti -fno-exceptions -pipe \
-		-Wall -Wextra -Weffc++ -Werror -Wconversion
+		-Wall -Wextra \
+		-Weffc++ -Wconversion -Wpedantic
 
 ifndef CXXFLAGS
-CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os -flto
+CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os
 endif
 CXXFLAGS_DEBUG	= $(CXXFLAGS_GLOBAL) -g -O0
 CXXFLAGS_ADD	=
-LDFLAGS		= -lpthread
+LDFLAGS		= -Os -lpthread
 LDFLAGS_ADD	=
 
 LIBVOS_OPTS	=
@@ -32,11 +42,11 @@ NO_DEFAULT_LIBS	= -nodefaultlibs -DNO_DEFAULT_LIBS
 
 do_compile=\
 	echo "[C] $@";\
-	$(CXX) $(CXXFLAGS) -c $< -o $@;
+	$(LIBVOS_CXX) $(CXXFLAGS) -c $< -o $@;
 
 do_build=\
 	echo "[B] $@";\
-	$(LINKER) $(LDFLAGS) $^ -o $@;
+	$(LIBVOS_LINKER) $(LDFLAGS) $^ -o $@;
 
 do_install=\
 	echo "[I] installing $(1) => $(2)";\
