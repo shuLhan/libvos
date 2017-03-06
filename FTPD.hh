@@ -151,6 +151,8 @@ public:
 
 	static void on_cmd_QUIT(FTPD* s, FTPD_client* c);
 	static void on_cmd_unknown(FTPD_client* c);
+
+	static const char* __cname;
 private:
 	FTPD(const FTPD&);
 	void operator=(const FTPD&);

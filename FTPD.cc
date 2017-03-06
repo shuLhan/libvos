@@ -8,6 +8,8 @@
 
 namespace vos {
 
+const char* FTPD::__cname = "FTPD";
+
 const char* _FTP_reply_msg[N_REPLY_CODE] =
 {
 	"150 File status okay; about to open data connection.\r\n"
@@ -364,7 +366,7 @@ static void EXIT(int signum)
 {
 	if (signum == SIGINT || signum == SIGQUIT) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::FTPD____] exit\n");
+			printf("[FTPD] exit\n");
 		}
 		if (_ftpd_) {
 			_ftpd_->_running = 0;
@@ -393,7 +395,7 @@ int FTPD::run()
 
 	while (_running) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::FTPD____] run: waiting for client\n\n");
+			printf("[%s] run: waiting for client\n\n", __cname);
 		}
 
 		_fd_read = _fd_all;
@@ -440,7 +442,7 @@ err:
 void FTPD::client_process()
 {
 	int x = 0;
-	int		s;
+	ssize_t s = 0;
 	Socket*		csock	= NULL;
 	SockServer*	cpsvr	= NULL;
 	FTPD_client* c = NULL;
@@ -516,7 +518,8 @@ int FTPD::client_get_command(Socket* c, FTPD_cmd* ftp_cmd)
 	}
 
 	int x = 0;
-	int		s;
+	int cmp = 0;
+	size_t s = 0;
 	FTPD_cmd*	cmd_p = NULL;
 
 	ftp_cmd->reset();
@@ -540,8 +543,8 @@ int FTPD::client_get_command(Socket* c, FTPD_cmd* ftp_cmd)
 	for (; x < _cmds.size(); x++) {
 		cmd_p = (FTPD_cmd*) _cmds.at(x);
 
-		s = ftp_cmd->_name.like(&cmd_p->_name);
-		if (s == 0) {
+		cmp = ftp_cmd->_name.like(&cmd_p->_name);
+		if (cmp == 0) {
 			ftp_cmd->_code = cmd_p->_code;
 			ftp_cmd->_callback = cmd_p->_callback;
 			return ftp_cmd->_code;
@@ -549,7 +552,7 @@ int FTPD::client_get_command(Socket* c, FTPD_cmd* ftp_cmd)
 	}
 
 	fprintf(stderr
-		, "[vos::FTPD____] client_get_command: unknown command '%s'\n"
+		, "[%s] client_get_command: unknown command '%s'\n", __cname
 		, ftp_cmd->_name._v);
 
 	return -1;
@@ -584,7 +587,7 @@ void FTPD::client_add(FTPD_client* c)
 void FTPD::client_del(FTPD_client* c)
 {
 	if (LIBVOS_DEBUG) {
-		printf("[vos::FTPD____] client_del: client '%d' quit.\n"
+		printf("[%s] client_del: client '%d' quit.\n", __cname
 			, c->_sock->_d);
 	}
 
@@ -661,11 +664,12 @@ int FTPD::client_get_path(FTPD_client* c, int check_parm)
 	}
 
 	if (LIBVOS_DEBUG) {
-		printf(	"[vos::FTPD____] client_get_path:\n"\
+		printf(	"[%s] client_get_path:\n"\
 			"  path      : %s\n"\
 			"  path real : %s\n"\
 			"  path base : %s\n"
-			, c->_path._v, c->_path_real._v, c->_path_base._v);
+			, __cname, c->_path._v, c->_path_real._v
+			, c->_path_base._v);
 	}
 out:
 	return c->_s;
@@ -688,8 +692,8 @@ out:
  */
 int FTPD::client_get_parent_path(FTPD_client* c)
 {
-	int	i	= 0;
-	int	tmp_i	= 0;
+	size_t i = 0;
+	size_t tmp_i = 0;
 	Buffer*	cmd_path = &c->_cmd._parm;
 
 	c->_s = 0;
@@ -732,11 +736,12 @@ int FTPD::client_get_parent_path(FTPD_client* c)
 	c->_path_real.append(&c->_path_base);
 
 	if (LIBVOS_DEBUG) {
-		printf(	"[vos::FTPD____] client_get_parent_path:\n"\
+		printf(	"[%s] client_get_parent_path:\n"\
 			"  parent path      : %s\n"\
 			"  parent real path : %s\n"\
 			"  base name        : %s\n"
-			, c->_path._v, c->_path_real._v, c->_path_base._v);
+			, __cname, c->_path._v, c->_path_real._v
+			, c->_path_base._v);
 	}
 out:
 	return c->_s;
@@ -917,7 +922,7 @@ void FTPD::on_cmd_CWD(FTPD* s, FTPD_client* c)
 			c->_wd.copy(&c->_path);
 
 			if (LIBVOS_DEBUG) {
-				printf("[vos::FTPD____] on_cmd_CWD: '%s'\n"
+				printf("[%s] on_cmd_CWD: '%s'\n", __cname
 					, c->_wd._v);
 			}
 		}
@@ -962,7 +967,8 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPD_client* c)
 
 	if (!c->_sock) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::FTPD____] on_cmd_PASV: client socket null!\n");
+			printf("[%s] on_cmd_PASV: client socket null!\n"
+				, __cname);
 		}
 		return;
 	}
@@ -1007,7 +1013,7 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPD_client* c)
 	}
 
 	if (LIBVOS_DEBUG) {
-		printf("[LIBVOS::FTPD____] PASV: %s\n", pasv_addr._v);
+		printf("[%s] PASV: %s\n", __cname, pasv_addr._v);
 	}
 
 	c->_s		= CODE_227;
@@ -1041,7 +1047,7 @@ static int get_node_perm(Buffer* bfr, DirNode* node)
 		return -1;
 	}
 
-	int i = bfr->_i;
+	size_t i = bfr->_i;
 
 	bfr->append_raw("----------");
 
@@ -1289,7 +1295,7 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPD_client* c)
 		return;
 	}
 
-	int		x;
+	ssize_t x = 0;
 	File		file;
 	Socket*		pasv_c		= NULL;
 
@@ -1344,7 +1350,7 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPD_client* c)
 		return;
 	}
 
-	int		x;
+	ssize_t x = 0;
 	File		file;
 	Socket*		pasv_c		= NULL;
 
@@ -1509,10 +1515,10 @@ void FTPD::on_cmd_RNTO(FTPD* s, FTPD_client* c)
 	}
 
 	if (LIBVOS_DEBUG) {
-		printf(	"[vos::FTPD____] on_cmd_RNTO:\n"\
+		printf(	"[%s] on_cmd_RNTO:\n"\
 			"  RENAME from : %s\n"\
 			"         to   : %s\n"
-			, from._v, c->_path_real._v);
+			, __cname, from._v, c->_path_real._v);
 	}
 
 	x = rename(from._v, c->_path_real._v);
