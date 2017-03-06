@@ -8,6 +8,7 @@
 
 namespace vos {
 
+const char* SockAddr::__cname = "SockAddr";
 unsigned int SockAddr::IN_SIZE	= sizeof(struct sockaddr_in);
 unsigned int SockAddr::IN6_SIZE	= sizeof(struct sockaddr_in6);
 
@@ -77,7 +78,7 @@ int SockAddr::set(const int type, const char* addr, const uint16_t port)
 		s = CREATE_ADDR6(&_in6, addr, port);
 		break;
 	default:
-		fprintf(stderr, "[vos::SockAddr] set: invalid type '%d'\n"
+		fprintf(stderr, "[%s] set: invalid type '%d'\n", __cname
 			, type);
 		s = -1;
 	}
@@ -306,7 +307,7 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
 			return -1;
 		}
 
-		memcpy(&sin->sin_addr, hep->h_addr, hep->h_length);
+		memcpy(&sin->sin_addr, hep->h_addr, size_t(hep->h_length));
 	}
 
 	sin->sin_family	= AF_INET;
@@ -363,7 +364,7 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 			return -1;
 		}
 
-		memcpy(&sin6->sin6_addr, hep->h_addr, hep->h_length);
+		memcpy(&sin6->sin6_addr, hep->h_addr, size_t(hep->h_length));
 	}
 
 	sin6->sin6_family	= AF_INET6;

@@ -53,6 +53,8 @@ public:
 
 	static unsigned int IN_SIZE;
 	static unsigned int IN6_SIZE;
+
+	static const char* __cname;
 private:
 	//
 	// `_p_address` is a temporary buffer to hold address string when
