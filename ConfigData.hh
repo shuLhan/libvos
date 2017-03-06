@@ -37,19 +37,19 @@ public:
 	ConfigData();
 	~ConfigData();
 
-	int init(const int type, const char* data, int len = 0);
+	int init(const int type, const char* data, size_t data_len = 0);
 
 	void add_head(const ConfigData* head);
-	int add_head_raw(const char* head, int len = 0);
+	int add_head_raw(const char* head, const size_t head_len = 0);
 
 	void add_key(const ConfigData* key);
-	int add_key_raw(const char* key, int len = 0);
+	int add_key_raw(const char* key, const size_t key_len = 0);
 
 	int add_value(const ConfigData* value);
-	int add_value_raw(const char* value, int len = 0);
+	int add_value_raw(const char* value, const size_t value_len = 0);
 
 	void add_misc(const ConfigData* misc);
-	int add_misc_raw(const char* misc, int len = 0);
+	int add_misc_raw(const char* misc, const size_t misc_len = 0);
 
 	void dump();
 
@@ -61,7 +61,9 @@ public:
 	ConfigData*	_last_key;
 
 	static int INIT(ConfigData** o, const int type, const char* data
-			, int len = 0);
+			, const size_t data_len = 0);
+
+	static const char* __cname;
 private:
 	ConfigData(const ConfigData&);
 	void operator=(const ConfigData&);
