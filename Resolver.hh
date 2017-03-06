@@ -70,6 +70,8 @@ public:
 	static unsigned int UDP_PACKET_SIZE;
 	static unsigned int TIMEOUT;
 	static unsigned int N_TRY;
+
+	static const char* __cname;
 private:
 	Resolver(const Resolver&);
 	void operator=(const Resolver&);

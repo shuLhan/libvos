@@ -8,6 +8,8 @@
 
 namespace vos {
 
+const char* Resolver::__cname = "Resolver";
+
 uint16_t Resolver::PORT = 53;
 unsigned int Resolver::UDP_PACKET_SIZE	= 512;
 unsigned int Resolver::TIMEOUT		= 6;
@@ -64,7 +66,7 @@ int Resolver::init(const int type)
 	int s;
 
 	if (_servers.size() <= 0) {
-		fprintf(stderr, "[vos::Resolver] init: no server set!\n");
+		fprintf(stderr, "[%s] init: no server set!\n", __cname);
 		return -1;
 	}
 
@@ -141,7 +143,7 @@ int Resolver::add_server(const char* server_list)
 		return 0;
 	}
 
-	register int	s;
+	int s = 0;
 	uint16_t	port_num;
 
 	int x;
@@ -209,7 +211,7 @@ void Resolver::rotate_server()
 	}
 
 	if (LIBVOS_DEBUG && _p_saddr) {
-		fprintf(stderr, "[vos::Resolver] server switch: %s\n"
+		fprintf(stderr, "[%s] server switch: %s\n", __cname
 			, _p_saddr->chars());
 	}
 }
@@ -229,14 +231,14 @@ int Resolver::send_udp(DNSQuery* question)
 		return -1;
 	}
 	if (_servers.size() <= 0) {
-		fprintf(stderr, "[vos::Resolver] send_udp: no server!\n");
+		fprintf(stderr, "[%s] send_udp: no server!\n", __cname);
 		return -1;
 	}
 
 	rotate_server();
 
 	if (LIBVOS_DEBUG) {
-		printf("[vos::Resolver] send_udp: server '%s' ...\n"
+		printf("[%s] send_udp: server '%s' ...\n", __cname
 			, _p_saddr->chars());
 	}
 
@@ -285,13 +287,14 @@ int Resolver::recv_udp(DNSQuery* answer)
 
 	if ((answer->_flag & RCODE_FLAG) != 0) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::Resolver] recv_udp: reply flag is zero.\n");
+			printf("[%s] recv_udp: reply flag is zero.\n"
+				, __cname);
 		}
 		s = -1;
 	} else if (answer->_n_ans <= 0 && answer->_n_aut <= 0) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::Resolver] recv_udp: number of RR answer '%d'\n"
-				, answer->_n_ans);
+			printf("[%s] recv_udp: number of RR answer '%d'\n"
+				, __cname, answer->_n_ans);
 		}
 		s = -1;
 	}
@@ -330,7 +333,7 @@ int Resolver::send_tcp(DNSQuery* question)
 	}
 	// (3)
 	if (_servers.size() <= 0) {
-		fprintf(stderr, "[vos::Resolver] send_tcp: no server!\n");
+		fprintf(stderr, "[%s] send_tcp: no server!\n", __cname);
 		return -1;
 	}
 
@@ -363,8 +366,8 @@ int Resolver::send_tcp(DNSQuery* question)
 
 				if (LIBVOS_DEBUG) {
 					fprintf(stderr
-					, "[vos::Resolver] send_tcp: connected to server '%s'\n"
-					, _p_saddr->chars());
+					, "[%s] send_tcp: connected to server '%s'\n"
+					, __cname, _p_saddr->chars());
 				}
 			}
 		} while (s != 0 && _n_try < N_TRY);
@@ -372,7 +375,8 @@ int Resolver::send_tcp(DNSQuery* question)
 		if (s < 0) {
 			if (LIBVOS_DEBUG) {
 				fprintf(stderr
-				, "[vos::Resolver] send_tcp: cannot connect to server!\n");
+				, "[%s] send_tcp: cannot connect to server!\n"
+				, __cname);
 			}
 			return -1;
 		}
@@ -432,12 +436,13 @@ int Resolver::recv_tcp(DNSQuery* answer)
 	if (_status < 0) {
 		if (LIBVOS_DEBUG) {
 			fprintf (stderr
-				, "[vos::Resolver] recv_tcp: socket is not open.\n");
+				, "[%s] recv_tcp: socket is not open.\n"
+				, __cname);
 		}
 		return -1;
 	}
 
-	int s;
+	ssize_t s;
 
 	_fd_read		= _fd_all;
 	_timeout.tv_sec		= TIMEOUT;
@@ -452,8 +457,8 @@ int Resolver::recv_tcp(DNSQuery* answer)
 	if (! FD_ISSET(_d, &_fd_read)) {
 		if (LIBVOS_DEBUG) {
 			fprintf(stderr
-				, "[vos::Resolver] recv_tcp: timeout after '%d' seconds.\n"
-				, TIMEOUT);
+				, "[%s] recv_tcp: timeout after '%d' seconds.\n"
+				, __cname, TIMEOUT);
 		}
 		return -1;
 	}
@@ -467,7 +472,8 @@ int Resolver::recv_tcp(DNSQuery* answer)
 	// (6)
 	if (s == 0) {
 		if (LIBVOS_DEBUG) {
-			printf ("[vos::Resolver] recv_tcp: connection closed.\n");
+			printf ("[%s] recv_tcp: connection closed.\n"
+				, __cname);
 		}
 		FD_CLR (_d, &_fd_all);
 		return 0;
@@ -482,15 +488,16 @@ int Resolver::recv_tcp(DNSQuery* answer)
 	if ((answer->_flag & RCODE_FLAG) != 0) {
 		if (LIBVOS_DEBUG) {
 			fprintf(stderr
-				, "[vos::Resolver] recv_tcp: reply flag is zero.\n");
+				, "[%s] recv_tcp: reply flag is zero.\n"
+				, __cname);
 		}
 		return -1;
 	// (9)
 	} else if (answer->_n_ans <= 0 && answer->_n_aut <= 0) {
 		if (LIBVOS_DEBUG) {
 			fprintf(stderr
-				, "[vos::Resolver] recv_tcp: number of RR answer '%d'\n"
-				, answer->_n_ans);
+				, "[%s] recv_tcp: number of RR answer '%d'\n"
+				, __cname, answer->_n_ans);
 		}
 		return -1;
 	}
@@ -539,7 +546,7 @@ int Resolver::resolve_udp(DNSQuery* question, DNSQuery* answer)
 			++_n_try;
 			if (LIBVOS_DEBUG) {
 				printf(
-"[vos::Resolver] resolve_udp: timeout...(%d)\n", _n_try);
+"[%s] resolve_udp: timeout...(%d)\n", __cname, _n_try);
 			}
 			continue;
 		}
@@ -553,7 +560,8 @@ int Resolver::resolve_udp(DNSQuery* question, DNSQuery* answer)
 		if (s != 0) {
 			if (LIBVOS_DEBUG) {
 				printf(
-"[vos::Resolver] resolve_udp: mismatch name [Q:%s] vs [A:%s]\n"
+			"[%s] resolve_udp: mismatch name [Q:%s] vs [A:%s]\n"
+					, __cname
 					, question->_name.chars()
 					, answer->_name.chars());
 			}
@@ -563,7 +571,8 @@ int Resolver::resolve_udp(DNSQuery* question, DNSQuery* answer)
 		if (question->_id != answer->_id) {
 			if (LIBVOS_DEBUG) {
 				printf(
-"[vos::Resolver] resolve_udp: mismatch ID [Q:%d] vs [A:%d]\n"
+			"[%s] resolve_udp: mismatch ID [Q:%d] vs [A:%d]\n"
+					, __cname
 					, question->_id, answer->_id);
 			}
 			answer->set_id(question->_id);
@@ -615,8 +624,8 @@ int Resolver::resolve_tcp(DNSQuery* question, DNSQuery* answer)
 		if (0 == s || !FD_ISSET(_d, &_fd_read)) {
 			++_n_try;
 			if (LIBVOS_DEBUG) {
-				printf(
-"[vos::Resolver] resolve_tcp: timeout...(%d)\n", _n_try);
+				printf("[%s] resolve_tcp: timeout...(%d)\n"
+					, __cname, _n_try);
 			}
 			continue;
 		}
@@ -629,8 +638,8 @@ int Resolver::resolve_tcp(DNSQuery* question, DNSQuery* answer)
 		s = question->_name.like(&answer->_name);
 		if (s != 0) {
 			if (LIBVOS_DEBUG) {
-				printf(
-"[vos::Resolver] resolve_tcp: mismatch name [Q:%s] vs [A:%s]\n"
+				printf("[%s] resolve_tcp: mismatch name [Q:%s] vs [A:%s]\n"
+					, __cname
 					, question->_name.chars()
 					, answer->_name.chars());
 			}
@@ -639,8 +648,8 @@ int Resolver::resolve_tcp(DNSQuery* question, DNSQuery* answer)
 
 		if (question->_id != answer->_id) {
 			if (LIBVOS_DEBUG) {
-				printf(
-"[vos::Resolver] resolve_tcp: mismatch ID [Q:%d] vs [A:%d]\n"
+				printf("[%s] resolve_tcp: mismatch ID [Q:%d] vs [A:%d]\n"
+					, __cname
 					, question->_id, answer->_id);
 			}
 			answer->set_id(question->_id);
