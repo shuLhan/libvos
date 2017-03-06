@@ -8,14 +8,19 @@
 
 namespace vos {
 
+const char* File::__cname = "File";
+
 const char* __eol[N_EOL_MODE] = {
 	"\n",
 	"\r\n"
 };
 
-unsigned int File::DFLT_SIZE = 4096;
+/**
+ * Static `DFLT_SIZE` define default buffer size for file.
+ */
+size_t File::DFLT_SIZE = 4096;
 
-File::File(const unsigned int bfr_size) : Buffer(bfr_size)
+File::File(const size_t bfr_size) : Buffer(bfr_size)
 ,	_d(0)
 ,	_p(0)
 ,	_status(FILE_OPEN_NO)
@@ -46,7 +51,7 @@ File::~File()
  */
 int File::_open(const char* path, const int mode, const int perm)
 {
-	register int s;
+	int s = 0;
 
 	if (!path) {
 		return -1;
@@ -60,6 +65,7 @@ int File::_open(const char* path, const int mode, const int perm)
 
 	_d = ::open(path, mode, perm);
 	if (_d < 0) {
+		perror(__cname);
 		_d = 0;
 		return -1;
 	}
@@ -159,7 +165,7 @@ int File::open_wa(const char* path)
  */
 int File::truncate (uint8_t flush_mode)
 {
-	int s = 0;
+	ssize_t s = 0;
 
 	if (flush_mode & FILE_TRUNC_FLUSH_FIRST) {
 		reset ();
@@ -169,6 +175,7 @@ int File::truncate (uint8_t flush_mode)
 	if (_d && (_d != STDOUT_FILENO && _d != STDERR_FILENO)) {
 		s = ::close(_d);
 		if (s != 0) {
+			perror(__cname);
 			return -1;
 		}
 	}
@@ -210,24 +217,28 @@ int File::is_open()
  */
 off_t File::get_size()
 {
-	register off_t s;
-	register off_t cur;
-	register off_t size;
+	off_t s = 0;
+	off_t cur = 0;
+	off_t size = 0;
 
 	cur = lseek(_d, 0, SEEK_CUR);
 	if (cur < 0) {
+		perror(__cname);
 		return -1;
 	}
 	s = lseek(_d, 0, SEEK_SET);
 	if (s < 0) {
+		perror(__cname);
 		return -1;
 	}
 	size = lseek(_d, 0, SEEK_END);
 	if (size < 0) {
+		perror(__cname);
 		return -1;
 	}
 	cur = lseek(_d, cur, SEEK_SET);
 	if (cur < 0) {
+		perror(__cname);
 		return -1;
 	}
 	return size;
@@ -255,21 +266,25 @@ void File::set_eol(const int mode)
  *	< -1	: fail, error at reading descriptor.
  * @desc	: read contents of file and saved it to buffer.
  */
-int File::read()
+ssize_t File::read()
 {
 	if (_status == O_WRONLY) {
 		return 0;
 	}
 
-	_i = (int) ::read(_d, &_v[0], _l);
-	if (_i < 0) {
+	ssize_t s = 0;
+
+	s = ::read(_d, &_v[0], _l);
+	if (s < 0) {
+		perror(__cname);
 		return -1;
 	}
 
+	_i	= size_t(s);
 	_p	= 0;
 	_v[_i]	= '\0';
 
-	return _i;
+	return s;
 }
 
 /**
@@ -284,40 +299,41 @@ int File::read()
  *	read n bytes of characters from file, automatically increase buffer if n
  *	is greater than File buffer size.
  */
-int File::readn(int n)
+ssize_t File::readn(size_t n)
 {
 	if (_status == O_WRONLY) {
 		return 0;
 	}
 
-	register int s;
+	ssize_t s;
 
 	if (n > _l) {
 		s = resize(n);
 		if (s != 0) {
-			return -1; 
+			return -1;
 		}
 	}
 	_i = 0;
 	while (n > 0) {
-		s = (int) ::read(_d, &_v[_i], n);
+		s = ::read(_d, &_v[_i], n);
 		if (s < 0) {
 			if (s == EAGAIN || s == EWOULDBLOCK) {
 				break;
 			}
+			perror(__cname);
 			return -1;
 		}
 		if (s == 0) {
 			break;
 		}
-		_i += s;
-		n -= s;
+		_i += size_t(s);
+		n -= size_t(s);
 	}
 
 	_p	= 0;
 	_v[_i]	= '\0';
 
-	return _i;
+	return ssize_t(_i);
 }
 
 /**
@@ -333,19 +349,20 @@ int File::readn(int n)
  * buffer and will not be replaced, new data will be filled in position after
  * (_i - _p).
  */
-int File::refill(int read_min)
+ssize_t File::refill(size_t read_min)
 {
 	if (_status == O_WRONLY) {
 		return 0;
 	}
 
-	register int move_len	= 0;
-	register int len	= 0;
+	ssize_t s = 0;
+	size_t move_len = 0;
+	size_t len = 0;
 
 	move_len = _i - _p;
 	if (move_len > 0 && _p > 0) {
-		memmove(&_v[0], &_v[_p], move_len);
-	} else { /* move_len <= 0 || _p <= 0 */
+		memmove(&_v[0], &_v[_p], size_t(move_len));
+	} else { /* move_len == 0 || _p == 0 */
 		_p = 0;
 		return 0;
 	}
@@ -353,35 +370,37 @@ int File::refill(int read_min)
 	len = move_len + read_min;
 	if (len > _l) {
 		if (LIBVOS_DEBUG) {
-			printf("[vos::File____] refill: read resize from '%d' to '%d'\n"
-				, _l, len);
+			printf("[%s] refill: read resize from '%ld' to '%ld'\n"
+				, __cname, _l, len);
 		}
 		resize(len);
 		len -= move_len;
 	} else {
 		len = _l - move_len;
-		if (len <= 0) {
+		if (len == 0) {
 			len = _l * 2;
 			if (LIBVOS_DEBUG) {
-				printf("[vos::File____] refile: read resize from '%d' to '%d'\n"
-					, _l, len);
+				printf("[%s] refill: read resize from '%ld' to '%ld'\n"
+					, __cname, _l, len);
 			}
 			resize(len);
 			len -= move_len;
 		}
 	}
 
-	_i = (int) ::read(_d, &_v[move_len], len);
-	if (_i < 0) {
+	s = ::read(_d, &_v[move_len], len);
+	if (s < 0) {
+		perror(__cname);
 		return -1;
 	}
+
+	_i = size_t(s);
 
 	_i	+= move_len;
 	_p	= 0;
 	_v[_i]	= '\0';
 
-	return _i;
-
+	return s;
 }
 
 /**
@@ -403,13 +422,14 @@ int File::get_line(Buffer* line)
 		return 0;
 	}
 
-	register int s	= 0;
-	register int start;
-	register int len;
+	ssize_t s = 0;
+	size_t start = 0;
+	ssize_t len = 0;
 
 	if (_i == 0) {
 		s = File::read();
 		if (s <= 0) {
+			perror(__cname);
 			return -1;
 		}
 	}
@@ -420,23 +440,24 @@ int File::get_line(Buffer* line)
 			_p = _p - start;
 			memmove(&_v[0], &_v[start], _p);
 
-			len = _l - _p;
+			len = ssize_t(_l - _p);
 			if (len == 0) {
-				len = _l;
+				len = ssize_t(_l);
 				resize(_l * 2);
 			}
 
 			_i = _p;
 			while (len > 0) {
-				s = (int) ::read(_d, &_v[_i], len);
+				s = ::read(_d, &_v[_i], size_t(len));
 				if (s < 0) {
+					perror(__cname);
 					return -1;
 				}
 				if (s == 0) {
 					break;
 				}
 
-				_i	+= s;
+				_i	+= size_t(s);
 				len	-= s;
 			}
 			if (s == 0) {
@@ -453,9 +474,9 @@ int File::get_line(Buffer* line)
 		}
 	}
 
-	len = _p - start;
-	if (len == 0) {
-		if (_p < _i) {
+	len = ssize_t(_p - start);
+	if (len <= 0) {
+		if (_p != 0 && _p < _i) {
 			line->reset();
 			_p++;
 			return 1;
@@ -463,7 +484,7 @@ int File::get_line(Buffer* line)
 		return 0;
 	}
 
-	s = line->copy_raw(&_v[start], len);
+	s = line->copy_raw(&_v[start], size_t(len));
 	if (s < 0) {
 		return -1;
 	}
@@ -482,7 +503,7 @@ int File::get_line(Buffer* line)
  *	< -1	: fail, error at writing to descriptor.
  * @desc	: append buffer 'bfr' to File buffer for writing.
  */
-int File::write(const Buffer* bfr)
+ssize_t File::write(const Buffer* bfr)
 {
 	if (_status == O_RDONLY || !bfr) {
 		return 0;
@@ -500,20 +521,20 @@ int File::write(const Buffer* bfr)
  *	< -1	: fail, error at writing to descriptor.
  * @desc	: append buffer 'bfr' to File buffer for writing.
  */
-int File::write_raw(const char* bfr, int len)
+ssize_t File::write_raw(const char* bfr, size_t len)
 {
 	if (_status == O_RDONLY || !bfr) {
 		return 0;
 	}
 	if (!len) {
-		len = (int) strlen(bfr);
+		len = strlen(bfr);
 		if (!len) {
 			return 0;
 		}
 	}
 
-	register int x = 0;
-	register int s;
+	size_t x = 0;
+	ssize_t s = 0;
 
 	/* direct write */
 	if (len >= _l) {
@@ -522,12 +543,13 @@ int File::write_raw(const char* bfr, int len)
 			return -1;
 		}
 		while (len > 0) {
-			s = (int) ::write(_d, &bfr[x], len);
+			s = ::write(_d, &bfr[x], len);
 			if (s < 0) {
+				perror(__cname);
 				return -1;
 			}
-			x	+= s;
-			len	-= s;
+			x	+= size_t(s);
+			len	-= size_t(s);
 		}
 		len = x;
 		_size += len;
@@ -547,7 +569,7 @@ int File::write_raw(const char* bfr, int len)
 		}
 	}
 
-	return len;
+	return ssize_t(len);
 }
 
 /**
@@ -561,14 +583,14 @@ int File::write_raw(const char* bfr, int len)
  *	< -1	: fail.
  * @desc	: write buffer of formatted string to file.
  */
-int File::writef(const char* fmt, va_list args)
+ssize_t File::writef(const char* fmt, va_list args)
 {
 	if (_status == O_RDONLY || !fmt) {
 		return 0;
 	}
 
-	register int	s;
-	Buffer		b;
+	int s = 0;
+	Buffer b;
 
 	s = b.vprint(fmt, args);
 	if (s < 0) {
@@ -588,13 +610,13 @@ int File::writef(const char* fmt, va_list args)
  *	< -1	: fail.
  * @desc	: write buffer of formatted string to file.
  */
-int File::writes(const char* fmt, ...)
+ssize_t File::writes(const char* fmt, ...)
 {
 	if (_status == O_RDONLY || !fmt) {
 		return 0;
 	}
 
-	register int	s;
+	int s = 0;
 	Buffer		b;
 	va_list		al;
 
@@ -624,7 +646,7 @@ int File::writec(const char c)
 		return 0;
 	}
 
-	register int s;
+	ssize_t s = 0;
 
 	if (_i + 1 >= _l) {
 		s = flush();
@@ -649,30 +671,31 @@ int File::writec(const char c)
  *	< -1	: fail, error at writing to descriptor.
  * @desc	: flush buffer cache; write all File buffer to disk.
  */
-int File::flush()
+ssize_t File::flush()
 {
 	if (_status == O_RDONLY) {
 		reset();
 		return 0;
 	}
 
-	register int x = 0;
-	register int s;
+	size_t x = 0;
+	ssize_t s = 0;
 
 	while (_i > 0) {
-		s = (int) ::write(_d, &_v[x], _i);
+		s = ::write(_d, &_v[x], _i);
 		if (s < 0) {
+			perror(__cname);
 			return -1;
 		}
-		x	+= s;
-		_i	-= s;
+		x	+= size_t(s);
+		_i	-= size_t(s);
 	}
 	_i = x;
 	_size += _i;
 
 	reset();
 
-	return x;
+	return ssize_t(x);
 }
 
 /**
@@ -700,7 +723,7 @@ void File::close()
  */
 void File::dump()
 {
-	printf("[vos::File____] dump:\n");
+	printf("[%s] dump:\n", __cname);
 	printf("  descriptor  : %d\n", _d);
 	printf("  name        : %s\n", _name.chars());
 	printf("  size        : %ld\n", _size);
@@ -722,8 +745,8 @@ off_t File::GET_SIZE(const char* path)
 		return 0;
 	}
 
-	register int fd;
-	register off_t size;
+	int fd = 0;
+	off_t size = 0;
 
 	fd = ::open(path, O_RDONLY);
 	if (fd < 0) {
@@ -761,7 +784,7 @@ int File::IS_EXIST(const char* path, int acc_mode)
 		return 0;
 	}
 
-	register int fd;
+	int fd = 0;
 
 	fd = ::open(path, acc_mode);
 	if (fd < 0) {
@@ -790,9 +813,9 @@ int File::BASENAME(Buffer* name, const char* path)
 		return -1;
 	}
 
-	register int	s;
-	register int	len;
-	register int	p;
+	int s = 0;
+	size_t len = 0;
+	size_t p = 0;
 
 	name->reset();
 
@@ -802,7 +825,7 @@ int File::BASENAME(Buffer* name, const char* path)
 			return -1;
 		}
 	} else {
-		len = (int) strlen(path);
+		len = strlen(path);
 		if (path[0] == '/' && len == 1) {
 			s = name->appendc('/');
 			if (s < 0) {
@@ -820,7 +843,7 @@ int File::BASENAME(Buffer* name, const char* path)
 			if (path[p] == '/' && path[p + 1] != '/') {
 				++p;
 			}
-			s = name->copy_raw(&path[p], len - p);
+			s = name->copy_raw(&path[p], size_t(len - p));
 			if (s < 0) {
 				return -1;
 			}
@@ -850,9 +873,9 @@ int File::COPY(const char* src, const char* dst)
 		return -1;
 	}
 
-	register int	s;
-	File		from;
-	File		to;
+	ssize_t s = 0;
+	File from;
+	File to;
 
 	s = from.open_ro(src);
 	if (s < 0) {
@@ -901,6 +924,7 @@ int File::TOUCH(const char* filename)
 		if (errno == ENOENT) {
 			s = ::open(filename, FILE_OPEN_WA, S_IRUSR | S_IWUSR);
 			if (s < 0) {
+				perror(__cname);
 				return -1;
 			}
 			::close(s);
@@ -931,8 +955,8 @@ int File::TOUCH(const char* filename)
  */
 int File::WRITE_PID(const char* file)
 {
-	register int	s;
-	File		f;
+	int s = 0;
+	File f;
 
 	s = f.open_wx(file);
 	if (0 == s) {

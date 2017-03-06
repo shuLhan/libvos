@@ -63,7 +63,7 @@ enum _file_truncate_mode {
  */
 class File : public Buffer {
 public:
-	File(const unsigned int bfr_size = File::DFLT_SIZE);
+	File(const size_t bfr_size = File::DFLT_SIZE);
 	~File();
 
 	int _open(const char* path, const int mode,
@@ -80,18 +80,18 @@ public:
 	off_t get_size();
 	void set_eol(const int mode);
 
-	int read();
-	int readn(int n);
-	int refill(int read_min = 0);
+	ssize_t read();
+	ssize_t readn(size_t n);
+	ssize_t refill(size_t read_min = 0);
 	int get_line(Buffer* line);
 
-	int write(const Buffer* bfr);
-	int write_raw(const char* bfr, int len = 0);
-	int writef(const char* fmt, va_list args);
-	int writes(const char* fmt, ...);
+	ssize_t write(const Buffer* bfr);
+	ssize_t write_raw(const char* bfr, size_t len = 0);
+	ssize_t writef(const char* fmt, va_list args);
+	ssize_t writes(const char* fmt, ...);
 	int writec(const char c);
 
-	int flush();
+	ssize_t flush();
 	void close();
 	void dump();
 
@@ -102,10 +102,11 @@ public:
 	static int TOUCH(const char* file);
 	static int WRITE_PID(const char* file);
 
-	static unsigned int DFLT_SIZE;
+	static size_t DFLT_SIZE;
+	static const char* __cname;
 
 	int		_d;
-	int		_p;
+	size_t		_p;
 	int		_status;
 	int		_perm;
 	off_t		_size;
