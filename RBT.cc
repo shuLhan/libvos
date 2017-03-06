@@ -70,7 +70,7 @@ void RBT::_chars(Buffer* b, TreeNode* p, int level, int n_black)
 	}
 
 	for (; x < level; x++) {
-		b->append_raw("..");
+		b->append_raw("..", 2);
 	}
 
 	b->append_raw(p->chars());
@@ -576,9 +576,9 @@ TreeNode* RBT::_removed_have_no_child(TreeNode* x)
 	}
 
 	if (x->is_left_of(parent)) {
-		parent->set_left(NULL);
+		parent->set_left((TreeNode*) NULL);
 	} else {
-		parent->set_right(NULL);
+		parent->set_right((TreeNode*) NULL);
 	}
 
 	x->detach();
