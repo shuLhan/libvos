@@ -44,6 +44,8 @@ public:
 
 	static const char* ADDR_WILCARD;
 	static const char* ADDR_WILCARD6;
+
+	static const char* __cname;
 private:
 	SockServer(const SockServer&);
 	void operator=(const SockServer&);

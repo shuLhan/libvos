@@ -8,6 +8,8 @@
 
 namespace vos {
 
+const char* SockServer::__cname = "SockServer";
+
 const char* SockServer::ADDR_WILCARD	= "0.0.0.0";
 const char* SockServer::ADDR_WILCARD6	= "::";
 
@@ -40,7 +42,7 @@ int SockServer::bind(const char* address, const uint16_t port)
 	int	optval	= 1;
 
 	if (LIBVOS_DEBUG) {
-		printf("[vos::SockSrvr] bind: %s:%d\n", address, port);
+		printf("[%s] bind: %s:%d\n", __cname, address, port);
 	}
 
 	if (!address) {
@@ -106,7 +108,7 @@ int SockServer::bind(const char* address, const uint16_t port)
  */
 int SockServer::listen(const unsigned int queue_len)
 {
-	return ::listen(_d, queue_len);
+	return ::listen(_d, int(queue_len));
 }
 
 /**
@@ -161,7 +163,7 @@ Socket* SockServer::accept()
 	}
 
 	inet_ntop(AF_INET, &client_addr.sin_addr, client->_name._v
-		, client->_name._l);
+		, socklen_t(client->_name._l));
 
 	client->_status	= O_RDWR | O_SYNC;
 
@@ -199,7 +201,7 @@ Socket* SockServer::accept6()
 	}
 
 	inet_ntop(_family, &client_addr.sin6_addr, client->_name._v
-		, client->_name._l);
+		, socklen_t(client->_name._l));
 
 	client->_status	= O_RDWR | O_SYNC;
 
@@ -227,7 +229,7 @@ Socket* SockServer::accept_conn()
 		client = accept();
 	}
 	if (client && LIBVOS_DEBUG) {
-		printf("[vos::SockSrvr] accept_conn: from '%s'\n"
+		printf("[%s] accept_conn: from '%s'\n", __cname
 			, client->_name.chars());
 	}
 
