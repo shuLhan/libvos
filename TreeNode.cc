@@ -38,8 +38,8 @@ TreeNode::~TreeNode()
 //
 void TreeNode::detach()
 {
-	set_left(NULL);
-	set_right(NULL);
+	set_left((TreeNode*) NULL);
+	set_right((TreeNode*) NULL);
 	set_parent(NULL);
 }
 

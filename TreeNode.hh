@@ -41,9 +41,11 @@ public:
 	int is_left_red();
 	int is_right_red();
 
+	using BNode::set_left;
 	void set_left(TreeNode* node);
 	TreeNode* get_left();
 
+	using BNode::set_right;
 	void set_right(TreeNode* node);
 	TreeNode* get_right();
 
@@ -59,7 +61,10 @@ public:
 	void set_childs_attr_to_red();
 	void set_childs_attr_to_black();
 
+	using BNode::insert_left;
 	void insert_left(TreeNode* node);
+
+	using BNode::insert_right;
 	void insert_right(TreeNode* node);
 
 	const char* chars();
