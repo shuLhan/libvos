@@ -26,6 +26,8 @@ const char* _DNS_HDR_RCODE_NAME[] = {
 	,	"REFUSED"
 	};
 
+const char* DNSQuery::__cname = "DNSQuery";
+
 /**
  * @method	: DNSQuery::DNSQuery
  */
@@ -236,7 +238,7 @@ int DNSQuery::create_question(const char* qname, const int type)
 	}
 
 	int	s;
-	int	len;
+	size_t len = 0;
 	Buffer	label;
 
 	reset(DNSQ_DO_ALL);
@@ -357,8 +359,8 @@ int DNSQuery::extract_header()
 int DNSQuery::extract_question()
 {
 	// start from header length.
-	int	startp	= DNS_HDR_SIZE;
-	int	len	= 0;
+	size_t startp = DNS_HDR_SIZE;
+	int len = 0;
 
 	// check if buffer size is smaller
 	if (startp > _i) {
@@ -371,11 +373,11 @@ int DNSQuery::extract_question()
 	if (len < 0) {
 		return -1;
 	}
-	startp += len;
+	startp = startp + size_t(len);
 
 	// check 4 byte more for question type and class
-	len = startp + 4;
-	if (len > _i) {
+	len = int(startp) + 4;
+	if (size_t(len) > _i) {
 		return -1;
 	}
 
@@ -408,7 +410,7 @@ int DNSQuery::extract_resource_record (const char extract_flag)
 {
 	int	s	= 0;
 	int	i	= 0;
-	int	len	= 0;
+	size_t len = 0;
 	DNS_rr*	rr	= NULL;
 
 	// check if question has been extracted.
@@ -490,7 +492,7 @@ void DNSQuery::set_max_ttl_from_rr (const DNS_rr* rr)
  *	< NULL		: fail.
  * @desc		: extract Resource-Record (RR) from buffer 'bfr'.
  */
-DNS_rr* DNSQuery::extract_rr(int* offset)
+DNS_rr* DNSQuery::extract_rr(size_t* offset)
 {
 	int	s	= 0;
 	DNS_rr*	rr	= NULL;
@@ -506,11 +508,11 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 		goto err;
 	}
 	rr->_name_len	= (uint16_t) s;
-	*offset		+= s;
+	*offset		+= size_t(s);
 
 	/* Check if buffer is wide enough to have rr type */
-	s = *offset + 2;
-	if (s > _i) {
+	s = int(*offset) + 2;
+	if (size_t(s) > _i) {
 		return rr;
 	}
 
@@ -520,8 +522,8 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 	*offset		+= 2;
 
 	/* Check if buffer is wide enough to have rr class */
-	s = *offset + 2;
-	if (s > _i) {
+	s = int(*offset) + 2;
+	if (size_t(s) > _i) {
 		return rr;
 	}
 
@@ -531,8 +533,8 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 	*offset		+= 2;
 
 	/* Check 4 byte TTL */
-	s = *offset + 4;
-	if (s > _i) {
+	s = int(*offset) + 4;
+	if (size_t(s) > _i) {
 		return rr;
 	}
 
@@ -543,8 +545,8 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 	*offset		+= 4;
 
 	/* Check 2 bytes for DATALEN */
-	s = *offset + 2;
-	if (s > _i) {
+	s = int(*offset) + 2;
+	if (size_t(s) > _i) {
 		return rr;
 	}
 
@@ -554,8 +556,8 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 	*offset		+= 2;
 
 	/* Check if packet length is less equal than DATALEN */
-	s = *offset + rr->_len;
-	if (s > _i) {
+	s = int(*offset + rr->_len);
+	if (size_t(s) > _i) {
 		return rr;
 	}
 
@@ -574,8 +576,9 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 
 	switch (rr->_type) {
 	case QUERY_T_ADDRESS:
-		inet_ntop(AF_INET, rr->_v, rr->_data._v, rr->_data._l);
-		rr->_data._i = (int) strlen(rr->_data._v);
+		inet_ntop(AF_INET, rr->_v, rr->_data._v
+			, socklen_t(rr->_data._l));
+		rr->_data._i = strlen(rr->_data._v);
 		*offset	+= 4;
 		break;
 
@@ -585,7 +588,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 		if (s != rr->_len) {
 			goto err;
 		}
-		*offset	+= s;
+		*offset	+= size_t(s);
 		break;
 
 	case QUERY_T_SOA:
@@ -593,13 +596,13 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 		if (s < 0) {
 			goto err;
 		}
-		*offset += s;
+		*offset += size_t(s);
 
 		s = extract_label(&rr->_data2, *offset);
 		if (s < 0) {
 			goto err;
 		}
-		*offset += s;
+		*offset += size_t(s);
 
 		if ((*offset + 20) > _i) {
 			goto err;
@@ -631,7 +634,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 		if (s != rr->_len) {
 			goto err;
 		}
-		*offset += s;
+		*offset += size_t(s);
 		break;
 
 	case QUERY_T_HINFO:
@@ -639,13 +642,13 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 		if (s < 0) {
 			goto err;
 		}
-		*offset += s;
+		*offset += size_t(s);
 
 		s = extract_label(&rr->_data2, *offset);
 		if (s < 0) {
 			goto err;
 		}
-		*offset += s;
+		*offset += size_t(s);
 		break;
 
 	case QUERY_T_MX:
@@ -657,7 +660,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 		if (s < 0) {
 			goto err;
 		}
-		*offset += s;
+		*offset += size_t(s);
 		break;
 
 	case QUERY_T_TXT:
@@ -665,7 +668,7 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 		if (s != rr->_len) {
 			goto err;
 		}
-		*offset += s;
+		*offset += size_t(s);
 		break;
 
 	case QUERY_T_SRV:
@@ -685,19 +688,20 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 		if (s < 0) {
 			goto err;
 		}
-		*offset += s;
+		*offset += size_t(s);
 		break;
 
 	case QUERY_T_AAAA:
-		inet_ntop (AF_INET6, rr->_v, rr->_data._v, rr->_data._l);
-		rr->_data._i = (int) strlen (rr->_data._v);
+		inet_ntop (AF_INET6, rr->_v, rr->_data._v
+			, socklen_t(rr->_data._l));
+		rr->_data._i = strlen(rr->_data._v);
 		*offset	+= 16;
 		break;
 
 	default:
 		fprintf(stderr
-, "[vos::DNSQuery] extract_rr: (%s) Record type '%d' is not handle yet!\n"
-		, _name.chars(), rr->_type);
+, "[%s] extract_rr: (%s) Record type '%d' is not handle yet!\n"
+		, __cname, _name.chars(), rr->_type);
 		goto err;
 	}
 
@@ -705,8 +709,8 @@ DNS_rr* DNSQuery::extract_rr(int* offset)
 err:
 	if (LIBVOS_DEBUG) {
 		fprintf(stderr
-	, "[vos::DNSQuery] extract_rr: error extracting record type '%d'!"
-	, rr->_type);
+	, "[%s] extract_rr: error extracting record type '%d'!"
+	, __cname, rr->_type);
 	}
 	delete rr;
 	return NULL;
@@ -722,7 +726,7 @@ err:
  *	< -1		: fail.
  * @desc		: read a label from DNS packet buffer.
  */
-int DNSQuery::extract_label(Buffer* label, const int bfr_off)
+int DNSQuery::extract_label(Buffer* label, const size_t bfr_off)
 {
 	int		len	= 0;
 	int		ret_len	= 0;
@@ -786,14 +790,14 @@ int DNSQuery::extract_label(Buffer* label, const int bfr_off)
  * `_extract_TXT()` will copy `n` octact of data from answer buffer.
  * The length of TXT record is defined in RDLENGTH of RR.
  */
-int DNSQuery::_extract_TXT(DNS_rr* rr, const int offset)
+int DNSQuery::_extract_TXT(DNS_rr* rr, const size_t offset)
 {
 	const char* p = &_v[offset];
 	int len = *p;
 
 	p++;
 
-	rr->_data.copy_raw(p, len);
+	rr->_data.copy_raw(p, size_t(len));
 
 	return len + 1;
 }
@@ -872,6 +876,7 @@ void DNSQuery::remove_rr_aut()
 		return;
 	}
 
+	ssize_t s = 0;
 	int rr_add_len;
 	int rr_aut_len;
 
@@ -879,12 +884,15 @@ void DNSQuery::remove_rr_aut()
 		rr_aut_len = (int)(_rr_add_p - _rr_aut_p);
 		rr_add_len = (int)(&_v[_i] - _rr_add_p);
 
-		memmove((void *)_rr_aut_p, _rr_add_p, rr_add_len);
-		_i -= rr_aut_len;
+		memmove((void *)_rr_aut_p, _rr_add_p, size_t(rr_add_len));
+
+		_i = _i - size_t(rr_aut_len);
 	} else {
-		_i = (int)(_rr_aut_p - _v);
-		if (_i < 0) {
+		s = _rr_aut_p - _v;
+		if (s < 0) {
 			_i = 0;
+		} else {
+			_i = size_t(s);
 		}
 	}
 
@@ -910,9 +918,13 @@ void DNSQuery::remove_rr_add()
 		return;
 	}
 
-	_i = (int)(_rr_add_p - _v);
-	if (_i < 0) {
+	ssize_t s = 0;
+
+	s = (_rr_add_p - _v);
+	if (s < 0) {
 		_i = 0;
+	} else {
+		_i = size_t(s);
 	}
 
 	_rr_add.reset();
@@ -1057,7 +1069,7 @@ void DNSQuery::reset(const int do_type)
  */
 void DNSQuery::dump(const int do_type)
 {
-	printf("\n[vos::DNSQuery] dump:\n; Buffer\n");
+	printf("\n[%s] dump:\n; Buffer\n", __cname);
 
 	if (_v && !(do_type & DNSQ_DO_DATA_ONLY)) {
 		dump_hex();

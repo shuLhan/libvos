@@ -132,8 +132,8 @@ public:
 	int extract_question();
 	int extract_resource_record (const char extract_flag);
 	void set_max_ttl_from_rr (const DNS_rr* rr);
-	DNS_rr* extract_rr(int* offset);
-	int extract_label(Buffer* label, const int bfr_off);
+	DNS_rr* extract_rr(size_t* offset);
+	int extract_label(Buffer* label, const size_t bfr_off);
 
 	int create_answer (const char* name
 			, uint16_t type, uint16_t clas
@@ -182,11 +182,13 @@ public:
 
 	static int INIT(DNSQuery** o, const Buffer* bfr
 			, const int type = BUFFER_IS_UDP);
+
+	static const char* __cname;
 private:
 	DNSQuery(const DNSQuery&);
 	void operator=(const DNSQuery&);
 
-	int _extract_TXT(DNS_rr* rr, const int offset);
+	int _extract_TXT(DNS_rr* rr, const size_t offset);
 };
 
 } /* namespace::vos */
