@@ -15,7 +15,7 @@
 
 namespace vos {
 
-enum connection_type {
+enum SocketConnType {
 	IS_UDP = 0
 ,	IS_TCP = 1
 };
@@ -32,7 +32,7 @@ enum connection_type {
  */
 class Socket : public File {
 public:
-	Socket(const int bfr_size = DFLT_BUFFER_SIZE);
+	Socket(const size_t bfr_size = DFLT_BUFFER_SIZE);
 	~Socket();
 
 	int create(const int family = PF_INET, const int type = SOCK_STREAM);
@@ -52,14 +52,15 @@ public:
 
 	long int send_udp(struct sockaddr_in* addr, Buffer *bfr = NULL);
 	long int send_udp_raw(struct sockaddr_in* addr
-				, const char* bfr = NULL, int len = 0);
+				, const char* bfr = NULL, size_t len = 0);
 	long int recv_udp(struct sockaddr_in* addr);
 
 	int		_family;
 	int		_type;
 	socklen_t	_recv_addr_l;
 
-	static unsigned int DFLT_BUFFER_SIZE;
+	static size_t DFLT_BUFFER_SIZE;
+	static const char* __cname;
 private:
 	Socket(const Socket&);
 	void operator=(const Socket&);

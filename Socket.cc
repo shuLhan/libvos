@@ -8,7 +8,8 @@
 
 namespace vos {
 
-unsigned int Socket::DFLT_BUFFER_SIZE = 65536;
+const char* Socket::__cname = "Socket";
+size_t Socket::DFLT_BUFFER_SIZE = 65536;
 
 /**
  * @method		: Socket::Socket
@@ -16,7 +17,7 @@ unsigned int Socket::DFLT_BUFFER_SIZE = 65536;
  *	> bfr_size	: size of socket buffer.
  * @desc		: Socket object constructor.
  */
-Socket::Socket(const int bfr_size) : File(bfr_size)
+Socket::Socket(const size_t bfr_size) : File(bfr_size)
 ,	_family(0)
 ,	_type(0)
 ,	_recv_addr_l (0)
@@ -64,10 +65,10 @@ int Socket::create(const int family, const int type)
 
 int Socket::set_socket_opt (int optname, int optval)
 {
-	int s;
-	int len = sizeof (optval);
+	int s = 0;
+	size_t len = sizeof(optval);
 
-	s = setsockopt(_d, SOL_SOCKET, optname, &optval, len);
+	s = setsockopt(_d, SOL_SOCKET, optname, &optval, socklen_t(len));
 	if (s < 0) {
 		return -1;
 	}
@@ -106,7 +107,7 @@ int Socket::connect_to(struct sockaddr_in* sin)
 		return -1;
 	}
 
-	inet_ntop(AF_INET, &sin->sin_addr, _name._v, _name._l);
+	inet_ntop(AF_INET, &sin->sin_addr, _name._v, socklen_t(_name._l));
 	_status	= O_RDWR | O_SYNC;
 
 	return 0;
@@ -135,7 +136,7 @@ int Socket::connect_to6(struct sockaddr_in6* sin6)
 		return -1;
 	}
 
-	inet_ntop(AF_INET6, &sin6->sin6_addr, _name._v, _name._l);
+	inet_ntop(AF_INET6, &sin6->sin6_addr, _name._v, socklen_t(_name._l));
 	_status	= O_RDWR | O_SYNC;
 
 	return 0;
@@ -236,7 +237,7 @@ long int Socket::send_udp(struct sockaddr_in* addr, Buffer* bfr)
  *	send 'bfr' with length is 'len' to 'addr' using datagram protocol.
  */
 long int Socket::send_udp_raw(struct sockaddr_in* addr, const char* bfr
-				, int len)
+				, size_t len)
 {
 	if (!addr) {
 		return -1;
@@ -249,10 +250,10 @@ long int Socket::send_udp_raw(struct sockaddr_in* addr, const char* bfr
 		len = _i;
 	}
 	if (!len) {
-		len = (int) strlen(bfr);
+		len = strlen(bfr);
 	}
 
-	long int s = ::sendto(_d, bfr, len, 0, (struct sockaddr*) addr
+	ssize_t s = ::sendto(_d, bfr, len, 0, (struct sockaddr*) addr
 			, SockAddr::IN_SIZE);
 
 	_locker.unlock();
@@ -279,16 +280,18 @@ long int Socket::recv_udp(struct sockaddr_in* addr)
 
 	_locker.lock();
 
+	ssize_t s = 0;
 	_recv_addr_l = SockAddr::IN_SIZE;
 
-	_i = (int) ::recvfrom(_d, _v, _l, 0, (struct sockaddr*) addr, &_recv_addr_l);
-	if (_i >= 0) {
-		_v[_i] = '\0';
+	s = ::recvfrom(_d, _v, _l, 0, (struct sockaddr*) addr, &_recv_addr_l);
+	if (s >= 0) {
+		_v[s] = '\0';
+		_i = size_t(s);
 	}
 
 	_locker.unlock();
 
-	return _i;
+	return s;
 }
 
 } /* namespace::vos */
