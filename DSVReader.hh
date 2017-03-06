@@ -21,8 +21,10 @@ public:
 	DSVReader();
 	~DSVReader();
 
-	int refill_buffer(const int read_min);
+	ssize_t refill_buffer(const size_t read_min);
 	int read(DSVRecord* r, List* list_md);
+
+	static const char* __cname;
 private:
 	DSVReader(const DSVReader&);
 	void operator=(const DSVReader&);

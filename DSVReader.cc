@@ -8,6 +8,8 @@
 
 namespace vos {
 
+const char* DSVReader::__cname = "DSVReader";
+
 /**
  * @method	: DSVReader::DSVReader
  * @desc	: DSVReader object constructor.
@@ -34,54 +36,57 @@ DSVReader::~DSVReader()
  *	move unparsed line to the first position, and fill the rest with a new
  *	content.
  */
-int DSVReader::refill_buffer(const int read_min)
+ssize_t DSVReader::refill_buffer(const size_t read_min)
 {
-	register int move_len	= 0;
-	register int len	= 0;
+	size_t move_len = 0;
+	ssize_t len = 0;
+	ssize_t s = 0;
 
 	move_len = _i - _p;
 	if (move_len > 0 && _p > ((_i / 2) + 1)) {
 		if (LIBVOS_DEBUG) {
-			printf("[libvos::DSVReader] refill_buffer: memmove from %d of %d\n"
-				, _p, _i);
+			printf("[%s] refill_buffer: memmove from %ld of %ld\n"
+				, __cname, _p, _i);
 		}
 		memmove(&_v[0], &_v[_p], move_len);
 	}
 
-	len = move_len + read_min;
-	if (len > _l) {
+	len = ssize_t(move_len + read_min);
+	if (size_t(len) > _l) {
 
 		if (LIBVOS_DEBUG) {
-			printf("\n reader resize: from %d to %d\n", _l, len);
+			printf("[%s] reader resize: from %ld to %ld\n"
+				, __cname, _l, len);
 		}
 
-		resize(len);
+		resize(size_t(len));
 		len -= move_len;
 	} else {
-		len = _l - move_len;
+		len = ssize_t(_l - move_len);
 		if (len <= 0) {
-			len = _l * 2;
+			len = ssize_t(_l * 2);
 
 			if (LIBVOS_DEBUG) {
-				printf("\n reader resize: from %d to %d\n",
-					_l, len);
+				printf("[%s] reader resize: from %ld to %ld\n"
+					, __cname, _l, len);
 			}
 
-			resize(len);
+			resize(size_t(len));
 			len -= move_len;
 		}
 	}
 
-	_i = (int) ::read(_d, &_v[move_len], len);
-	if (_i < 0) {
+	s = ::read(_d, &_v[move_len], size_t(len));
+	if (s < 0) {
 		return -1;
 	}
 
+	_i = size_t(s);
 	_i	+= move_len;
 	_p	= 0;
 	_v[_i]	= '\0';
 
-	return _i;
+	return ssize_t(_i);
 }
 
 /**
@@ -101,10 +106,10 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 {
 	int x		= 0;
 	int n		= 0;
-	int startp	= _p;
-	int len		= 0;
-	int s		= 0;
-	int chop_bgn	= 0;
+	size_t startp = _p;
+	size_t len = 0;
+	size_t chop_bgn = 0;
+	ssize_t s = 0;
 	DSVRecordMD* rmd = NULL;
 
 	if (_i == 0) {
@@ -234,7 +239,7 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 			}
 		} else { /* not BLOB */
 			if (rmd->_end_p) {
-				len = (startp - _p) + rmd->_end_p;
+				len = (startp - _p) + size_t(rmd->_end_p);
 
 				if (len > r->_l) {
 					r->resize(len);
