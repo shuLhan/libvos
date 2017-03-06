@@ -66,12 +66,12 @@ void FTPD_client::reset()
  * @desc	: Send a reply to this FTPD client object. Reply code and
  * their messages is taken from '_rmsg' and '_rmsg_plus'.
  */
-int FTPD_client::reply()
+ssize_t FTPD_client::reply()
 {
 	if (LIBVOS_DEBUG) {
-		printf(	"[vos::FTPD_clt] reply    : %s"
+		printf(	"[%s] reply    : %s"
 			"                add. msg : %s\n"
-			, _rmsg?_rmsg:"-", _rmsg_plus?_rmsg_plus:"-");
+			, __cname, _rmsg?_rmsg:"-", _rmsg_plus?_rmsg_plus:"-");
 	}
 
 	_sock->reset();
@@ -87,7 +87,7 @@ int FTPD_client::reply()
  * @desc		: Send a reply 'msg' plus 'msg_add' to this FTPD
  * client object.
  */
-int FTPD_client::reply_raw(int code, const char* msg, const char* msg_add)
+ssize_t FTPD_client::reply_raw(int code, const char* msg, const char* msg_add)
 {
 	_s		= code;
 	_rmsg		= msg;
