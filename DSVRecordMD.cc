@@ -20,7 +20,9 @@ enum _rmd_parser {
 	MD_TYPE
 };
 
-int DSVRecordMD::BLOB_SIZE = sizeof(int);
+const char* DSVRecordMD::__cname = "DSVRecordMD";
+
+uint8_t DSVRecordMD::BLOB_SIZE = sizeof(int);
 int DSVRecordMD::DEF_SEP	= ',';
 
 /**
@@ -69,7 +71,7 @@ const char* DSVRecordMD::chars()
 		", \"name\": \"%s\""	\
 		", \"right_q\": \"%c\""	\
 		", \"start_p\": %d"	\
-		", \"end_p\": %d"
+		", \"end_p\": %ld"
 		, _type, _left_q, _name.chars(), _right_q
 		, _start_p, _end_p);
 
@@ -341,7 +343,7 @@ List* DSVRecordMD::INIT(const char* meta)
 				++i;
 			}
 
-			md->_start_p = (int) strtol(v.chars(), 0, 0);
+			md->_start_p = size_t(strtol(v.chars(), 0, 0));
 			v.reset();
 
 			todo		= MD_META_SEP;
@@ -355,7 +357,7 @@ List* DSVRecordMD::INIT(const char* meta)
 					++i;
 				}
 
-				md->_end_p = (int) strtol(v.chars(), 0, 0);
+				md->_end_p = size_t(strtol(v.chars(), 0, 0));
 				v.reset();
 			} else if (meta[i] == '\'') {
 				++i;
@@ -450,9 +452,9 @@ List* DSVRecordMD::INIT(const char* meta)
 	return o;
 err:
 	fprintf(stderr
-	, "[vos::DSVRecordMD] INIT: invalid field meta data : %s\n"	\
+	, "[%s] INIT: invalid field meta data : %s\n"	\
 	  "                at position '%d', at character '%c'.\n"
-	, &meta[i], i, meta[i]);
+	, __cname, &meta[i], i, meta[i]);
 
 	if (o) {
 		delete o;
@@ -476,7 +478,7 @@ err:
  */
 List* DSVRecordMD::INIT_FROM_FILE(const char* fmeta)
 {
-	register int	s;
+	ssize_t s = 0;
 	File		f;
 
 	s = f.open_ro(fmeta);
@@ -484,7 +486,7 @@ List* DSVRecordMD::INIT_FROM_FILE(const char* fmeta)
 		return NULL;
 	}
 
-	s = f.resize((int) f.get_size());
+	s = f.resize(size_t(f.get_size()));
 	if (s < 0) {
 		return NULL;
 	}

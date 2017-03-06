@@ -58,8 +58,8 @@ public:
 	int		_type;
 	int		_left_q;
 	int		_right_q;
-	int		_start_p;
-	int		_end_p;
+	size_t _start_p;
+	size_t _end_p;
 	int		_sep;
 	int		_fltr_idx;
 	int		_fltr_rule;
@@ -71,7 +71,7 @@ public:
 	static List* INIT(const char* meta);
 	static List* INIT_FROM_FILE(const char* fmeta);
 
-	static int	BLOB_SIZE;
+	static uint8_t	BLOB_SIZE;
 	static int	DEF_SEP;
 	static const char* __cname;
 private:
