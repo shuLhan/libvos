@@ -8,6 +8,8 @@
 
 namespace vos {
 
+const char* Dlogger::__cname = "Dlogger";
+
 /**
  * @method	: Dlogger::Dlogger()
  * @desc	: initialize all Dlogger attributes, set standard error as
@@ -47,7 +49,7 @@ Dlogger::~Dlogger()
  * @return < -1		: fail.
  * @desc		: start the log daemon on the file 'logfile'.
  */
-int Dlogger::open (const char* logfile, off_t max_size, const char* prefix
+int Dlogger::open (const char* logfile, size_t max_size, const char* prefix
 	, int show_timestamp)
 {
 	int s = 0;
@@ -117,9 +119,9 @@ void Dlogger::add_prefix()
  *	> fmt		: format of messages.
  * @desc		: The generic method of writing a log messages.
  */
-int Dlogger::_w(int fd, const char* fmt)
+ssize_t Dlogger::_w(int fd, const char* fmt)
 {
-	int s = 0;
+	ssize_t s = 0;
 	ssize_t ws = 0;
 
 	add_timestamp();
@@ -134,7 +136,7 @@ int Dlogger::_w(int fd, const char* fmt)
 	if (_d != STDERR_FILENO || !fd) {
 		// Check size of file
 		if (_max_size > 0
-		&& (_size + _i) > _max_size) {
+		&& ((size_t(_size) + _i) > _max_size)) {
 			truncate (FILE_TRUNC_FLUSH_NO);
 		}
 
@@ -142,12 +144,12 @@ int Dlogger::_w(int fd, const char* fmt)
 	}
 	if (fd) {
 		do {
-			ws = ::write(fd, &_tmp._v[ws], _tmp._i - ws);
+			ws = ::write(fd, &_tmp._v[ws], _tmp._i - size_t(ws));
 			if (ws < 0) {
 				s = -1;
 				break;
 			}
-		} while(ws < _tmp._i);
+		} while(size_t(ws) < _tmp._i);
 	}
 	_tmp.reset();
 
@@ -164,9 +166,9 @@ int Dlogger::_w(int fd, const char* fmt)
  *	< -1	: fail.
  * @desc	: write message to standard error and log file.
  */
-int Dlogger::er(const char* fmt, ...)
+ssize_t Dlogger::er(const char* fmt, ...)
 {
-	int s;
+	ssize_t s;
 
 	_locker.lock();
 
@@ -193,9 +195,9 @@ int Dlogger::er(const char* fmt, ...)
  *	< -1	: fail.
  * @desc	: write message to standard output and log file.
  */
-int Dlogger::out(const char* fmt, ...)
+ssize_t Dlogger::out(const char* fmt, ...)
 {
-	int s = 0;
+	ssize_t s = 0;
 
 	_locker.lock();
 
@@ -222,9 +224,9 @@ int Dlogger::out(const char* fmt, ...)
  *	< -1	: fail.
  * @desc	: write message to log file only.
  */
-int Dlogger::it(const char* fmt, ...)
+ssize_t Dlogger::it(const char* fmt, ...)
 {
-	int s = 0;
+	ssize_t s = 0;
 
 	_locker.lock();
 

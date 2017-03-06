@@ -25,21 +25,23 @@ public:
 	Dlogger();
 	~Dlogger();
 
-	int open(const char* logfile, off_t max_size = 0
+	int open(const char* logfile, size_t max_size = 0
 		, const char* prefix = 0
 		, int show_timestamp = 1);
 	void close();
 
-	int er(const char* fmt, ...);
-	int out(const char* fmt, ...);
-	int it(const char* fmt, ...);
+	ssize_t er(const char* fmt, ...);
+	ssize_t out(const char* fmt, ...);
+	ssize_t it(const char* fmt, ...);
+
+	static const char* __cname;
 private:
 	Dlogger(const Dlogger&);
 	void operator=(const Dlogger&);
 
 	void add_timestamp();
 	void add_prefix();
-	int _w(int fd, const char* fmt);
+	ssize_t _w(int fd, const char* fmt);
 
 	Locker		_locker;
 	Buffer		_tmp;
@@ -48,7 +50,7 @@ private:
 	struct tm	_time;
 	int		_time_show;
 	va_list		_args;
-	off_t		_max_size;
+	size_t		_max_size;
 };
 
 } /* namespace::vos */
