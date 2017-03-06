@@ -19,7 +19,7 @@ User::User()
 ,	name(getlogin())
 ,	id(getuid())
 ,	gid(getgid())
-,	ename(0)
+,	ename()
 ,	eid(geteuid())
 ,	egid(getegid())
 {}
@@ -89,7 +89,7 @@ int User::set_effective_name(const char* name)
 
 	int s = 0;
 	char* buf = NULL;
-	long int buflen = 0;
+	ssize_t buflen = 0;
 	struct passwd user_raw;
 	struct passwd* user_raw_p;
 
@@ -98,13 +98,14 @@ int User::set_effective_name(const char* name)
 		buflen = 16384;
 	}
 
-	buf = (char*) calloc(buflen, sizeof(char));
+	buf = (char*) calloc(size_t(buflen), sizeof(char));
 	if (!buf) {
 		s = -1;
 		goto out;
 	}
 	
-	s = getpwnam_r(ename.chars(), &user_raw, buf, buflen, &user_raw_p);
+	s = getpwnam_r(ename.chars(), &user_raw, buf, size_t(buflen)
+		, &user_raw_p);
 	if (s) {
 		s = -2;
 		goto out;
