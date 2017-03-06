@@ -8,8 +8,10 @@
 
 namespace vos {
 
+const char* FTP::__cname = "FTP";
+
 uint16_t FTP::PORT = 21;
-unsigned int FTP::TIMEOUT	= 3;
+uint16_t FTP::TIMEOUT	= 3;
 
 /**
  * @method	: FTP::FTP
@@ -74,7 +76,8 @@ int FTP::connect(const char* host, const uint16_t port, const int mode)
 		/* get & set server EOL */
 		if (_i > 2 && _v[_i - 2] == __eol[EOL_DOS][0]) {
 			if (LIBVOS_DEBUG) {
-				printf("[vos::FTP_____] connect: set EOL to DOS\n");
+				printf("[%s] connect: set EOL to DOS\n"
+					, __cname);
 			}
 			set_eol(EOL_DOS);
 		}
@@ -158,9 +161,9 @@ void FTP::disconnect()
  *	To check if function fail because of timeout or not, check the errno
  *	value.
  */
-int FTP::recv(const int to_sec, const int to_usec)
+int FTP::recv(const unsigned int to_sec, const unsigned int to_usec)
 {
-	register int s;
+	ssize_t s = 0;
 
 	reset();
 
@@ -185,11 +188,11 @@ int FTP::recv(const int to_sec, const int to_usec)
 		s = -1;
 		if (LIBVOS_DEBUG) {
 			printf(
-"[vos::FTP_____] recv: timeout after '%d.%d' seconds.\n", to_sec, to_usec);
+"[%s] recv: timeout after '%d.%d' seconds.\n", __cname, to_sec, to_usec);
 		}
 	}
 
-	return s;
+	return int(s);
 }
 
 /**
@@ -211,7 +214,7 @@ int FTP::send_cmd(const char* cmd, const char *parm)
 
 	reset();
 
-	register int s = 0;
+	ssize_t s = 0;
 
 	if (parm) {
 		s = concat(cmd, " ", parm, _eols, NULL);
@@ -240,9 +243,9 @@ int FTP::send_cmd(const char* cmd, const char *parm)
  *	< -1		: fail.
  * @desc		: wait and get a reply from server.
  */
-int FTP::get_reply(const int timeout)
+int FTP::get_reply(const unsigned int timeout)
 {
-	register int s;
+	ssize_t s = 0;
 
 	do {
 		s = recv(timeout);
@@ -261,7 +264,7 @@ int FTP::get_reply(const int timeout)
 	} while (_i > 3 && _v[3] == '-');
 
 	if (LIBVOS_DEBUG) {
-		printf("[vos::FTP_____] get_reply: code '%d'\n", _reply);
+		printf("[%s] get_reply: code '%d'\n", __cname, _reply);
 	}
 
 	switch (_reply) {
@@ -320,13 +323,13 @@ int FTP::get_reply(const int timeout)
 	case 552: /* requested file action aborted. exceeded storage allocation */
 	case 553: /* requested action not taken, file name not allowed */
 		fprintf(stderr
-			, "[vos::FTP_____] get_reply: server message: %s"
-			, chars());
+			, "[%s] get_reply: server message: %s"
+			, __cname, chars());
 		return -1;
 	default:
 		fprintf(stderr
-			, "[vos::FTP_____] get_reply: unknown reply code %d!"
-			, _reply);
+			, "[%s] get_reply: unknown reply code %d!"
+			, __cname, _reply);
 	}
 
 	return -1;
@@ -352,8 +355,8 @@ int FTP::parsing_pasv_reply(Buffer* addr, uint16_t* port)
 	/* get reply code : 227 */ 
 	s = (int) strtol(_v, &p, 0);
 	if (LIBVOS_DEBUG) {
-		printf("[vos::FTP_____] parsing_pasv_reply: reply code : %d\n"
-			, s);
+		printf("[%s] parsing_pasv_reply: reply code : %d\n"
+			, __cname, s);
 	}
 
 	/* get address */
@@ -386,7 +389,7 @@ int FTP::parsing_pasv_reply(Buffer* addr, uint16_t* port)
 	*port	= (uint16_t) (*port + tmp);
 
 	if (LIBVOS_DEBUG) {
-		printf("[vos::FTP_____] parsing_pasv_reply: '%s:%d'\n"
+		printf("[%s] parsing_pasv_reply: '%s:%d'\n", __cname
 			, addr->chars(), *port);
 	}
 

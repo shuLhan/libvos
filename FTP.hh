@@ -44,10 +44,11 @@ public:
 	void logout();
 	void disconnect();
 
-	int recv(const int to_sec = TIMEOUT, const int to_usec = 0);
+	int recv(const unsigned int to_sec = TIMEOUT
+		, const unsigned int to_usec = 0);
 
 	int send_cmd(const char* cmd, const char* parm);
-	int get_reply(const int timeout);
+	int get_reply(const unsigned int timeout);
 
 	int parsing_pasv_reply(Buffer* addr, uint16_t* port);
 	int do_pasv(const char* cmd, const char* parm, const char* out);
@@ -93,7 +94,9 @@ public:
 	struct timeval	_timeout;
 
 	static uint16_t PORT;
-	static unsigned int TIMEOUT;
+	static uint16_t TIMEOUT;
+
+	static const char* __cname;
 private:
 	FTP(const FTP&);
 	void operator=(const FTP&);
