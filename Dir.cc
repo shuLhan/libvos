@@ -116,7 +116,7 @@ DirNode* Dir::find(DirNode* dir, const char* name, int depth)
 	}
 
 	if (LIBVOS_DEBUG) {
-		printf("[vos::Dir_____] find: scanning directory '%s'\n"
+		printf("[%s] find: scanning directory '%s'\n", __cname
 			, dir->_name.chars());
 	}
 
@@ -207,7 +207,7 @@ int Dir::get_list(DirNode* list, const char* path, int depth)
 	}
 
 	if (LIBVOS_DEBUG) {
-		printf("[vos::Dir_____] get_list: scanning '%s' ...\n", path);
+		printf("[%s] get_list: scanning '%s' ...\n", __cname, path);
 	}
 
 	dir = opendir(path);
@@ -232,7 +232,7 @@ int Dir::get_list(DirNode* list, const char* path, int depth)
 			continue;
 		}
 		if (LIBVOS_DEBUG) {
-			printf("[vos::Dir_____] get_list: checking '%s'\n"
+			printf("[%s] get_list: checking '%s'\n", __cname
 				, dent->d_name);
 		}
 
@@ -310,7 +310,7 @@ int Dir::get_symlink(DirNode *list)
 						, _name._i);
 			if (!list->_link) {
 				fprintf(stderr
-, "[vos::Dir_____] get_symlink: cannot get link to '%s'\n"
+, "[%s] get_symlink: cannot get link to '%s'\n", __cname
 					, list->_linkname.chars());
 				return -1;
 			}
@@ -344,12 +344,12 @@ int Dir::get_symlink(DirNode *list)
  * This function also can be used to get node index of any 'path', as long as
  * they were in the same 'root'.
  */
-DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
+DirNode* Dir::get_node(Buffer* path, const char* root, size_t root_len)
 {
 	int		s;
-	int		i;
+	size_t i = 0;
 	Buffer		node;
-	int		len	= path->_i;
+	size_t len = path->_i;
 	const char*	name	= path->_v;
 	DirNode*	p	= _ls;
 	DirNode*	c	= NULL;
@@ -358,17 +358,15 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 		return NULL;
 	}
 	if (root_len <= 0) {
-		root_len = (int) strlen(root);
+		root_len = strlen(root);
 	}
 	s = strncmp(path->_v, root, root_len);
 	if (s != 0) {
 		return NULL;
 	}
 	if (LIBVOS_DEBUG) {
-		printf("[vos::Dir_____] get_node: get link child %s\n", name);
+		printf("[%s] get_node: get link child %s\n", __cname, name);
 	}
-
-	i = len - root_len;
 
 	for (i = root_len; i <= len; i++) {
 		if (i < len && name[i] != '/') {
@@ -399,10 +397,10 @@ DirNode* Dir::get_node(Buffer* path, const char* root, int root_len)
 		}
 
 		if (LIBVOS_DEBUG) {
-			fprintf(stderr, "[vos::Dir_____] get_node:\n"
+			fprintf(stderr, "[%s] get_node:\n"
 					"  invalid path: %s\n"
 					"  node name   : %s\n"
-				, name, node.chars());
+				, __cname, name, node.chars());
 		}
 		return NULL;
 	}
@@ -450,8 +448,8 @@ int Dir::refresh_by_path(Buffer* path)
 	}
 
 	if (LIBVOS_DEBUG) {
-		printf("[vos::Dir_____] refresh_by_path: refreshing '%s' ...\n"
-			, path->chars());
+		printf("[%s] refresh_by_path: refreshing '%s' ...\n"
+			, __cname, path->chars());
 	}
 
 	s = list->update_attr(list, rpath._v);
@@ -481,8 +479,8 @@ int Dir::refresh_by_path(Buffer* path)
 			continue;
 		}
 		if (LIBVOS_DEBUG) {
-			printf("[vos::Dir_____] refresh_by_path: checking '%s'\n"
-				, dent->d_name);
+			printf("[%s] refresh_by_path: checking '%s'\n"
+				, __cname, dent->d_name);
 		}
 
 		rpath.reset();
@@ -501,7 +499,7 @@ int Dir::refresh_by_path(Buffer* path)
 			}
 			if (!cnode) {
 				fprintf(stderr
-, "[vos::Dir_____] refresh_by_path: child node empty!");
+, "[%s] refresh_by_path: child node empty!", __cname);
 				return -2;
 			}
 
@@ -554,7 +552,7 @@ int Dir::refresh_by_path(Buffer* path)
 
 	if (LIBVOS_DEBUG) {
 		printf(
-"[vos::Dir_____] refresh_by_path: numbers of node changed '%d'\n", n);
+"[%s] refresh_by_path: numbers of node changed '%d'\n", __cname, n);
 	}
 
 	return n;
@@ -586,7 +584,7 @@ int Dir::CREATE(const char *path, mode_t perm)
 	register int s = 0;
 
 	if (LIBVOS_DEBUG) {
-		printf("[vos::Dir_____] CREATE: %s\n", path);
+		printf("[%s] CREATE: %s\n", __cname, path);
 	}
 
 	s = mkdir(path, perm);
@@ -613,7 +611,7 @@ int Dir::CREATES(const char* path, mode_t perm)
 		return 0;
 	}
 	if (LIBVOS_DEBUG) {
-		printf("[vos::Dir_____] CREATES: %s\n", path);
+		printf("[%s] CREATES: %s\n", __cname, path);
 	}
 
 	int s = 0;
