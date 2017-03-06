@@ -15,6 +15,8 @@ enum _cfg_parsing_stt {
 ,	P_CFG_VALUE
 };
 
+const char* Config::__cname = "Config";
+
 /**
  * @method	: Config::Config
  * @desc	: Config object constructor.
@@ -83,7 +85,7 @@ int Config::save()
 	Buffer		ini;
 
 	if (_name.is_empty()) {
-		printf("[vos::Config__] save: filename is empty!\n");
+		printf("[%s] save: filename is empty!\n", __cname);
 		return -1;
 	}
 
@@ -111,13 +113,13 @@ int Config::save()
  */
 int Config::save_as(const char* ini, const int mode)
 {
-	int		s;
+	ssize_t s = 0;
 	File		fini;
 	ConfigData*	phead	= &_data;
 	ConfigData*	pkey	= NULL;
 
 	if (!ini) {
-		printf("[vos::Config__] save_as: filename is empty!\n");
+		printf("[%s] save_as: filename is empty!\n", __cname);
 		return -1;
 	}
 
@@ -345,14 +347,14 @@ int Config::set(const char* head, const char* key, const char* value)
  */
 void Config::add_comment(const char* comment)
 {
-	int		len;
+	size_t len = 0;
 	const char*	raw = NULL;
 
 	if (!comment) {
 		raw = ";\n";
 		len = 2;
 	} else {
-		len = (int) strlen(comment);
+		len = strlen(comment);
 		if (len == 0) {
 			raw = ";\n";
 			len = 2;
@@ -372,15 +374,15 @@ void Config::add_comment(const char* comment)
  */
 inline int Config::parsing()
 {
-	int	s	= 0;
+	ssize_t s = 0;
 	int	todo	= P_CFG_START;
-	int	start	= 0;
-	int	end	= 0;
-	int	_e_row	= 1;
-	int	_e_col	= 0;
+	size_t start = 0;
+	size_t end = 0;
+	size_t _e_row = 1;
+	size_t _e_col = 0;
 	Buffer	b;
 
-	s = resize((int) get_size());
+	s = resize(size_t(get_size()));
 	if (s < 0) {
 		return -1;
 	}
@@ -556,8 +558,8 @@ inline int Config::parsing()
 	return 0;
 bad_cfg:
 	fprintf(stderr
-	, "[vos::Config] parsing: line '%d' column '%d', invalid config format.\n"
-	, _e_row, _e_col);
+	, "[%s] parsing: line '%ld' column '%ld', invalid config format.\n"
+	, __cname, _e_row, _e_col);
 
 	return -1;
 }

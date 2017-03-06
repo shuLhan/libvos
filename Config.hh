@@ -60,6 +60,8 @@ public:
 	void add_comment(const char* comment);
 
 	ConfigData _data;
+
+	static const char* __cname;
 private:
 	Config(const Config&);
 	void operator=(const Config&);
