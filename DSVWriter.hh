@@ -28,6 +28,8 @@ public:
 	int writes(DSVRecord* rows, List* list_md);
 
 	Buffer _line;
+
+	static const char* __cname;
 private:
 	DSVWriter(const DSVWriter&);
 	void operator=(const DSVWriter&);

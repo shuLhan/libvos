@@ -8,6 +8,8 @@
 
 namespace vos {
 
+const char* DSVWriter::__cname = "DSVWriter";
+
 /**
  * @method	: DSVWriter::DSVWriter
  * @desc	: DSVWriter object constructor.
@@ -35,8 +37,8 @@ DSVWriter::~DSVWriter()
  */
 int DSVWriter::write(DSVRecord *row, List *list_md)
 {
-	register int	s;
-	register int	len;
+	ssize_t s = 0;
+	ssize_t len = 0;
 	int x = 0;
 	DSVRecordMD* rmd = NULL;
 
@@ -80,14 +82,14 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 
 		if (rmd->_end_p) {
 			if (rmd->_end_p < _line._i) {
-				len = rmd->_end_p;
+				len = ssize_t(rmd->_end_p);
 				if (rmd->_right_q) {
 					--len;
 				}
 				if (rmd->_sep) {
 					--len;
 				}
-				while (len < _line._i) {
+				while (size_t(len) < _line._i) {
 					_line._v[_line._i] = ' ';
 					--_line._i;
 				}
@@ -114,8 +116,8 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 
 	_line.appendc((char) _eol);
 
-	len = _i + _line._i;
-	if (len > _l) {
+	len = ssize_t(_i + _line._i);
+	if (size_t(len) > _l) {
 		flush();
 	}
 
