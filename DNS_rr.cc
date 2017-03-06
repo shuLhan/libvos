@@ -10,12 +10,12 @@ namespace vos {
 
 const char* DNS_rr::__cname = "DNS_rr";
 
-unsigned int DNS_rr::RDATA_MAX_SIZE = 255;
+size_t DNS_rr::RDATA_MAX_SIZE = 255;
 
 /**
  * @method	: DNS_rr::DNS_rr
  */
-DNS_rr::DNS_rr(const int bfr_size) : Buffer(bfr_size)
+DNS_rr::DNS_rr(const size_t bfr_size) : Buffer(bfr_size)
 ,	_type(0)
 ,	_class(0)
 ,	_ttl(0)
@@ -92,7 +92,7 @@ void DNS_rr::reset()
 	_ttl	= 0;
 	_len	= 0;
 	_name.reset();
-	reset();
+	Buffer::reset();
 }
 
 //
@@ -193,7 +193,7 @@ DNS_rr* DNS_rr::INIT (const char* name
 }
 
 int DNS_rr::APPEND_DNS_LABEL (Buffer* b, const char* label
-				, unsigned int len)
+				, size_t len)
 {
 	if (! b) {
 		return -1;
@@ -201,7 +201,7 @@ int DNS_rr::APPEND_DNS_LABEL (Buffer* b, const char* label
 
 	Buffer subl;
 
-	if (((int)(b->_i + len + 1)) > b->_l) {
+	if ((b->_i + len + 1) > b->_l) {
 		b->resize (b->_i + len + 1);
 	}
 

@@ -75,7 +75,7 @@ enum _RR_CLASS {
  */
 class DNS_rr : public Buffer {
 public:
-	DNS_rr(int bfr_size = RDATA_MAX_SIZE);
+	DNS_rr(const size_t bfr_size = RDATA_MAX_SIZE);
 	~DNS_rr();
 	const char* chars();
 
@@ -111,8 +111,8 @@ public:
 	uint16_t	_port;
 
 	static int APPEND_DNS_LABEL (Buffer* b, const char* label
-					, unsigned int len = 0);
-	static unsigned int RDATA_MAX_SIZE;
+					, size_t len = 0);
+	static size_t RDATA_MAX_SIZE;
 
 	static const char* __cname;
 private:
