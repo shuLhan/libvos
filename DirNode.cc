@@ -246,7 +246,7 @@ int DirNode::GET_LINK_NAME(Buffer* linkname, const char* path)
 		return -1;
 	}
 	if (LIBVOS_DEBUG) {
-		printf("[vos::DirNode_] GET_LINK_NAME: '%s'\n", path);
+		printf("[%s] GET_LINK_NAME: '%s'\n", __cname, path);
 	}
 	if (linkname->_v && linkname->_l) {
 		free(linkname->_v);
@@ -257,7 +257,7 @@ int DirNode::GET_LINK_NAME(Buffer* linkname, const char* path)
 		return -1;
 	}
 
-	linkname->_i = (int) strlen(linkname->_v);
+	linkname->_i = strlen(linkname->_v);
 	linkname->_l = linkname->_i;
 
 	return 0;

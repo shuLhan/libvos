@@ -74,10 +74,10 @@ public:
 	static void UNLINK(DirNode** list, DirNode* node);
 	static int REMOVE_CHILD_BY_NAME(DirNode* list, const char* name);
 
-	int		_mode;
-	int		_uid;
-	int		_gid;
-	long		_size;
+	mode_t _mode;
+	uid_t		_uid;
+	gid_t		_gid;
+	off_t		_size;
 	long		_mtime;
 	long		_ctime;
 	Buffer		_name;
