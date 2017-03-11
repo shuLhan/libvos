@@ -181,7 +181,7 @@ int File::truncate (uint8_t flush_mode)
 	}
 
 	// Reopen file by truncate.
-	s = _open (_name._v, _status | O_CREAT | O_TRUNC, _perm);
+	s = _open (_name.v(), _status | O_CREAT | O_TRUNC, _perm);
 	if (s != 0) {
 		return -2;
 	}
@@ -508,7 +508,7 @@ ssize_t File::write(const Buffer* bfr)
 	if (_status == O_RDONLY || !bfr) {
 		return 0;
 	}
-	return write_raw(bfr->_v, bfr->_i);
+	return write_raw(bfr->v(), bfr->_i);
 }
 
 /**
@@ -597,7 +597,7 @@ ssize_t File::writef(const char* fmt, va_list args)
 		return -1;
 	}
 
-	return write_raw(b._v, b._i);
+	return write_raw(b.v(), b._i);
 }
 
 /**
@@ -628,7 +628,7 @@ ssize_t File::writes(const char* fmt, ...)
 		return -1;
 	}
 
-	return write_raw(b._v, b._i);
+	return write_raw(b.v(), b._i);
 }
 
 /**

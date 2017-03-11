@@ -99,8 +99,8 @@ int DSVRecord::set_column(int n, Buffer* bfr)
 	if (n < 0 || NULL == p) {
 		return -1;
 	}
-	if (bfr->_v) {
-		s = p->copy_raw(bfr->_v, bfr->_i);
+	if (! bfr->is_empty()) {
+		s = p->copy_raw(bfr->v(), bfr->_i);
 	}
 	return s;
 }

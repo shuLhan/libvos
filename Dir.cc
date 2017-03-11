@@ -168,14 +168,14 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
 	}
 
 	if ((path->_i <= 0)
-	||  (path->_i > 0 && path->_v[path->_i - 1] != '/')) {
+	||  (path->_i > 0 && path->char_at(path->_i - 1) != '/')) {
 		path->appendc('/');
 	}
 
 	if (ls->_name.cmp_raw("/") != 0) {
 		path->append(&ls->_name);
 
-		if (ls->is_dir() && path->_v[path->_i - 1] != '/') {
+		if (ls->is_dir() && path->char_at(path->_i - 1) != '/') {
 			path->appendc('/');
 		}
 	}
@@ -239,28 +239,28 @@ int Dir::get_list(DirNode* list, const char* path, int depth)
 		rpath.reset();
 		rpath.append_raw(path);
 
-		if (rpath._v[rpath._i - 1] != '/') {
+		if (rpath.char_at(rpath._i - 1) != '/') {
 			rpath.appendc('/');
 		}
 
 		rpath.append_raw(dent->d_name);
 
-		s = DirNode::INIT(&node, rpath._v, dent->d_name);
+		s = DirNode::INIT(&node, rpath.v(), dent->d_name);
 		if (s < 0) {
 			break;
 		}
 
 		if (node->is_dir()) {
 			if (node->_linkname.is_empty()) {
-				s = get_list(node, rpath._v, depth - 1);
+				s = get_list(node, rpath.v(), depth - 1);
 				if (s < 0) {
 					return s;
 				}
 			} else {
-				s = strncmp(node->_linkname._v, _name._v
+				s = strncmp(node->_linkname.v(), _name.v()
 						, _name._i);
 				if (s != 0) {
-					s = get_list(node, node->_linkname._v
+					s = get_list(node, node->_linkname.v()
 						, depth - 1);
 					if (s < 0) {
 						return s;
@@ -306,7 +306,7 @@ int Dir::get_symlink(DirNode *list)
 		} else if (list->_linkname.is_empty()) {
 			continue;
 		} else {
-			list->_link = get_node(&list->_linkname, _name._v
+			list->_link = get_node(&list->_linkname, _name.v()
 						, _name._i);
 			if (!list->_link) {
 				fprintf(stderr
@@ -350,7 +350,7 @@ DirNode* Dir::get_node(Buffer* path, const char* root, size_t root_len)
 	size_t i = 0;
 	Buffer		node;
 	size_t len = path->_i;
-	const char*	name	= path->_v;
+	const char*	name	= path->v();
 	DirNode*	p	= _ls;
 	DirNode*	c	= NULL;
 
@@ -360,7 +360,7 @@ DirNode* Dir::get_node(Buffer* path, const char* root, size_t root_len)
 	if (root_len <= 0) {
 		root_len = strlen(root);
 	}
-	s = strncmp(path->_v, root, root_len);
+	s = strncmp(path->v(), root, root_len);
 	if (s != 0) {
 		return NULL;
 	}
@@ -440,9 +440,9 @@ int Dir::refresh_by_path(Buffer* path)
 		return -2;
 	}
 
-	realpath(path->_v, rpath._v);
+	rpath.set_at(0, realpath(path->v(), NULL), 0);
 
-	list = get_node(&rpath, _name._v, _name._i);
+	list = get_node(&rpath, _name.v(), _name._i);
 	if (!list) {
 		return -1;
 	}
@@ -452,12 +452,12 @@ int Dir::refresh_by_path(Buffer* path)
 			, __cname, path->chars());
 	}
 
-	s = list->update_attr(list, rpath._v);
+	s = list->update_attr(list, rpath.v());
 	if (s <= 0 || !list->is_dir()) {
 		return s;
 	}
 
-	dir = opendir(rpath._v);
+	dir = opendir(rpath.v());
 	if (!dir) {
 		if (errno == EACCES) {
 			return 0;
@@ -486,13 +486,13 @@ int Dir::refresh_by_path(Buffer* path)
 		rpath.reset();
 		rpath.append(path);
 
-		if (rpath._v[rpath._i - 1] != '/') {
+		if (rpath.char_at(rpath._i - 1) != '/') {
 			rpath.appendc('/');
 		}
 
 		rpath.append_raw(dent->d_name);
 
-		s = list->update_child_attr(&cnode, rpath._v, dent->d_name);
+		s = list->update_child_attr(&cnode, rpath.v(), dent->d_name);
 		if (s >= 0) {
 			if (s == 1) {
 				n++;
@@ -506,23 +506,23 @@ int Dir::refresh_by_path(Buffer* path)
 			DirNode::UNLINK(&list->_child, cnode);
 			DirNode::INSERT(&childs, cnode);
 		} else if (s == -1) {
-			s = DirNode::INIT(&cnode, rpath._v, dent->d_name);
+			s = DirNode::INIT(&cnode, rpath.v(), dent->d_name);
 			if (s < 0) {
 				break;
 			}
 
 			if (cnode->is_dir()) {
 				if (cnode->_linkname.is_empty()) {
-					s = get_list(cnode, rpath._v);
+					s = get_list(cnode, rpath.v());
 					if (s < 0) {
 						return s;
 					}
 				} else {
-					s = strncmp(cnode->_linkname._v
-							, _name._v, _name._i);
+					s = strncmp(cnode->_linkname.v()
+							, _name.v(), _name._i);
 					if (s != 0) {
 						s = get_list(cnode
-							, cnode->_linkname._v);
+							, cnode->_linkname.v());
 						if (s < 0) {
 							return s;
 						}
@@ -623,7 +623,7 @@ int Dir::CREATES(const char* path, mode_t perm)
 		if (path[i] == '/') {
 			d.appendc(path[i]);
 
-			s = CREATE(d._v, perm);
+			s = CREATE(d.v(), perm);
 			if (s < 0 && errno != EEXIST) {
 				goto err;
 			}
@@ -638,7 +638,7 @@ int Dir::CREATES(const char* path, mode_t perm)
 	}
 	i--;
 	if (path[i] != '/' && path[i] != '.') {
-		s = CREATE(d._v, perm);
+		s = CREATE(d.v(), perm);
 		if (s < 0 && errno != EEXIST) {
 			goto err;
 		}

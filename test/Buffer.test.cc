@@ -88,7 +88,7 @@ void test_constructor_raw()
 	const char* exp = "Use of this source code is governed by a BSD-style";
 	size_t exp_len = strlen(exp);
 
-	Buffer b(exp);
+	Buffer b(exp, exp_len);
 
 	assert(b.len() == exp_len);
 	assert(b.size() == exp_len);

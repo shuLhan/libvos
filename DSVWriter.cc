@@ -62,7 +62,7 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 		case RMD_T_STRING:
 		case RMD_T_NUMBER:
 		case RMD_T_DATE:
-			s = _line.append_raw(row->_v, row->_i);
+			s = _line.append_raw(row->v(), row->_i);
 			if (s < 0) {
 				return -1;
 			}
@@ -73,7 +73,7 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 				return -1;
 			}
 
-			s = _line.append_raw(row->_v, row->_i);
+			s = _line.append_raw(row->v(), row->_i);
 			if (s < 0) {
 				return -1;
 			}
@@ -90,7 +90,7 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 					--len;
 				}
 				while (size_t(len) < _line._i) {
-					_line._v[_line._i] = ' ';
+					_line.set_char_at(_line._i, ' ');
 					--_line._i;
 				}
 			} else {
@@ -121,7 +121,7 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 		flush();
 	}
 
-	s = append_raw(_line._v, _line._i);
+	s = append_raw(_line.v(), _line._i);
 	if (s < 0) {
 		return -1;
 	}

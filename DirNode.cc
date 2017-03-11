@@ -82,7 +82,7 @@ int DirNode::get_attr(const char* rpath, const char* name)
 
 		memset(&st, 0, sizeof(struct stat));
 
-		s = lstat(_linkname._v, &st);
+		s = lstat(_linkname.v(), &st);
 		if (s < 0) {
 			return -1;
 		}
@@ -118,7 +118,7 @@ int DirNode::update_attr(DirNode* node, const char* rpath)
 	if (node->_linkname.is_empty()) {
 		s = lstat(rpath, &st);
 	} else {
-		s = lstat(node->_linkname._v, &st);
+		s = lstat(node->_linkname.v(), &st);
 	}
 	if (s < 0) {
 		return -1;
@@ -248,17 +248,13 @@ int DirNode::GET_LINK_NAME(Buffer* linkname, const char* path)
 	if (LIBVOS_DEBUG) {
 		printf("[%s] GET_LINK_NAME: '%s'\n", __cname, path);
 	}
-	if (linkname->_v && linkname->_l) {
-		free(linkname->_v);
-	}
+	linkname->release();
 
-	linkname->_v = realpath(path, NULL);
-	if (! linkname->_v) {
+	linkname->set(realpath(path, NULL));
+	if (linkname->is_empty()) {
+		perror(__cname);
 		return -1;
 	}
-
-	linkname->_i = strlen(linkname->_v);
-	linkname->_l = linkname->_i;
 
 	return 0;
 }

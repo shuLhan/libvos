@@ -310,8 +310,7 @@ const char* TreeNode::chars()
 		b.append_raw(_item->chars());
 	}
 
-	__str = b._v;
-	b._v = NULL;
+	__str = b.detach();
 
 	return __str;
 }

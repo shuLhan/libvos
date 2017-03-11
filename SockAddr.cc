@@ -155,8 +155,7 @@ const char* SockAddr::chars()
 	b.appendc(':');
 	b.appendi(get_port(AF_INET6));
 
-	__str = b._v;
-	b._v = NULL;
+	__str = b.detach();
 
 	return __str;
 }
@@ -296,8 +295,9 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
 	} else {
 		ip_addr.resize(512);
 		do {
-			s = gethostbyname2_r(addr, AF_INET, &he, ip_addr._v
-						, ip_addr._l, &hep, &err);
+			s = gethostbyname2_r(addr, AF_INET, &he
+				, (char*) ip_addr.v()
+				, ip_addr._l, &hep, &err);
 			if (ERANGE == s) {
 				ip_addr.resize(ip_addr._l * 2);
 			}
@@ -353,7 +353,8 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 	} else {
 		ip_addr.resize(512);
 		do {
-			s = gethostbyname2_r(addr, AF_INET6, &he, ip_addr._v
+			s = gethostbyname2_r(addr, AF_INET6, &he
+				, (char*) ip_addr.v()
 						, ip_addr._l, &hep, &err);
 			if (ERANGE == s) {
 				ip_addr.resize(ip_addr._l * 2);

@@ -107,7 +107,8 @@ int Socket::connect_to(struct sockaddr_in* sin)
 		return -1;
 	}
 
-	inet_ntop(AF_INET, &sin->sin_addr, _name._v, socklen_t(_name._l));
+	inet_ntop(AF_INET, &sin->sin_addr, (char*) _name.v()
+		, socklen_t(_name._l));
 	_status	= O_RDWR | O_SYNC;
 
 	return 0;
@@ -136,7 +137,8 @@ int Socket::connect_to6(struct sockaddr_in6* sin6)
 		return -1;
 	}
 
-	inet_ntop(AF_INET6, &sin6->sin6_addr, _name._v, socklen_t(_name._l));
+	inet_ntop(AF_INET6, &sin6->sin6_addr, (char*) _name.v()
+		, socklen_t(_name._l));
 	_status	= O_RDWR | O_SYNC;
 
 	return 0;
@@ -216,7 +218,7 @@ long int Socket::send_udp(struct sockaddr_in* addr, Buffer* bfr)
 				, (struct sockaddr *) addr, SockAddr::IN_SIZE);
 		}
 	} else if (bfr->_i > 0) {
-			s = ::sendto(_d, bfr->_v, bfr->_i, 0
+			s = ::sendto(_d, bfr->v(), bfr->_i, 0
 				, (struct sockaddr *) addr, SockAddr::IN_SIZE);
 	}
 

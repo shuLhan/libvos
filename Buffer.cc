@@ -95,12 +95,36 @@ Buffer::Buffer(const Buffer* bfr)
  */
 Buffer::~Buffer()
 {
+	release();
+}
+
+/**
+ * Method `release()` will release the allocated buffer to the system without
+ * deleting the object it self.
+ */
+void Buffer::release()
+{
 	if (_v && _l) {
 		free(_v);
 		_v = NULL;
 	}
-	_i = 0;
 	_l = 0;
+	_i = 0;
+}
+
+/**
+ * Method `detach()` will release the allocated buffer and return it to be
+ * used by the caller.
+ */
+char* Buffer::detach()
+{
+	char* v = _v;
+
+	_v = NULL;
+	_l = 0;
+	_i = 0;
+
+	return v;
 }
 
 /**
@@ -132,10 +156,109 @@ size_t Buffer::size() const
  * Method `v()` will return content of buffer at index `idx`.
  *
  * If `idx` is not defined, then it will default to zero.
+ *
+ * If `idx` is out of current buffer index range, then it will return NULL.
  */
 const char* Buffer::v(size_t idx) const
 {
+	if (idx > _i) {
+		return NULL;
+	}
 	return &_v[idx];
+}
+
+/**
+ * Method `set(v)` will replace the buffer pointer with buffer at `v`.
+ *
+ * WARNING: previous buffer will not be freed.
+ */
+void Buffer::set(char* v)
+{
+	if (v) {
+		_v = v;
+		_l = strlen(v);
+		_i = _l;
+	} else {
+		_v = NULL;
+		_l = 0;
+		_i = 0;
+	}
+}
+
+/**
+ * Method `set_at(idx, v, vlen)` will set or replace buffer at index `idx` to
+ * content of `v` with length of `vlen`.
+ *
+ * It will `0` on success, or `-1` when no memory left.
+ */
+int Buffer::set_at(size_t idx, const char* v, size_t vlen)
+{
+	ssize_t s = 0;
+	size_t growth = idx;
+
+	if (!vlen) {
+		if (v) {
+			vlen = strlen(v);
+			growth += vlen;
+		}
+	}
+
+	if (growth > _l) {
+		s = resize(growth);
+		if (s) {
+			return -1;
+		}
+	}
+
+	if (v) {
+		if (vlen == 1) {
+			_v[idx] = v[0];
+		} else {
+			memcpy(&_v[idx], v, vlen);
+
+			if (growth > _i) {
+				_i = growth;
+				_v[_i] = 0;
+			}
+		}
+	} else {
+		_v = 0;
+		_l = 0;
+		_i = 0;
+	}
+
+	return 0;
+}
+
+/**
+ * Method `char_at(idx)` will return a single byte character of buffer at
+ * index `idx`.
+ *
+ * If `idx` is out of range of current buffer index it will return 0.
+ */
+char Buffer::char_at(size_t idx)
+{
+	if (idx > _i) {
+		return 0;
+	}
+	return _v[idx];
+}
+
+/**
+ * Method `set_char_at(idx, v)` will set a single byte of buffer at position
+ * `idx` to `v`.
+ *
+ * It will return 0 on success, or `-1` if `idx` is out of range.
+ */
+int Buffer::set_char_at(size_t idx, char v)
+{
+	if (idx > _i) {
+		return -1;
+	}
+
+	_v[idx] = v;
+
+	return 0;
 }
 
 /**

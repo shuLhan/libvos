@@ -134,7 +134,7 @@ int DNSQuery::to_udp(const Buffer *tcp)
 		memmove(_v, &_v[DNS_TCP_HDR_SIZE], _i);
 		_v[_i] = 0;
 	} else {
-		s = copy_raw(&tcp->_v[DNS_TCP_HDR_SIZE]
+		s = copy_raw(tcp->v(DNS_TCP_HDR_SIZE)
 				, tcp->_i - DNS_TCP_HDR_SIZE);
 		if (s < 0) {
 			return -1;
@@ -570,15 +570,15 @@ DNS_rr* DNSQuery::extract_rr(size_t* offset)
 	}
 
 	/* Get RR DATA */
-	memcpy(rr->_v, &_v[*offset], rr->_len);
+	rr->set_at(0, &_v[*offset], rr->_len);
 	rr->_i = rr->_len;
-	rr->_v[rr->_i] = 0;
+	rr->set_char_at(rr->_i, '\0');
 
 	switch (rr->_type) {
 	case QUERY_T_ADDRESS:
-		inet_ntop(AF_INET, rr->_v, rr->_data._v
+		inet_ntop(AF_INET, rr->v(), (char*) rr->_data.v()
 			, socklen_t(rr->_data._l));
-		rr->_data._i = strlen(rr->_data._v);
+		rr->_data._i = strlen(rr->_data.v());
 		*offset	+= 4;
 		break;
 
@@ -692,9 +692,9 @@ DNS_rr* DNSQuery::extract_rr(size_t* offset)
 		break;
 
 	case QUERY_T_AAAA:
-		inet_ntop (AF_INET6, rr->_v, rr->_data._v
+		inet_ntop (AF_INET6, rr->v(), (char*) rr->_data.v()
 			, socklen_t(rr->_data._l));
-		rr->_data._i = strlen(rr->_data._v);
+		rr->_data._i = strlen(rr->_data.v());
 		*offset	+= 16;
 		break;
 
@@ -856,7 +856,7 @@ int DNSQuery::create_answer (const char* name
 		return 1;
 	}
 
-	append_raw(rr_answer->_v, rr_answer->_i);
+	append_raw(rr_answer->v(), rr_answer->_i);
 
 	_rr_ans.push_tail(rr_answer);
 
@@ -1154,8 +1154,8 @@ const char* DNSQuery::chars()
 
 	b.append_raw("}");
 
-	__str = b._v;
-	b._v = NULL;
+	__str = b.detach();
+
 	return __str;
 }
 

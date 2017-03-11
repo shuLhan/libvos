@@ -36,11 +36,19 @@ public:
 	Buffer(const char* v, const size_t vlen = 0);
 	Buffer(const Buffer* v);
 	virtual ~Buffer();
+	void release();
+	char* detach();
 
 	int is_empty() const;
 	size_t len() const;
 	size_t size() const;
+
 	const char* v(size_t idx = 0) const;
+	void set(char* v);
+	int set_at(size_t idx, const char* v, size_t vlen);
+
+	char char_at(size_t idx);
+	int set_char_at(size_t idx, char v);
 
 	int resize(size_t len);
 	void reset(int c = 0);
@@ -88,7 +96,6 @@ public:
 
 	size_t _i;
 	size_t _l;
-	char* _v;
 
 	static int PARSE_INT(char** pp, int* v);
 	static int VSNPRINTF(char *bfr, int len, const char *fmt,
@@ -100,6 +107,10 @@ public:
 	static uint8_t	CHAR_SIZE;
 
 	static const char* __cname;
+
+protected:
+	char* _v;
+
 private:
 	Buffer(const Buffer&);
 	void operator=(const Buffer&);

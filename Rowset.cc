@@ -59,8 +59,7 @@ const char* Rowset::chars()
 	b.append_raw(" ]");
 
 out:
-	__str = b._v;
-	b._v = NULL;
+	__str = b.detach();
 
 	return __str;
 }

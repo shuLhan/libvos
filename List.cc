@@ -901,8 +901,7 @@ const char* List::chars()
 
 	b.append_raw(" ]");
 
-	__str = b._v;
-	b._v = NULL;
+	__str = b.detach();
 
 out:
 	unlock();

@@ -123,8 +123,7 @@ const char* RBT::chars()
 
 	_chars(&b, p, 0, 0);
 
-	__str = b._v;
-	b._v = NULL;
+	__str = b.detach();
 
 	unlock();
 

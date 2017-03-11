@@ -703,8 +703,7 @@ const char* Resolver::chars()
 	Buffer b;
 	b.aprint("{ \"servers\": %s }", _servers.chars());
 
-	__str = b._v;
-	b._v = NULL;
+	__str = b.detach();
 
 	return __str;
 }

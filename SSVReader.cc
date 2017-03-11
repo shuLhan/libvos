@@ -39,7 +39,7 @@ List* SSVReader::parse(Buffer* line)
 
 	// skip line start with comment
 	if (_comment_c != 0
-	&& line->_v[0] == _comment_c) {
+	&& line->char_at(0) == _comment_c) {
 		return NULL;
 	}
 

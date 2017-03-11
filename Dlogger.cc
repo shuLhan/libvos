@@ -140,11 +140,11 @@ ssize_t Dlogger::_w(int fd, const char* fmt)
 			truncate (FILE_TRUNC_FLUSH_NO);
 		}
 
-		s = write_raw(_tmp._v, _tmp._i);
+		s = write_raw(_tmp.v(), _tmp._i);
 	}
 	if (fd) {
 		do {
-			ws = ::write(fd, &_tmp._v[ws], _tmp._i - size_t(ws));
+			ws = ::write(fd, _tmp.v(size_t(ws)), _tmp._i - size_t(ws));
 			if (ws < 0) {
 				s = -1;
 				break;

@@ -96,7 +96,7 @@ int Config::save()
 
 	close();
 
-	s = save_as(ini._v, CONFIG_SAVE_WITH_COMMENT);
+	s = save_as(ini.v(), CONFIG_SAVE_WITH_COMMENT);
 
 	return s;
 }
@@ -142,13 +142,13 @@ int Config::save_as(const char* ini, const int mode)
 				s = fini.writes("\t%s = %s\n",
 						pkey->chars(),
 						pkey->_value ?
-						pkey->_value->_v : "");
+						pkey->_value->v() : "");
 				if (s < 0) {
 					return -1;
 				}
 			} else {
 				if (CONFIG_SAVE_WITH_COMMENT == mode) {
-					s = fini.writes("%s\n", pkey->_v);
+					s = fini.writes("%s\n", pkey->v());
 					if (s < 0) {
 						return -1;
 					}
@@ -224,7 +224,7 @@ const char* Config::get(const char* head, const char* key, const char* dflt)
 			while (k) {
 				if (CONFIG_T_KEY == k->_t) {
 					if (k->like_raw(key) == 0)
-						return k->_value->_v;
+						return k->_value->v();
 				}
 
 				k = k->_next_key;
@@ -424,7 +424,7 @@ inline int Config::parsing()
 
 			b.trim();
 
-			s = _data.add_misc_raw(b._v);
+			s = _data.add_misc_raw(b.v());
 			if (s < 0) {
 				return -1;
 			}
@@ -466,7 +466,7 @@ inline int Config::parsing()
 				goto bad_cfg;
 			}
 
-			s = _data.add_head_raw(b._v, b._i);
+			s = _data.add_head_raw(b.v(), b._i);
 			if (s < 0) {
 				return -1;
 			}
@@ -506,7 +506,7 @@ inline int Config::parsing()
 				goto bad_cfg;
 			}
 
-			s = _data.add_key_raw(b._v, b._i);
+			s = _data.add_key_raw(b.v(), b._i);
 			if (s < 0) {
 				return -1;
 			}
@@ -540,7 +540,7 @@ inline int Config::parsing()
 				}
 			}
 
-			s = _data.add_value_raw(b._v, b._i);
+			s = _data.add_value_raw(b.v(), b._i);
 			if (s < 0) {
 				return -1;
 			}

@@ -190,8 +190,8 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 			}
 
 			/* copy blob from file buffer to record buffer */
-			memcpy(r->_v, &_v[startp], r->_i);
-			r->_v[r->_i] = '\0';
+			r->set_at(0, &_v[startp], r->_i);
+			r->set_char_at(r->_i, 0);
 
 			startp += r->_i;
 			if (startp >= _i) {
@@ -255,7 +255,7 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 					}
 				}
 
-				memcpy(r->_v, &_v[startp], len);
+				r->set_at(0, &_v[startp], len);
 				startp += len;
 
 			} else if (rmd->_right_q) {

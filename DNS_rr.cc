@@ -48,7 +48,7 @@ int DNS_rr::create_packet ()
 	uint32_t vl = 0;
 
 	/* Set NAME */
-	DNS_rr::APPEND_DNS_LABEL(this, _name._v, _name._i);
+	DNS_rr::APPEND_DNS_LABEL(this, _name.v(), _name._i);
 	_name_len = (uint16_t) (_name._i + 1);
 
 	/* Set TYPE */
@@ -70,7 +70,7 @@ int DNS_rr::create_packet ()
 	switch (_type) {
 	case QUERY_T_ADDRESS:
 		vl = 0;
-		s = inet_pton (AF_INET, _data._v, &vl);
+		s = inet_pton (AF_INET, _data.v(), &vl);
 		if (s <= 0) {
 			return -1;
 		}
@@ -157,8 +157,8 @@ const char* DNS_rr::chars()
 	if (_v) {
 		free(_v);
 	}
-	_v = o._v;
-	o._v = NULL;
+
+	_v = o.detach();
 
 	return _v;
 }

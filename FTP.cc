@@ -431,7 +431,7 @@ int FTP::do_pasv(const char* cmd, const char* parm, const char* out)
 		return -1;
 	}
 
-	s = pasv.connect(addr._v, port, FTP_MODE_PASV);
+	s = pasv.connect(addr.v(), port, FTP_MODE_PASV);
 	if (s < 0) {
 		return -1;
 	}
@@ -500,7 +500,7 @@ int FTP::do_put(const char* path)
 		return -1;
 	}
 
-	s = pasv.connect(addr._v, port, FTP_MODE_PASV);
+	s = pasv.connect(addr.v(), port, FTP_MODE_PASV);
 	if (s < 0) {
 		return -1;
 	}

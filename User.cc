@@ -41,8 +41,7 @@ const char* User::chars()
 	b.aprint("{ " K(name) ": " K(%s) ", " K(id) ": %d, " K(gid) ": %d, " K(eid) ": %d, " K(egid) ": %d }"
 		, name.chars(), id, gid, eid, egid);
 
-	__str = b._v;
-	b._v = NULL;
+	__str = b.detach();
 
 	return __str;
 }

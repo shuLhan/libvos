@@ -106,8 +106,7 @@ const char* DSVRecordMD::chars()
 		__str = NULL;
 	}
 
-	__str = o._v;
-	o._v = NULL;
+	__str = o.detach();
 
 	return __str;
 }

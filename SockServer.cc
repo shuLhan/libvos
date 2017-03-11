@@ -162,7 +162,7 @@ Socket* SockServer::accept()
 		return NULL;
 	}
 
-	inet_ntop(AF_INET, &client_addr.sin_addr, client->_name._v
+	inet_ntop(AF_INET, &client_addr.sin_addr, (char*) client->_name.v()
 		, socklen_t(client->_name._l));
 
 	client->_status	= O_RDWR | O_SYNC;
@@ -200,7 +200,7 @@ Socket* SockServer::accept6()
 		return NULL;
 	}
 
-	inet_ntop(_family, &client_addr.sin6_addr, client->_name._v
+	inet_ntop(_family, &client_addr.sin6_addr, (char*) client->_name.v()
 		, socklen_t(client->_name._l));
 
 	client->_status	= O_RDWR | O_SYNC;
