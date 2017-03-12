@@ -1026,7 +1026,7 @@ err:
 	if (pasv_sock) {
 		delete pasv_sock;
 	}
-	c->_s		= 451;
+	c->_s		= CODE_451;
 	c->_rmsg	= _FTP_reply_msg[c->_s];
 	c->reply();
 }

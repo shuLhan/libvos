@@ -512,7 +512,7 @@ int Buffer::appendc(const char c)
 int Buffer::appendi(long int i, unsigned int base)
 {
 	int s = 0;
-	int x = 0;
+	int x = -1;
 	char angka[23];
 
 	if (i < 0) {
@@ -523,12 +523,12 @@ int Buffer::appendi(long int i, unsigned int base)
 		i = -(i);
 	}
 	while (i >= 0) {
+		++x;
 		angka[x]	= __digits[i % base];
 		i		= i / base;
 		if (0 == i) {
 			break;
 		}
-		++x;
 	}
 	while (x >= 0) {
 		s = appendc(angka[x]);
@@ -706,7 +706,7 @@ int Buffer::concat(const char* bfr, ...)
 	while (p) {
 		s = append_raw(p, strlen(p));
 		if (s < 0) {
-			return -1;
+			break;
 		}
 		p = va_arg(al, const char *);
 	}
@@ -1449,7 +1449,6 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 					o._v[0] = '0';
 				}
 			}
-			flagv = 0;
 			flen = 0;
 		}
 

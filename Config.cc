@@ -290,7 +290,7 @@ int Config::set(const char* head, const char* key, const char* value)
 			k = h;
 			while (k) {
 				if (k->like_raw(key) == 0) {
-					s = k->_value->copy_raw(value);
+					k->_value->copy_raw(value);
 					return -1;
 				}
 				k = k->_next_key;
@@ -514,7 +514,6 @@ inline int Config::parsing()
 			b.reset();
 
 			++_p;
-			todo = P_CFG_VALUE;
 			/* no break, keep it flow */
 
 		case P_CFG_VALUE:

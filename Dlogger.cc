@@ -179,6 +179,7 @@ ssize_t Dlogger::er(const char* fmt, ...)
 	s = _w(STDERR_FILENO, fmt);
 
 	va_end(_args);
+	va_end(args);
 
 	_locker.unlock();
 
@@ -208,6 +209,7 @@ ssize_t Dlogger::out(const char* fmt, ...)
 	s = _w(STDOUT_FILENO, fmt);
 
 	va_end(_args);
+	va_end(args);
 
 	_locker.unlock();
 
@@ -237,6 +239,7 @@ ssize_t Dlogger::it(const char* fmt, ...)
 	s = _w(0, fmt);
 
 	va_end(_args);
+	va_end(args);
 
 	_locker.unlock();
 

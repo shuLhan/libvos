@@ -296,10 +296,10 @@ int Resolver::recv_udp(DNSQuery* answer)
 			printf("[%s] recv_udp: number of RR answer '%d'\n"
 				, __cname, answer->_n_ans);
 		}
-		s = -1;
+		s = 1;
 	}
 
-	return 1;
+	return s;
 }
 
 /**

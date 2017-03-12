@@ -481,7 +481,6 @@ void RBT::_do_rebalance(TreeNode* x)
 			if (siblingl && siblingl->is_red()) {
 				set_root_unsafe(TREE_ROTATE_RIGHT(_root, sibling));
 				sibling->swap_attr(siblingl);
-				parent = x;
 				continue;
 			}
 
@@ -535,7 +534,6 @@ void RBT::_do_rebalance(TreeNode* x)
 			if (siblingr && siblingr->is_red()) {
 				set_root_unsafe(TREE_ROTATE_LEFT(_root, sibling));
 				sibling->swap_attr(siblingr);
-				parent = x;
 				continue;
 			}
 

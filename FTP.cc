@@ -73,6 +73,10 @@ int FTP::connect(const char* host, const uint16_t port, const int mode)
 
 	if (mode == FTP_MODE_NORMAL) {
 		s = get_reply(TIMEOUT);
+		if (s < 0) {
+			return -1;
+		}
+
 		/* get & set server EOL */
 		if (_i > 2 && _v[_i - 2] == __eol[EOL_DOS][0]) {
 			if (LIBVOS_DEBUG) {

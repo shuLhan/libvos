@@ -172,7 +172,7 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
 		path->appendc('/');
 	}
 
-	if (ls->_name.cmp_raw("/") != 0) {
+	if (ls && ls->_name.cmp_raw("/") != 0) {
 		path->append(&ls->_name);
 
 		if (ls->is_dir() && path->char_at(path->_i - 1) != '/') {

@@ -54,7 +54,7 @@ DirNode::~DirNode()
  */
 int DirNode::get_attr(const char* rpath, const char* name)
 {
-	if (!rpath && !name) {
+	if (!rpath) {
 		return 0;
 	}
 

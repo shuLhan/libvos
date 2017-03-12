@@ -42,6 +42,9 @@ int main()
 	reader._comment_c = '#';
 
 	s = reader.load ("./hosts");
+	if (s) {
+		return 1;
+	}
 
 	for (; x < reader._rows->size(); x++) {
 		row = (vos::List*) reader._rows->at(x);
