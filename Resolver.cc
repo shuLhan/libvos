@@ -271,35 +271,33 @@ int Resolver::recv_udp(DNSQuery* answer)
 		return -1;
 	}
 
-	register int		s;
-	struct sockaddr_in	addr;
+	struct sockaddr_in addr;
 
-	s = (int) Socket::recv_udp(&addr);
+	int s = (int) Socket::recv_udp(&addr);
 	if (s <= 0) {
-		return s;
+		return -1;
 	}
 
 	answer->reset(DNSQ_DO_ALL);
 	answer->set((Buffer*) this);
 	answer->extract (vos::DNSQ_EXTRACT_RR_AUTH);
 
-	s = 0;
-
 	if ((answer->_flag & RCODE_FLAG) != 0) {
 		if (LIBVOS_DEBUG) {
 			printf("[%s] recv_udp: reply flag is zero.\n"
 				, __cname);
 		}
-		s = -1;
-	} else if (answer->_n_ans == 0 && answer->_n_aut == 0) {
+		return -1;
+	}
+
+	if (answer->_n_ans == 0 && answer->_n_aut == 0) {
 		if (LIBVOS_DEBUG) {
 			printf("[%s] recv_udp: number of RR answer '%d'\n"
 				, __cname, answer->_n_ans);
 		}
-		s = 1;
 	}
 
-	return s;
+	return 0;
 }
 
 /**
