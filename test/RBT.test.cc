@@ -35,7 +35,7 @@ int expect_red_nodes(RBT* rbt, const char* exp)
 
 void do_insert(RBT* rbt, const char v, const char* exp_red_nodes)
 {
-	TreeNode* node = NULL;
+	TreeNode* node;
 	Buffer tree_before;
 	Buffer tree_after;
 	int s = 0;
@@ -101,9 +101,8 @@ void do_remove(RBT* rbt, const char node_item, const char* exp)
 {
 	Buffer tree_before;
 	Buffer tree_after;
-	TreeNode* node = NULL;
-	TreeNode* got = NULL;
-	int s;
+	TreeNode* node;
+	TreeNode* got;
 
 	b->reset();
 	b->appendc(node_item);
@@ -122,7 +121,7 @@ void do_remove(RBT* rbt, const char node_item, const char* exp)
 	tree_after.copy_raw(rbt->chars());
 
 	if (exp) {
-		s = expect_red_nodes(rbt, exp);
+		int s = expect_red_nodes(rbt, exp);
 		if (s == 0) {
 			return;
 		}

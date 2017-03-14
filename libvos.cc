@@ -20,7 +20,6 @@ extern "C" void* __my_cpp_new(size_t len) { \
 extern "C" void __my_cpp_delete(void* p) {
 	if (p) {
 		free(p);
-		p = NULL;
 	}
 }
 

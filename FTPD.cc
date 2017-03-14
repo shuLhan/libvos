@@ -459,7 +459,7 @@ void FTPD::client_process()
 				FD_CLR(cpsvr->_d, &_fd_all);
 			}
 		}
-		if (!FD_ISSET(csock->_d, &_fd_read)) {
+		if (csock && FD_ISSET(csock->_d, &_fd_read) == 0) {
 			continue;
 		}
 
@@ -518,7 +518,6 @@ int FTPD::client_get_command(Socket* c, FTPD_cmd* ftp_cmd)
 	}
 
 	int x = 0;
-	int cmp = 0;
 	size_t s = 0;
 	FTPD_cmd*	cmd_p = NULL;
 
@@ -543,7 +542,7 @@ int FTPD::client_get_command(Socket* c, FTPD_cmd* ftp_cmd)
 	for (; x < _cmds.size(); x++) {
 		cmd_p = (FTPD_cmd*) _cmds.at(x);
 
-		cmp = ftp_cmd->_name.like(&cmd_p->_name);
+		int cmp = ftp_cmd->_name.like(&cmd_p->_name);
 		if (cmp == 0) {
 			ftp_cmd->_code = cmd_p->_code;
 			ftp_cmd->_callback = cmd_p->_callback;
@@ -633,10 +632,10 @@ int FTPD::client_get_path(FTPD_client* c, int check_parm)
 	}
 
 	if (cmd_parm->char_at(0) == '/') {
-		c->_path_real.concat(_path.v(), cmd_parm->v(), NULL);
+		c->_path_real.concat(_path.v(), cmd_parm->v(), 0);
 	} else {
 		c->_path_real.concat(_path.v(), c->_wd.v(), "/", cmd_parm->v()
-					, NULL);
+					, 0);
 	}
 
 	c->_path_node = _dir.get_node(&c->_path_real, _path.v(), _path._i);
@@ -707,10 +706,9 @@ int FTPD::client_get_parent_path(FTPD_client* c)
 	}
 
 	if (cmd_path->char_at(0) == '/') {
-		c->_path.concat(_path.v(), cmd_path->v(), NULL);
+		c->_path.concat(_path.v(), cmd_path->v(), 0);
 	} else {
-		c->_path.concat(_path.v(), c->_wd.v(), "/", cmd_path->v()
-				, NULL);
+		c->_path.concat(_path.v(), c->_wd.v(), "/", cmd_path->v(), 0);
 	}
 
 	tmp_i = c->_path._i;
@@ -1053,39 +1051,41 @@ static int get_node_perm(Buffer* bfr, DirNode* node)
 
 	if (!node) {
 		return 0;
-	} else if (node->_linkname._i) {
+	}
+
+	if (node->_linkname._i) {
 		bfr->set_at(0, "lrwxrwxrwx", 10);
 	} else {
 		if (S_ISDIR(node->_mode)) {
-			bfr->set_char_at(i, 'd');
-		} i++;
+			bfr->set_char_at(i+0, 'd');
+		};
 		if (node->_mode & S_IRUSR) {
-			bfr->set_char_at(i, 'r');
-		} i++;
+			bfr->set_char_at(i+1, 'r');
+		};
 		if (node->_mode & S_IWUSR) {
-			bfr->set_char_at(i, 'w');
-		} i++;
+			bfr->set_char_at(i+2, 'w');
+		};
 		if (node->_mode & S_IXUSR) {
-			bfr->set_char_at(i, 'x');
-		} i++;
+			bfr->set_char_at(i+3, 'x');
+		};
 		if (node->_mode & S_IRGRP) {
-			bfr->set_char_at(i, 'r');
-		} i++;
+			bfr->set_char_at(i+4, 'r');
+		};
 		if (node->_mode & S_IWGRP) {
-			bfr->set_char_at(i, 'w');
-		} i++;
+			bfr->set_char_at(i+5, 'w');
+		};
 		if (node->_mode & S_IXGRP) {
-			bfr->set_char_at(i, 'x');
-		} i++;
+			bfr->set_char_at(i+6, 'x');
+		};
 		if (node->_mode & S_IROTH) {
-			bfr->set_char_at(i, 'r');
-		} i++;
+			bfr->set_char_at(i+7, 'r');
+		};
 		if (node->_mode & S_IWOTH) {
-			bfr->set_char_at(i, 'w');
-		} i++;
+			bfr->set_char_at(i+8, 'w');
+		};
 		if (node->_mode & S_IXOTH) {
-			bfr->set_char_at(i, 'x');
-		} i++;
+			bfr->set_char_at(i+9, 'x');
+		};
 	}
 	return 0;
 }
@@ -1474,10 +1474,9 @@ void FTPD::on_cmd_RNTO(FTPD* s, FTPD_client* c)
 
 	/* get from path */
 	if (last_parm->char_at(0) == '/') {
-		path.concat(s->_path.v(), last_parm->v(), NULL);
+		path.concat(s->_path.v(), last_parm->v(), 0);
 	} else {
-		path.concat(s->_path.v(), c->_wd.v(), "/", last_parm->v()
-			, NULL);
+		path.concat(s->_path.v(), c->_wd.v(), "/", last_parm->v(), 0);
 	}
 
 	from_node = s->_dir.get_node(&path, s->_path.v(), s->_path._i);

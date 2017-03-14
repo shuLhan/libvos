@@ -63,7 +63,7 @@ enum _file_truncate_mode {
  */
 class File : public Buffer {
 public:
-	File(const size_t bfr_size = File::DFLT_SIZE);
+	explicit File(const size_t bfr_size = File::DFLT_SIZE);
 	~File();
 
 	int _open(const char* path, const int mode,
@@ -102,7 +102,7 @@ public:
 	static int TOUCH(const char* file);
 	static int WRITE_PID(const char* file);
 
-	static size_t DFLT_SIZE;
+	static uint16_t DFLT_SIZE;
 	static const char* __cname;
 
 	int		_d;

@@ -44,7 +44,7 @@ const char* Rowset::chars()
 	BNode* node = _head;
 
 	if (_head == _tail) {
-		b.concat("[ ", _head->chars(), " ]", NULL);
+		b.concat("[ ", _head->chars(), " ]", 0);
 		goto out;
 	}
 

@@ -38,7 +38,7 @@ Rowset rowset;
 
 List* create_row_0()
 {
-	Buffer* b = NULL;
+	Buffer* b;
 	List* row = new List();
 
 	b = new Buffer();
@@ -58,7 +58,7 @@ List* create_row_0()
 
 List* create_row_1()
 {
-	Buffer* b = NULL;
+	Buffer* b;
 	List* row = new List();
 
 	b = new Buffer();

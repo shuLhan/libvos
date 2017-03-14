@@ -557,7 +557,7 @@ inline int Config::parsing()
 	return 0;
 bad_cfg:
 	fprintf(stderr
-	, "[%s] parsing: line '%ld' column '%ld', invalid config format.\n"
+	, "[%s] parsing: line '%zu' column '%zu', invalid config format.\n"
 	, __cname, _e_row, _e_col);
 
 	return -1;

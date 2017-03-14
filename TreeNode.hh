@@ -25,7 +25,7 @@ enum _node_attr {
 //
 class TreeNode : public BNode {
 public:
-	TreeNode(Object* item);
+	explicit TreeNode(Object* item);
 	virtual ~TreeNode();
 	void detach();
 

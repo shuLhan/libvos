@@ -148,7 +148,7 @@ int OCI::check(void* handle, int type)
 	case OCI_ERROR:
 		s = -1;
 		if (handle) {
-			errmsg = (char*)calloc(2048, sizeof(errmsg));
+			errmsg = (char*)calloc(2048, sizeof(char));
 			OCIErrorGet(handle, 1, 0, &errcode, (text *) errmsg
 					, 2048, type);
 		} else {
@@ -328,7 +328,7 @@ int OCI::create_session_pool(const char* conn, int conn_len)
 		return s;
 	}
 
-	_spool_name = (char*) calloc(128, sizeof(_spool_name));
+	_spool_name = (char*) calloc(128, sizeof(char));
 	if (!_spool_name) {
 		return -1;
 	}
@@ -714,14 +714,13 @@ int OCI::stmt_prepare_r(const char* stmt)
 
 int OCI::stmt_subscribe(void* callback)
 {
-	register int	s		= 0;
 	unsigned int	type		= OCI_SUBSCR_NAMESPACE_DBCHANGE;
 	int		get_rowid	= TRUE;
 	int		timeout		= 0;
 
 	_stat = OCIHandleAlloc(_env, (void **) &_subscr
 				, OCI_HTYPE_SUBSCRIPTION, 0, 0);
-	s = check_err();
+	int s = check_err();
 	if (s < 0) {
 		return -1;
 	}
@@ -768,7 +767,7 @@ int OCI::stmt_subscribe(void* callback)
 	}
 
 	/* Associate the statement with the subscription handle */
-	s = OCIAttrSet(_stmt, OCI_HTYPE_STMT, _subscr, 0
+	OCIAttrSet(_stmt, OCI_HTYPE_STMT, _subscr, 0
 			, OCI_ATTR_CHNF_REGHANDLE, _err);
 	s = check_err();
 	if (s < 0) {

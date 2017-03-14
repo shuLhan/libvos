@@ -20,7 +20,7 @@ using vos::List;
 void test_INIT()
 {
 	int x = 0;
-	List* list_md = NULL;
+	List* list_md;
 	DSVRecordMD* md = NULL;
 	DSVRecordMD exp[4];
 

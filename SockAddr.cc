@@ -339,12 +339,11 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 	int		err	= 0;
 	struct hostent	he;
 	struct hostent*	hep	= NULL;
-	char*		buf	= NULL;
 	Buffer		ip_addr;
 
 	memset(sin6, 0, IN6_SIZE);
 
-	buf = (char *) strchr(addr, ':');
+	char* buf = (char *) strchr(addr, ':');
 	if (buf) {
 		s = inet_pton(AF_INET6, addr, &sin6->sin6_addr);
 		if (s <= 0) {

@@ -151,7 +151,7 @@ public:
 	int get_num_answer();
 
 	void reset(const int do_type = DNSQ_DO_DATA_ONLY);
-	void dump(const int do_type = DNSQ_DO_DATA_ONLY);
+	void dump(const uint8_t do_type = DNSQ_DO_DATA_ONLY);
 
 	const char* chars();
 

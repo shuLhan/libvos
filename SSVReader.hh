@@ -23,7 +23,7 @@ namespace vos {
  */
 class SSVReader : public File {
 public:
-	SSVReader (const char comment = 0);
+	explicit SSVReader (const char comment = 0);
 	~SSVReader ();
 
 	int load (const char* file);

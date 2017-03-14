@@ -30,7 +30,7 @@ void test_open()
 
 	int s = 0;
 	Dir dir;
-	DirNode* inode = NULL;
+	DirNode* inode;
 
 	s = dir.open("./dir");
 
@@ -42,8 +42,6 @@ void test_open()
 	assert(inode->_child != NULL);
 
 	inode = inode->_child;
-
-	dir.dump();
 
 	s = 0;
 	while (inode) {

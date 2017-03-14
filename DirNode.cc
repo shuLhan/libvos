@@ -154,11 +154,10 @@ int DirNode::update_attr(DirNode* node, const char* rpath)
 int DirNode::update_child_attr(DirNode** node, const char* rpath
 				, const char* name)
 {
-	register int	s;
 	DirNode*	p = _child;
 
 	while (p) {
-		s = p->_name.cmp_raw(name);
+		int s = p->_name.cmp_raw(name);
 		if (s == 0) {
 			(*node)	= p;
 			s	= update_attr(p, rpath);
@@ -277,12 +276,11 @@ void DirNode::INSERT(DirNode** list, DirNode* node)
 		return;
 	}
 
-	int		s;
 	DirNode*	last	= NULL;
 	DirNode*	p	= (*list);
 
 	while (p) {
-		s = p->_name.like(&node->_name);
+		int s = p->_name.like(&node->_name);
 		if (s > 0) {
 			break;
 		}

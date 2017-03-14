@@ -18,7 +18,7 @@ const char* __eol[N_EOL_MODE] = {
 /**
  * Static `DFLT_SIZE` define default buffer size for file.
  */
-size_t File::DFLT_SIZE = 4096;
+uint16_t File::DFLT_SIZE = 4096;
 
 File::File(const size_t bfr_size) : Buffer(bfr_size)
 ,	_d(0)
@@ -370,7 +370,7 @@ ssize_t File::refill(size_t read_min)
 	len = move_len + read_min;
 	if (len > _l) {
 		if (LIBVOS_DEBUG) {
-			printf("[%s] refill: read resize from '%ld' to '%ld'\n"
+			printf("[%s] refill: read resize from '%zu' to '%zu'\n"
 				, __cname, _l, len);
 		}
 		resize(len);
@@ -380,7 +380,7 @@ ssize_t File::refill(size_t read_min)
 		if (len == 0) {
 			len = _l * 2;
 			if (LIBVOS_DEBUG) {
-				printf("[%s] refill: read resize from '%ld' to '%ld'\n"
+				printf("[%s] refill: read resize from '%zu' to '%zu'\n"
 					, __cname, _l, len);
 			}
 			resize(len);
@@ -533,7 +533,6 @@ ssize_t File::write_raw(const char* bfr, size_t len)
 		}
 	}
 
-	size_t x = 0;
 	ssize_t s = 0;
 
 	/* direct write */
@@ -542,6 +541,9 @@ ssize_t File::write_raw(const char* bfr, size_t len)
 		if (s < 0) {
 			return -1;
 		}
+
+		size_t x = 0;
+
 		while (len > 0) {
 			s = ::write(_d, &bfr[x], len);
 			if (s < 0) {
@@ -646,10 +648,8 @@ int File::writec(const char c)
 		return 0;
 	}
 
-	ssize_t s = 0;
-
 	if (_i + 1 >= _l) {
-		s = flush();
+		ssize_t s = flush();
 		if (s < 0) {
 			return -1;
 		}
@@ -679,10 +679,9 @@ ssize_t File::flush()
 	}
 
 	size_t x = 0;
-	ssize_t s = 0;
 
 	while (_i > 0) {
-		s = ::write(_d, &_v[x], _i);
+		ssize_t s = ::write(_d, &_v[x], _i);
 		if (s < 0) {
 			perror(__cname);
 			return -1;
@@ -814,8 +813,6 @@ int File::BASENAME(Buffer* name, const char* path)
 	}
 
 	int s = 0;
-	size_t len = 0;
-	size_t p = 0;
 
 	name->reset();
 
@@ -825,14 +822,14 @@ int File::BASENAME(Buffer* name, const char* path)
 			return -1;
 		}
 	} else {
-		len = strlen(path);
+		size_t len = strlen(path);
 		if (path[0] == '/' && len == 1) {
 			s = name->appendc('/');
 			if (s < 0) {
 				return -1;
 			}
 		} else {
-			p = len - 1;
+			size_t p = len - 1;
 			while (p > 0 && path[p] == '/') {
 				--len;
 				--p;

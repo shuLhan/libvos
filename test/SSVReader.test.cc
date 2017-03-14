@@ -57,15 +57,17 @@
 
 int main()
 {
-	register int s;
+	int s;
+	int sz;
 	vos::SSVReader reader;
-	const char* got = NULL;
+	const char* got;
 
 	s = reader.load ("./hosts");
 
 	assert(s == 0);
 
-	assert(reader._rows->size() == 10);
+	sz = reader._rows->size();
+	assert(sz == 10);
 
 	got = reader._rows->at(0)->chars();
 	assert(strcmp(EXP_LINE_00, got) == 0);
@@ -107,7 +109,9 @@ int main()
 	s = reader.load ("./hosts");
 
 	assert(s == 0);
-	assert(reader._rows->size() == 4);
+
+	sz = reader._rows->size();
+	assert(sz == 4);
 
 	got = reader._rows->at(0)->chars();
 	assert(strcmp(EXP_LINE_04, got) == 0);

@@ -147,9 +147,8 @@ Socket* SockServer::accept()
 {
 	socklen_t		client_addrlen;
 	struct sockaddr_in	client_addr;
-	Socket*			client		= NULL;
 
-	client = new Socket();
+	Socket* client = new Socket();
 	if (!client) {
 		return NULL;
 	}
@@ -185,9 +184,8 @@ Socket* SockServer::accept6()
 {
 	socklen_t		client_addrlen;
 	struct sockaddr_in6	client_addr;
-	Socket*			client = NULL;
 
-	client = new Socket();
+	Socket* client = new Socket();
 	if (!client) {
 		return NULL;
 	}

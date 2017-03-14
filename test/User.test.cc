@@ -13,8 +13,6 @@ void test_switch()
 {
 	User me;
 
-	D.out("%s\n", me.chars());
-
 	me.switch_to_effective("bin");
 
 	assert(me.get_effective_id() == 1);
@@ -24,11 +22,7 @@ void test_switch()
 	expectString(me.get_name(), getlogin(), 0);
 	expectString(me.get_effective_name(), "bin", 0);
 
-	D.out("%s\n", me.chars());
-
 	me.switch_to_real();
-
-	D.out("%s\n", me.chars());
 
 	assert(me.get_effective_id() == 0);
 	assert(me.get_effective_gid() == 0);

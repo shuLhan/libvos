@@ -68,11 +68,10 @@ int OCIValue::init(const int pos, const int type, const int len)
  */
 OCIValue* OCIValue::INIT(const int pos, const int type, const int len)
 {
-	register int	s;
 	OCIValue	*o = new OCIValue();
 
 	if (o) {
-		s = o->init(pos, type, len);
+		int s = o->init(pos, type, len);
 		if (s < 0) {
 			delete o;
 			o = NULL;

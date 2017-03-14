@@ -22,9 +22,7 @@ Dlogger::Dlogger () : File()
 ,	_time_s(0)
 ,	_time()
 ,	_time_show(0)
-#if defined(sun) || defined(__sun) || defined(__i386__)
 ,	_args()
-#endif
 ,	_max_size (0)
 {
 	_d	= STDERR_FILENO;
@@ -52,15 +50,13 @@ Dlogger::~Dlogger()
 int Dlogger::open (const char* logfile, size_t max_size, const char* prefix
 	, int show_timestamp)
 {
-	int s = 0;
-
 	_prefix.copy_raw(prefix);
 	_time_show = show_timestamp;
 
 	if (logfile) {
 		close();
 
-		s = open_wa(logfile);
+		int s = open_wa(logfile);
 		if (s < 0) {
 			_d = STDERR_FILENO;
 		} else {
@@ -122,7 +118,6 @@ void Dlogger::add_prefix()
 ssize_t Dlogger::_w(int fd, const char* fmt)
 {
 	ssize_t s = 0;
-	ssize_t ws = 0;
 
 	add_timestamp();
 	add_prefix();
@@ -143,8 +138,10 @@ ssize_t Dlogger::_w(int fd, const char* fmt)
 		s = write_raw(_tmp.v(), _tmp._i);
 	}
 	if (fd) {
+		ssize_t ws = 0;
 		do {
-			ws = ::write(fd, _tmp.v(size_t(ws)), _tmp._i - size_t(ws));
+			ws = ::write(fd, _tmp.v(size_t(ws))
+				, _tmp._i - size_t(ws));
 			if (ws < 0) {
 				s = -1;
 				break;

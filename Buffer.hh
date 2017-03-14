@@ -32,9 +32,9 @@ namespace vos {
  */
 class Buffer : public Object {
 public:
-	Buffer(const size_t size = DFLT_SIZE);
+	explicit Buffer(const size_t size = DFLT_SIZE);
 	Buffer(const char* v, const size_t vlen = 0);
-	Buffer(const Buffer* v);
+	explicit Buffer(const Buffer* v);
 	virtual ~Buffer();
 	void release();
 	char* detach();
@@ -103,7 +103,7 @@ public:
 	static size_t TRIM(char *bfr, size_t len);
 	static int CMP_OBJECTS(Object* x, Object* y);
 
-	static uint8_t	DFLT_SIZE;
+	static uint16_t	DFLT_SIZE;
 	static uint8_t	CHAR_SIZE;
 
 	static const char* __cname;

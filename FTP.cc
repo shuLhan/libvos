@@ -192,7 +192,7 @@ int FTP::recv(const unsigned int to_sec, const unsigned int to_usec)
 		s = -1;
 		if (LIBVOS_DEBUG) {
 			printf(
-"[%s] recv: timeout after '%d.%d' seconds.\n", __cname, to_sec, to_usec);
+"[%s] recv: timeout after '%u.%u' seconds.\n", __cname, to_sec, to_usec);
 		}
 	}
 
@@ -249,14 +249,12 @@ int FTP::send_cmd(const char* cmd, const char *parm)
  */
 int FTP::get_reply(const unsigned int timeout)
 {
-	ssize_t s = 0;
-
 	do {
-		s = recv(timeout);
+		ssize_t s = recv(timeout);
 		if (s < 0) {
 			return -1;
 		}
-		if (_i <= 0) {
+		if (_i == 0) {
 			return 0;
 		}
 

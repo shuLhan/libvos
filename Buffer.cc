@@ -31,7 +31,7 @@ enum __print_flag {
 /**
  * Static DFLT_SIZE default buffer size
  */
-uint8_t Buffer::DFLT_SIZE = 16;
+uint16_t Buffer::DFLT_SIZE = 16;
 
 /**
  * Static CHAR_SIZE size of char, to minimize calling the sizeof
@@ -193,7 +193,6 @@ void Buffer::set(char* v)
  */
 int Buffer::set_at(size_t idx, const char* v, size_t vlen)
 {
-	ssize_t s = 0;
 	size_t growth = idx;
 
 	if (!vlen) {
@@ -204,7 +203,7 @@ int Buffer::set_at(size_t idx, const char* v, size_t vlen)
 	}
 
 	if (growth > _l) {
-		s = resize(growth);
+		ssize_t s = resize(growth);
 		if (s) {
 			return -1;
 		}
@@ -552,7 +551,6 @@ int Buffer::appendi(long int i, unsigned int base)
  */
 int Buffer::appendui(long unsigned int i, size_t base)
 {
-	int s = 0;
 	int x = 0;
 	char angka[23];
 
@@ -566,8 +564,9 @@ int Buffer::appendui(long unsigned int i, size_t base)
 		}
 		++x;
 	}
+
 	while (x >= 0) {
-		s = appendc(angka[x]);
+		int s = appendc(angka[x]);
 		if (s < 0) {
 			return -1;
 		}
@@ -697,14 +696,13 @@ int Buffer::concat(const char* bfr, ...)
 		return 0;
 	}
 
-	int s = 0;
-	const char *p = NULL;
+	const char *p;
 	va_list al;
 
 	va_start(al, bfr);
 	p = bfr;
 	while (p) {
-		s = append_raw(p, strlen(p));
+		int s = append_raw(p, strlen(p));
 		if (s < 0) {
 			break;
 		}
@@ -1136,7 +1134,7 @@ const char* Buffer::chars()
  */
 void Buffer::dump()
 {
-	printf("[vos::Buffer__] dump: [%ld|%ld|%s]\n", _i, _l, _v);
+	printf("[%s] dump: [%zu|%zu|%s]\n", __cname, _i, _l, _v);
 }
 
 /**
@@ -1490,8 +1488,6 @@ size_t Buffer::TRIM(char *bfr, size_t len)
 		}
 	}
 
-	size_t x = 0;
-
 	do {
 		--len;
 	} while (len > 0 && isspace(bfr[len]));
@@ -1501,6 +1497,8 @@ size_t Buffer::TRIM(char *bfr, size_t len)
 			++len;
 		}
 	} else {
+		size_t x = 0;
+
 		while (x < len && isspace(bfr[x])) {
 			++x;
 		}

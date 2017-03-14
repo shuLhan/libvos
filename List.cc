@@ -228,16 +228,12 @@ void List::sort_conqueror(List* left, List* right
 
 {
 	int s = 0;
-	BNode* pleft = NULL;
-	BNode* pright = NULL;
-	BNode* endleft = NULL;
-	BNode* endright = NULL;
-	Object* tmp = NULL;
+	Object* tmp;
 
-	pleft = left->_head;
-	pright = right->_head;
-	endleft = right->_head;
-	endright = right->_tail->_right;
+	BNode* pleft = left->_head;
+	BNode* pright = right->_head;
+	BNode* endleft = right->_head;
+	BNode* endright = right->_tail->_right;
 
 	while (pleft != endleft && pright != endright && pleft != pright) {
 		s = fn_compare(pleft->_item, pright->_item);
@@ -888,7 +884,7 @@ const char* List::chars()
 	do {
 		p = node->chars();
 		if (p && p[0] != '{' && p[0] != '[') {
-			b.concat("\"", p, "\"", NULL);
+			b.concat("\"", p, "\"", 0);
 		} else {
 			b.append_raw(p);
 		}

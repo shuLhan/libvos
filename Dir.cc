@@ -107,7 +107,6 @@ void Dir::close()
  */
 DirNode* Dir::find(DirNode* dir, const char* name, int depth)
 {
-	int		s;
 	DirNode*	ls = NULL;
 	DirNode*	node = NULL;
 
@@ -123,7 +122,7 @@ DirNode* Dir::find(DirNode* dir, const char* name, int depth)
 	ls = dir->_child;
 
 	while (ls) {
-		s = ls->_name.cmp_raw(name);
+		int s = ls->_name.cmp_raw(name);
 		if (s == 0) {
 			return ls;
 		}
@@ -155,19 +154,17 @@ DirNode* Dir::find(DirNode* dir, const char* name, int depth)
  */
 int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
 {
-	register int s = 0;
-
 	if (depth == _depth) {
 		return depth;
 	}
 	if (ls && ls->_parent != _ls) {
-		s = get_parent_path(path, ls->_parent, depth + 1);
+		int s = get_parent_path(path, ls->_parent, depth + 1);
 		if (s < 0) {
 			return -1;
 		}
 	}
 
-	if ((path->_i <= 0)
+	if ((path->_i == 0)
 	||  (path->_i > 0 && path->char_at(path->_i - 1) != '/')) {
 		path->appendc('/');
 	}
@@ -195,7 +192,6 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
  */
 int Dir::get_list(DirNode* list, const char* path, int depth)
 {
-	int		s	= 0;
 	int		n	= 0;
 	Buffer		rpath;
 	DIR*		dir	= NULL;
@@ -223,7 +219,8 @@ int Dir::get_list(DirNode* list, const char* path, int depth)
 		if (!dent) {
 			break;
 		}
-		s = strcmp(dent->d_name, ".");
+
+		int s = strcmp(dent->d_name, ".");
 		if (s == 0) {
 			continue;
 		}
@@ -349,21 +346,23 @@ DirNode* Dir::get_node(Buffer* path, const char* root, size_t root_len)
 	int		s;
 	size_t i = 0;
 	Buffer		node;
-	size_t len = path->_i;
-	const char*	name	= path->v();
 	DirNode*	p	= _ls;
 	DirNode*	c	= NULL;
 
 	if (!path || !root) {
 		return NULL;
 	}
-	if (root_len <= 0) {
+	if (root_len == 0) {
 		root_len = strlen(root);
 	}
 	s = strncmp(path->v(), root, root_len);
 	if (s != 0) {
 		return NULL;
 	}
+
+	size_t len = path->_i;
+	const char* name = path->v();
+
 	if (LIBVOS_DEBUG) {
 		printf("[%s] get_node: get link child %s\n", __cname, name);
 	}

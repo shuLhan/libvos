@@ -14,7 +14,7 @@ namespace vos {
 
 class Locker : public Object {
 public:
-	Locker(int type = PTHREAD_MUTEX_NORMAL);
+	explicit Locker(int type = PTHREAD_MUTEX_NORMAL);
 	virtual ~Locker();
 	const char* chars();
 

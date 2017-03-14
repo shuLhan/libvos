@@ -148,7 +148,7 @@ int Resolver::add_server(const char* server_list)
 
 	int x;
 	Buffer b;
-	List* addrs = NULL;
+	List* addrs;
 	List* addr_port = NULL;
 	Buffer* b_addr = NULL;
 	Buffer* addr = NULL;
@@ -291,7 +291,7 @@ int Resolver::recv_udp(DNSQuery* answer)
 				, __cname);
 		}
 		s = -1;
-	} else if (answer->_n_ans <= 0 && answer->_n_aut <= 0) {
+	} else if (answer->_n_ans == 0 && answer->_n_aut == 0) {
 		if (LIBVOS_DEBUG) {
 			printf("[%s] recv_udp: number of RR answer '%d'\n"
 				, __cname, answer->_n_ans);
@@ -457,7 +457,7 @@ int Resolver::recv_tcp(DNSQuery* answer)
 	if (! FD_ISSET(_d, &_fd_read)) {
 		if (LIBVOS_DEBUG) {
 			fprintf(stderr
-				, "[%s] recv_tcp: timeout after '%d' seconds.\n"
+				, "[%s] recv_tcp: timeout after '%u' seconds.\n"
 				, __cname, TIMEOUT);
 		}
 		return -1;
@@ -493,7 +493,7 @@ int Resolver::recv_tcp(DNSQuery* answer)
 		}
 		return -1;
 	// (9)
-	} else if (answer->_n_ans <= 0 && answer->_n_aut <= 0) {
+	} else if (answer->_n_ans == 0 && answer->_n_aut == 0) {
 		if (LIBVOS_DEBUG) {
 			fprintf(stderr
 				, "[%s] recv_tcp: number of RR answer '%d'\n"
@@ -546,7 +546,7 @@ int Resolver::resolve_udp(DNSQuery* question, DNSQuery* answer)
 			++_n_try;
 			if (LIBVOS_DEBUG) {
 				printf(
-"[%s] resolve_udp: timeout...(%d)\n", __cname, _n_try);
+"[%s] resolve_udp: timeout...(%u)\n", __cname, _n_try);
 			}
 			continue;
 		}
@@ -624,7 +624,7 @@ int Resolver::resolve_tcp(DNSQuery* question, DNSQuery* answer)
 		if (0 == s || !FD_ISSET(_d, &_fd_read)) {
 			++_n_try;
 			if (LIBVOS_DEBUG) {
-				printf("[%s] resolve_tcp: timeout...(%d)\n"
+				printf("[%s] resolve_tcp: timeout...(%u)\n"
 					, __cname, _n_try);
 			}
 			continue;

@@ -36,7 +36,7 @@ namespace vos {
  */
 class FTPD_client : public Object {
 public:
-	FTPD_client(Socket* socket = NULL);
+	explicit FTPD_client(Socket* socket = NULL);
 	~FTPD_client();
 
 	void reset();

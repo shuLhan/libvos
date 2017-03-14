@@ -143,10 +143,8 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
  */
 int DSVWriter::writes(DSVRecord *rows, List *list_md)
 {
-	register int s;
-
 	while (rows) {
-		s = write(rows, list_md);
+		int s = write(rows, list_md);
 		if (s < 0) {
 			return -1;
 		}

@@ -216,7 +216,7 @@ void test_PARSE_INT()
 	int s = 0;
 	int v = 0;
 	char* str = (char*) calloc(64, sizeof(char));
-	char* p = NULL;
+	char* p;
 
 	strcpy(str, "\0");
 	p = str;

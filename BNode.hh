@@ -17,7 +17,7 @@ namespace vos {
 //
 class BNode : public Object {
 public:
-	BNode(Object* item);
+	explicit BNode(Object* item);
 	virtual ~BNode();
 
 	void delete_content();

@@ -38,7 +38,6 @@ void RBT::_delete(TreeNode* p)
 		_delete(p->_right);
 	}
 	delete p;
-	p = NULL;
 }
 
 //
@@ -174,10 +173,8 @@ TreeNode* RBT::get_root_unsafe()
  */
 TreeNode* RBT::get_root()
 {
-	TreeNode* r = NULL;
-
 	lock();
-	r = _root;
+	TreeNode* r = _root;
 	unlock();
 
 	return r;
@@ -298,12 +295,11 @@ static TreeNode* TREE_ROTATE_LEFT(TreeNode* root, TreeNode* x)
 //
 static TreeNode* INSERT_FIXUP(TreeNode* root, TreeNode* node)
 {
-	TreeNode* parent = NULL;
 	TreeNode* gp = NULL;
 	TreeNode* aunt = NULL;
 
 	// (1)
-	parent = node->get_parent();
+	TreeNode* parent = node->get_parent();
 	while (parent && parent->is_red()) {
 		gp = node->get_grand_parent();
 
@@ -645,11 +641,10 @@ TreeNode* RBT::remove(TreeNode* x)
 TreeNode* RBT::find(Object* item)
 {
 	int s = 0;
-	TreeNode* p = NULL;
 
 	lock();
 
-	p = get_root_unsafe();
+	TreeNode* p = get_root_unsafe();
 
 	while (p) {
 		s = _fn_cmp(item, p->get_content());

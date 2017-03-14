@@ -45,7 +45,7 @@ ssize_t DSVReader::refill_buffer(const size_t read_min)
 	move_len = _i - _p;
 	if (move_len > 0 && _p > ((_i / 2) + 1)) {
 		if (LIBVOS_DEBUG) {
-			printf("[%s] refill_buffer: memmove from %ld of %ld\n"
+			printf("[%s] refill_buffer: memmove from %zu of %zu\n"
 				, __cname, _p, _i);
 		}
 		memmove(&_v[0], &_v[_p], move_len);
@@ -55,7 +55,7 @@ ssize_t DSVReader::refill_buffer(const size_t read_min)
 	if (size_t(len) > _l) {
 
 		if (LIBVOS_DEBUG) {
-			printf("[%s] reader resize: from %ld to %ld\n"
+			printf("[%s] reader resize: from %zu to %zd\n"
 				, __cname, _l, len);
 		}
 
@@ -67,7 +67,7 @@ ssize_t DSVReader::refill_buffer(const size_t read_min)
 			len = ssize_t(_l * 2);
 
 			if (LIBVOS_DEBUG) {
-				printf("[%s] reader resize: from %ld to %ld\n"
+				printf("[%s] reader resize: from %zu to %zd\n"
 					, __cname, _l, len);
 			}
 

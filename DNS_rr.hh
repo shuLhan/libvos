@@ -75,7 +75,7 @@ enum _RR_CLASS {
  */
 class DNS_rr : public Buffer {
 public:
-	DNS_rr(const size_t bfr_size = RDATA_MAX_SIZE);
+	explicit DNS_rr(const size_t bfr_size = RDATA_MAX_SIZE);
 	~DNS_rr();
 	const char* chars();
 

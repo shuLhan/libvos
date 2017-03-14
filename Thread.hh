@@ -13,7 +13,7 @@ namespace vos {
 
 class Thread : public Locker {
 public:
-	Thread(void* (*fn)(void* arg) = NULL);
+	explicit Thread(void* (*fn)(void* arg) = NULL);
 	~Thread();
 
 	void* _arg;

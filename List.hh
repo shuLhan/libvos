@@ -17,7 +17,7 @@ namespace vos {
 //
 class List : public Locker {
 public:
-	List(const char sep = ',');
+	explicit List(const char sep = ',');
 	virtual ~List();
 
 	void first_push(BNode* node);

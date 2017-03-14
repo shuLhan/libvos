@@ -123,8 +123,6 @@ DNSQuery* DNSQuery::duplicate ()
  */
 int DNSQuery::to_udp(const Buffer *tcp)
 {
-	register int s;
-
 	if (!tcp) {
 		if (_bfr_type == BUFFER_IS_UDP) {
 			return 0;
@@ -134,7 +132,7 @@ int DNSQuery::to_udp(const Buffer *tcp)
 		memmove(_v, &_v[DNS_TCP_HDR_SIZE], _i);
 		_v[_i] = 0;
 	} else {
-		s = copy_raw(tcp->v(DNS_TCP_HDR_SIZE)
+		int s = copy_raw(tcp->v(DNS_TCP_HDR_SIZE)
 				, tcp->_i - DNS_TCP_HDR_SIZE);
 		if (s < 0) {
 			return -1;
@@ -237,7 +235,6 @@ int DNSQuery::create_question(const char* qname, const int type)
 		return -1;
 	}
 
-	int	s;
 	size_t len = 0;
 	Buffer	label;
 
@@ -255,7 +252,7 @@ int DNSQuery::create_question(const char* qname, const int type)
 	len = _name._i + 16;
 
 	if (len > _l) {
-		s = resize(len);
+		int s = resize(len);
 		if (s < 0) {
 			return -1;
 		}
@@ -408,14 +405,13 @@ int DNSQuery::extract_question()
  */
 int DNSQuery::extract_resource_record (const char extract_flag)
 {
-	int	s	= 0;
 	int	i	= 0;
 	size_t len = 0;
 	DNS_rr*	rr	= NULL;
 
 	// check if question has been extracted.
-	if (_q_len <= 0) {
-		s = extract_question ();
+	if (_q_len == 0) {
+		int s = extract_question ();
 		if (s <= 0) {
 			return -1;
 		}
@@ -495,9 +491,8 @@ void DNSQuery::set_max_ttl_from_rr (const DNS_rr* rr)
 DNS_rr* DNSQuery::extract_rr(size_t* offset)
 {
 	int	s	= 0;
-	DNS_rr*	rr	= NULL;
+	DNS_rr*	rr = new DNS_rr();
 
-	rr = new DNS_rr();
 	if (!rr) {
 		return NULL;
 	}
@@ -876,19 +871,15 @@ void DNSQuery::remove_rr_aut()
 		return;
 	}
 
-	ssize_t s = 0;
-	int rr_add_len;
-	int rr_aut_len;
-
 	if (_n_add > 0 && _rr_add_p) {
-		rr_aut_len = (int)(_rr_add_p - _rr_aut_p);
-		rr_add_len = (int)(&_v[_i] - _rr_add_p);
+		int rr_aut_len = (int)(_rr_add_p - _rr_aut_p);
+		int rr_add_len = (int)(&_v[_i] - _rr_add_p);
 
 		memmove((void *)_rr_aut_p, _rr_add_p, size_t(rr_add_len));
 
 		_i = _i - size_t(rr_aut_len);
 	} else {
-		s = _rr_aut_p - _v;
+		ssize_t s = _rr_aut_p - _v;
 		if (s < 0) {
 			_i = 0;
 		} else {
@@ -1067,11 +1058,11 @@ void DNSQuery::reset(const int do_type)
  * @method	: DNSQuery::dump
  * @desc	: print content of DNS packet buffer to standard output.
  */
-void DNSQuery::dump(const int do_type)
+void DNSQuery::dump(const uint8_t do_type)
 {
 	printf("\n[%s] dump:\n; Buffer\n", __cname);
 
-	if (_v && !(do_type & DNSQ_DO_DATA_ONLY)) {
+	if (_v && do_type == DNSQ_DO_ALL) {
 		dump_hex();
 	}
 

@@ -326,8 +326,8 @@ void test_sort()
 
 void test_search()
 {
-	BNode* node_found = NULL;
-	Buffer* bdel = NULL;
+	BNode* node_found;
+	Buffer* bdel;
 
 	Buffer* b0 = new Buffer();
 	b0->copy_raw(STR_TEST_0);
@@ -558,7 +558,7 @@ void test_push_tail_sorted_desc()
 
 void test_detach()
 {
-	BNode* node = NULL;
+	BNode* node;
 
 	Buffer* b0 = new Buffer();
 	b0->copy_raw(STR_TEST_0);

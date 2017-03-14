@@ -32,7 +32,7 @@ enum SocketConnType {
  */
 class Socket : public File {
 public:
-	Socket(const size_t bfr_size = DFLT_BUFFER_SIZE);
+	explicit Socket(const size_t bfr_size = DFLT_BUFFER_SIZE);
 	~Socket();
 
 	int create(const int family = PF_INET, const int type = SOCK_STREAM);
