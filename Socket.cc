@@ -31,7 +31,11 @@ Socket::Socket(const size_t bfr_size) : File(bfr_size)
  * @desc	: Socket object destructor.
  */
 Socket::~Socket()
-{}
+{
+	if (_type == SOCK_DGRAM) {
+		reset();
+	}
+}
 
 /**
  * @method		: Socket::create
