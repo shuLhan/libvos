@@ -282,14 +282,6 @@ int Resolver::recv_udp(DNSQuery* answer)
 	answer->set((Buffer*) this);
 	answer->extract (vos::DNSQ_EXTRACT_RR_AUTH);
 
-	if ((answer->_flag & RCODE_FLAG) != 0) {
-		if (LIBVOS_DEBUG) {
-			printf("[%s] recv_udp: reply flag is zero.\n"
-				, __cname);
-		}
-		return -1;
-	}
-
 	if (answer->_n_ans == 0 && answer->_n_aut == 0) {
 		if (LIBVOS_DEBUG) {
 			printf("[%s] recv_udp: number of RR answer '%d'\n"
@@ -420,7 +412,6 @@ int Resolver::send_tcp(DNSQuery* question)
  * descriptor from set.
  * DO NOT close the socket, let upper layer handle closing connection.
  * (7) Convert packet to UDP and extract it.
- * (8) Check if reply header has REPLY flag.
  * (9) Check if number of records is greater than 0.
  */
 int Resolver::recv_tcp(DNSQuery* answer)
@@ -482,25 +473,16 @@ int Resolver::recv_tcp(DNSQuery* answer)
 	answer->to_udp((Buffer *) this);
 	answer->extract (vos::DNSQ_EXTRACT_RR_AUTH);
 
-	// (8)
-	if ((answer->_flag & RCODE_FLAG) != 0) {
-		if (LIBVOS_DEBUG) {
-			fprintf(stderr
-				, "[%s] recv_tcp: reply flag is zero.\n"
-				, __cname);
-		}
-		return -1;
 	// (9)
-	} else if (answer->_n_ans == 0 && answer->_n_aut == 0) {
+	if (answer->_n_ans == 0 && answer->_n_aut == 0) {
 		if (LIBVOS_DEBUG) {
 			fprintf(stderr
 				, "[%s] recv_tcp: number of RR answer '%d'\n"
 				, __cname, answer->_n_ans);
 		}
-		return -1;
 	}
 
-	return 1;
+	return 0;
 }
 
 /**
