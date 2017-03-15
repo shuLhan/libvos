@@ -29,6 +29,7 @@ enum _DNS_HDR_RCODE {
 ,	RCODE_NAME	= 0x0003
 ,	RCODE_NOT_IMPL	= 0x0004
 ,	RCODE_REFUSED	= 0x0005
+,	RCODE_SIZE	= 0x0006
 ,	RCODE_FLAG	= 0x000F
 };
 
@@ -149,6 +150,10 @@ public:
 	void set_rr_answer_ttl(unsigned int ttl = UINT_MAX);
 
 	int get_num_answer();
+
+	int get_rcode();
+	int is_ok();
+	const char* get_rcode_name();
 
 	void reset(const int do_type = DNSQ_DO_DATA_ONLY);
 	void dump(const uint8_t do_type = DNSQ_DO_DATA_ONLY);

@@ -17,13 +17,14 @@ const char* _DNS_HDR_OPCODE_NAME[] = {
 	,	"IQUERY"
 	,	"STATUS"
 	};
-const char* _DNS_HDR_RCODE_NAME[] = {
+const char* _DNS_HDR_RCODE_NAME[RCODE_SIZE + 1] = {
 		"OK"
 	,	"FORMAT_ERROR"
 	,	"SERVER_FAILURE"
 	,	"NAME_ERROR"
 	,	"NOT_IMPLEMENTED"
 	,	"REFUSED"
+	,	"UNKNOWN"
 	};
 
 const char* DNSQuery::__cname = "DNSQuery";
@@ -1102,9 +1103,62 @@ const char* get_opcode(uint16_t flag)
 	return _DNS_HDR_OPCODE_NAME[(flag >> 11) & 0x0003];
 }
 
-const char* get_rcode(uint16_t flag)
+//
+// `get_rcode()` will return DNS packet reply code (RCODE) status.
+//
+// The status can be,
+//
+// 0 - No error condition
+//
+// 1 - Format error - The name server was unable to interpret the query.
+//
+// 2 - Server failure - The name server was unable to process this query due
+// to a problem with the name server.
+//
+// 3 - Name Error - Meaningful only for responses from an authoritative name
+// server, this code signifies that the domain name referenced in the query
+// does not exist.
+//
+// 4 - Not Implemented - The name server does not support the requested kind
+// of query.
+//
+// 5 - Refused - The name server refuses to perform the specified operation
+// for policy reasons.  For example, a name server may not wish to provide the
+// information to the particular requester, or a name server may not wish to
+// perform a particular operation (e.g., zone transfer) for particular data.
+//
+// 6-15 - Reserved for future use.
+//
+int DNSQuery::get_rcode()
 {
-	return _DNS_HDR_RCODE_NAME[flag & RCODE_FLAG];
+	return _flag & RCODE_FLAG;
+}
+
+//
+// `is_ok()` is an alias for `get_rcode()`.
+//
+int DNSQuery::is_ok()
+{
+	return DNSQuery::get_rcode();
+}
+
+//
+// `get_rcode_name()` will return string error in DNS reply based on value of
+// `_flag`.
+// It will return "unknown" if reply code is equal or greater than known reply
+// code.
+//
+// Reference: rfc1035 page 27.
+//
+const char* DNSQuery::get_rcode_name()
+{
+	int rcode = get_rcode();
+
+	if (rcode >= RCODE_SIZE) {
+		return _DNS_HDR_RCODE_NAME[RCODE_SIZE];
+	}
+
+	return _DNS_HDR_RCODE_NAME[rcode];
 }
 
 /**
@@ -1129,7 +1183,7 @@ const char* DNSQuery::chars()
 	b.aprint(",\t" K(TC)     ": %d\n", (_flag & RTYPE_TC_ON) ? 1 : 0);
 	b.aprint(",\t" K(RD)     ": %d\n", (_flag & RTYPE_RD) ? 1 : 0);
 	b.aprint(",\t" K(RA)     ": %d\n", (_flag & RTYPE_RA) ? 1 : 0);
-	b.aprint(",\t" K(RCODE)  ": " K(%s) "\n", get_rcode(_flag));
+	b.aprint(",\t" K(RCODE)  ": " K(%s) "\n", get_rcode_name());
 
 	b.append_raw(",\t" K(ANSWERS) ": ");
 	b.append_raw(_rr_ans.chars());
