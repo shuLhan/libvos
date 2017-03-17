@@ -1,18 +1,43 @@
-v0.3.2 (2017-03-xx)
+v0.4.0 (2017-03-18)
 ===================
+
+This release is dedicated for `clang` and `cppcheck`. Those two tools are
+wonderful.
+
+Breaking Changes
+----------------
+
+* Resolver:
+  - recv_udp(), recv_tcp(): Do not check for reply code, return as is.
+  - recv_udp: return 0 only if there is a reply, otherwise -1
+
+* Buffer:
+  - refactoring `_v` from public into protected
+  - refactoring length and size type from `int` to `size_t`
 
 New Features
 ------------
+
+* DNSQuery: add method to return reply code and name
+
+* Allow user to use different compiler or linker that are set from environment
+  variable `CXX` and/or `LINKER`
 
 * User: new class to manage user process real and/or effective ID.
 
 Fixes
 -----
 
+* Socket: reset buffer on destroy if socket type is UDP
 * DirNode: fix mode for symbolic link
 
 Internal
 --------
+
+* Fix code based on recommendation by cppcheck tool
+* Fix code based on clang `scan-build` output
+* Fix compile warning when using `clang`
+* Fix compile warning with `-Wpedantic`
 
 * DirNode:
   * Make DirNode inherit from Object
