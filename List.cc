@@ -784,16 +784,14 @@ int List::remove(Object* item)
 {
 	lock();
 
-	register int s = 1;
-	register int x = 0;
-	BNode* p = NULL;
+	int s = 1;
+	int x = 0;
+	BNode* p = _head;
 
 	// (C0)
-	if (! item || !_head) {
+	if (!item || !_head) {
 		goto out;
 	}
-
-	p = _head;
 
 	for (; x < _n; x++) {
 		if (p->_item == item) {

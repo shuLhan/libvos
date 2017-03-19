@@ -68,7 +68,7 @@ int SockAddr::set(const int type, const char* addr, const uint16_t port)
 		return set_port(type, port);
 	}
 
-	register int s;
+	int s;
 
 	switch (type) {
 	case AF_INET:
@@ -200,9 +200,9 @@ int SockAddr::IS_IPV4(const char* str)
 		return 0;
 	}
 
-	register int	n	= 0;
-	register int	dot	= 0;
-	char		x[3];
+	int n = 0;
+	int dot = 0;
+	char x[3];
 
 	while (*str) {
 		if (isdigit(*str)) {

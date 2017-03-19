@@ -104,9 +104,7 @@ int Socket::connect_to(struct sockaddr_in* sin)
 		return -1;
 	}
 
-	register int s;
-
-	s = ::connect(_d, (struct sockaddr*) sin, SockAddr::IN_SIZE);
+	int s = ::connect(_d, (struct sockaddr*) sin, SockAddr::IN_SIZE);
 	if (s < 0) {
 		return -1;
 	}
@@ -134,9 +132,7 @@ int Socket::connect_to6(struct sockaddr_in6* sin6)
 		return -1;
 	}
 
-	register int s;
-
-	s = ::connect(_d, (struct sockaddr*) sin6, SockAddr::IN_SIZE);
+	int s = ::connect(_d, (struct sockaddr*) sin6, SockAddr::IN_SIZE);
 	if (s < 0) {
 		return -1;
 	}
@@ -164,7 +160,7 @@ int Socket::connect_to_raw(const char* address, const uint16_t port)
 		return -1;
 	}
 
-	register int s;
+	int s;
 
 	if (_family == AF_INET6) {
 		struct sockaddr_in6 sin6;
@@ -212,7 +208,7 @@ long int Socket::send_udp(struct sockaddr_in* addr, Buffer* bfr)
 		return -1;
 	}
 
-	register ssize_t s = 0;
+	ssize_t s = 0;
 
 	_locker.lock();
 

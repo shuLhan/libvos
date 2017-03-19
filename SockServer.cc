@@ -125,9 +125,7 @@ int SockServer::listen(const unsigned int queue_len)
  */
 int SockServer::bind_listen(const char* address, const uint16_t port)
 {
-	register int s;
-
-	s = SockServer::bind(address, port);
+	int s = SockServer::bind(address, port);
 	if (0 == s) {
 		return SockServer::listen(2048);
 	}

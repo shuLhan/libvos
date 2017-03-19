@@ -90,8 +90,7 @@ int DSVRecord::set_column(int n, Buffer* bfr)
 		return 0;
 	}
 
-	register int	s	= 0;
-	DSVRecord*	p	= this;
+	DSVRecord* p = this;
 
 	for (; n > 0 && p; --n) {
 		p = p->_next_col;
@@ -99,9 +98,13 @@ int DSVRecord::set_column(int n, Buffer* bfr)
 	if (n < 0 || NULL == p) {
 		return -1;
 	}
+
+	int s = 0;
+
 	if (! bfr->is_empty()) {
 		s = p->copy_raw(bfr->v(), bfr->_i);
 	}
+
 	return s;
 }
 
@@ -117,8 +120,7 @@ int DSVRecord::set_column(int n, Buffer* bfr)
  */
 int DSVRecord::set_column_number(int n, const int number)
 {
-	register int	s	= 0;
-	DSVRecord*	p	= this;
+	DSVRecord* p = this;
 
 	for (; n > 0 && p; --n) {
 		p = p->_next_col;
@@ -127,9 +129,8 @@ int DSVRecord::set_column_number(int n, const int number)
 		return -1;
 	}
 	p->reset();
-	s = p->appendi(number);
 
-	return s;
+	return p->appendi(number);
 }
 
 /**
@@ -144,8 +145,7 @@ int DSVRecord::set_column_number(int n, const int number)
  */
 int DSVRecord::set_column_ulong(int n, const unsigned long number)
 {
-	register int	s	= 0;
-	DSVRecord*	p	= this;
+	DSVRecord* p = this;
 
 	for (; n > 0 && p; --n) {
 		p = p->_next_col;
@@ -154,9 +154,8 @@ int DSVRecord::set_column_ulong(int n, const unsigned long number)
 		return -1;
 	}
 	p->reset();
-	s = p->appendui(number);
 
-	return s;
+	return p->appendui(number);
 }
 
 /**

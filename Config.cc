@@ -58,11 +58,9 @@ int Config::load(const char* ini)
 		return 0;
 	}
 
-	register int s;
-
 	close();
 
-	s = open_ro(ini);
+	int s = open_ro(ini);
 	if (s < 0) {
 		return -1;
 	}
@@ -81,15 +79,14 @@ int Config::load(const char* ini)
  */
 int Config::save()
 {
-	register int	s;
-	Buffer		ini;
-
 	if (_name.is_empty()) {
 		printf("[%s] save: filename is empty!\n", __cname);
 		return -1;
 	}
 
-	s = ini.copy(&_name);
+	Buffer ini;
+
+	int s = ini.copy(&_name);
 	if (s < 0) {
 		return -1;
 	}

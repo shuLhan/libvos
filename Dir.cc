@@ -580,15 +580,11 @@ void Dir::dump()
  */
 int Dir::CREATE(const char *path, mode_t perm)
 {
-	register int s = 0;
-
 	if (LIBVOS_DEBUG) {
 		printf("[%s] CREATE: %s\n", __cname, path);
 	}
 
-	s = mkdir(path, perm);
-
-	return s;
+	return mkdir(path, perm);
 }
 
 /**

@@ -92,10 +92,9 @@ int ConfigData::add_head_raw(const char* head, const size_t head_len)
 		return -1;
 	}
 
-	register int	s;
-	ConfigData*	h = NULL;
+	ConfigData* h = NULL;
 
-	s = ConfigData::INIT(&h, CONFIG_T_HEAD, head, head_len);
+	int s = ConfigData::INIT(&h, CONFIG_T_HEAD, head, head_len);
 	if (0 == s) {
 		add_head(h);
 	}
@@ -132,10 +131,9 @@ int ConfigData::add_key_raw(const char* key, const size_t key_len)
 		return -1;
 	}
 
-	register int	s;
-	ConfigData*	k = NULL;
+	ConfigData* k = NULL;
 
-	s = ConfigData::INIT(&k, CONFIG_T_KEY, key, key_len);
+	int s = ConfigData::INIT(&k, CONFIG_T_KEY, key, key_len);
 	if (0 == s) {
 		add_key(k);
 	}
@@ -178,10 +176,9 @@ int ConfigData::add_value(const ConfigData* value)
  */
 int ConfigData::add_value_raw(const char* value, const size_t value_len)
 {
-	register int	s;
-	ConfigData*	v = NULL;
+	ConfigData* v = NULL;
 
-	s = ConfigData::INIT(&v, CONFIG_T_VALUE, value, value_len);
+	int s = ConfigData::INIT(&v, CONFIG_T_VALUE, value, value_len);
 	if (0 == s) {
 		s = add_value(v);
 	}
@@ -220,10 +217,9 @@ int ConfigData::add_misc_raw(const char* misc, const size_t misc_len)
 		return -1;
 	}
 
-	register int	s;
-	ConfigData*	m = NULL;
+	ConfigData* m = NULL;
 
-	s = ConfigData::INIT(&m, CONFIG_T_MISC, misc, misc_len);
+	int s = ConfigData::INIT(&m, CONFIG_T_MISC, misc, misc_len);
 	if (0 == s) {
 		add_misc(m);
 	}
@@ -278,7 +274,7 @@ void ConfigData::dump()
 int ConfigData::INIT(ConfigData** o, const int type, const char* data
 			, const size_t data_len)
 {
-	register int s = -1;
+	int s = -1;
 
 	(*o) = new ConfigData();
 	if ((*o)) {

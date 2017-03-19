@@ -57,15 +57,11 @@ List* SSVReader::parse(Buffer* line)
  */
 int SSVReader::open (const char* file)
 {
-	register int s;
-
 	if (! file) {
 		return -1;
 	}
 
-	s = File::open_ro (file);
-
-	return s;
+	return File::open_ro (file);
 }
 
 /**
@@ -79,11 +75,7 @@ int SSVReader::open (const char* file)
  */
 int SSVReader::load (const char* file)
 {
-	register int s;
-	Buffer line;
-	List* row = NULL;
-
-	s = open (file);
+	int s = open(file);
 	if (s != 0) {
 		return -1;
 	}
@@ -91,6 +83,9 @@ int SSVReader::load (const char* file)
 	if (! _rows) {
 		_rows = new Rowset();
 	}
+
+	Buffer line;
+	List* row = NULL;
 
 	do {
 		s = File::get_line (&line);

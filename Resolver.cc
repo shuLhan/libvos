@@ -659,7 +659,7 @@ int Resolver::resolve(DNSQuery* question, DNSQuery* answer)
 		return -1;
 	}
 
-	register int s;
+	int s;
 
 	if (_type == SOCK_STREAM) {
 		s = resolve_tcp(question, answer);

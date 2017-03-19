@@ -25,10 +25,9 @@ else
 LIBVOS_LINKER	:= gcc
 endif
 
-CXXFLAGS_GLOBAL	= -fno-rtti -fno-exceptions -pipe \
+CXXFLAGS_GLOBAL = -fno-rtti -fno-exceptions -pipe \
 		-Wall -Wextra \
-		-Weffc++ -Wconversion -Wpedantic \
-		-Wno-gnu-statement-expression
+		-Weffc++ -Wconversion -Wpedantic
 
 ifndef CXXFLAGS
 CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os

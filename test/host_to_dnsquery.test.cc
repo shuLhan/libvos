@@ -28,7 +28,6 @@ int main()
 		,	"local.blog.jquery.com"
 		};
 
-	register int s;
 	int x = 0;
 	int y = 0;
 	int exp_addr_idx = 0;
@@ -41,7 +40,7 @@ int main()
 
 	reader._comment_c = '#';
 
-	s = reader.load ("./hosts");
+	int s = reader.load ("./hosts");
 	if (s) {
 		return 1;
 	}

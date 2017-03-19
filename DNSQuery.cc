@@ -156,8 +156,8 @@ int DNSQuery::to_udp(const Buffer *tcp)
  */
 int DNSQuery::to_tcp(const Buffer* udp)
 {
-	register int	s;
-	uint16_t	size;
+	int s;
+	uint16_t size;
 
 	if (!udp) {
 		if (_bfr_type == BUFFER_IS_TCP) {
@@ -1221,12 +1221,12 @@ int DNSQuery::INIT(DNSQuery **o, const Buffer *bfr, const int type)
 		return -1;
 	}
 
-	register int s = -1;
-
 	(*o) = new DNSQuery();
 	if (!(*o)) {
 		return -1;
 	}
+
+	int s;
 
 	if (type == BUFFER_IS_TCP) {
 		s = (*o)->to_udp(bfr);

@@ -58,16 +58,15 @@ int DirNode::get_attr(const char* rpath, const char* name)
 		return 0;
 	}
 
-	register int	s;
-	struct stat	st;
-
 	if (name) {
 		_name.copy_raw(name);
 	} else {
 		_name.copy_raw(rpath);
 	}
 
-	s = lstat(rpath, &st);
+	struct stat st;
+
+	int s = lstat(rpath, &st);
 	if (s < 0) {
 		return -1;
 	}
@@ -112,8 +111,8 @@ int DirNode::get_attr(const char* rpath, const char* name)
  */
 int DirNode::update_attr(DirNode* node, const char* rpath)
 {
-	register int	s = 0;
-	struct stat	st;
+	int s = 0;
+	struct stat st;
 
 	if (node->_linkname.is_empty()) {
 		s = lstat(rpath, &st);

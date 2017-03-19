@@ -52,11 +52,9 @@ FTP::~FTP()
  */
 int FTP::connect(const char* host, const uint16_t port, const int mode)
 {
-	register int s;
-
 	disconnect();
 
-	s = create();
+	int s = create();
 	if (s < 0) {
 		return -1;
 	}
@@ -102,9 +100,7 @@ int FTP::connect(const char* host, const uint16_t port, const int mode)
  */
 int FTP::login(const char* username, const char* password)
 {
-	register int s;
-
-	s = send_cmd(_FTP_cmd[FTP_CMD_USER], username);
+	int s = send_cmd(_FTP_cmd[FTP_CMD_USER], username);
 	if (s < 0) {
 		return -1;
 	}
@@ -350,8 +346,8 @@ int FTP::get_reply(const unsigned int timeout)
  */
 int FTP::parsing_pasv_reply(Buffer* addr, uint16_t* port)
 {
-	register int	s;
-	register uint16_t tmp;
+	int s;
+	uint16_t tmp;
 	char*		p = _v;
 
 	/* get reply code : 227 */ 
@@ -540,9 +536,7 @@ int FTP::do_rename(const char* from, const char* to)
 		return -1;
 	}
 
-	register int s;
-
-	s = send_cmd(_FTP_cmd[FTP_CMD_RNFR], from);
+	int s = send_cmd(_FTP_cmd[FTP_CMD_RNFR], from);
 	if (s < 0) {
 		return -1;
 	}
