@@ -82,6 +82,7 @@ all:
 .PHONY: libvos-opts EMPTY_OPTS NO_DEFAULT_LIBS
 .PHONY: libvos-all libvos-all-32 libvos-all-64
 .PHONY: libvos-debug libvos-debug-32 libvos-debug-64
+.PHONY: cppcheck
 
 libvos: $$(PRE_TARGET) $$(TARGET_OBJS) $$(TARGET)
 
@@ -183,5 +184,8 @@ $(LIBVOS_BLD_D)/FTPUser.oo	: $(LIBVOS_BLD_D)/Dir.oo
 
 $(LIBVOS_BLD_D)/%.oo: $(LIBVOS_SRC_D)/%.cc $(LIBVOS_SRC_D)/%.hh
 	@$(do_compile)
+
+cppcheck:
+	@cppcheck-gui --enable-all -p libvos.cppcheck $(LIBVOS_SRC_D)
 
 # vi: ts=8 sw=8 tw=78:
