@@ -1,0 +1,39 @@
+# libvos Classes
+
+*Legend*
+
+```
+<-- : inheritance
+*-- : depend (include, using)
+```
+
+*Class Inheritances*
+
+```
+Object <-+-- Buffer <-+-- ConfigData
+         |            +-- DNSQuery
+         |            +-- DNS_rr
+         |            +-- File     <--+-- Config
+         |            +-- SockAddr    |
+         |                            |
+         +-- BNode <----- TreeNode    +-- Dlogger
+         |                            |
+         +-- Dir                      +-- DSVReader
+         +-- DirNode                  +-- DSVWriter
+         +-- DNSRecordType            |
+         |                            +-- Socket <--+-- FTP
+         +-- DSVRecordMD              |             +-- Resolver
+         |                            |             +-- SocketServer <-- FTPD
+         +-- FTPD_cmd                 +-- SSVReader
+         +-- FTPD_client
+         +-- FTPD_user
+         |
+         +-- Locker <--+-- List <-- Rowset
+         |             +-- RBT
+         |             +-- Thread
+         +-- Record
+         |
+         +-- SockAddr
+         |
+         +-- User
+```
