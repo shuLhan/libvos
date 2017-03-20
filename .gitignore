@@ -2,3 +2,4 @@
 test/valgrind.*
 test/*.test
 test/tmp
+test/log
