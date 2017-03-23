@@ -7,6 +7,8 @@
 #ifndef _LIBVOS_SOCKSERVER_HH
 #define _LIBVOS_SOCKSERVER_HH 1
 
+#include <sys/time.h>
+
 #include "Locker.hh"
 #include "Socket.hh"
 

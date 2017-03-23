@@ -7,7 +7,9 @@
 #ifndef _LIBVOS_RESOLVER_HH
 #define _LIBVOS_RESOLVER_HH 1
 
+#include <sys/select.h>
 #include <time.h>
+
 #include "DNSQuery.hh"
 #include "Socket.hh"
 
