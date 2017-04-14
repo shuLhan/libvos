@@ -356,7 +356,7 @@ int main()
 	expectString(a.__cname, "Buffer", 0);
 	expectString(a.Object::__cname, "Object", 0);
 
-	assert(a._l == Buffer::DFLT_SIZE);
+	assert(a.size() == Buffer::DFLT_SIZE);
 	assert(a._i == 0);
 	expectString(a.v(), "", 0);
 

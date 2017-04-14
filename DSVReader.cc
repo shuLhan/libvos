@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -169,7 +169,7 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 			memcpy(&r->_i, &_v[startp], DSVRecordMD::BLOB_SIZE);
 			startp += DSVRecordMD::BLOB_SIZE;
 
-			if (r->_i > r->_l) {
+			if (r->_i > r->size()) {
 				r->resize(r->_i + 1);
 			}
 			if (r->_i > _l) {
@@ -241,7 +241,7 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 			if (rmd->_end_p) {
 				len = (startp - _p) + size_t(rmd->_end_p);
 
-				if (len > r->_l) {
+				if (len > r->size()) {
 					r->resize(len);
 				}
 

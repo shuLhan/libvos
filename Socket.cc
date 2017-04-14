@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -110,7 +110,7 @@ int Socket::connect_to(struct sockaddr_in* sin)
 	}
 
 	inet_ntop(AF_INET, &sin->sin_addr, (char*) _name.v()
-		, socklen_t(_name._l));
+		, socklen_t(_name.size()));
 	_status	= O_RDWR | O_SYNC;
 
 	return 0;
@@ -138,7 +138,7 @@ int Socket::connect_to6(struct sockaddr_in6* sin6)
 	}
 
 	inet_ntop(AF_INET6, &sin6->sin6_addr, (char*) _name.v()
-		, socklen_t(_name._l));
+		, socklen_t(_name.size()));
 	_status	= O_RDWR | O_SYNC;
 
 	return 0;

@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -558,7 +558,7 @@ DNS_rr* DNSQuery::extract_rr(size_t* offset)
 	}
 
 	/* Check if buffer size is enough, if not resize it DATALEN */
-	if (rr->_len > rr->_l) {
+	if (rr->_len > rr->size()) {
 		s = rr->resize(rr->_len);
 		if (s < 0) {
 			goto err;
@@ -573,7 +573,7 @@ DNS_rr* DNSQuery::extract_rr(size_t* offset)
 	switch (rr->_type) {
 	case QUERY_T_ADDRESS:
 		inet_ntop(AF_INET, rr->v(), (char*) rr->_data.v()
-			, socklen_t(rr->_data._l));
+			, socklen_t(rr->_data.size()));
 		rr->_data._i = strlen(rr->_data.v());
 		*offset	+= 4;
 		break;
@@ -689,7 +689,7 @@ DNS_rr* DNSQuery::extract_rr(size_t* offset)
 
 	case QUERY_T_AAAA:
 		inet_ntop (AF_INET6, rr->v(), (char*) rr->_data.v()
-			, socklen_t(rr->_data._l));
+			, socklen_t(rr->_data.size()));
 		rr->_data._i = strlen(rr->_data.v());
 		*offset	+= 16;
 		break;

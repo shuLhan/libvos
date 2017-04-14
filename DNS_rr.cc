@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -201,7 +201,7 @@ int DNS_rr::APPEND_DNS_LABEL (Buffer* b, const char* label
 
 	Buffer subl;
 
-	if ((b->_i + len + 1) > b->_l) {
+	if ((b->_i + len + 1) > b->size()) {
 		b->resize (b->_i + len + 1);
 	}
 

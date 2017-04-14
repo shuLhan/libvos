@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -160,7 +160,7 @@ Socket* SockServer::accept()
 	}
 
 	inet_ntop(AF_INET, &client_addr.sin_addr, (char*) client->_name.v()
-		, socklen_t(client->_name._l));
+		, socklen_t(client->_name.size()));
 
 	client->_status	= O_RDWR | O_SYNC;
 
@@ -197,7 +197,7 @@ Socket* SockServer::accept6()
 	}
 
 	inet_ntop(_family, &client_addr.sin6_addr, (char*) client->_name.v()
-		, socklen_t(client->_name._l));
+		, socklen_t(client->_name.size()));
 
 	client->_status	= O_RDWR | O_SYNC;
 

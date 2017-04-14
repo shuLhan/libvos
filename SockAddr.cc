@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -297,9 +297,9 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
 		do {
 			s = gethostbyname2_r(addr, AF_INET, &he
 				, (char*) ip_addr.v()
-				, ip_addr._l, &hep, &err);
+				, ip_addr.size(), &hep, &err);
 			if (ERANGE == s) {
-				ip_addr.resize(ip_addr._l * 2);
+				ip_addr.resize(ip_addr.size() * 2);
 			}
 		} while (ERANGE == s);
 
@@ -354,9 +354,9 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 		do {
 			s = gethostbyname2_r(addr, AF_INET6, &he
 				, (char*) ip_addr.v()
-						, ip_addr._l, &hep, &err);
+				, ip_addr.size(), &hep, &err);
 			if (ERANGE == s) {
-				ip_addr.resize(ip_addr._l * 2);
+				ip_addr.resize(ip_addr.size() * 2);
 			}
 		} while (ERANGE == s);
 
