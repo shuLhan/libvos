@@ -246,13 +246,18 @@ int DirNode::GET_LINK_NAME(Buffer* linkname, const char* path)
 	if (LIBVOS_DEBUG) {
 		printf("[%s] GET_LINK_NAME: '%s'\n", __cname, path);
 	}
-	linkname->release();
 
-	linkname->set(realpath(path, NULL));
-	if (linkname->is_empty()) {
+	char *actual_path;
+
+	actual_path = realpath(path, NULL);
+	if (!actual_path) {
 		perror(__cname);
 		return -1;
 	}
+
+	linkname->copy_raw(actual_path);
+
+	free(actual_path);
 
 	return 0;
 }

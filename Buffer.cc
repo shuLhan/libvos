@@ -168,28 +168,10 @@ const char* Buffer::v(size_t idx) const
 }
 
 /**
- * Method `set(v)` will replace the buffer pointer with buffer at `v`.
+ * Method `set_at(idx, v, vlen)` will set or replace buffer at index `idx`
+ * with the content of `v` with length of `vlen`.
  *
- * WARNING: previous buffer will not be freed.
- */
-void Buffer::set(char* v)
-{
-	if (v) {
-		_v = v;
-		_l = strlen(v);
-		_i = _l;
-	} else {
-		_v = NULL;
-		_l = 0;
-		_i = 0;
-	}
-}
-
-/**
- * Method `set_at(idx, v, vlen)` will set or replace buffer at index `idx` to
- * content of `v` with length of `vlen`.
- *
- * It will `0` on success, or `-1` when no memory left.
+ * It will return `0` on success, or `-1` when no memory left.
  */
 int Buffer::set_at(size_t idx, const char* v, size_t vlen)
 {

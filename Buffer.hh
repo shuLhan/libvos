@@ -45,7 +45,6 @@ public:
 	size_t size() const;
 
 	const char* v(size_t idx = 0) const;
-	void set(char* v);
 	int set_at(size_t idx, const char* v, size_t vlen);
 
 	char char_at(size_t idx);
