@@ -89,7 +89,7 @@ void RBT::_chars(Buffer* b, TreeNode* p, int level, int n_black)
 	b->appendc('\n');
 
 	if (p->is_red()) {
-		if (_red_nodes._i > 0) {
+		if (_red_nodes.len() > 0) {
 			_red_nodes.appendc(' ');
 		}
 		_red_nodes.append_raw(p->BNode::chars());

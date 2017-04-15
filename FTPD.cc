@@ -524,7 +524,7 @@ int FTPD::client_get_command(Socket* c, FTPD_cmd* ftp_cmd)
 	ftp_cmd->reset();
 
 	s = 0;
-	while (s < c->_i && !isspace(c->char_at(s))) {
+	while (s < c->len() && !isspace(c->char_at(s))) {
 		s++;
 	}
 	if (s == 0) {
@@ -534,8 +534,8 @@ int FTPD::client_get_command(Socket* c, FTPD_cmd* ftp_cmd)
 	ftp_cmd->_name.copy_raw(c->v(), s);
 
 	s++;
-	if (s < c->_i) {
-		ftp_cmd->_parm.copy_raw(c->v(s), c->_i - s);
+	if (s < c->len()) {
+		ftp_cmd->_parm.copy_raw(c->v(s), c->len() - s);
 		ftp_cmd->_parm.trim();
 	}
 
@@ -638,7 +638,7 @@ int FTPD::client_get_path(FTPD_client* c, int check_parm)
 					, 0);
 	}
 
-	c->_path_node = _dir.get_node(&c->_path_real, _path.v(), _path._i);
+	c->_path_node = _dir.get_node(&c->_path_real, _path.v(), _path.len());
 	if (!c->_path_node) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
@@ -711,22 +711,22 @@ int FTPD::client_get_parent_path(FTPD_client* c)
 		c->_path.concat(_path.v(), c->_wd.v(), "/", cmd_path->v(), 0);
 	}
 
-	tmp_i = c->_path._i;
+	tmp_i = c->_path.len();
 	if (c->_path.char_at(tmp_i - 1) != '/') {
 		File::BASENAME(&c->_path_base, c->_path.v());
-		i		= c->_path._i - c->_path_base._i;
+		i		= c->_path.len() - c->_path_base.len();
 		c->_path.set_char_at(i, 0);
-		c->_path._i	= i;
+		c->_path.set_len(i);
 	}
 
-	c->_path_node = _dir.get_node(&c->_path, _path.v(), _path._i);
+	c->_path_node = _dir.get_node(&c->_path, _path.v(), _path.len());
 	if (! c->_path_node) {
 		goto out;
 	}
 
 	if (i) {
 		c->_path.set_char_at(i, '/');
-		c->_path._i	= tmp_i;
+		c->_path.set_len(tmp_i);
 	}
 
 	c->_path_real.append(&_path);
@@ -1045,7 +1045,7 @@ static int get_node_perm(Buffer* bfr, DirNode* node)
 		return -1;
 	}
 
-	size_t i = bfr->_i;
+	size_t i = bfr->len();
 
 	bfr->append_raw("----------");
 
@@ -1053,7 +1053,7 @@ static int get_node_perm(Buffer* bfr, DirNode* node)
 		return 0;
 	}
 
-	if (node->_linkname._i) {
+	if (node->_linkname.len()) {
 		bfr->set_at(0, "lrwxrwxrwx", 10);
 	} else {
 		if (S_ISDIR(node->_mode)) {
@@ -1479,7 +1479,7 @@ void FTPD::on_cmd_RNTO(FTPD* s, FTPD_client* c)
 		path.concat(s->_path.v(), c->_wd.v(), "/", last_parm->v(), 0);
 	}
 
-	from_node = s->_dir.get_node(&path, s->_path.v(), s->_path._i);
+	from_node = s->_dir.get_node(&path, s->_path.v(), s->_path.len());
 	if (!from_node
 	|| from_node->_parent == NULL
 	|| from_node->_parent == from_node) {

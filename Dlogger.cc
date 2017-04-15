@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -135,18 +135,18 @@ ssize_t Dlogger::_w(int fd, const char* fmt)
 			truncate (FILE_TRUNC_FLUSH_NO);
 		}
 
-		s = write_raw(_tmp.v(), _tmp._i);
+		s = write_raw(_tmp.v(), _tmp.len());
 	}
 	if (fd) {
 		ssize_t ws = 0;
 		do {
 			ws = ::write(fd, _tmp.v(size_t(ws))
-				, _tmp._i - size_t(ws));
+				, _tmp.len() - size_t(ws));
 			if (ws < 0) {
 				s = -1;
 				break;
 			}
-		} while(size_t(ws) < _tmp._i);
+		} while(size_t(ws) < _tmp.len());
 	}
 	_tmp.reset();
 

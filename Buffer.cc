@@ -261,6 +261,28 @@ int Buffer::set_char_at(size_t idx, char v)
 }
 
 /**
+ * Method `set_len(len)` will set buffer length to `len`. If buffer size is
+ * smaller than `len` then it will resized to `len + 1`.
+ *
+ * It will return `0` on success, or `-1` when fail to resize the buffer.
+ */
+int Buffer::set_len(size_t len)
+{
+	int s;
+
+	if (len > _l) {
+		s = resize(len + 1);
+		if (s != 0) {
+			return -1;
+		}
+	}
+
+	_i = len;
+
+	return 0;
+}
+
+/**
  * Method `resize(size)` will resize the buffer to `size`.
  *
  * If 'size' is less than current buffer size, no reallocation will be
@@ -466,6 +488,18 @@ int Buffer::shiftr(const size_t nbyte, int c)
 	_v[_i]	= '\0';
 
 	return 0;
+}
+
+/**
+ * Method `truncate(len, c)` will cut buffer until size `len`.
+ */
+void Buffer::truncate(const size_t len)
+{
+	if ((len + 1) > _i) {
+		return;
+	}
+	_v[len + 1] = 0;
+	_i = len;
 }
 
 /**

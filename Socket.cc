@@ -217,8 +217,8 @@ long int Socket::send_udp(struct sockaddr_in* addr, Buffer* bfr)
 			s = ::sendto(_d, _v, _i, 0
 				, (struct sockaddr *) addr, SockAddr::IN_SIZE);
 		}
-	} else if (bfr->_i > 0) {
-			s = ::sendto(_d, bfr->v(), bfr->_i, 0
+	} else if (bfr->len() > 0) {
+			s = ::sendto(_d, bfr->v(), bfr->len(), 0
 				, (struct sockaddr *) addr, SockAddr::IN_SIZE);
 	}
 

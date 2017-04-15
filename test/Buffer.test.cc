@@ -122,6 +122,36 @@ void test_constructor_buffer()
 	expectString(c.v(), exp, 0);
 }
 
+void test_set_len()
+{
+	printf(">>> Buffer::test_set_len\n");
+
+	Buffer b;
+
+	assert(b.len() == 0);
+	assert(b.size() == Buffer::DFLT_SIZE);
+
+	printf("- it should not resize the buffer if new len < size: ");
+
+	b.set_len(b.size());
+
+	assert(b.len() == b.size());
+	assert(b.size() == Buffer::DFLT_SIZE);
+
+	printf("OK\n");
+
+	printf("- it should resize the buffer if new len > size: ");
+
+	size_t new_len = 24;
+
+	b.set_len(new_len);
+
+	assert(b.len() == new_len);
+	assert(b.size() == (new_len + 1));
+
+	printf("OK\n");
+}
+
 int test_n = 0;
 Buffer in;
 List* lbuf;
@@ -135,13 +165,32 @@ void test_copy_raw()
 	b.copy_raw(str);
 
 	sz = strlen(str);
-	assert(b._i == sz);
+	assert(b.len() == sz);
 	expectString(str, b.v(), 0);
 
 	b.copy_raw(STR_TEST_0);
 
-	assert(b._i == strlen(STR_TEST_0));
+	assert(b.len() == strlen(STR_TEST_0));
 	expectString(STR_TEST_0, b.v(), 0);
+}
+
+void test_truncate()
+{
+	printf(">>> Buffer::test_truncate\n");
+
+	Buffer b;
+
+	b.append_raw("abcdefghijklmnopqrstuvwxyz");
+
+	assert(b.len() == 26);
+	assert(b.size() == 26);
+
+	b.truncate(3);
+
+	assert(b.len() == 3);
+	assert(b.size() == 26);
+
+	expectString("abcd", b.v(), 0);
 }
 
 void test_split_by_char_n(const char* input, const char split
@@ -357,14 +406,18 @@ int main()
 	expectString(a.Object::__cname, "Object", 0);
 
 	assert(a.size() == Buffer::DFLT_SIZE);
-	assert(a._i == 0);
+	assert(a.len() == 0);
 	expectString(a.v(), "", 0);
 
 	test_constructor_size();
 	test_constructor_raw();
 	test_constructor_buffer();
 
+	test_set_len();
+
 	test_copy_raw();
+
+	test_truncate();
 
 	test_split_by_char();
 

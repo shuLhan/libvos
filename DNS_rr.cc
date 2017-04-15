@@ -48,8 +48,8 @@ int DNS_rr::create_packet ()
 	uint32_t vl = 0;
 
 	/* Set NAME */
-	DNS_rr::APPEND_DNS_LABEL(this, _name.v(), _name._i);
-	_name_len = (uint16_t) (_name._i + 1);
+	DNS_rr::APPEND_DNS_LABEL(this, _name.v(), _name.len());
+	_name_len = (uint16_t) (_name.len() + 1);
 
 	/* Set TYPE */
 	vs = htons (_type);
@@ -200,15 +200,17 @@ int DNS_rr::APPEND_DNS_LABEL (Buffer* b, const char* label
 	}
 
 	Buffer subl;
+	size_t sublen;
 
-	if ((b->_i + len + 1) > b->size()) {
-		b->resize (b->_i + len + 1);
+	if ((b->len() + len + 1) > b->size()) {
+		b->resize (b->len() + len + 1);
 	}
 
 	while (*label) {
 		if (*label == '.') {
-			if (subl._i) {
-				b->append_bin (&subl._i, 1);
+			sublen = subl.len();
+			if (sublen) {
+				b->append_bin(&sublen, 1);
 				b->append (&subl);
 				subl.reset ();
 			}
@@ -217,8 +219,9 @@ int DNS_rr::APPEND_DNS_LABEL (Buffer* b, const char* label
 		}
 		label++;
 	}
-	if (subl._i) {
-		b->append_bin (&subl._i, 1);
+	sublen = subl.len();
+	if (sublen) {
+		b->append_bin(&sublen, 1);
 		b->append (&subl);
 	}
 	b->appendc (0);

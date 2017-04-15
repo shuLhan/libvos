@@ -39,6 +39,7 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 {
 	ssize_t s = 0;
 	ssize_t len = 0;
+	size_t blob_size = 0;
 	int x = 0;
 	DSVRecordMD* rmd = NULL;
 
@@ -62,18 +63,19 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 		case RMD_T_STRING:
 		case RMD_T_NUMBER:
 		case RMD_T_DATE:
-			s = _line.append_raw(row->v(), row->_i);
+			s = _line.append_raw(row->v(), row->len());
 			if (s < 0) {
 				return -1;
 			}
 			break;
 		case RMD_T_BLOB:
-			s = _line.append_bin (&row->_i, DSVRecordMD::BLOB_SIZE);
+			blob_size = row->len();
+			s = _line.append_bin(&blob_size, DSVRecordMD::BLOB_SIZE);
 			if (s < 0) {
 				return -1;
 			}
 
-			s = _line.append_raw(row->v(), row->_i);
+			s = _line.append_raw(row->v(), row->len());
 			if (s < 0) {
 				return -1;
 			}
@@ -81,7 +83,7 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 		}
 
 		if (rmd->_end_p) {
-			if (rmd->_end_p < _line._i) {
+			if (rmd->_end_p < _line.len()) {
 				len = ssize_t(rmd->_end_p);
 				if (rmd->_right_q) {
 					--len;
@@ -89,14 +91,12 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 				if (rmd->_sep) {
 					--len;
 				}
-				while (size_t(len) < _line._i) {
-					_line.set_char_at(_line._i, ' ');
-					--_line._i;
-				}
+
+				_line.truncate(size_t(len));
 			} else {
-				_line._i = rmd->_end_p;
+				_line.set_len(rmd->_end_p);
 				/* it will resize by itself it the next
-				 * call of append*() */
+				 * call of append */
 			}
 		}
 		if (rmd->_right_q) {
@@ -116,12 +116,12 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 
 	_line.appendc((char) _eol);
 
-	len = ssize_t(_i + _line._i);
+	len = ssize_t(_i + _line.len());
 	if (size_t(len) > _l) {
 		flush();
 	}
 
-	s = append_raw(_line.v(), _line._i);
+	s = append_raw(_line.v(), _line.len());
 	if (s < 0) {
 		return -1;
 	}

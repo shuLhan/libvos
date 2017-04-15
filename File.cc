@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -508,7 +508,7 @@ ssize_t File::write(const Buffer* bfr)
 	if (_status == O_RDONLY || !bfr) {
 		return 0;
 	}
-	return write_raw(bfr->v(), bfr->_i);
+	return write_raw(bfr->v(), bfr->len());
 }
 
 /**
@@ -599,7 +599,7 @@ ssize_t File::writef(const char* fmt, va_list args)
 		return -1;
 	}
 
-	return write_raw(b.v(), b._i);
+	return write_raw(b.v(), b.len());
 }
 
 /**
@@ -630,7 +630,7 @@ ssize_t File::writes(const char* fmt, ...)
 		return -1;
 	}
 
-	return write_raw(b.v(), b._i);
+	return write_raw(b.v(), b.len());
 }
 
 /**

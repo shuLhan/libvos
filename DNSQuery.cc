@@ -134,7 +134,7 @@ int DNSQuery::to_udp(const Buffer *tcp)
 		_v[_i] = 0;
 	} else {
 		int s = copy_raw(tcp->v(DNS_TCP_HDR_SIZE)
-				, tcp->_i - DNS_TCP_HDR_SIZE);
+				, tcp->len() - DNS_TCP_HDR_SIZE);
 		if (s < 0) {
 			return -1;
 		}
@@ -173,13 +173,13 @@ int DNSQuery::to_tcp(const Buffer* udp)
 		size = htons(size);
 		memcpy(_v, &size, DNS_TCP_HDR_SIZE);
 	} else {
-		s = resize(udp->_i + DNS_TCP_HDR_SIZE);
+		s = resize(udp->len() + DNS_TCP_HDR_SIZE);
 		if (s < 0) {
 			return -1;
 		}
 		reset();
 
-		size = (uint16_t) udp->_i;
+		size = (uint16_t) udp->len();
 		memcpy(_v, &size, DNS_TCP_HDR_SIZE);
 		_i = DNS_TCP_HDR_SIZE;
 
@@ -250,7 +250,7 @@ int DNSQuery::create_question(const char* qname, const int type)
 
 	_name.copy_raw(qname);
 
-	len = _name._i + 16;
+	len = _name.len() + 16;
 
 	if (len > _l) {
 		int s = resize(len);
@@ -567,14 +567,14 @@ DNS_rr* DNSQuery::extract_rr(size_t* offset)
 
 	/* Get RR DATA */
 	rr->set_at(0, &_v[*offset], rr->_len);
-	rr->_i = rr->_len;
-	rr->set_char_at(rr->_i, '\0');
+	rr->set_len(rr->_len);
+	rr->set_char_at(rr->len(), '\0');
 
 	switch (rr->_type) {
 	case QUERY_T_ADDRESS:
 		inet_ntop(AF_INET, rr->v(), (char*) rr->_data.v()
 			, socklen_t(rr->_data.size()));
-		rr->_data._i = strlen(rr->_data.v());
+		rr->_data.set_len(strlen(rr->_data.v()));
 		*offset	+= 4;
 		break;
 
@@ -690,7 +690,7 @@ DNS_rr* DNSQuery::extract_rr(size_t* offset)
 	case QUERY_T_AAAA:
 		inet_ntop (AF_INET6, rr->v(), (char*) rr->_data.v()
 			, socklen_t(rr->_data.size()));
-		rr->_data._i = strlen(rr->_data.v());
+		rr->_data.set_len(strlen(rr->_data.v()));
 		*offset	+= 16;
 		break;
 
@@ -760,7 +760,7 @@ int DNSQuery::extract_label(Buffer* label, const size_t bfr_off)
 			p++;
 
 			/* If this is the last message LENGTH == 0 */
-			if (label->_i > 0) {
+			if (label->len() > 0) {
 				label->appendc('.');
 			}
 			if (!offset) {
@@ -852,7 +852,7 @@ int DNSQuery::create_answer (const char* name
 		return 1;
 	}
 
-	append_raw(rr_answer->v(), rr_answer->_i);
+	append_raw(rr_answer->v(), rr_answer->len());
 
 	_rr_ans.push_tail(rr_answer);
 

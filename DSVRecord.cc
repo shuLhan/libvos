@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -102,7 +102,7 @@ int DSVRecord::set_column(int n, Buffer* bfr)
 	int s = 0;
 
 	if (! bfr->is_empty()) {
-		s = p->copy_raw(bfr->v(), bfr->_i);
+		s = p->copy_raw(bfr->v(), bfr->len());
 	}
 
 	return s;

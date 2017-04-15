@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -427,7 +427,7 @@ List* DSVRecordMD::INIT(const char* meta)
 				++i;
 			}
 
-			if (v._i) {
+			if (v.len()) {
 				if (v.like_raw("NUMBER") == 0) {
 					md->_type = RMD_T_NUMBER;
 				} else if (v.like_raw("DATE") == 0) {

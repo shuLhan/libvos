@@ -452,7 +452,7 @@ int FTP::do_pasv(const char* cmd, const char* parm, const char* out)
 	}
 
 	pasv.recv(TIMEOUT);
-	while (pasv._i > 0) {
+	while (pasv.len() > 0) {
 		fout.write(&pasv);
 		pasv.recv(TIMEOUT);
 	}
@@ -509,7 +509,7 @@ int FTP::do_put(const char* path)
 	}
 
 	fput.read();
-	while (fput._i > 0) {
+	while (fput.len() > 0) {
 		pasv.write(&fput);
 		fput.read();
 	}

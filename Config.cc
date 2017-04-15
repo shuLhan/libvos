@@ -458,12 +458,12 @@ inline int Config::parsing()
 
 			b.trim();
 			/* empty ? */
-			if (b._i == 0) {
+			if (b.len() == 0) {
 				_e_col = _p - end;
 				goto bad_cfg;
 			}
 
-			s = _data.add_head_raw(b.v(), b._i);
+			s = _data.add_head_raw(b.v(), b.len());
 			if (s < 0) {
 				return -1;
 			}
@@ -498,12 +498,12 @@ inline int Config::parsing()
 
 			b.trim();
 			/* empty ? */
-			if (b._i == 0) {
+			if (b.len() == 0) {
 				_e_col = _p - end;
 				goto bad_cfg;
 			}
 
-			s = _data.add_key_raw(b.v(), b._i);
+			s = _data.add_key_raw(b.v(), b.len());
 			if (s < 0) {
 				return -1;
 			}
@@ -530,13 +530,13 @@ inline int Config::parsing()
 				}
 
 				b.trim();
-				if (b._i == 0) {
+				if (b.len() == 0) {
 					_e_col = _p - end;
 					goto bad_cfg;
 				}
 			}
 
-			s = _data.add_value_raw(b.v(), b._i);
+			s = _data.add_value_raw(b.v(), b.len());
 			if (s < 0) {
 				return -1;
 			}

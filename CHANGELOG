@@ -1,3 +1,23 @@
+v0.5.0 (2017-04-xx)
+===================
+
+* Make code complient with `C++11`
+* Library now can be compiled with Musl libc
+
+Breaking Changes
+----------------
+
+* Buffer
+  - refactoring buffer size, `_l`, from public to protected
+  - refactoring buffer index, `_i`, from public to protected
+
+New Features
+------------
+
+* Buffer:
+  - set_len(): new method to set buffer index position directly
+  - truncate(): new method to truncate buffer
+
 v0.4.0 (2017-03-18)
 ===================
 

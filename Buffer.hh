@@ -36,6 +36,7 @@ public:
 	Buffer(const char* v, const size_t vlen = 0);
 	explicit Buffer(const Buffer* v);
 	virtual ~Buffer();
+
 	void release();
 	char* detach();
 
@@ -50,6 +51,8 @@ public:
 	char char_at(size_t idx);
 	int set_char_at(size_t idx, char v);
 
+	int set_len(size_t len);
+
 	int resize(size_t len);
 	void reset(int c = 0);
 	void trim();
@@ -62,6 +65,7 @@ public:
 
 	int move_to(Buffer** bfr);
 	int shiftr(const size_t nbyte, int c = 0);
+	void truncate(const size_t len);
 
 	int appendc(const char c);
 	int appendi(long int i, unsigned int base = 10);
@@ -94,8 +98,6 @@ public:
 	void dump();
 	void dump_hex();
 
-	size_t _i;
-
 	static int PARSE_INT(char** pp, int* v);
 	static int VSNPRINTF(char *bfr, int len, const char *fmt,
 				va_list args);
@@ -108,6 +110,7 @@ public:
 	static const char* __cname;
 
 protected:
+	size_t _i;
 	size_t _l;
 	char* _v;
 

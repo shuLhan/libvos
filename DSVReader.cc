@@ -109,6 +109,7 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 	size_t startp = _p;
 	size_t len = 0;
 	size_t chop_bgn = 0;
+	size_t blob_size = 0;
 	ssize_t s = 0;
 	DSVRecordMD* rmd = NULL;
 
@@ -164,36 +165,36 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 					goto reject;
 				}
 			}
+
 			/* get record blob size */
-			r->_i = 0;
-			memcpy(&r->_i, &_v[startp], DSVRecordMD::BLOB_SIZE);
+			memcpy(&blob_size, &_v[startp], DSVRecordMD::BLOB_SIZE);
+
+			r->set_len(blob_size);
+
 			startp += DSVRecordMD::BLOB_SIZE;
 
-			if (r->_i > r->size()) {
-				r->resize(r->_i + 1);
-			}
-			if (r->_i > _l) {
+			if (r->len() > _l) {
 				startp	= startp - _p;
-				s	= refill_buffer(r->_i);
+				s	= refill_buffer(r->len());
 				if (s <= 0) {
 					goto reject;
 				}
 			}
 
-			len = startp + r->_i;
+			len = startp + r->len();
 			if (len >= _i) {
 				startp	= startp - _p;
-				s	= refill_buffer(r->_i);
+				s	= refill_buffer(r->len());
 				if (s <= 0) {
 					goto reject;
 				}
 			}
 
 			/* copy blob from file buffer to record buffer */
-			r->set_at(0, &_v[startp], r->_i);
-			r->set_char_at(r->_i, 0);
+			r->set_at(0, &_v[startp], r->len());
+			r->set_char_at(r->len(), 0);
 
-			startp += r->_i;
+			startp += r->len();
 			if (startp >= _i) {
 				startp = startp - _p;
 				s = refill_buffer(0);

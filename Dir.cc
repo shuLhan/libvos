@@ -164,15 +164,15 @@ int Dir::get_parent_path(Buffer *path, DirNode *ls, int depth)
 		}
 	}
 
-	if ((path->_i == 0)
-	||  (path->_i > 0 && path->char_at(path->_i - 1) != '/')) {
+	if ((path->len() == 0)
+	||  (path->len() > 0 && path->char_at(path->len() - 1) != '/')) {
 		path->appendc('/');
 	}
 
 	if (ls && ls->_name.cmp_raw("/") != 0) {
 		path->append(&ls->_name);
 
-		if (ls->is_dir() && path->char_at(path->_i - 1) != '/') {
+		if (ls->is_dir() && path->char_at(path->len() - 1) != '/') {
 			path->appendc('/');
 		}
 	}
@@ -236,7 +236,7 @@ int Dir::get_list(DirNode* list, const char* path, int depth)
 		rpath.reset();
 		rpath.append_raw(path);
 
-		if (rpath.char_at(rpath._i - 1) != '/') {
+		if (rpath.char_at(rpath.len() - 1) != '/') {
 			rpath.appendc('/');
 		}
 
@@ -255,7 +255,7 @@ int Dir::get_list(DirNode* list, const char* path, int depth)
 				}
 			} else {
 				s = strncmp(node->_linkname.v(), _name.v()
-						, _name._i);
+						, _name.len());
 				if (s != 0) {
 					s = get_list(node, node->_linkname.v()
 						, depth - 1);
@@ -304,7 +304,7 @@ int Dir::get_symlink(DirNode *list)
 			continue;
 		} else {
 			list->_link = get_node(&list->_linkname, _name.v()
-						, _name._i);
+						, _name.len());
 			if (!list->_link) {
 				fprintf(stderr
 , "[%s] get_symlink: cannot get link to '%s'\n", __cname
@@ -360,7 +360,7 @@ DirNode* Dir::get_node(Buffer* path, const char* root, size_t root_len)
 		return NULL;
 	}
 
-	size_t len = path->_i;
+	size_t len = path->len();
 	const char* name = path->v();
 
 	if (LIBVOS_DEBUG) {
@@ -441,7 +441,7 @@ int Dir::refresh_by_path(Buffer* path)
 
 	rpath.set_at(0, realpath(path->v(), NULL), 0);
 
-	list = get_node(&rpath, _name.v(), _name._i);
+	list = get_node(&rpath, _name.v(), _name.len());
 	if (!list) {
 		return -1;
 	}
@@ -485,7 +485,7 @@ int Dir::refresh_by_path(Buffer* path)
 		rpath.reset();
 		rpath.append(path);
 
-		if (rpath.char_at(rpath._i - 1) != '/') {
+		if (rpath.char_at(rpath.len() - 1) != '/') {
 			rpath.appendc('/');
 		}
 
@@ -518,7 +518,8 @@ int Dir::refresh_by_path(Buffer* path)
 					}
 				} else {
 					s = strncmp(cnode->_linkname.v()
-							, _name.v(), _name._i);
+							, _name.v()
+							, _name.len());
 					if (s != 0) {
 						s = get_list(cnode
 							, cnode->_linkname.v());

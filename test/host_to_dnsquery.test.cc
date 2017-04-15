@@ -63,7 +63,7 @@ int main()
 					, vos::QUERY_T_ADDRESS
 					, vos::QUERY_C_IN
 					, UINT_MAX
-					, (uint16_t) ip->_i, ip->chars());
+					, (uint16_t) ip->len(), ip->chars());
 
 				qanswer.extract (vos::DNSQ_EXTRACT_RR_AUTH);
 				//qanswer.dump ();
