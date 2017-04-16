@@ -320,6 +320,42 @@ void test_set_len()
 	T.ok();
 }
 
+void test_resize()
+{
+	T.start("resize", "greater than current size");
+
+	size_t resize_to = 256;
+	const char* exp = "buffer";
+	const size_t exp_len = strlen(exp);
+	Buffer a;
+
+	a.copy_raw(exp);
+
+	assert(a.len() == exp_len);
+	assert(a.size() == Buffer::DFLT_SIZE);
+	T.expect_string(exp, a.v(), 0);
+
+	a.resize(resize_to);
+
+	assert(a.len() == exp_len);
+	assert(a.size() == resize_to);
+	T.expect_string(exp, a.v(), 0);
+
+	T.ok();
+
+	T.start(0, "less than current size");
+
+	const size_t resize_to_less = 16;
+
+	a.resize(resize_to_less);
+
+	assert(a.len() == exp_len);
+	assert(a.size() == resize_to);
+	T.expect_string(exp, a.v(), 0);
+
+	T.ok();
+}
+
 int test_n = 0;
 Buffer in;
 List* lbuf;
@@ -566,6 +602,7 @@ int main()
 	test_set_len();
 
 	// skip testing `size()`, because its already done on other tests.
+	test_resize();
 
 	// skip testing `v()`, because its already done on other tests.
 
