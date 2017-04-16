@@ -155,8 +155,8 @@ void Buffer::truncate(const size_t len)
 	if ((len + 1) > _i) {
 		return;
 	}
-	_v[len + 1] = 0;
-	_i = len;
+	_i = len + 1;
+	_v[_i] = 0;
 }
 
 /**
