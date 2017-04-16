@@ -52,13 +52,13 @@ public:
 	int resize(size_t len);
 
 	const char* v(size_t idx = 0) const;
-	int set_at(size_t idx, const char* v, size_t vlen);
 
 	char char_at(size_t idx);
 	int set_char_at(size_t idx, char v);
 
 	int copy(const Buffer* bfr);
 	int copy_raw(const char* bfr, size_t len = 0);
+	int copy_raw_at(size_t idx, const char* v, size_t vlen);
 
 	int set(const Buffer* bfr, const Buffer* dflt);
 	int set_raw(const char* bfr, const char* dflt);

@@ -251,50 +251,6 @@ const char* Buffer::v(size_t idx) const
 }
 
 /**
- * Method `set_at(idx, v, vlen)` will set or replace buffer at index `idx`
- * with the content of `v` with length of `vlen`.
- *
- * It will return `0` on success, or `-1` when no memory left.
- */
-int Buffer::set_at(size_t idx, const char* v, size_t vlen)
-{
-	size_t growth = idx;
-
-	if (!vlen) {
-		if (v) {
-			vlen = strlen(v);
-			growth += vlen;
-		}
-	}
-
-	if (growth > _l) {
-		ssize_t s = resize(growth);
-		if (s) {
-			return -1;
-		}
-	}
-
-	if (v) {
-		if (vlen == 1) {
-			_v[idx] = v[0];
-		} else {
-			memcpy(&_v[idx], v, vlen);
-
-			if (growth > _i) {
-				_i = growth;
-				_v[_i] = 0;
-			}
-		}
-	} else {
-		_v = 0;
-		_l = 0;
-		_i = 0;
-	}
-
-	return 0;
-}
-
-/**
  * Method `char_at(idx)` will return a single byte character of buffer at
  * index `idx`.
  *
@@ -376,6 +332,55 @@ int Buffer::copy_raw(const char* bfr, size_t len)
 
 	return 0;
 }
+
+/**
+ * Method `set_at(idx, v, vlen)` will set or replace buffer at index `idx`
+ * with the content of `v` with length of `vlen`.
+ *
+ * If `v` is null, it will truncate the buffer until `idx`.
+ *
+ * Unlike `copy_raw()` it will not move the buffer index if `vlen` is less
+ * than current index.
+ *
+ * It will return `0` on success, or `-1` when no memory left.
+ */
+int Buffer::copy_raw_at(size_t idx, const char* v, size_t vlen)
+{
+	size_t growth = idx;
+
+	if (!vlen) {
+		if (v) {
+			vlen = strlen(v);
+			growth += vlen;
+		}
+	}
+
+	if (growth > _l) {
+		int s = resize(growth);
+		if (s) {
+			return -1;
+		}
+	}
+
+	if (v) {
+		if (vlen == 1) {
+			_v[idx] = v[0];
+		} else {
+			memcpy(&_v[idx], v, vlen);
+
+			if (growth > _i) {
+				_i = growth;
+				_v[_i] = 0;
+			}
+		}
+	} else {
+		truncate(idx);
+	}
+
+	return 0;
+}
+
+
 
 /**
  * @method	: Buffer::set
