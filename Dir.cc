@@ -439,7 +439,16 @@ int Dir::refresh_by_path(Buffer* path)
 		return -2;
 	}
 
-	rpath.set_at(0, realpath(path->v(), NULL), 0);
+	char* actual_path = realpath(path->v(), NULL);
+
+	if (!actual_path) {
+		perror(__cname);
+		return -2;
+	}
+
+	rpath.copy_raw(actual_path);
+
+	free(actual_path);
 
 	list = get_node(&rpath, _name.v(), _name.len());
 	if (!list) {
