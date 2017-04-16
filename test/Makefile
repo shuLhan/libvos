@@ -20,7 +20,8 @@ TEST_OBJS=	$(BLD_D)/test.oo		\
 		$(LIBVOS_BLD_D)/Locker.oo	\
 		$(LIBVOS_BLD_D)/Buffer.oo	\
 		$(LIBVOS_BLD_D)/File.oo		\
-		$(LIBVOS_BLD_D)/Dlogger.oo
+		$(LIBVOS_BLD_D)/Dlogger.oo	\
+		$(LIBVOS_BLD_D)/Test.oo
 
 Object_OBJS=	$(TEST_OBJS)
 

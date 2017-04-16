@@ -5,8 +5,10 @@
 //
 
 #include "test.hh"
+#include "../Test.hh"
 #include "../List.hh"
 
+using vos::Test;
 using vos::List;
 
 #define TEST_SPLIT_BY_00_IN "127.0.0.1:53"
@@ -74,35 +76,68 @@ using vos::List;
 		V_STR("e") \
 	)
 
+Test T("Buffer");
+
+void test_constructor()
+{
+	T.start("constructor", "default");
+
+	Buffer a;
+
+	T.expect_string(a.__cname, "Buffer");
+	T.expect_string(a.Object::__cname, "Object");
+
+	assert(a.size() == Buffer::DFLT_SIZE);
+	assert(a.len() == 0);
+	T.expect_string(a.v(), "");
+
+	T.ok();
+}
+
 void test_constructor_size()
 {
+	T.start("constructor", "with size");
+
 	Buffer b(256);
 
 	assert(b.len() == 0);
 	assert(b.size() == 256);
-	expectString(b.v(), "", 0);
+
+	T.expect_string(b.v(), "");
+
+	T.ok();
 }
 
 void test_constructor_raw()
 {
+	T.start("constructor", "with raw char");
+
 	const char* exp = "Use of this source code is governed by a BSD-style";
 	size_t exp_len = strlen(exp);
 
-	Buffer b(exp, exp_len);
+	Buffer b(exp);
 
 	assert(b.len() == exp_len);
 	assert(b.size() == exp_len);
-	expectString(b.v(), exp, 0);
+	T.expect_string(b.v(), exp);
+
+	T.ok();
+
+	T.start(0, "with raw char and size");
 
 	Buffer c(exp, 6);
 
 	assert(c.len() == 6);
 	assert(c.size() == 6);
-	expectString(c.v(), "Use of", 0);
+	T.expect_string(c.v(), "Use of");
+
+	T.ok();
 }
 
 void test_constructor_buffer()
 {
+	T.start("constructor", "with empty buffer");
+
 	const char* exp = "Use of this source code is governed by a BSD-style";
 	size_t exp_len = strlen(exp);
 
@@ -111,7 +146,11 @@ void test_constructor_buffer()
 
 	assert(b.len() == 0);
 	assert(b.size() == a.size());
-	expectString(a.v(), b.v(), 0);
+	T.expect_string(a.v(), b.v());
+
+	T.ok();
+
+	T.start(0, "with non-empty buffer");
 
 	a.copy_raw(exp);
 
@@ -119,28 +158,157 @@ void test_constructor_buffer()
 
 	assert(c.len() == exp_len);
 	assert(c.size() == exp_len);
-	expectString(c.v(), exp, 0);
+	T.expect_string(c.v(), exp);
+
+	T.ok();
+}
+
+void test_detach()
+{
+	T.start("detach");
+
+	Buffer a;
+	char *v;
+
+	v = a.detach();
+
+	assert(a.len() == 0);
+	assert(a.size() == 0);
+	assert(a.v() == NULL);
+	assert(v != NULL);
+
+	free(v);
+
+	T.ok();
+}
+
+void test_release()
+{
+	T.start("release");
+
+	Buffer a;
+
+	assert(a.len() == 0);
+	assert(a.size() == Buffer::DFLT_SIZE);
+	assert(a.v() != NULL);
+
+	a.release();
+
+	assert(a.len() == 0);
+	assert(a.size() == 0);
+	assert(a.v() == NULL);
+
+	T.ok();
+}
+
+void test_reset()
+{
+	T.start("reset");
+
+	const char* exp = "a string";
+	const size_t exp_len = strlen(exp);
+	Buffer a;
+
+	a.copy_raw(exp);
+
+	assert(a.len() == exp_len);
+	assert(a.size() == Buffer::DFLT_SIZE);
+	T.expect_string(exp, a.v(), 0);
+
+	a.reset();
+
+	assert(a.len() == 0);
+	assert(a.size() == Buffer::DFLT_SIZE);
+	T.expect_string("", a.v(), 0);
+
+	T.ok();
+}
+
+void test_trim()
+{
+	T.start("trim");
+
+	const size_t in_len = 3;
+	const char* in[in_len] = {
+			"	  a"
+		,	"a	  "
+		,	"	  a	  "
+		};
+	const char* exp = "a";
+
+	Buffer a;
+
+	for (size_t x = 0; x < in_len; x++) {
+		a.copy_raw(in[x]);
+		a.trim();
+		T.expect_string(exp, a.v(), 0);
+	}
+
+	T.ok();
+}
+
+void test_truncate()
+{
+	T.start("truncate");
+
+	const char* input = "abcdefghijklmnopqrstuvwxyz";
+	const char* exp = "abcd";
+	const size_t input_len = strlen(input);
+	const size_t exp_len = strlen(exp);
+
+	Buffer a;
+
+	a.copy_raw(input);
+
+	assert(a.len() == input_len);
+	assert(a.size() == input_len);
+
+	a.truncate(3);
+
+	assert(a.len() == exp_len);
+	assert(a.size() == input_len);
+
+	T.expect_string(exp, a.v(), 0);
+
+	T.ok();
+}
+
+void test_is_empty()
+{
+	T.start("is_empty", "true");
+
+	Buffer a;
+
+	assert(a.is_empty() == 1);
+
+	T.ok();
+
+	T.start("is_empty", "false");
+
+	a.copy_raw("any");
+
+	assert(a.is_empty() == 0);
+
+	T.ok();
 }
 
 void test_set_len()
 {
-	printf(">>> Buffer::test_set_len\n");
+	T.start("set_len", "it should not resize the buffer");
 
 	Buffer b;
 
 	assert(b.len() == 0);
 	assert(b.size() == Buffer::DFLT_SIZE);
 
-	printf("- it should not resize the buffer if new len < size: ");
-
 	b.set_len(b.size());
 
 	assert(b.len() == b.size());
 	assert(b.size() == Buffer::DFLT_SIZE);
 
-	printf("OK\n");
+	T.ok();
 
-	printf("- it should resize the buffer if new len > size: ");
+	T.start(0, "it should resize the buffer");
 
 	size_t new_len = 24;
 
@@ -149,7 +317,7 @@ void test_set_len()
 	assert(b.len() == new_len);
 	assert(b.size() == (new_len + 1));
 
-	printf("OK\n");
+	T.ok();
 }
 
 int test_n = 0;
@@ -172,25 +340,6 @@ void test_copy_raw()
 
 	assert(b.len() == strlen(STR_TEST_0));
 	expectString(STR_TEST_0, b.v(), 0);
-}
-
-void test_truncate()
-{
-	printf(">>> Buffer::test_truncate\n");
-
-	Buffer b;
-
-	b.append_raw("abcdefghijklmnopqrstuvwxyz");
-
-	assert(b.len() == 26);
-	assert(b.size() == 26);
-
-	b.truncate(3);
-
-	assert(b.len() == 3);
-	assert(b.size() == 26);
-
-	expectString("abcd", b.v(), 0);
 }
 
 void test_split_by_char_n(const char* input, const char split
@@ -400,24 +549,27 @@ void test_aprint()
 
 int main()
 {
-	Buffer a;
-
-	expectString(a.__cname, "Buffer", 0);
-	expectString(a.Object::__cname, "Object", 0);
-
-	assert(a.size() == Buffer::DFLT_SIZE);
-	assert(a.len() == 0);
-	expectString(a.v(), "", 0);
-
+	test_constructor();
 	test_constructor_size();
 	test_constructor_raw();
 	test_constructor_buffer();
 
+	test_detach();
+	test_release();
+	test_reset();
+	test_trim();
+	test_truncate();
+
+	test_is_empty();
+
+	// skip testing `len()`, because its already done on other tests.
 	test_set_len();
 
-	test_copy_raw();
+	// skip testing `size()`, because its already done on other tests.
 
-	test_truncate();
+	// skip testing `v()`, because its already done on other tests.
+
+	test_copy_raw();
 
 	test_split_by_char();
 
