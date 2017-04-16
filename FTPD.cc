@@ -1054,7 +1054,7 @@ static int get_node_perm(Buffer* bfr, DirNode* node)
 	}
 
 	if (node->_linkname.len()) {
-		bfr->set_at(0, "lrwxrwxrwx", 10);
+		bfr->copy_raw("lrwxrwxrwx", 10);
 	} else {
 		if (S_ISDIR(node->_mode)) {
 			bfr->set_char_at(i+0, 'd');
