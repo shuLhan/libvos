@@ -99,6 +99,21 @@ Buffer::~Buffer()
 }
 
 /**
+ * Method `detach()` will release the allocated buffer and return it to be
+ * used by the caller.
+ */
+char* Buffer::detach()
+{
+	char* v = _v;
+
+	_v = NULL;
+	_l = 0;
+	_i = 0;
+
+	return v;
+}
+
+/**
  * Method `release()` will release the allocated buffer to the system without
  * deleting the object it self.
  */
@@ -113,18 +128,35 @@ void Buffer::release()
 }
 
 /**
- * Method `detach()` will release the allocated buffer and return it to be
- * used by the caller.
+ * Method `reset(c)` will reset the content of buffer to `c`, all of them,
+ * keep an already allocated buffer and start index from zero again.
  */
-char* Buffer::detach()
+void Buffer::reset(int c)
 {
-	char* v = _v;
+	if (_i) {
+		_i = 0;
+		memset(_v, c, _l);
+	}
+}
 
-	_v = NULL;
-	_l = 0;
-	_i = 0;
+/**
+ * Method `trim()` will remove leading and trailing white-space in buffer.
+ */
+void Buffer::trim()
+{
+	_i = TRIM(_v, _i);
+}
 
-	return v;
+/**
+ * Method `truncate(len, c)` will cut buffer until size `len`.
+ */
+void Buffer::truncate(const size_t len)
+{
+	if ((len + 1) > _i) {
+		return;
+	}
+	_v[len + 1] = 0;
+	_i = len;
 }
 
 /**
@@ -145,11 +177,62 @@ size_t Buffer::len() const
 }
 
 /**
+ * Method `set_len(len)` will set buffer length to `len`. If buffer size is
+ * smaller than `len` then it will resized to `len + 1`.
+ *
+ * It will return `0` on success, or `-1` when fail to resize the buffer.
+ */
+int Buffer::set_len(size_t len)
+{
+	int s;
+
+	if (len > _l) {
+		s = resize(len + 1);
+		if (s != 0) {
+			return -1;
+		}
+	}
+
+	_i = len;
+
+	return 0;
+}
+
+/**
  * Method `size()` will return the size of buffer (used + unused).
  */
 size_t Buffer::size() const
 {
 	return _l;
+}
+
+/**
+ * Method `resize(size)` will resize the buffer to `size`.
+ *
+ * If 'size' is less than current buffer size, no reallocation will be
+ * happenend.
+ *
+ * It will return `0` on success or `-1` when fail to reallocate more memory.
+ */
+int Buffer::resize(size_t size)
+{
+	char* newv = NULL;
+
+	if (size <= _l) {
+		return 0;
+	}
+
+	newv = (char *) realloc(_v, size + CHAR_SIZE);
+	if (!newv) {
+		perror(__cname);
+		return -1;
+	}
+
+	_v	= newv;
+	_v[_i]	= '\0';
+	_l	= size;
+
+	return 0;
 }
 
 /**
@@ -240,77 +323,6 @@ int Buffer::set_char_at(size_t idx, char v)
 	_v[idx] = v;
 
 	return 0;
-}
-
-/**
- * Method `set_len(len)` will set buffer length to `len`. If buffer size is
- * smaller than `len` then it will resized to `len + 1`.
- *
- * It will return `0` on success, or `-1` when fail to resize the buffer.
- */
-int Buffer::set_len(size_t len)
-{
-	int s;
-
-	if (len > _l) {
-		s = resize(len + 1);
-		if (s != 0) {
-			return -1;
-		}
-	}
-
-	_i = len;
-
-	return 0;
-}
-
-/**
- * Method `resize(size)` will resize the buffer to `size`.
- *
- * If 'size' is less than current buffer size, no reallocation will be
- * happenend.
- *
- * It will return `0` on success or `-1` when fail to reallocate more memory.
- */
-int Buffer::resize(size_t size)
-{
-	char* newv = NULL;
-
-	if (size <= _l) {
-		return 0;
-	}
-
-	newv = (char *) realloc(_v, size + CHAR_SIZE);
-	if (!newv) {
-		perror(__cname);
-		return -1;
-	}
-
-	_v	= newv;
-	_v[_i]	= '\0';
-	_l	= size;
-
-	return 0;
-}
-
-/**
- * Method `reset(c)` will reset the content of buffer to `c`, all of them,
- * keep an already allocated buffer and start index from zero again.
- */
-void Buffer::reset(int c)
-{
-	if (_i) {
-		_i = 0;
-		memset(_v, c, _l);
-	}
-}
-
-/**
- * Method `trim()` will remove leading and trailing white-space in buffer.
- */
-void Buffer::trim()
-{
-	_i = TRIM(_v, _i);
 }
 
 /**
@@ -469,18 +481,6 @@ int Buffer::shiftr(const size_t nbyte, int c)
 	_v[_i]	= '\0';
 
 	return 0;
-}
-
-/**
- * Method `truncate(len, c)` will cut buffer until size `len`.
- */
-void Buffer::truncate(const size_t len)
-{
-	if ((len + 1) > _i) {
-		return;
-	}
-	_v[len + 1] = 0;
-	_i = len;
 }
 
 /**

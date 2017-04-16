@@ -37,24 +37,25 @@ public:
 	explicit Buffer(const Buffer* v);
 	virtual ~Buffer();
 
-	void release();
 	char* detach();
+	void release();
+	void reset(int c = 0);
+	void trim();
+	void truncate(const size_t len);
 
 	int is_empty() const;
+
 	size_t len() const;
+	int set_len(size_t len);
+
 	size_t size() const;
+	int resize(size_t len);
 
 	const char* v(size_t idx = 0) const;
 	int set_at(size_t idx, const char* v, size_t vlen);
 
 	char char_at(size_t idx);
 	int set_char_at(size_t idx, char v);
-
-	int set_len(size_t len);
-
-	int resize(size_t len);
-	void reset(int c = 0);
-	void trim();
 
 	int copy(const Buffer* bfr);
 	int copy_raw(const char* bfr, size_t len = 0);
@@ -64,7 +65,6 @@ public:
 
 	int move_to(Buffer** bfr);
 	int shiftr(const size_t nbyte, int c = 0);
-	void truncate(const size_t len);
 
 	int appendc(const char c);
 	int appendi(long int i, unsigned int base = 10);
