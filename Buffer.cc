@@ -451,16 +451,15 @@ int Buffer::move_to(Buffer** bfr)
  */
 int Buffer::shiftr(const size_t nbyte, int c)
 {
+	int s;
 	size_t growth = _i + nbyte;
-	char* newv = NULL;
 
 	if (growth > _l) {
-		_l += nbyte;
-		newv = (char *) realloc(_v, (_l + CHAR_SIZE));
-		if (!newv) {
+		s = resize(growth);
+
+		if (s) {
 			return -1;
 		}
-		_v = newv;
 	}
 
 	memmove(&_v[nbyte], &_v[0], _i);
@@ -495,18 +494,16 @@ void Buffer::truncate(const size_t len)
  */
 int Buffer::appendc(const char c)
 {
-	char* newv = NULL;
+	int s;
 
 	if (c < 0) {
 		return 0;
 	}
 	if (_i + CHAR_SIZE > _l) {
-		_l += DFLT_SIZE;
-		newv = (char *) realloc(_v, _l + CHAR_SIZE);
-		if (!newv) {
+		s = resize(_i + CHAR_SIZE);
+		if (s) {
 			return -1;
 		}
-		_v = newv;
 	}
 	_v[_i]	= c;
 	_i++;
