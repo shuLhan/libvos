@@ -566,9 +566,7 @@ DNS_rr* DNSQuery::extract_rr(size_t* offset)
 	}
 
 	/* Get RR DATA */
-	rr->set_at(0, &_v[*offset], rr->_len);
-	rr->set_len(rr->_len);
-	rr->set_char_at(rr->len(), '\0');
+	rr->copy_raw(&_v[*offset], rr->_len);
 
 	switch (rr->_type) {
 	case QUERY_T_ADDRESS:
