@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -356,6 +356,65 @@ void test_resize()
 	T.ok();
 }
 
+void test_char_at()
+{
+	struct TestInput {
+		const char* desc;
+		const char* in;
+		size_t      idx;
+		char        exp;
+	};
+
+	TestInput const testIns[] = {
+		{
+			"With empty buffer",
+			"",
+			0,
+			0,
+		},
+		{
+			"With index out of range",
+			"Test",
+			100,
+			0,
+		},
+		{
+			"With index same as input length",
+			"Test",
+			4,
+			0,
+		},
+		{
+			"With correct index",
+			"Test",
+			0,
+			'T',
+		},
+		{
+			"With correct index",
+			"Test",
+			3,
+			't',
+		},
+	};
+
+	Buffer       b;
+	char         got;
+	const size_t lenTestIns = sizeof(testIns)/sizeof(TestInput);
+
+	for (size_t x = 0; x < lenTestIns; x++) {
+		T.start("char_at", testIns[x].desc);
+
+		b.copy_raw(testIns[x].in);
+
+		got = b.char_at(testIns[x].idx);
+
+		assert(testIns[x].exp == got);
+
+		T.ok();
+	}
+}
+
 int test_n = 0;
 Buffer in;
 List* lbuf;
@@ -605,6 +664,8 @@ int main()
 	test_resize();
 
 	// skip testing `v()`, because its already done on other tests.
+
+	test_char_at();
 
 	test_copy_raw();
 
