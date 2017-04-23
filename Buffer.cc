@@ -272,7 +272,7 @@ char Buffer::char_at(size_t idx)
  */
 int Buffer::set_char_at(size_t idx, char v)
 {
-	if (idx > _i) {
+	if (idx >= _i) {
 		return -1;
 	}
 
