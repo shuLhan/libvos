@@ -4,77 +4,7 @@
 // found in the LICENSE file.
 //
 
-#include "test.hh"
-#include "../Test.hh"
-#include "../List.hh"
-
-using vos::Test;
-using vos::List;
-
-#define TEST_SPLIT_BY_00_IN "127.0.0.1:53"
-#define TEST_SPLIT_BY_00_OUT SB(V_STR(TEST_SPLIT_BY_00_IN))
-#define TEST_SPLIT_BY_WS_00_OUT SB(V_STR(TEST_SPLIT_BY_00_IN))
-
-#define TEST_SPLIT_BY_01_IN "127.0.0.1:53"
-#define TEST_SPLIT_BY_01_OUT SB(K(127.0.0.1) SEP_ITEM K(53))
-
-#define TEST_SPLIT_BY_02_IN "a b, c d e, fg hi, "
-#define	TEST_SPLIT_BY_WS_02_OUT SB( \
-		V_STR("a") SEP_ITEM \
-		V_STR("b,") SEP_ITEM \
-		V_STR("c") SEP_ITEM \
-		V_STR("d") SEP_ITEM \
-		V_STR("e,") SEP_ITEM \
-		V_STR("fg") SEP_ITEM \
-		V_STR("hi,") \
-	)
-
-#define TEST_SPLIT_BY_02_OUT SB( \
-		K(a b) SEP_ITEM \
-		V_STR(" c d e") SEP_ITEM \
-		V_STR(" fg hi") SEP_ITEM \
-		V_STR(" ") \
-	)
-
-#define TEST_SPLIT_BY_02_OUT_TRIM SB( \
-		K(a b) SEP_ITEM \
-		K(c d e) SEP_ITEM \
-		K(fg hi) \
-	)
-
-#define TEST_SPLIT_BY_03_IN "a b,, c d e, , fg hi, "
-#define TEST_SPLIT_BY_03_OUT SB( \
-		V_STR("a b") SEP_ITEM \
-		V_STR("") SEP_ITEM \
-		V_STR(" c d e") SEP_ITEM \
-		V_STR(" ") SEP_ITEM \
-		V_STR(" fg hi") SEP_ITEM \
-		V_STR(" ") \
-	)
-#define TEST_SPLIT_BY_03_OUT_TRIM SB( \
-		K(a b) SEP_ITEM \
-		K(c d e) SEP_ITEM \
-		K(fg hi) \
-	)
-#define TEST_SPLIT_BY_WS_03_OUT SB( \
-		V_STR("a") SEP_ITEM \
-		V_STR("b,,") SEP_ITEM \
-		V_STR("c") SEP_ITEM \
-		V_STR("d") SEP_ITEM \
-		V_STR("e,") SEP_ITEM \
-		V_STR(",") SEP_ITEM \
-		V_STR("fg") SEP_ITEM \
-		V_STR("hi,") \
-	)
-
-#define	TEST_04_IN "	  a   b   c		d	e	"
-#define	TEST_04_WS_OUT SB( \
-		V_STR("a") SEP_ITEM \
-		V_STR("b") SEP_ITEM \
-		V_STR("c") SEP_ITEM \
-		V_STR("d") SEP_ITEM \
-		V_STR("e") \
-	)
+#include "Buffer.test.hh"
 
 Test T("Buffer");
 
@@ -358,14 +288,7 @@ void test_resize()
 
 void test_char_at()
 {
-	struct TestInput {
-		const char* desc;
-		const char* in;
-		size_t      idx;
-		char        exp;
-	};
-
-	TestInput const testIns[] = {
+	const struct t_char_at inputs[] = {
 		{
 			"With empty buffer",
 			"",
@@ -398,18 +321,74 @@ void test_char_at()
 		},
 	};
 
-	Buffer       b;
-	char         got;
-	const size_t lenTestIns = sizeof(testIns)/sizeof(TestInput);
+	Buffer b;
+	char got;
+	const size_t inputs_len = ARRAY_SIZE(inputs);
 
-	for (size_t x = 0; x < lenTestIns; x++) {
-		T.start("char_at", testIns[x].desc);
+	for (size_t x = 0; x < inputs_len; x++) {
+		T.start("char_at", inputs[x].desc);
 
-		b.copy_raw(testIns[x].in);
+		b.copy_raw(inputs[x].in);
 
-		got = b.char_at(testIns[x].idx);
+		got = b.char_at(inputs[x].idx);
 
-		assert(testIns[x].exp == got);
+		assert(inputs[x].exp == got);
+
+		T.ok();
+	}
+}
+
+void test_set_char_at()
+{
+	const struct t_set_char_at inputs[] = {
+		{
+			"With empty input",
+			"",
+			0,
+			'x',
+			-1,
+			"",
+		},
+		{
+			"With out of range index",
+			"Test",
+			10,
+			'x',
+			-1,
+			"Test",
+		},
+		{
+			"With index equal to length",
+			"Test",
+			4,
+			'x',
+			-1,
+			"Test",
+		},
+		{
+			"Within range",
+			"Test",
+			3,
+			'x',
+			0,
+			"Tesx",
+		},
+	};
+
+	Buffer b;
+	int got_ret;
+	size_t inputs_len = ARRAY_SIZE(inputs);
+
+	for (size_t x = 0; x < inputs_len; x++) {
+		T.start("set_char_at", inputs[x].desc);
+
+		b.copy_raw(inputs[x].in);
+
+		got_ret = b.set_char_at(inputs[x].idx, inputs[x].v);
+
+		assert(inputs[x].exp_ret == got_ret);
+
+		T.expect_string(inputs[x].exp_res, b.v(), 0);
 
 		T.ok();
 	}
@@ -666,6 +645,7 @@ int main()
 	// skip testing `v()`, because its already done on other tests.
 
 	test_char_at();
+	test_set_char_at();
 
 	test_copy_raw();
 

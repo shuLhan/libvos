@@ -137,7 +137,7 @@ clean: libvos-clean
 $(BLD_D)/%.oo: $(SRC_D)/%.cc $(SRC_D)/%.hh
 	@$(do_compile)
 
-$(BLD_D)/%.test.oo: $(SRC_D)/%.test.cc
+$(BLD_D)/%.test.oo: $(SRC_D)/%.test.cc $(SRC_D)/%.test.hh
 	@$(do_compile)
 
 $(BLD_D)/%.test: $(BLD_D)/%.test.oo $$(%_OBJS)
