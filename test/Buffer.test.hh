@@ -76,8 +76,10 @@ using vos::List;
 		V_STR("e") \
 	)
 
-#define TEST_IN_MED "Use of this source code is governed by a BSD-style"
+#define TEST_IN_SHORT "a"
+size_t test_in_short_len = strlen(TEST_IN_SHORT);
 
+#define TEST_IN_MED "Use of this source code is governed by a BSD-style"
 size_t test_in_med_len = strlen(TEST_IN_MED);
 
 struct t_char_at {
@@ -99,6 +101,15 @@ struct t_set_char_at {
 struct t_copy {
 	const char   *desc;
 	Buffer       *in;
+	const size_t exp_len;
+	const size_t exp_size;
+	const char   *exp_v;
+};
+
+struct t_copy_raw {
+	const char   *desc;
+	const char   *in;
+	size_t       in_len;
 	const size_t exp_len;
 	const size_t exp_size;
 	const char   *exp_v;

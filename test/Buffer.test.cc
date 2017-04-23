@@ -396,7 +396,7 @@ void test_set_char_at()
 
 void test_copy()
 {
-	struct t_copy inputs[] = {
+	const struct t_copy inputs[] = {
 		{
 			"With null",
 			NULL,
@@ -414,7 +414,6 @@ void test_copy()
 	};
 
 	Buffer b;
-	Buffer *to_copy;
 	size_t inputs_len = ARRAY_SIZE(inputs);
 
 	for (size_t x = 0; x< inputs_len; x++) {
@@ -434,27 +433,62 @@ void test_copy()
 	}
 }
 
-int test_n = 0;
-Buffer in;
-List* lbuf;
-
 void test_copy_raw()
 {
-	Buffer b;
-	const char* str = "a";
-	size_t sz = 0;
+	const struct t_copy_raw inputs[] = {
+		{
+			"With empty string",
+			NULL,
+			0,
+			0,
+			Buffer::DFLT_SIZE,
+			"",
+		},
+		{
+			"With short string",
+			TEST_IN_SHORT,
+			0,
+			test_in_short_len,
+			Buffer::DFLT_SIZE,
+			TEST_IN_SHORT,
+		},
+		{
+			"With medium string",
+			TEST_IN_MED,
+			0,
+			test_in_med_len,
+			test_in_med_len,
+			TEST_IN_MED,
+		},
+		{
+			"With length",
+			TEST_IN_MED,
+			3,
+			3,
+			Buffer::DFLT_SIZE,
+			"Use",
+		},
+	};
 
-	b.copy_raw(str);
+	size_t inputs_len = ARRAY_SIZE(inputs);
 
-	sz = strlen(str);
-	assert(b.len() == sz);
-	expectString(str, b.v(), 0);
+	for (size_t x = 0; x < inputs_len; x++) {
+		T.start("copy_raw()", inputs[x].desc);
 
-	b.copy_raw(STR_TEST_0);
+		Buffer b;
 
-	assert(b.len() == strlen(STR_TEST_0));
-	expectString(STR_TEST_0, b.v(), 0);
+		b.copy_raw(inputs[x].in, inputs[x].in_len);
+
+		assert(inputs[x].exp_len == b.len());
+		assert(inputs[x].exp_size == b.size());
+		T.expect_string(inputs[x].exp_v, b.v(), 0);
+
+		T.ok();
+	}
 }
+
+Buffer in;
+List* lbuf;
 
 void test_split_by_char_n(const char* input, const char split
 	, const uint8_t trim, const char* exp, const int exp_size)
