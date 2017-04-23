@@ -322,7 +322,6 @@ void test_char_at()
 	};
 
 	Buffer b;
-	char got;
 	const size_t inputs_len = ARRAY_SIZE(inputs);
 
 	for (size_t x = 0; x < inputs_len; x++) {
@@ -330,7 +329,7 @@ void test_char_at()
 
 		b.copy_raw(inputs[x].in);
 
-		got = b.char_at(inputs[x].idx);
+		char got = b.char_at(inputs[x].idx);
 
 		assert(inputs[x].exp == got);
 
@@ -376,7 +375,6 @@ void test_set_char_at()
 	};
 
 	Buffer b;
-	int got_ret;
 	size_t inputs_len = ARRAY_SIZE(inputs);
 
 	for (size_t x = 0; x < inputs_len; x++) {
@@ -384,7 +382,7 @@ void test_set_char_at()
 
 		b.copy_raw(inputs[x].in);
 
-		got_ret = b.set_char_at(inputs[x].idx, inputs[x].v);
+		int got_ret = b.set_char_at(inputs[x].idx, inputs[x].v);
 
 		assert(inputs[x].exp_ret == got_ret);
 

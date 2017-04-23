@@ -15,7 +15,7 @@ namespace vos {
 
 class Test : public Dlogger {
 public:
-	Test(const char* header);
+	explicit Test(const char* header);
 	~Test();
 
 	void start(const char* suffix, const char* msg = 0);

@@ -184,10 +184,8 @@ size_t Buffer::len() const
  */
 int Buffer::set_len(size_t len)
 {
-	int s;
-
 	if (len > _l) {
-		s = resize(len + 1);
+		int s = resize(len + 1);
 		if (s != 0) {
 			return -1;
 		}
@@ -372,8 +370,6 @@ int Buffer::copy_raw_at(size_t idx, const char* v, size_t vlen)
 	return 0;
 }
 
-
-
 /**
  * @method	: Buffer::set
  * @param	:
@@ -460,11 +456,10 @@ int Buffer::move_to(Buffer** bfr)
  */
 int Buffer::shiftr(const size_t nbyte, int c)
 {
-	int s;
 	size_t growth = _i + nbyte;
 
 	if (growth > _l) {
-		s = resize(growth);
+		int s = resize(growth);
 
 		if (s) {
 			return -1;
@@ -491,13 +486,11 @@ int Buffer::shiftr(const size_t nbyte, int c)
  */
 int Buffer::appendc(const char c)
 {
-	int s;
-
 	if (c < 0) {
 		return 0;
 	}
 	if (_i + CHAR_SIZE > _l) {
-		s = resize(_i + CHAR_SIZE);
+		int s = resize(_i + CHAR_SIZE);
 		if (s) {
 			return -1;
 		}
