@@ -82,7 +82,7 @@ all:
 .PHONY: libvos-opts EMPTY_OPTS NO_DEFAULT_LIBS
 .PHONY: libvos-all libvos-all-32 libvos-all-64
 .PHONY: libvos-debug libvos-debug-32 libvos-debug-64
-.PHONY: cppcheck
+.PHONY: cppcheck clangcheck check
 
 libvos: $$(PRE_TARGET) $$(TARGET_OBJS) $$(TARGET)
 
@@ -186,6 +186,13 @@ $(LIBVOS_BLD_D)/%.oo: $(LIBVOS_SRC_D)/%.cc $(LIBVOS_SRC_D)/%.hh
 	@$(do_compile)
 
 cppcheck:
-	@cppcheck-gui --enable-all -p libvos.cppcheck $(LIBVOS_SRC_D)
+	@cppcheck --enable=all \
+		--suppressions-list=$(LIBVOS_SRC_D)/libvos.cppcheck.suppress \
+		$(LIBVOS_SRC_D)
+
+clangcheck:
+	@find $(LIBVOS_SRC_D) -name '*.cc' | xargs clang-check
+
+check: cppcheck clangcheck
 
 # vi: ts=8 sw=8 tw=78:
