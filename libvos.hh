@@ -19,6 +19,8 @@
 
 namespace vos {
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
 extern int LIBVOS_DEBUG;
 
 } /* namespace::vos */
