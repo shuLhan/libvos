@@ -485,6 +485,108 @@ void test_copy_raw()
 	}
 }
 
+void test_copy_raw_at()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		size_t     in_idx;
+		const char *in_v;
+		size_t     in_len;
+		size_t     exp_len;
+		size_t     exp_size;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"With empty buffer: zero index and empty value",
+			"",
+			0,
+			NULL,
+			0,
+			0,
+			Buffer::DFLT_SIZE,
+			"",
+		},
+		{
+			"With empty buffer: zero index and non-empty value",
+			"",
+			0,
+			"Test copy_raw_at()",
+			0,
+			18,
+			18,
+			"Test copy_raw_at()",
+		},
+		{
+			"With non-empty buffer: zero index and empty value",
+			"Test copy_raw_at()",
+			0,
+			NULL,
+			0,
+			18,
+			18,
+			"Test copy_raw_at()",
+		},
+		{
+			"With non-empty buffer: zero index and non-empty value",
+			"Test copy_raw_at()",
+			0,
+			"XXXX",
+			0,
+			18,
+			18,
+			"XXXX copy_raw_at()",
+		},
+		{
+			"With non-empty buffer: zero index and value longer than buffer",
+			"Test copy_raw_at()",
+			0,
+			"Test copy_raw_at() 123456",
+			0,
+			25,
+			25,
+			"Test copy_raw_at() 123456",
+		},
+		{
+			"With non-empty buffer: replace middle buffer",
+			"1234567890",
+			2,
+			"XXX",
+			0,
+			10,
+			Buffer::DFLT_SIZE,
+			"12XXX67890",
+		},
+		{
+			"With non-empty buffer: replace middle buffer longer than buffer",
+			"1234567890",
+			2,
+			"abcdefghij",
+			0,
+			12,
+			Buffer::DFLT_SIZE,
+			"12abcdefghij",
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("copy_raw_at()", tests[x].desc);
+
+		Buffer b;
+		b.copy_raw(tests[x].init);
+
+		b.copy_raw_at(tests[x].in_idx, tests[x].in_v, tests[x].in_len);
+
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+
+		T.ok();
+	}
+}
+
 Buffer in;
 List* lbuf;
 
@@ -721,6 +823,7 @@ int main()
 
 	test_copy();
 	test_copy_raw();
+	test_copy_raw_at();
 
 	test_split_by_char();
 
