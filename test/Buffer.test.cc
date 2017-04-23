@@ -394,6 +394,46 @@ void test_set_char_at()
 	}
 }
 
+void test_copy()
+{
+	struct t_copy inputs[] = {
+		{
+			"With null",
+			NULL,
+			0,
+			Buffer::DFLT_SIZE,
+			"",
+		},
+		{
+			"With buffer greater than default size",
+			new Buffer(TEST_IN_MED),
+			test_in_med_len,
+			test_in_med_len,
+			TEST_IN_MED,
+		},
+	};
+
+	Buffer b;
+	Buffer *to_copy;
+	size_t inputs_len = ARRAY_SIZE(inputs);
+
+	for (size_t x = 0; x< inputs_len; x++) {
+		T.start("copy()", inputs[x].desc);
+
+		b.copy(inputs[x].in);
+
+		assert(inputs[x].exp_len == b.len());
+		assert(inputs[x].exp_size == b.size());
+		T.expect_string(inputs[x].exp_v, b.v(), 0);
+
+		if (inputs[x].in) {
+			delete inputs[x].in;
+		}
+
+		T.ok();
+	}
+}
+
 int test_n = 0;
 Buffer in;
 List* lbuf;
@@ -647,6 +687,7 @@ int main()
 	test_char_at();
 	test_set_char_at();
 
+	test_copy();
 	test_copy_raw();
 
 	test_split_by_char();
