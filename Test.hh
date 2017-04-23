@@ -21,7 +21,9 @@ public:
 	void start(const char* suffix, const char* msg = 0);
 	void ok();
 
-	int expect_string(const char* exp, const char* got, int to = 0);
+	int expect_string(const char* exp, const char* got, int equality = 0);
+	int expect_unsigned(const size_t exp, const size_t got,
+		int equality = 0);
 
 protected:
 	Buffer _header;

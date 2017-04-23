@@ -40,19 +40,77 @@ void Test::ok()
 	out("OK\n");
 }
 
-int Test::expect_string(const char* exp, const char* got, int to)
+//
+// Method `expect_string(exp, got, to)` will compare expected string value
+// `exp` with `got` value.
+//
+// Value of equality `-1` means the function expect the `exp` value to be less
+// than `got` value.
+// Value of equality `0` means its `exp` equal with `got`.
+// Value of equality `1` means the function expect the `exp` value greater
+// than `got` value.
+//
+// It will return `0` if string comparison of `exp` with `got` value match
+// with `equality` value; otherwise it will exit the test with status 1.
+//
+int Test::expect_string(const char* exp, const char* got, int equality)
 {
 	int s = strcmp(exp, got);
 
-	if (s == to) {
+	if (s == equality) {
 		return 0;
 	}
 
-	printf("%s.%s\n", _header.v(), _prefix.v());
+	printf("\n");
 	printf("    Expecting: %s\n", exp);
 	printf("    got      : %s\n", got);
 
 	exit(1);
+}
+
+//
+// Method `expect_unsigned(exp, got, equality)` will check if `exp` value is
+// either,
+//
+// - less than (equality is -1),
+// - equal (equality is 0), or
+// - greater than (equality is 1)
+//
+// `got` value.
+//
+// It will return `0` if expected and got value true to their equality value.
+// Otherwise, it will exit with status `1`.
+//
+int Test::expect_unsigned(const size_t exp, const size_t got, int equality)
+{
+	const char *str_equality;
+
+	switch (equality) {
+	case -1:
+		if (exp < got) {
+			return 0;
+		}
+		str_equality = "less than";
+		break;
+	case 0:
+		if (exp == got) {
+			return 0;
+		}
+		str_equality = "equal";
+		break;
+	case 1:
+		if (exp > got) {
+			return 0;
+		}
+		str_equality = "greater than";
+		break;
+	}
+
+	printf("\n");
+	printf("    Expecting '%zu' %s '%zu'\n", exp, str_equality, got);
+
+	exit(1);
+
 }
 
 } // namespace::vos
