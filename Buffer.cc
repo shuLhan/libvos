@@ -336,35 +336,35 @@ int Buffer::copy_raw(const char* bfr, size_t len)
  */
 int Buffer::copy_raw_at(size_t idx, const char* v, size_t vlen)
 {
+	if (!v) {
+		return 0;
+	}
+
 	size_t growth = idx;
 
 	if (!vlen) {
-		if (v) {
-			vlen = strlen(v);
-			growth += vlen;
+		vlen = strlen(v);
+		if (!vlen) {
+			return 0;
 		}
+
+		growth += vlen;
 	}
 
-	if (growth > _l) {
-		int s = resize(growth);
-		if (s) {
-			return -1;
-		}
+	int s = resize(growth);
+	if (s) {
+		return -1;
 	}
 
-	if (v) {
-		if (vlen == 1) {
-			_v[idx] = v[0];
-		} else {
-			memcpy(&_v[idx], v, vlen);
-
-			if (growth > _i) {
-				_i = growth;
-				_v[_i] = 0;
-			}
-		}
+	if (vlen == 1) {
+		_v[idx] = v[0];
 	} else {
-		truncate(idx);
+		memcpy(&_v[idx], v, vlen);
+
+		if (growth > _i) {
+			_i = growth;
+			_v[_i] = 0;
+		}
 	}
 
 	return 0;
