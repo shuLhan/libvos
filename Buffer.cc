@@ -1533,10 +1533,10 @@ int Buffer::CMP_OBJECTS(Object* x, Object* y)
 	if (x == y) {
 		return 0;
 	}
-	if (x == NULL && y != NULL) {
+	if (x == NULL) {
 		return -1;
 	}
-	if (x != NULL && y == NULL) {
+	if (y == NULL) {
 		return 1;
 	}
 
