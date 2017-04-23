@@ -282,13 +282,11 @@ int Buffer::set_char_at(size_t idx, char v)
 }
 
 /**
- * @method	: Buffer::copy
- * @param	:
- *	> bfr	: A pointer to Buffer object.
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
- * @desc	: Copy the content of Buffer object 'bfr'.
+ * Method `copy(bfr)` will copy content of buffer `bfr` to its own buffer.
+ *
+ * If `bfr` is nil, no buffer changes happened.
+ *
+ * On success, it will return `0`, otherwise `-1`.
  */
 int Buffer::copy(const Buffer* bfr)
 {
@@ -299,21 +297,15 @@ int Buffer::copy(const Buffer* bfr)
 }
 
 /**
- * @method	: Buffer::copy_raw
- * @param	:
- *	> bfr	: a pointer to raw buffer.
- *	> len	: optional, length of 'bfr'.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: Copy the content of raw buffer.
+ * Method `copy_raw(bfr, len)` will copy `bfr` with length `len` to current
+ * buffer.  If `len` is zero, and its the default value, then this function
+ * will compute the buffer length.
+ *
+ * On success it will return `0`, otherwise it will return `-1`.
  */
 int Buffer::copy_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
-		if (len > 0) {
-			return resize(len);
-		}
 		return 0;
 	}
 	if (len == 0) {
@@ -334,8 +326,8 @@ int Buffer::copy_raw(const char* bfr, size_t len)
 }
 
 /**
- * Method `set_at(idx, v, vlen)` will set or replace buffer at index `idx`
- * with the content of `v` with length of `vlen`.
+ * Method `copy_raw_at(idx, v, vlen)` will replace buffer at index `idx` with
+ * the content of `v` with length of `vlen`.
  *
  * If `v` is null, it will truncate the buffer until `idx`.
  *
