@@ -26,269 +26,487 @@ void test_constructor()
 
 void test_constructor_size()
 {
-	T.start("constructor", "with size");
+	struct {
+		const char *desc;
+		size_t     in_size;
+		size_t     exp_len;
+		size_t     exp_size;
+	} const tests[] = {
+		{
+			"Without size or zero size",
+			0,
+			0,
+			Buffer::DFLT_SIZE,
+		},
+		{
+			"With size greater than zero",
+			256,
+			0,
+			256,
+		},
+	};
 
-	Buffer b(256);
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	assert(b.len() == 0);
-	assert(b.size() == 256);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("Buffer(size_t)", tests[x].desc);
 
-	T.expect_string(b.v(), "");
+		Buffer b(tests[x].in_size);
 
-	T.ok();
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
 }
 
 void test_constructor_raw()
 {
-	T.start("constructor", "with raw char");
+	struct {
+		const char *desc;
+		const char *in_v;
+		size_t     in_len;
+		size_t     exp_len;
+		size_t     exp_size;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"With empty string",
+			"",
+			0,
+			0,
+			16,
+			"",
+		},
+		{
+			"With non empty string",
+			"abcdefghij",
+			0,
+			10,
+			10,
+			"abcdefghij",
+		},
+		{
+			"With non empty string and length",
+			"abcdefghij",
+			4,
+			4,
+			4,
+			"abcd",
+		},
+	};
 
-	const char* exp = "Use of this source code is governed by a BSD-style";
-	size_t exp_len = strlen(exp);
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	Buffer b(exp);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("Buffer(const char *, size_t)", tests[x].desc);
 
-	assert(b.len() == exp_len);
-	assert(b.size() == exp_len);
-	T.expect_string(b.v(), exp);
+		Buffer b(tests[x].in_v, tests[x].in_len);
 
-	T.ok();
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), 0);
 
-	T.start(0, "with raw char and size");
-
-	Buffer c(exp, 6);
-
-	assert(c.len() == 6);
-	assert(c.size() == 6);
-	T.expect_string(c.v(), "Use of");
-
-	T.ok();
+		T.ok();
+	}
 }
 
 void test_constructor_buffer()
 {
-	T.start("constructor", "with empty buffer");
+	struct {
+		const char *desc;
+		Buffer     *in_buffer;
+		size_t     exp_len;
+		size_t     exp_size;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"With empty buffer",
+			new Buffer(256),
+			0,
+			256,
+			"",
+		},
+		{
+			"With non empty buffer",
+			new Buffer("abcdefghij"),
+			10,
+			10,
+			"abcdefghij",
+		},
+	};
 
-	const char* exp = "Use of this source code is governed by a BSD-style";
-	size_t exp_len = strlen(exp);
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	Buffer a(256);
-	Buffer b(&a);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("Buffer(const Buffer *)", tests[x].desc);
 
-	assert(b.len() == 0);
-	assert(b.size() == a.size());
-	T.expect_string(a.v(), b.v());
+		Buffer b(tests[x].in_buffer);
 
-	T.ok();
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), 0);
 
-	T.start(0, "with non-empty buffer");
+		if (tests[x].in_buffer) {
+			delete tests[x].in_buffer;
+		}
 
-	a.copy_raw(exp);
-
-	Buffer c(&a);
-
-	assert(c.len() == exp_len);
-	assert(c.size() == exp_len);
-	T.expect_string(c.v(), exp);
-
-	T.ok();
+		T.ok();
+	}
 }
 
 void test_detach()
 {
-	T.start("detach");
+	struct {
+		const char *desc;
+		const char *in_v;
+		size_t     exp_len;
+		size_t     exp_size;
+		const char *exp_v;
+		const char *exp_ret;
+	} const tests[] = {
+		{
+			"With empty buffer",
+			"",
+			0,
+			0,
+			NULL,
+			"",
+		},
+		{
+			"With non empty buffer",
+			"abcdefghij",
+			0,
+			0,
+			NULL,
+			"abcdefghij",
+		},
+	};
 
-	Buffer a;
-	char *v;
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	v = a.detach();
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("detach()", tests[x].desc);
 
-	assert(a.len() == 0);
-	assert(a.size() == 0);
-	assert(a.v() == NULL);
-	assert(v != NULL);
+		Buffer b;
 
-	free(v);
+		b.copy_raw(tests[x].in_v);
 
-	T.ok();
+		char *got = b.detach();
+
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_ptr((void *) tests[x].exp_v, (void *) b.v(), 0);
+		T.expect_string(tests[x].exp_ret, got, 0);
+
+		if (got) {
+			free(got);
+		}
+
+		T.ok();
+	}
 }
 
 void test_release()
 {
-	T.start("release");
+	struct {
+		const char *desc;
+		const char *in_v;
+		size_t     exp_len;
+		size_t     exp_size;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"With empty buffer",
+			"",
+			0,
+			0,
+			NULL,
+		},
+		{
+			"With non empty buffer",
+			"abcdefghij",
+			0,
+			0,
+			NULL,
+		},
+	};
 
-	Buffer a;
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	assert(a.len() == 0);
-	assert(a.size() == Buffer::DFLT_SIZE);
-	assert(a.v() != NULL);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("release()", tests[x].desc);
 
-	a.release();
+		Buffer b;
 
-	assert(a.len() == 0);
-	assert(a.size() == 0);
-	assert(a.v() == NULL);
+		b.copy_raw(tests[x].in_v);
 
-	T.ok();
+		b.release();
+
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_ptr((void *) tests[x].exp_v, (void *) b.v(), 0);
+
+		T.ok();
+	}
 }
 
 void test_reset()
 {
-	T.start("reset");
+	struct {
+		const char *desc;
+		const char *in_v;
+		size_t     exp_len;
+		size_t     exp_size;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"When buffer empty",
+			"",
+			0,
+			Buffer::DFLT_SIZE,
+			"",
+		},
+		{
+			"With buffer not empty",
+			"abcdefghij",
+			0,
+			Buffer::DFLT_SIZE,
+			"",
+		},
+	};
 
-	const char* exp = "a string";
-	const size_t exp_len = strlen(exp);
-	Buffer a;
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	a.copy_raw(exp);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("reset()", tests[x].desc);
 
-	assert(a.len() == exp_len);
-	assert(a.size() == Buffer::DFLT_SIZE);
-	T.expect_string(exp, a.v(), 0);
+		Buffer b;
 
-	a.reset();
+		b.copy_raw(tests[x].in_v);
 
-	assert(a.len() == 0);
-	assert(a.size() == Buffer::DFLT_SIZE);
-	T.expect_string("", a.v(), 0);
+		b.reset();
 
-	T.ok();
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+
+		T.ok();
+	}
 }
 
 void test_trim()
 {
-	T.start("trim");
+	struct {
+		const char *desc;
+		const char *in_v;
+		const char *exp;
+	} const tests[] = {
+		{
+			"With space before",
+			"	  a",
+			"a",
+		},
+		{
+			"With space after",
+			"a	  ",
+			"a",
+		},
+		{
+			"With space before and after",
+			"	  a	  ",
+			"a",
+		},
+	};
 
-	const size_t in_len = 3;
-	const char* in[in_len] = {
-			"	  a"
-		,	"a	  "
-		,	"	  a	  "
-		};
-	const char* exp = "a";
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	Buffer a;
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("trim()", tests[x].desc);
 
-	for (size_t x = 0; x < in_len; x++) {
-		a.copy_raw(in[x]);
-		a.trim();
-		T.expect_string(exp, a.v(), 0);
+		Buffer b;
+
+		b.copy_raw(tests[x].in_v);
+		b.trim();
+
+		T.expect_string(tests[x].exp, b.v(), 0);
+
+		T.ok();
 	}
-
-	T.ok();
 }
 
 void test_truncate()
 {
-	T.start("truncate");
+	struct {
+		const char *desc;
+		const char *in_v;
+		size_t     in_len;
+		size_t     exp_len;
+		size_t     exp_size;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"With length greater than buffer len",
+			"abcdefghij",
+			20,
+			10,
+			Buffer::DFLT_SIZE,
+			"abcdefghij",
+		},
+		{
+			"With length smaller than buffer",
+			"abcdefghij",
+			3,
+			3,
+			Buffer::DFLT_SIZE,
+			"abc",
+		},
+	};
 
-	const char* input = "abcdefghijklmnopqrstuvwxyz";
-	const char* exp = "abcd";
-	const size_t input_len = strlen(input);
-	const size_t exp_len = strlen(exp);
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	Buffer a;
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("truncate()", tests[x].desc);
 
-	a.copy_raw(input);
+		Buffer b;
 
-	assert(a.len() == input_len);
-	assert(a.size() == input_len);
+		b.copy_raw(tests[x].in_v);
 
-	a.truncate(3);
+		b.truncate(tests[x].in_len);
 
-	assert(a.len() == exp_len);
-	assert(a.size() == input_len);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), 0);
 
-	T.expect_string(exp, a.v(), 0);
-
-	T.ok();
+		T.ok();
+	}
 }
 
 void test_is_empty()
 {
-	T.start("is_empty", "true");
+	struct {
+		const char *desc;
+		const char *in_v;
+		int        exp_res;
+	} const tests[] = {
+		{
+			"Empty",
+			"",
+			1,
+		},
+		{
+			"Not empty",
+			"a",
+			0,
+		},
+	};
 
-	Buffer a;
+	Buffer       b;
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	assert(a.is_empty() == 1);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("is_empty()", tests[x].desc);
 
-	T.ok();
+		b.copy_raw(tests[x].in_v);
 
-	T.start("is_empty", "false");
+		T.expect_signed(tests[x].exp_res, b.is_empty(), 0);
 
-	a.copy_raw("any");
-
-	assert(a.is_empty() == 0);
-
-	T.ok();
+		T.ok();
+	}
 }
 
 void test_set_len()
 {
-	T.start("set_len", "it should not resize the buffer");
+	struct {
+		const char *desc;
+		size_t     in_len;
+		size_t     exp_len;
+		size_t     exp_size;
+	} const tests[] = {
+		{
+			"With new len less than current size",
+			1,
+			1,
+			Buffer::DFLT_SIZE,
+		},
+		{
+			"With new len greater than current size",
+			256,
+			256,
+			257,
+		},
+	};
 
-	Buffer b;
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	assert(b.len() == 0);
-	assert(b.size() == Buffer::DFLT_SIZE);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("set_len()", tests[x].desc);
 
-	b.set_len(b.size());
+		Buffer b;
 
-	assert(b.len() == b.size());
-	assert(b.size() == Buffer::DFLT_SIZE);
+		b.set_len(tests[x].in_len);
 
-	T.ok();
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
 
-	T.start(0, "it should resize the buffer");
-
-	size_t new_len = 24;
-
-	b.set_len(new_len);
-
-	assert(b.len() == new_len);
-	assert(b.size() == (new_len + 1));
-
-	T.ok();
+		T.ok();
+	}
 }
 
 void test_resize()
 {
-	T.start("resize", "greater than current size");
+	struct {
+		const char *desc;
+		const char *in_v;
+		size_t      in_resize_to;
+		size_t      exp_len;
+		size_t      exp_size;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"Greater than current size",
+			"Buffer",
+			256,
+			6,
+			256,
+			"Buffer",
+		},
+		{
+			"Less than current size",
+			"Buffer",
+			1,
+			6,
+			Buffer::DFLT_SIZE,
+			"Buffer",
+		},
+	};
 
-	size_t resize_to = 256;
-	const char* exp = "buffer";
-	const size_t exp_len = strlen(exp);
-	Buffer a;
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	a.copy_raw(exp);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("resize()", tests[x].desc);
 
-	assert(a.len() == exp_len);
-	assert(a.size() == Buffer::DFLT_SIZE);
-	T.expect_string(exp, a.v(), 0);
+		Buffer b;
 
-	a.resize(resize_to);
+		b.copy_raw(tests[x].in_v);
+		b.resize(tests[x].in_resize_to);
 
-	assert(a.len() == exp_len);
-	assert(a.size() == resize_to);
-	T.expect_string(exp, a.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), 0);
 
-	T.ok();
-
-	T.start(0, "less than current size");
-
-	const size_t resize_to_less = 16;
-
-	a.resize(resize_to_less);
-
-	assert(a.len() == exp_len);
-	assert(a.size() == resize_to);
-	T.expect_string(exp, a.v(), 0);
-
-	T.ok();
+		T.ok();
+	}
 }
 
 void test_char_at()
 {
-	const struct t_char_at inputs[] = {
+	struct {
+		const char *desc;
+		const char *in;
+		size_t     idx;
+		char       exp;
+	} const tests[] = {
 		{
 			"With empty buffer",
 			"",
@@ -322,16 +540,16 @@ void test_char_at()
 	};
 
 	Buffer b;
-	const size_t inputs_len = ARRAY_SIZE(inputs);
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	for (size_t x = 0; x < inputs_len; x++) {
-		T.start("char_at", inputs[x].desc);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("char_at()", tests[x].desc);
 
-		b.copy_raw(inputs[x].in);
+		b.copy_raw(tests[x].in);
 
-		char got = b.char_at(inputs[x].idx);
+		char got = b.char_at(tests[x].idx);
 
-		assert(inputs[x].exp == got);
+		assert(tests[x].exp == got);
 
 		T.ok();
 	}
@@ -339,7 +557,14 @@ void test_char_at()
 
 void test_set_char_at()
 {
-	const struct t_set_char_at inputs[] = {
+	struct {
+		const char *desc;
+		const char *in;
+		size_t     idx;
+		char       v;
+		int        exp_ret;
+		const char *exp_res;
+	} const tests[] = {
 		{
 			"With empty input",
 			"",
@@ -375,18 +600,18 @@ void test_set_char_at()
 	};
 
 	Buffer b;
-	size_t inputs_len = ARRAY_SIZE(inputs);
+	size_t tests_len = ARRAY_SIZE(tests);
 
-	for (size_t x = 0; x < inputs_len; x++) {
-		T.start("set_char_at", inputs[x].desc);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("set_char_at()", tests[x].desc);
 
-		b.copy_raw(inputs[x].in);
+		b.copy_raw(tests[x].in);
 
-		int got_ret = b.set_char_at(inputs[x].idx, inputs[x].v);
+		int got_ret = b.set_char_at(tests[x].idx, tests[x].v);
 
-		assert(inputs[x].exp_ret == got_ret);
+		assert(tests[x].exp_ret == got_ret);
 
-		T.expect_string(inputs[x].exp_res, b.v(), 0);
+		T.expect_string(tests[x].exp_res, b.v(), 0);
 
 		T.ok();
 	}
@@ -394,7 +619,13 @@ void test_set_char_at()
 
 void test_copy()
 {
-	const struct t_copy inputs[] = {
+	struct {
+		const char   *desc;
+		Buffer       *in;
+		const size_t exp_len;
+		const size_t exp_size;
+		const char   *exp_v;
+	} const tests[] = {
 		{
 			"With null",
 			NULL,
@@ -412,19 +643,19 @@ void test_copy()
 	};
 
 	Buffer b;
-	size_t inputs_len = ARRAY_SIZE(inputs);
+	size_t tests_len = ARRAY_SIZE(tests);
 
-	for (size_t x = 0; x< inputs_len; x++) {
-		T.start("copy()", inputs[x].desc);
+	for (size_t x = 0; x< tests_len; x++) {
+		T.start("copy()", tests[x].desc);
 
-		b.copy(inputs[x].in);
+		b.copy(tests[x].in);
 
-		assert(inputs[x].exp_len == b.len());
-		assert(inputs[x].exp_size == b.size());
-		T.expect_string(inputs[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), 0);
 
-		if (inputs[x].in) {
-			delete inputs[x].in;
+		if (tests[x].in) {
+			delete tests[x].in;
 		}
 
 		T.ok();
@@ -433,7 +664,14 @@ void test_copy()
 
 void test_copy_raw()
 {
-	const struct t_copy_raw inputs[] = {
+	struct {
+		const char   *desc;
+		const char   *in;
+		size_t       in_len;
+		const size_t exp_len;
+		const size_t exp_size;
+		const char   *exp_v;
+	} const tests[] = {
 		{
 			"With empty string",
 			NULL,
@@ -468,18 +706,18 @@ void test_copy_raw()
 		},
 	};
 
-	size_t inputs_len = ARRAY_SIZE(inputs);
+	size_t tests_len = ARRAY_SIZE(tests);
 
-	for (size_t x = 0; x < inputs_len; x++) {
-		T.start("copy_raw()", inputs[x].desc);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("copy_raw()", tests[x].desc);
 
 		Buffer b;
 
-		b.copy_raw(inputs[x].in, inputs[x].in_len);
+		b.copy_raw(tests[x].in, tests[x].in_len);
 
-		assert(inputs[x].exp_len == b.len());
-		assert(inputs[x].exp_size == b.size());
-		T.expect_string(inputs[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), 0);
 
 		T.ok();
 	}
