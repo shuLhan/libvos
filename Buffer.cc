@@ -378,24 +378,20 @@ int Buffer::copy_raw_at(size_t idx, const char* v, size_t vlen)
 }
 
 /**
- * @method	: Buffer::set
- * @param	:
- *	> bfr	: pointer to Buffer object.
- *	> dflt	: default value to be copied to buffer if 'bfr' is empty.
- * @return	:
- *	< 0	: success, or 'bfr' is nil.
- *	< -1	: fail.
- * @desc	:
- *	set contents of Buffer to 'bfr'. This method is similar with copy()
- *	with additional parameter 'dflt', if 'bfr' is nil then 'dflt' value
- *	will be used.
+ * Method `set(bfr, dflt)` will set contents of Buffer to 'bfr'. This method
+ * is similar with `copy()` with additional parameter 'dflt'; if 'bfr' is nil
+ * or empty then 'dflt' value will be used.
+ *
+ * If both are nil or empties then buffer content will not changes.
+ *
+ * On success, it will return `0`, or `-1` otherwise.
  */
 int Buffer::set(const Buffer* bfr, const Buffer* dflt)
 {
-	if (bfr) {
+	if (bfr && !bfr->is_empty()) {
 		return copy_raw(bfr->_v, bfr->_i);
 	}
-	if (dflt) {
+	if (dflt && !dflt->is_empty()) {
 		return copy_raw(dflt->_v, dflt->_i);
 	}
 	return 0;

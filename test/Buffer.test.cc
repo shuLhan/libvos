@@ -825,6 +825,89 @@ void test_copy_raw_at()
 	}
 }
 
+void test_set()
+{
+	struct {
+		const char *desc;
+		const char *in_v;
+		Buffer     *in_bfr;
+		Buffer     *in_dflt;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"With both parameters are NULL",
+			"initial",
+			NULL,
+			NULL,
+			"initial",
+		},
+		{
+			"With bfr is empty and default is NULL",
+			"initial",
+			new Buffer(),
+			NULL,
+			"initial",
+		},
+		{
+			"With bfr is not empty and default is NULL",
+			"initial",
+			new Buffer("buffer"),
+			NULL,
+			"buffer",
+		},
+		{
+			"With bfr is NULL and default is empty",
+			"initial",
+			NULL,
+			new Buffer(),
+			"initial",
+		},
+		{
+			"With bfr is NULL and default is not empty",
+			"initial",
+			NULL,
+			new Buffer("default"),
+			"default",
+		},
+		{
+			"With both parameters are empty",
+			"initial",
+			new Buffer(),
+			new Buffer(),
+			"initial",
+		},
+		{
+			"With both parameters are not empty",
+			"initial",
+			new Buffer("buffer"),
+			new Buffer("default"),
+			"buffer",
+		},
+	};
+
+	Buffer b;
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("set()", tests[x].desc);
+
+		b.copy_raw(tests[x].in_v);
+
+		b.set(tests[x].in_bfr, tests[x].in_dflt);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+
+		T.ok();
+
+		if (tests[x].in_bfr) {
+			delete tests[x].in_bfr;
+		}
+		if (tests[x].in_dflt) {
+			delete tests[x].in_dflt;
+		}
+	}
+}
+
 Buffer in;
 List* lbuf;
 
@@ -1062,6 +1145,8 @@ int main()
 	test_copy();
 	test_copy_raw();
 	test_copy_raw_at();
+
+	test_set();
 
 	test_split_by_char();
 
