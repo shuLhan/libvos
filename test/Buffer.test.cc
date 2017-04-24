@@ -908,6 +908,82 @@ void test_set()
 	}
 }
 
+void test_set_raw()
+{
+	struct {
+		const char *desc;
+		const char *in_v;
+		const char *in_bfr;
+		const char *in_dflt;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"With both parameters are NULL",
+			"initial",
+			NULL,
+			NULL,
+			"initial",
+		},
+		{
+			"With bfr is empty and default is NULL",
+			"initial",
+			"",
+			NULL,
+			"initial",
+		},
+		{
+			"With bfr is not empty and default is NULL",
+			"initial",
+			"buffer",
+			NULL,
+			"buffer",
+		},
+		{
+			"With bfr is NULL and default is empty",
+			"initial",
+			NULL,
+			"",
+			"initial",
+		},
+		{
+			"With bfr is NULL and default is not empty",
+			"initial",
+			NULL,
+			"default",
+			"default",
+		},
+		{
+			"With both parameters are empty",
+			"initial",
+			"",
+			"",
+			"initial",
+		},
+		{
+			"With both parameters are not empty",
+			"initial",
+			"buffer",
+			"default",
+			"buffer",
+		},
+	};
+
+	Buffer b;
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("set_raw()", tests[x].desc);
+
+		b.copy_raw(tests[x].in_v);
+
+		b.set_raw(tests[x].in_bfr, tests[x].in_dflt);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+
+		T.ok();
+	}
+}
+
 Buffer in;
 List* lbuf;
 
@@ -1147,6 +1223,7 @@ int main()
 	test_copy_raw_at();
 
 	test_set();
+	test_set_raw();
 
 	test_split_by_char();
 

@@ -398,21 +398,31 @@ int Buffer::set(const Buffer* bfr, const Buffer* dflt)
 }
 
 /**
- * @method	: Buffer::set_raw
- * @param	:
- *	> bfr	: a pointer to raw buffer.
- *	> dflt	: default value to be copied to buffer if 'bfr' is empty.
- * @return	:
- *	< 0	: success.
- *	< <0	: fail.
- * @desc	: set buffer to 'bfr' or to 'dflt' if 'bfr' is null/empty.
+ * Method `set_raw(bfr, dflt)` will set contents of Buffer to 'bfr', only if
+ * `bfr` is not nil and not empty.
+ * If `bfr` is nil or empty, then `dflt` will be used.
+ * If both are nil or empties then buffer content will not changes.
+ *
+ * On success, it will return `0`, or `-1` otherwise.
  */
 int Buffer::set_raw(const char* bfr, const char* dflt)
 {
+	size_t len;
 	if (bfr) {
-		return copy_raw(bfr, strlen(bfr));
+		len = strlen(bfr);
+		if (len) {
+			return copy_raw(bfr, len);
+		}
 	}
-	return copy_raw(dflt, strlen(dflt));
+
+	if (dflt) {
+		len = strlen(dflt);
+		if (len) {
+			return copy_raw(dflt, len);
+		}
+	}
+
+	return 0;
 }
 
 /**
