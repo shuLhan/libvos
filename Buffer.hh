@@ -33,7 +33,7 @@ namespace vos {
 class Buffer : public Object {
 public:
 	explicit Buffer(const size_t size = DFLT_SIZE);
-	Buffer(const char* v, const size_t vlen = 0);
+	Buffer(const char *v, size_t vlen = 0);
 	explicit Buffer(const Buffer* v);
 	virtual ~Buffer();
 

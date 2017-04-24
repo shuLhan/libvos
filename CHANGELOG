@@ -17,6 +17,16 @@ New Features
   - set_len(): new method to set buffer index position directly
   - truncate(): new method to truncate buffer
 
+* Test: new class for testing
+
+Fixes
+-----
+
+* Buffer:
+  - Buffer(size_t): check if size is zero, so object always created
+    with non null buffer
+  - truncate(): always truncate at the index pointed by `len`
+
 Internal
 --------
 

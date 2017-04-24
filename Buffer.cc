@@ -47,20 +47,27 @@ Buffer::Buffer(const size_t size)
 ,	_l(0)
 ,	_v(NULL)
 {
-	resize(size);
+	if (size) {
+		resize(size);
+	} else {
+		resize(Buffer::DFLT_SIZE);
+	}
 }
 
 /**
  * Method `Buffer(v)` will create a new Buffer object and initialize
  * its content from `v` with length of `v` is defined by `vlen`.
  */
-Buffer::Buffer(const char* v, const size_t vlen)
+Buffer::Buffer(const char *v, size_t vlen)
 :	Object()
 ,	_i(0)
 ,	_l(0)
 ,	_v(NULL)
 {
-	if (v) {
+	if (v && !vlen) {
+		vlen = strlen(v);
+	}
+	if (vlen) {
 		copy_raw(v, vlen);
 	} else {
 		resize(DFLT_SIZE);
@@ -152,10 +159,10 @@ void Buffer::trim()
  */
 void Buffer::truncate(const size_t len)
 {
-	if ((len + 1) > _i) {
+	if (len >= _i) {
 		return;
 	}
-	_i = len + 1;
+	_i = len;
 	_v[_i] = 0;
 }
 
