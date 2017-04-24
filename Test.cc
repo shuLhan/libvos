@@ -40,19 +40,56 @@ void Test::ok()
 	out("OK\n");
 }
 
-//
-// Method `expect_string(exp, got, to)` will compare expected string value
-// `exp` with `got` value.
-//
-// Value of equality `-1` means the function expect the `exp` value to be less
-// than `got` value.
-// Value of equality `0` means its `exp` equal with `got`.
-// Value of equality `1` means the function expect the `exp` value greater
-// than `got` value.
-//
-// It will return `0` if string comparison of `exp` with `got` value match
-// with `equality` value; otherwise it will exit the test with status 1.
-//
+/**
+ * Method `expect_ptr(exp, got, equality)` will compare pointer of `exp` and
+ * `got`.
+ *
+ * It will return `0` if,
+ *
+ * - `exp` and `got` has the same pointer and equality is true (`1`).
+ * - `exp` and `got` is not point to the same memory and equality is false
+ *   (`0`).
+ *
+ * Otherwise it will terminate the program with exit status `1`.
+ */
+int Test::expect_ptr(void *exp, void *got, int equality)
+{
+	const char *str_equality;
+
+	switch (equality) {
+	case 0:
+		if (exp == got) {
+			return 0;
+		}
+		str_equality = "equal";
+		break;
+	case 1:
+		if (exp != got) {
+			return 0;
+		}
+		str_equality = "not equal";
+		break;
+	}
+
+	printf("\n");
+	printf("    Expecting pointer '%p' %s '%p'\n", exp, str_equality, got);
+
+	exit(1);
+}
+
+/**
+ * Method `expect_string(exp, got, to)` will compare expected string value
+ * `exp` with `got` value.
+ *
+ * Value of equality `-1` means the function expect the `exp` value to be less
+ * than `got` value.
+ * Value of equality `0` means its `exp` equal with `got`.
+ * Value of equality `1` means the function expect the `exp` value greater
+ * than `got` value.
+ *
+ * It will return `0` if string comparison of `exp` with `got` value match
+ * with `equality` value; otherwise it will exit the test with status 1.
+ */
 int Test::expect_string(const char* exp, const char* got, int equality)
 {
 	int s = strcmp(exp, got);
@@ -68,19 +105,63 @@ int Test::expect_string(const char* exp, const char* got, int equality)
 	exit(1);
 }
 
-//
-// Method `expect_unsigned(exp, got, equality)` will check if `exp` value is
-// either,
-//
-// - less than (equality is -1),
-// - equal (equality is 0), or
-// - greater than (equality is 1)
-//
-// `got` value.
-//
-// It will return `0` if expected and got value true to their equality value.
-// Otherwise, it will exit with status `1`.
-//
+/**
+ * Method `expect_signed(exp, got, equality)` will check if `exp` value is
+ * either,
+ *
+ * - less (equality is -1),
+ * - equal (equality is 0), or
+ * - greater (equality is 1)
+ *
+ * than `got` value.
+ *
+ * It will return `0` if expected and got value true to their equality value.
+ * Otherwise, it will exit with status `1`.
+ */
+int Test::expect_signed(const ssize_t exp, const ssize_t got, int equality)
+{
+	const char *str_equality;
+
+	switch (equality) {
+	case -1:
+		if (exp < got) {
+			return 0;
+		}
+		str_equality = "less than";
+		break;
+	case 0:
+		if (exp == got) {
+			return 0;
+		}
+		str_equality = "equal";
+		break;
+	case 1:
+		if (exp > got) {
+			return 0;
+		}
+		str_equality = "greater than";
+		break;
+	}
+
+	printf("\n");
+	printf("    Expecting '%zd' %s '%zd'\n", exp, str_equality, got);
+
+	exit(1);
+}
+
+/**
+ * Method `expect_unsigned(exp, got, equality)` will check if `exp` value is
+ * either,
+ *
+ * - less than (equality is -1),
+ * - equal (equality is 0), or
+ * - greater than (equality is 1)
+ *
+ * `got` value.
+ *
+ * It will return `0` if expected and got value true to their equality value.
+ * Otherwise, it will exit with status `1`.
+ */
 int Test::expect_unsigned(const size_t exp, const size_t got, int equality)
 {
 	const char *str_equality;
