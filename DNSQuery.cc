@@ -242,7 +242,7 @@ int DNSQuery::create_question(const char* qname, const int type)
 	reset(DNSQ_DO_ALL);
 
 	set_header ((uint16_t) (rand() % 65536)
-		, HDR_IS_QUERY | OPCODE_QUERY | RTYPE_RD
+		, HDR_IS_QUERY | OPCODE_QUERY
 		, 1, 0, 0, 0);
 
 	_q_type		= htons((uint16_t) type);
@@ -830,7 +830,7 @@ int DNSQuery::create_answer (const char* name
 	_attrs		= attrs;
 
 	set_header (0
-		, HDR_IS_RESPONSE | OPCODE_QUERY | RTYPE_RD
+		, HDR_IS_RESPONSE | OPCODE_QUERY
 		, 1, (uint16_t) 1, 0, 0);
 
 	/* Create question section */

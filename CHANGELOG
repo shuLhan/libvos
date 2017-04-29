@@ -27,6 +27,9 @@ Fixes
     with non null buffer
   - truncate(): always truncate at the index pointed by `len`
 
+* DNSQuery:
+  - Remove recursive-desired flag when creating question and answer
+
 Internal
 --------
 
