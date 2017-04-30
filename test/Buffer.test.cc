@@ -984,6 +984,69 @@ void test_set_raw()
 	}
 }
 
+void test_shiftr()
+{
+	struct {
+		const char *desc;
+		const char *in_v;
+		const size_t in_nbyte;
+		const char *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With empty buffer",
+			"",
+			4,
+			"",
+			0,
+			16,
+		},
+		{
+			"With empty buffer and nbyte greater than buffer size",
+			"",
+			20,
+			"",
+			0,
+			20,
+		},
+		{
+			"With non empty buffer",
+			"abcd",
+			4,
+			"\0\0\0\0abcd",
+			8,
+			16,
+		},
+		{
+			"With non empty buffer and nbyte greater than buffer size",
+			"abcdefghij",
+			10,
+			"\0\0\0\0\0\0\0\0\0\0abcdefghij",
+			20,
+			20,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("shiftr()", tests[x].desc);
+
+		Buffer b;
+		
+		b.copy_raw(tests[x].in_v);
+
+		b.shiftr(tests[x].in_nbyte);
+
+		T.expect_mem(tests[x].exp_v, b.v(), tests[x].exp_len, 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
+}
+
 Buffer in;
 List* lbuf;
 
@@ -1224,6 +1287,8 @@ int main()
 
 	test_set();
 	test_set_raw();
+
+	test_shiftr();
 
 	test_split_by_char();
 

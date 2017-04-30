@@ -426,14 +426,13 @@ int Buffer::set_raw(const char* bfr, const char* dflt)
 }
 
 /**
- * @method	: Buffer::shiftr
- * @param	:
- *	> nbyte	: number of bytes, to be shifted to the right.
- *	> c	: fill the new empty gap in the left with value of 'c'.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: Move contents of buffer n bytes to the right.
+ * Method `shiftr(nbyte, c)` will move contents of buffer `nbyte` to the right
+ * and fill the empty gap in the left with value of `c` (default to zero).
+ *
+ * If buffer is empty, its will behave like resize if `nbyte` is greater than
+ * current buffer size.
+ *
+ * On success it will return `0`, otherwise it will return `-1`.
  */
 int Buffer::shiftr(const size_t nbyte, int c)
 {
@@ -445,6 +444,9 @@ int Buffer::shiftr(const size_t nbyte, int c)
 		if (s) {
 			return -1;
 		}
+	}
+	if (_i == 0) {
+		return 0;
 	}
 
 	memmove(&_v[nbyte], &_v[0], _i);
