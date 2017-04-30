@@ -63,7 +63,6 @@ public:
 	int set(const Buffer* bfr, const Buffer* dflt);
 	int set_raw(const char* bfr, const char* dflt);
 
-	int move_to(Buffer** bfr);
 	int shiftr(const size_t nbyte, int c = 0);
 
 	int appendc(const char c);

@@ -426,38 +426,6 @@ int Buffer::set_raw(const char* bfr, const char* dflt)
 }
 
 /**
- * @method	: Buffer::move_to
- * @param	:
- *	> bfr	: a pointer to another buffer.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	:
- * Move content of this Buffer object to another Buffer object, 'bfr',
- * leave current object to be an empty Buffer object.
- */
-int Buffer::move_to(Buffer** bfr)
-{
-	if ((*bfr)) {
-		delete (*bfr);
-	}
-
-	(*bfr) = new Buffer(size_t(0));
-	if (! (*bfr)) {
-		return -1;
-	}
-
-	(*bfr)->_l	= _l;
-	(*bfr)->_i	= _i;
-	(*bfr)->_v	= _v;
-	_i		= 0;
-	_l		= 0;
-	_v		= NULL;
-
-	return 0;
-}
-
-/**
  * @method	: Buffer::shiftr
  * @param	:
  *	> nbyte	: number of bytes, to be shifted to the right.

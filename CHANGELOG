@@ -9,6 +9,7 @@ Breaking Changes
   - refactoring buffer index, `_i`, from public to protected
   - Remove method `set()`
   - Rename method `set_at()` to `copy_raw_at()`
+  - Remove method `move_to()`
 
 New Features
 ------------
