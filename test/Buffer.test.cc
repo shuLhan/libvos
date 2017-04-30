@@ -1047,6 +1047,69 @@ void test_shiftr()
 	}
 }
 
+void test_appendc()
+{
+	struct {
+		const char *desc;
+		const char *in_v;
+		const char in_c;
+		const char *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With negative char",
+			"",
+			-1,
+			"",
+			0,
+			16,
+		},
+		{
+			"With empty buffer",
+			"",
+			'a',
+			"a",
+			1,
+			16,
+		},
+		{
+			"With non empty buffer",
+			"abcd",
+			'e',
+			"abcde",
+			5,
+			16,
+		},
+		{
+			"With buffer length equal to size",
+			"1234567890123456",
+			'a',
+			"1234567890123456a",
+			17,
+			17,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("appendc()", tests[x].desc);
+
+		Buffer b;
+		
+		b.copy_raw(tests[x].in_v);
+
+		b.appendc(tests[x].in_c);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
+}
+
 Buffer in;
 List* lbuf;
 
@@ -1289,6 +1352,8 @@ int main()
 	test_set_raw();
 
 	test_shiftr();
+
+	test_appendc();
 
 	test_split_by_char();
 

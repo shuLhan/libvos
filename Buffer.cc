@@ -459,28 +459,29 @@ int Buffer::shiftr(const size_t nbyte, int c)
 }
 
 /**
- * @method	: Buffer::appendc
- * @param	:
- *	> c	: a character to be added to buffer.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: Append one character to buffer.
+ * Method `appendc(c)` will append a character `c` to buffer.
+ *
+ * On success it will return `0`, otherwise it will return `-1`.
  */
 int Buffer::appendc(const char c)
 {
 	if (c < 0) {
 		return 0;
 	}
-	if (_i + CHAR_SIZE > _l) {
-		int s = resize(_i + CHAR_SIZE);
+
+	size_t growth = _i + CHAR_SIZE;
+
+	if (growth > _l) {
+		int s = resize(growth);
 		if (s) {
 			return -1;
 		}
 	}
+
 	_v[_i]	= c;
 	_i++;
 	_v[_i]	= '\0';
+
 	return 0;
 }
 
