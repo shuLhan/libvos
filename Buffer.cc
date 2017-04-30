@@ -491,7 +491,7 @@ int Buffer::appendc(const char c)
  *
  * On success it will return `0`, otherwise it will return `-1`.
  */
-int Buffer::appendi(long int i, unsigned int base)
+int Buffer::appendi(long int i, size_t base)
 {
 	int s = 0;
 	int x = -1;
@@ -555,24 +555,40 @@ int Buffer::appendui(long unsigned int i, size_t base)
 }
 
 /**
- * @method	: Buffer::appendd
- * @param	:
- *	> d	: float or double number.
- * @return	:
- *	< >=0	: success, number of bytes appended.
- *	< -1	: fail.
- * @desc	: Append a float number to buffer.
+ * Method `appendd(d, prec)` will append a double number as a string to
+ * buffer.  Maximum digit in precision is six digits.
  *
- *	Maximum digit in fraction is six digits.
+ * On success it will return `0`, otherwise it will return `-1`.
  */
-int Buffer::appendd(double d, int prec)
+int Buffer::appendd(double d, size_t prec)
 {
-	char f[32];
+	int s;
+	long int i = (long int) d;
 
-	if (::snprintf(f, 32, "%.*f", prec, d) < 0) {
+	if (d < 0) {
+		d = -(d);
+		d = d + (double) i;
+	} else {
+		d = d - (double) i;
+	}
+
+	for (size_t x = 0; x < prec; x++) {
+		d = d * 10;
+	}
+
+	long int frac = (long int) d;
+
+	s = appendi(i);
+	if (s) {
 		return -1;
 	}
-	return append_raw(f, strlen(f));
+
+	s = appendc('.');
+	if (s) {
+		return -1;
+	}
+
+	return appendi(frac);
 }
 
 /**

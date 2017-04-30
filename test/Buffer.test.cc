@@ -1318,6 +1318,110 @@ void test_appendui()
 	}
 }
 
+void test_appendd()
+{
+	struct {
+		const char *desc;
+		const char *in_v;
+		const double in_d;
+		const size_t in_prec;
+		const char *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With negative number (-1, 0)",
+			"",
+			-1,
+			3,
+			"-1.0",
+			4,
+			16,
+		},
+		{
+			"With negative number (-1, 3)",
+			"",
+			-1,
+			3,
+			"-1.0",
+			4,
+			16,
+		},
+		{
+			"With negative number (-1.234, 3)",
+			"",
+			-1.23456,
+			3,
+			"-1.234",
+			6,
+			16,
+		},
+		{
+			"With negative number (-1.234567, 3)",
+			"",
+			-1.234567,
+			3,
+			"-1.234",
+			6,
+			16,
+		},
+		{
+			"With zero (0, 3)",
+			"",
+			0,
+			3,
+			"0.0",
+			3,
+			16,
+		},
+		{
+			"With positive number (1, 3)",
+			"",
+			1,
+			3,
+			"1.0",
+			3,
+			16,
+		},
+		{
+			"With postitive number (1.234, 3)",
+			"",
+			1.234,
+			3,
+			"1.234",
+			5,
+			16,
+		},
+		{
+			"With positive number (1.234567, 3)",
+			"",
+			1.234567,
+			3,
+			"1.234",
+			5,
+			16,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("appendd()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].in_v);
+
+		b.appendd(tests[x].in_d, tests[x].in_prec);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
+}
+
 Buffer in;
 List* lbuf;
 
@@ -1564,6 +1668,7 @@ int main()
 	test_appendc();
 	test_appendi();
 	test_appendui();
+	test_appendd();
 
 	test_split_by_char();
 

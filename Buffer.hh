@@ -66,9 +66,9 @@ public:
 	int shiftr(const size_t nbyte, int c = 0);
 
 	int appendc(const char c);
-	int appendi(long int i, unsigned int base = 10);
+	int appendi(long int i, size_t base = 10);
 	int appendui(long unsigned int i, size_t base = 10);
-	int appendd(double d, int prec = 6);
+	int appendd(double d, size_t prec = 6);
 	int append(const Buffer* bfr);
 	int append_raw(const char* bfr, size_t len = 0);
 	int append_bin(void *bin, size_t len);
