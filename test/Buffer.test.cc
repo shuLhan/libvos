@@ -1034,7 +1034,7 @@ void test_shiftr()
 		T.start("shiftr()", tests[x].desc);
 
 		Buffer b;
-		
+
 		b.copy_raw(tests[x].in_v);
 
 		b.shiftr(tests[x].in_nbyte);
@@ -1097,10 +1097,218 @@ void test_appendc()
 		T.start("appendc()", tests[x].desc);
 
 		Buffer b;
-		
+
 		b.copy_raw(tests[x].in_v);
 
 		b.appendc(tests[x].in_c);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
+}
+
+void test_appendi()
+{
+	struct {
+		const char *desc;
+		const char *in_v;
+		const long int in_i;
+		const long int in_base;
+		const char *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With negative number",
+			"",
+			-1,
+			10,
+			"-1",
+			2,
+			16,
+		},
+		{
+			"With big negative number",
+			"",
+			-1234567890,
+			10,
+			"-1234567890",
+			11,
+			16,
+		},
+		{
+			"With zero",
+			"",
+			0,
+			10,
+			"0",
+			1,
+			16,
+		},
+		{
+			"With positive number",
+			"",
+			1234567890,
+			10,
+			"1234567890",
+			10,
+			16,
+		},
+		{
+			"With base 16 (0)",
+			"",
+			0,
+			16,
+			"0",
+			1,
+			16,
+		},
+		{
+			"With base 16 (15)",
+			"",
+			15,
+			16,
+			"F",
+			1,
+			16,
+		},
+		{
+			"With base 16 (4096)",
+			"",
+			4096,
+			16,
+			"1000",
+			4,
+			16,
+		},
+		{
+			"With base 16 (3545088211)",
+			"",
+			3545088211,
+			16,
+			"D34DC0D3",
+			8,
+			16,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("appendi()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].in_v);
+
+		b.appendi(tests[x].in_i, tests[x].in_base);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
+}
+
+void test_appendui()
+{
+	struct {
+		const char *desc;
+		const char *in_v;
+		const long int in_i;
+		const long int in_base;
+		const char *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With negative number",
+			"",
+			-1,
+			10,
+			"18446744073709551615",
+			20,
+			20,
+		},
+		{
+			"With big negative number",
+			"",
+			-1234567890,
+			10,
+			"18446744072474983726",
+			20,
+			20,
+		},
+		{
+			"With zero",
+			"",
+			0,
+			10,
+			"0",
+			1,
+			16,
+		},
+		{
+			"With positive number",
+			"",
+			1234567890,
+			10,
+			"1234567890",
+			10,
+			16,
+		},
+		{
+			"With base 16 (0)",
+			"",
+			0,
+			16,
+			"0",
+			1,
+			16,
+		},
+		{
+			"With base 16 (15)",
+			"",
+			15,
+			16,
+			"F",
+			1,
+			16,
+		},
+		{
+			"With base 16 (4096)",
+			"",
+			4096,
+			16,
+			"1000",
+			4,
+			16,
+		},
+		{
+			"With base 16 (3545088211)",
+			"",
+			3545088211,
+			16,
+			"D34DC0D3",
+			8,
+			16,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("appendui()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].in_v);
+
+		b.appendui(tests[x].in_i, tests[x].in_base);
 
 		T.expect_string(tests[x].exp_v, b.v(), 0);
 		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
@@ -1354,6 +1562,8 @@ int main()
 	test_shiftr();
 
 	test_appendc();
+	test_appendi();
+	test_appendui();
 
 	test_split_by_char();
 

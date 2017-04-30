@@ -486,14 +486,10 @@ int Buffer::appendc(const char c)
 }
 
 /**
- * @method	: Buffer::appendi
- * @param	:
- *	> i	: a number to be appended to buffer.
- *	> base	: base number, default to 10.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: Append an integer 'i' as a string to buffer.
+ * Method `appendi(i, base)` will append a long integer `i` as a string to
+ * buffer. The value of `i` will be assumed in base 10.
+ *
+ * On success it will return `0`, otherwise it will return `-1`.
  */
 int Buffer::appendi(long int i, unsigned int base)
 {
@@ -510,8 +506,8 @@ int Buffer::appendi(long int i, unsigned int base)
 	}
 	while (i >= 0) {
 		++x;
-		angka[x]	= __digits[i % base];
-		i		= i / base;
+		angka[x] = __digits[i % base];
+		i = i / base;
 		if (0 == i) {
 			break;
 		}
@@ -527,14 +523,10 @@ int Buffer::appendi(long int i, unsigned int base)
 }
 
 /**
- * @method	: Buffer::appendui
- * @param	:
- *	> i	: an unsigned number to be appended to buffer.
- *	> base	: base number, default to 10.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: Append an unsigned integer 'i' to buffer.
+ * Method `appendui(i, base)` will append an unsigned long integer `i` as a
+ * string to buffer. The value of `i` will be assumed in base 10.
+ *
+ * On success it will return `0`, otherwise it will return `-1`.
  */
 int Buffer::appendui(long unsigned int i, size_t base)
 {
@@ -544,8 +536,8 @@ int Buffer::appendui(long unsigned int i, size_t base)
 	angka[0] = '0';
 
 	while (i > 0) {
-		angka[x]	= __digits[i % base];
-		i		= i / base;
+		angka[x] = __digits[i % base];
+		i = i / base;
 		if (0 == i) {
 			break;
 		}
