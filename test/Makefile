@@ -124,7 +124,6 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/DSVRecordMD.test	\
 	$(BLD_D)/RBT.test		\
 	$(BLD_D)/Thread.test		\
-	$(BLD_D)/User.test		\
 	$(BLD_D)/Dir.test
 
 .PHONY: all clean
@@ -137,7 +136,10 @@ clean: libvos-clean
 $(BLD_D)/%.oo: $(SRC_D)/%.cc $(SRC_D)/%.hh
 	@$(do_compile)
 
-$(BLD_D)/%.test.oo: $(SRC_D)/%.test.cc $(SRC_D)/%.test.hh
+$(BLD_D)/%.test.oo: $(SRC_D)/%.test.cc
+	@$(do_compile)
+
+$(BLD_D)/Buffer.test.oo: $(SRC_D)/Buffer.test.cc $(SRC_D)/Buffer.test.hh
 	@$(do_compile)
 
 $(BLD_D)/%.test: $(BLD_D)/%.test.oo $$(%_OBJS)
