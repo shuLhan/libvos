@@ -41,6 +41,34 @@ void Test::ok()
 }
 
 /**
+ * Method `expect_mem(exp, got, len, equality)` will compare content of memory
+ * pointed by `exp` with `got` with length no more than `len`.
+ *
+ * It will return 0 if
+ *
+ * - equality is `1` and `exp` greater than `got`,
+ * - equality is `0` and `exp` is equal with `got`,
+ * - equality is `-1` and `exp` less than `got`.
+ *
+ * Otherwise it will terminate the program with exit code `1`.
+ */
+int Test::expect_mem(const void *exp, const void *got, size_t len,
+	int equality)
+{
+	int res = memcmp(exp, got, len);
+
+	if (res == equality) {
+		return 0;
+	}
+
+	printf("\n");
+	printf("    Expecting: %p\n", exp);
+	printf("    got      : %p\n", got);
+
+	exit(1);
+}
+
+/**
  * Method `expect_ptr(exp, got, equality)` will compare pointer of `exp` and
  * `got`.
  *
