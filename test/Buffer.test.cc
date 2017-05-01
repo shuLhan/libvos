@@ -2368,6 +2368,67 @@ void test_like_raw()
 	}
 }
 
+void test_to_lint()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		const long int exp_v;
+		const long int exp_ret;
+	} const tests[] = {
+		{
+			"With empty buffer",
+			"",
+			0,
+			0,
+		},
+		{
+			"With alpha",
+			"a",
+			0,
+			0,
+		},
+		{
+			"With numeric and alpha",
+			"123a",
+			123,
+			0,
+		},
+		{
+			"With out of range number",
+			"9223372036854775808",
+			0,
+			-1,
+		},
+		{
+			"With success",
+			"2147483647",
+			2147483647,
+			0,
+		},
+	};
+
+	long int got = 0;
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("to_lint()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		got = 0;
+
+		int ret = b.to_lint(&got);
+
+		T.expect_unsigned(tests[x].exp_v, got, 0);
+		T.expect_signed(tests[x].exp_ret, ret, 0);
+
+		T.ok();
+	}
+
+}
 
 Buffer in;
 List* lbuf;
@@ -2631,6 +2692,8 @@ int main()
 	test_cmp_raw();
 	test_like();
 	test_like_raw();
+
+	test_to_lint();
 
 	test_split_by_char();
 

@@ -144,7 +144,7 @@ int Resolver::add_server(const char* server_list)
 	}
 
 	int s = 0;
-	uint16_t	port_num;
+	long int port_num;
 
 	int x;
 	Buffer b;
@@ -169,13 +169,14 @@ int Resolver::add_server(const char* server_list)
 		if (addr_port->size() == 2) {
 			port = (Buffer*) addr_port->at(1);
 
-			port_num = (uint16_t) port->to_lint();
-			if (port_num == 0) {
+			s = port->to_lint(&port_num);
+			if (s != 0 || port_num <= 0 || port_num > 65535) {
 				port_num = PORT;
 			}
 		}
 
-		s = SockAddr::INIT(&saddr, AF_INET, addr->chars(), port_num);
+		s = SockAddr::INIT(&saddr, AF_INET, addr->chars(),
+			(uint16_t) port_num);
 		if (s < 0) {
 			goto err;
 		}

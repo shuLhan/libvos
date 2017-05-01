@@ -87,7 +87,7 @@ public:
 	int like(const Buffer* bfr);
 	int like_raw(const char* bfr, size_t len = 0);
 
-	long int to_lint();
+	int to_lint(long int *res);
 
 	List* split_by_char(const char sep, int trim = 0);
 	List* split_by_whitespace();

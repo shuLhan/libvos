@@ -945,28 +945,32 @@ int Buffer::like_raw(const char* bfr, size_t len)
 }
 
 /**
- * @method		: Buffer::to_lint
- * @return		:
- *	< number	: number in long integer.
- * @desc		: Convert sequence of digit in buffer into number.
+ * Method `to_lint(v)` will convert content of buffer into long integer and
+ * save their value to `res`.
+ *
+ * On success, it will return 0.
+ * On fail, the value of `res` will not changed and it will return `-1`.
  */
-long int Buffer::to_lint()
+int Buffer::to_lint(long int *res)
 {
 	if (!_v) {
 		return 0;
 	}
 
-	long int v;
+	long int li;
 
 	errno = 0;
 
-	v = strtol(_v, NULL, 0);
+	li = strtol(_v, NULL, 0);
 
 	if (errno == ERANGE) {
 		perror(NULL);
+		return -1;
 	}
 
-	return v;
+	*res = li;
+
+	return 0;
 }
 
 void list_buffer_add(List* buffers, const char* v, size_t start, size_t end

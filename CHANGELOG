@@ -10,6 +10,8 @@ Breaking Changes
   - Remove method `set()`
   - Rename method `set_at()` to `copy_raw_at()`
   - Remove method `move_to()`
+  - to_lint(): add parameter to return the result of conversion. Method now
+    return 0 on success or -1 if fail (out of range).
 
 New Features
 ------------
