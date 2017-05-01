@@ -658,20 +658,15 @@ int Buffer::append_bin(const void *bin, size_t len)
 	_i += len;
 	_v[_i] = 0;
 
-	return (int) len;
+	return 0;
 }
 
 /**
- * @method	: Buffer::concat
- * @param	:
- *	> bfr	: pointer to raw buffer.
- *	> ...	: others raw buffer. (the last parameter must be NULL).
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: Append several raw buffer to buffer.
+ * Method `concat(bfr ...)` will append one or more string to current buffer.
  *
- * NOTE: the last parameter must be NULL.
+ * NOTE: The last parameter must be NULL.
+ *
+ * On success it will return `0`, otherwise it will return `-1`.
  */
 int Buffer::concat(const char* bfr, ...)
 {
@@ -681,6 +676,7 @@ int Buffer::concat(const char* bfr, ...)
 
 	const char *p;
 	va_list al;
+	int s = 0;
 
 	va_start(al, bfr);
 	p = bfr;
@@ -693,9 +689,7 @@ int Buffer::concat(const char* bfr, ...)
 	}
 	va_end(al);
 
-	_v[_i] = '\0';
-
-	return 0;
+	return s;
 }
 
 /**

@@ -1653,6 +1653,79 @@ void test_append_bin()
 	}
 }
 
+void test_concat()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		const char *in_v0;
+		const char *in_v1;
+		const char *in_v2;
+		const char *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With NULL",
+			"",
+			NULL,
+			NULL,
+			NULL,
+			"",
+			0,
+			16,
+		},
+		{
+			"With empty strings",
+			"",
+			"",
+			"",
+			NULL,
+			"",
+			0,
+			16,
+		},
+		{
+			"With empty string on first param",
+			"",
+			"",
+			"abcd",
+			NULL,
+			"abcd",
+			4,
+			16,
+		},
+		{
+			"With init",
+			"abcd",
+			"efgh",
+			"ijkl",
+			NULL,
+			"abcdefghijkl",
+			12,
+			16,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("concat()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		b.concat(tests[x].in_v0, tests[x].in_v1, tests[x].in_v2);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
+}
+
 Buffer in;
 List* lbuf;
 
@@ -1903,6 +1976,8 @@ int main()
 	test_append();
 	test_append_raw();
 	test_append_bin();
+
+	test_concat();
 
 	test_split_by_char();
 
