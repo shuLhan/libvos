@@ -1946,6 +1946,183 @@ void test_subc()
 	}
 }
 
+void test_cmp()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		Buffer *in;
+		const int exp_res;
+	} const tests[] = {
+		{
+			"With NULL object",
+			"",
+			NULL,
+			1,
+		},
+		{
+			"With greater-than result",
+			"z",
+			new Buffer("a"),
+			1,
+		},
+		{
+			"With equal result",
+			"a",
+			new Buffer("a"),
+			0,
+		},
+		{
+			"With less-than result",
+			"a",
+			new Buffer("b"),
+			-1,
+		},
+		{
+			"Check sensitivity a - A",
+			"a",
+			new Buffer("A"),
+			1,
+		},
+		{
+			"Check sensitivity A - a",
+			"A",
+			new Buffer("a"),
+			-1,
+		},
+		{
+			"Check number vs lower char",
+			"1",
+			new Buffer("a"),
+			-1,
+		},
+		{
+			"Check number vs capital char",
+			"1",
+			new Buffer("A"),
+			-1,
+		},
+		{
+			"With different length 'abcd vs. a'",
+			"abcd",
+			new Buffer("a"),
+			1,
+		},
+		{
+			"With different length 'a vs. abcd'",
+			"a",
+			new Buffer("abcd"),
+			-1,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("cmp()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		int got = b.cmp(tests[x].in);
+
+		T.expect_signed(tests[x].exp_res, got, 0);
+
+		T.ok();
+
+		if (tests[x].in) {
+			delete tests[x].in;
+		}
+	}
+}
+
+void test_cmp_raw()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		const char *in_bfr;
+		const int exp_res;
+	} const tests[] = {
+		{
+			"With NULL object",
+			"",
+			NULL,
+			1,
+		},
+		{
+			"With greater-than result",
+			"z",
+			"a",
+			1,
+		},
+		{
+			"With equal result",
+			"a",
+			"a",
+			0,
+		},
+		{
+			"With less-than result",
+			"a",
+			"b",
+			-1,
+		},
+		{
+			"Check sensitivity a - A",
+			"a",
+			"A",
+			1,
+		},
+		{
+			"Check sensitivity A - a",
+			"A",
+			"a",
+			-1,
+		},
+		{
+			"Check number vs lower char",
+			"1",
+			"a",
+			-1,
+		},
+		{
+			"Check number vs capital char",
+			"1",
+			"A",
+			-1,
+		},
+		{
+			"With different length 'abcd vs. a'",
+			"abcd",
+			"a",
+			1,
+		},
+		{
+			"With different length 'a vs. abcd'",
+			"a",
+			"abcd",
+			-1,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("cmp_raw()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		int got = b.cmp_raw(tests[x].in_bfr);
+
+		T.expect_signed(tests[x].exp_res, got, 0);
+
+		T.ok();
+	}
+}
 
 
 Buffer in;
@@ -2205,6 +2382,9 @@ int main()
 	test_prepend_raw();
 
 	test_subc();
+
+	test_cmp();
+	test_cmp_raw();
 
 	test_split_by_char();
 

@@ -819,15 +819,16 @@ size_t Buffer::subc(const char from, const char to)
 }
 
 /**
- * @method	: Buffer::cmp
- * @param	:
- *	> bfr	: pointer to Buffer object.
- * @return	:
- *	< 1	: if this > bfr.
- *	< 0	: if this == bfr.
- *	< -1	: if this < bfr.
- * @desc	: Compare content of this buffer with content on 'bfr' object.
- * This is a case sensitive compare, where "A" != "a".
+ * Method `cmp(bfr)` will compare Object chars representation with current
+ * buffer.
+ *
+ * It will return,
+ *
+ * - `1` if this buffer greater than `bfr` or `bfr` is NULL
+ * - `0` if this buffer equal with `bfr`
+ * - `-1` if this buffer less than `bfr`
+ *
+ * This is a case sensitive comparison, where "A" != "a".
  */
 int Buffer::cmp(Object* bfr)
 {
@@ -838,18 +839,16 @@ int Buffer::cmp(Object* bfr)
 }
 
 /**
- * @method	: Buffer::cmp_raw
- * @param	:
- *	> bfr	: pointer to raw buffer.
- *	> len	: length of raw buffer 'bfr' to compare, default to 0.
- * @return	:
- *	< 1	: if this > bfr.
- *	< 0	: if this == bfr.
- *	< -1	: if this < bfr.
- * @desc	:
- * Compare content of this buffer with raw buffer 'bfr' with maximum length to
- * compare is 'len'.
- * This is case sensitive compare, where "A" != "a".
+ * Method `cmp_raw(bfr, len)` will compare raw buffer `bfr` with current
+ * buffer with maximum length to `len`.
+ *
+ * It will return,
+ *
+ * - `1` if this buffer greater than `bfr` or `bfr` is NULL
+ * - `0` if this buffer equal with `bfr`
+ * - `-1` if this buffer less than `bfr`
+ *
+ * This is a case sensitive comparison, where "A" != "a".
  */
 int Buffer::cmp_raw(const char* bfr, size_t len)
 {
