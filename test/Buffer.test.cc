@@ -301,21 +301,29 @@ void test_trim()
 		const char *desc;
 		const char *in_v;
 		const char *exp;
+		const size_t exp_len;
+		const size_t exp_size;
 	} const tests[] = {
 		{
 			"With space before",
 			"	  a",
 			"a",
+			1,
+			16,
 		},
 		{
 			"With space after",
 			"a	  ",
 			"a",
+			1,
+			16,
 		},
 		{
 			"With space before and after",
 			"	  a	  ",
 			"a",
+			1,
+			16,
 		},
 	};
 
@@ -330,6 +338,8 @@ void test_trim()
 		b.trim();
 
 		T.expect_string(tests[x].exp, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
 
 		T.ok();
 	}
