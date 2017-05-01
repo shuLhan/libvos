@@ -1872,6 +1872,72 @@ void test_prepend_raw()
 	}
 }
 
+void test_subc()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		const char from;
+		const char to;
+		const char *exp_v;
+		const int exp_res;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With empty buffer",
+			"",
+			'a',
+			'b',
+			"",
+			0,
+			0,
+			16,
+		},
+		{
+			"With no replacement found",
+			"zxcvbnm",
+			'a',
+			'b',
+			"zxcvbnm",
+			0,
+			7,
+			16,
+		},
+		{
+			"With success",
+			"ababab",
+			'a',
+			'b',
+			"bbbbbb",
+			3,
+			6,
+			16,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("subc()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		size_t res = b.subc(tests[x].from, tests[x].to);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_res, res, 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
+}
+
+
+
 Buffer in;
 List* lbuf;
 
@@ -2127,6 +2193,8 @@ int main()
 
 	test_prepend();
 	test_prepend_raw();
+
+	test_subc();
 
 	test_split_by_char();
 

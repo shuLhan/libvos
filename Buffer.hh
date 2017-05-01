@@ -80,7 +80,7 @@ public:
 	int prepend(Buffer* bfr);
 	int prepend_raw(const char* bfr, size_t len = 0);
 
-	int subc(int from, int to);
+	size_t subc(const char from, const char to);
 
 	int cmp(Object* bfr);
 	int cmp_raw(const char* bfr, size_t len = 0);

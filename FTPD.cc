@@ -993,7 +993,7 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPD_client* c)
 		}
 	} while (c->_s != 0);
 
-	c->_s = pasv_addr.subc('.', ',');
+	c->_s = (int) pasv_addr.subc('.', ',');
 	if (c->_s != 3) {
 		goto err;
 	}

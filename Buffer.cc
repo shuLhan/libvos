@@ -799,25 +799,22 @@ int Buffer::prepend_raw(const char* bfr, size_t len)
 }
 
 /**
- * @method	: Buffer::subc
- * @param	:
- *	> from	: character to be replaced.
- *	> to	: character that will replacing 'from' character.
- * @return	:
- *	< >=0	: number of character replaced.
- * @desc	: Replace each of 'from' character in buffer with 'to'.
+ * Method `subc(from, to)` will replace each occurence of `from` character in
+ * buffer with `to`.
+ *
+ * It will return number of character that has been replaced.
  */
-int Buffer::subc(int from, int to)
+size_t Buffer::subc(const char from, const char to)
 {
-	size_t i = 0;
-	int n = 0;
+	size_t n = 0;
 
-	for (; i < _i; i++) {
-		if (_v[i] == from) {
-			_v[i] = (char) to;
+	for (size_t x = 0; x < _i; x++) {
+		if (_v[x] == from) {
+			_v[x] = to;
 			n++;
 		}
 	}
+
 	return n;
 }
 
