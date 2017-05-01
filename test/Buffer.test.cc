@@ -2124,6 +2124,214 @@ void test_cmp_raw()
 	}
 }
 
+void test_like()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		Buffer *in;
+		const int exp_res;
+	} const tests[] = {
+		{
+			"With empty and NULL object",
+			"",
+			NULL,
+			0,
+		},
+		{
+			"With non-empty buffer and NULL object",
+			"a",
+			NULL,
+			1,
+		},
+		{
+			"With both buffer are empty",
+			"",
+			new Buffer(""),
+			0,
+		},
+		{
+			"With greater-than result",
+			"z",
+			new Buffer("a"),
+			1,
+		},
+		{
+			"With equal result",
+			"a",
+			new Buffer("a"),
+			0,
+		},
+		{
+			"With less-than result",
+			"a",
+			new Buffer("b"),
+			-1,
+		},
+		{
+			"Check sensitivity 'a vs. A'",
+			"a",
+			new Buffer("A"),
+			0,
+		},
+		{
+			"Check sensitivity 'A vs. a'",
+			"A",
+			new Buffer("a"),
+			0,
+		},
+		{
+			"Check number vs lower char",
+			"1",
+			new Buffer("a"),
+			-1,
+		},
+		{
+			"Check number vs capital char",
+			"1",
+			new Buffer("A"),
+			-1,
+		},
+		{
+			"With different length 'abcd vs. a'",
+			"abcd",
+			new Buffer("a"),
+			1,
+		},
+		{
+			"With different length and number 'abcd vs. 1'",
+			"abcd",
+			new Buffer("1"),
+			1,
+		},
+		{
+			"With different length 'a vs. abcd'",
+			"a",
+			new Buffer("abcd"),
+			-1,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("like()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		int got = b.like(tests[x].in);
+
+		T.expect_signed(tests[x].exp_res, got, 0);
+
+		T.ok();
+
+		if (tests[x].in) {
+			delete tests[x].in;
+		}
+	}
+}
+
+void test_like_raw()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		const char *in_bfr;
+		const int exp_res;
+	} const tests[] = {
+		{
+			"With empty and NULL object",
+			"",
+			NULL,
+			0,
+		},
+		{
+			"With non-empty buffer and NULL object",
+			"a",
+			NULL,
+			1,
+		},
+		{
+			"With greater-than result",
+			"z",
+			"a",
+			1,
+		},
+		{
+			"With equal result",
+			"a",
+			"a",
+			0,
+		},
+		{
+			"With less-than result",
+			"a",
+			"b",
+			-1,
+		},
+		{
+			"Check sensitivity 'a vs. A'",
+			"a",
+			"A",
+			0,
+		},
+		{
+			"Check sensitivity 'A vs. a'",
+			"A",
+			"a",
+			0,
+		},
+		{
+			"Check number vs lower char",
+			"1",
+			"a",
+			-1,
+		},
+		{
+			"Check number vs capital char",
+			"1",
+			"A",
+			-1,
+		},
+		{
+			"With different length 'abcd vs. a'",
+			"abcd",
+			"a",
+			1,
+		},
+		{
+			"With different length and number 'abcd vs. 1'",
+			"abcd",
+			"1",
+			1,
+		},
+		{
+			"With different length 'a vs. abcd'",
+			"a",
+			"abcd",
+			-1,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("like_raw()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		int got = b.like_raw(tests[x].in_bfr);
+
+		T.expect_signed(tests[x].exp_res, got, 0);
+
+		T.ok();
+	}
+}
+
 
 Buffer in;
 List* lbuf;
@@ -2385,6 +2593,8 @@ int main()
 
 	test_cmp();
 	test_cmp_raw();
+	test_like();
+	test_like_raw();
 
 	test_split_by_char();
 

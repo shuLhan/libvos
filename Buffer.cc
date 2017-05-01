@@ -873,51 +873,65 @@ int Buffer::cmp_raw(const char* bfr, size_t len)
 }
 
 /**
- * @method	: Buffer::like
- * @param	:
- *	> bfr	: pointer to Buffer object.
- * @return	:
- *	< 1	: if this > bfr.
- *	< 0	: if this == bfr.
- *	< -1	: if this < bfr.
- * @desc	: Case not sentisive compare, where "A" == "a".
+ * Method `like(bfr)` will compare content of current buffer with content of
+ * buffer `bfr`.
+ *
+ * It will return,
+ *
+ * - `1` if this buffer greater than `bfr` or `bfr` is NULL, or if this buffer
+ *   longer than `bfr` (e.g. "abcd" vs. "a").
+ * - `0` if this buffer equal with `bfr` or both are empty.
+ * - `-1` if this buffer less than `bfr`
+ *
+ *
+ * This is a case non-sensitive comparison, where "A" == "a".
  */
 int Buffer::like(const Buffer* bfr)
 {
 	if (!bfr) {
+		if (is_empty()) {
+			return 0;
+		}
+
 		return 1;
 	}
 	return like_raw(bfr->_v, bfr->_i);
 }
 
 /**
- * @method	: Buffer::like_raw
- * @param	:
- *	> bfr	: array of characters.
- *	> len	: length of raw buffer 'bfr' to compare, default to 0.
- * @return	:
- *	< 1	: if this > bfr.
- *	< 0	: if this == bfr.
- *	< -1	: if this < bfr.
- * @desc	: Case not sentisive compare, where "A" == "a".
+ * Method `like_raw(bfr, len)` will compare content of current buffer with
+ * raw buffer `bfr`.
+ *
+ * It will return,
+ *
+ * - `1` if this buffer greater than `bfr` or `bfr` is NULL, or if this buffer
+ *   longer than `bfr` (e.g. "abcd" vs. "a").
+ * - `0` if this buffer equal with `bfr` or both are empty
+ * - `-1` if this buffer less than `bfr`
+ *
+ * This is a case non-sensitive comparison, where "A" == "a".
  */
 int Buffer::like_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
+		if (is_empty()) {
+			return 0;
+		}
 		return 1;
 	}
 
-	int s = 0;
-
 	if (len == 0) {
-		s = strcasecmp(_v, bfr);
-	} else {
-		s = strncasecmp(_v, bfr, len);
+		len = strlen(bfr);
 	}
+
+	int s = strncasecmp(_v, bfr, len);
 	if (s < 0) {
 		return -1;
 	}
 	if (s > 0) {
+		return 1;
+	}
+	if (_i > len) {
 		return 1;
 	}
 	return 0;
