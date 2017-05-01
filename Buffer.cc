@@ -833,6 +833,9 @@ size_t Buffer::subc(const char from, const char to)
 int Buffer::cmp(Object* bfr)
 {
 	if (!bfr) {
+		if (is_empty()) {
+			return 0;
+		}
 		return 1;
 	}
 	return cmp_raw(bfr->chars());
@@ -853,20 +856,24 @@ int Buffer::cmp(Object* bfr)
 int Buffer::cmp_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
+		if (is_empty()) {
+			return 0;
+		}
 		return 1;
 	}
 
-	int s = 0;
-
 	if (len == 0) {
-		s = strcmp(_v, bfr);
-	} else {
-		s = strncmp(_v, bfr, len);
+		len = strlen(bfr);
 	}
+
+	int s = strncmp(_v, bfr, len);
 	if (s < 0) {
 		return -1;
 	}
 	if (s > 0) {
+		return 1;
+	}
+	if (_i > len) {
 		return 1;
 	}
 	return 0;

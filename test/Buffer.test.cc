@@ -1955,10 +1955,22 @@ void test_cmp()
 		const int exp_res;
 	} const tests[] = {
 		{
-			"With NULL object",
+			"With empty and NULL object",
 			"",
 			NULL,
+			0,
+		},
+		{
+			"With non-empty buffer and NULL object",
+			"a",
+			NULL,
 			1,
+		},
+		{
+			"With both buffer are empty",
+			"",
+			new Buffer(""),
+			0,
 		},
 		{
 			"With greater-than result",
@@ -2009,6 +2021,12 @@ void test_cmp()
 			1,
 		},
 		{
+			"With different length and number 'abcd vs. 1'",
+			"abcd",
+			new Buffer("1"),
+			1,
+		},
+		{
 			"With different length 'a vs. abcd'",
 			"a",
 			new Buffer("abcd"),
@@ -2046,10 +2064,22 @@ void test_cmp_raw()
 		const int exp_res;
 	} const tests[] = {
 		{
-			"With NULL object",
+			"With empty and NULL object",
 			"",
 			NULL,
+			0,
+		},
+		{
+			"With non-empty buffer and NULL buffer",
+			"a",
+			NULL,
 			1,
+		},
+		{
+			"With both buffer are empty",
+			"",
+			"",
+			0,
 		},
 		{
 			"With greater-than result",
@@ -2097,6 +2127,12 @@ void test_cmp_raw()
 			"With different length 'abcd vs. a'",
 			"abcd",
 			"a",
+			1,
+		},
+		{
+			"With different length and number 'abcd vs. 1'",
+			"abcd",
+			"1",
 			1,
 		},
 		{
