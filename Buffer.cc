@@ -430,7 +430,7 @@ int Buffer::set_raw(const char* bfr, const char* dflt)
  * and fill the empty gap in the left with value of `c` (default to zero).
  *
  * If buffer is empty, its will behave like resize if `nbyte` is greater than
- * current buffer size.
+ * current buffer size, but move the buffer index to `nbyte`.
  *
  * On success it will return `0`, otherwise it will return `-1`.
  */
@@ -444,9 +444,6 @@ int Buffer::shiftr(const size_t nbyte, int c)
 		if (s) {
 			return -1;
 		}
-	}
-	if (_i == 0) {
-		return 0;
 	}
 
 	memmove(&_v[nbyte], &_v[0], _i);
@@ -762,14 +759,10 @@ int Buffer::vprint(const char* fmt, va_list args)
 }
 
 /**
- * @method	: Buffer::prepend
- * @param	:
- *	> bfr	: pointer to Buffer object.
- * @return	:
- *	< >=0	: success, number of bytes added to the beginning of buffer.
- *	< -1	: fail.
- * @desc	:
- * Add buffer content of 'bfr' object to the beginning of this Buffer object.
+ * Method `prepend(bfr)` will add buffer content of `bfr` object to the
+ * beginning of this object.
+ *
+ * On success it will return `0`, otherwise it will return `-1`.
  */
 int Buffer::prepend(Buffer* bfr)
 {
@@ -780,21 +773,14 @@ int Buffer::prepend(Buffer* bfr)
 }
 
 /**
- * @method	: Buffer::prepend_raw
- * @param	:
- *	> bfr	: pointer to raw buffer.
- *	> len	: length of 'bfr', default to zero if not set.
- * @return	:
- *	< >=0	: success, number of bytes added to the beginning of buffer.
- *	< -1	: fail.
- * @desc	: Add raw buffer 'bfr' to the beginning of Buffer object.
+ * Method `prepend_raw(bfr, len)` will add raw buffer `bfr` to the beginning
+ * of buffer.
+ *
+ * On success it will return `0`, otherwise it will return `-1`.
  */
 int Buffer::prepend_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
-		if (len > 0) {
-			return resize(len);
-		}
 		return 0;
 	}
 	if (len == 0) {
@@ -809,7 +795,7 @@ int Buffer::prepend_raw(const char* bfr, size_t len)
 
 	memcpy(_v, bfr, len);
 
-	return (int) len;
+	return 0;
 }
 
 /**

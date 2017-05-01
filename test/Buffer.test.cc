@@ -998,16 +998,16 @@ void test_shiftr()
 			"With empty buffer",
 			"",
 			4,
-			"",
-			0,
+			"\0\0\0\0",
+			4,
 			16,
 		},
 		{
 			"With empty buffer and nbyte greater than buffer size",
 			"",
 			20,
-			"",
-			0,
+			"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
+			20,
 			20,
 		},
 		{
@@ -1726,6 +1726,152 @@ void test_concat()
 	}
 }
 
+void test_prepend()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		Buffer *in;
+		const char *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With nil buffer",
+			"",
+			NULL,
+			"",
+			0,
+			16,
+		},
+		{
+			"With empty buffer",
+			"",
+			new Buffer(""),
+			"",
+			0,
+			16,
+		},
+		{
+			"With init and empty buffer",
+			"abcdefghij",
+			new Buffer(""),
+			"abcdefghij",
+			10,
+			16,
+		},
+		{
+			"With non empty buffer",
+			"abcdefghij",
+			new Buffer("klmnopqrst "),
+			"klmnopqrst abcdefghij",
+			21,
+			21,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("prepend()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		b.prepend(tests[x].in);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+
+		if (tests[x].in) {
+			delete tests[x].in;
+		}
+	}
+}
+
+void test_prepend_raw()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		const char *in;
+		const char *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With nil buffer",
+			"",
+			NULL,
+			"",
+			0,
+			16,
+		},
+		{
+			"With empty buffer",
+			"",
+			"",
+			"",
+			0,
+			16,
+		},
+		{
+			"With single char",
+			"",
+			"a",
+			"a",
+			1,
+			16,
+		},
+		{
+			"With init and single char",
+			"abcdefghijklmnopqrst",
+			"u",
+			"uabcdefghijklmnopqrst",
+			21,
+			21,
+		},
+		{
+			"With init and empty buffer",
+			"abcdefghij",
+			"",
+			"abcdefghij",
+			10,
+			16,
+		},
+		{
+			"With non empty buffer",
+			"abcdefghij",
+			" klmnopqrst",
+			" klmnopqrstabcdefghij",
+			21,
+			21,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("prepend_raw()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		b.prepend_raw(tests[x].in);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
+}
+
 Buffer in;
 List* lbuf;
 
@@ -1978,6 +2124,9 @@ int main()
 	test_append_bin();
 
 	test_concat();
+
+	test_prepend();
+	test_prepend_raw();
 
 	test_split_by_char();
 
