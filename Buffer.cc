@@ -640,16 +640,12 @@ int Buffer::append_raw(const char* bfr, size_t len)
 }
 
 /**
- * @method	: Buffer::append_bin
- * @param	:
- *	> bin	: binary data.
- *	> len	: length of 'bin', in bytes.
- * @return	:
- *	< >=0	: success.
- *	< -1	: fail.
- * @desc	: append binary data to buffer.
+ * Method `append_bin(bin,len)` will append binary data with length `len` to
+ * buffer.
+ *
+ * On success it will return `0`, otherwise it will return `-1`.
  */
-int Buffer::append_bin(void *bin, size_t len)
+int Buffer::append_bin(const void *bin, size_t len)
 {
 	if (!bin || len == 0) {
 		return 0;

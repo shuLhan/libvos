@@ -71,7 +71,7 @@ public:
 	int appendd(double d, size_t prec = 6);
 	int append(const Buffer* bfr);
 	int append_raw(const char* bfr, size_t len = 0);
-	int append_bin(void *bin, size_t len);
+	int append_bin(const void *bin, size_t len);
 
 	int concat(const char* bfr, ...);
 	int aprint(const char* fmt, ...);

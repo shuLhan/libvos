@@ -1568,6 +1568,91 @@ void test_append_raw()
 	}
 }
 
+void test_append_bin()
+{
+	const char *chars = "1234567890";
+	int i = 1234567890;
+
+	char *exp_i = (char *) calloc(14, 1);
+	memcpy(exp_i, chars, 10);
+	memcpy(&exp_i[10], &i, 4);
+
+	struct {
+		const char *desc;
+		const char *init;
+		const void *bin;
+		const size_t len;
+		const void *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With null on empty buffer",
+			"",
+			NULL,
+			0,
+			"",
+			0,
+			16,
+		},
+		{
+			"With chars on empty buffer",
+			"",
+			chars,
+			4,
+			"1234",
+			4,
+			16,
+		},
+		{
+			"With chars on non empty buffer",
+			"abcd",
+			chars,
+			4,
+			"abcd1234",
+			8,
+			16,
+		},
+		{
+			"With integer on empty buffer",
+			"",
+			&i,
+			4,
+			&i,
+			4,
+			16,
+		},
+		{
+			"With integer on non empty buffer",
+			"1234567890",
+			&i,
+			4,
+			exp_i,
+			14,
+			16,
+		},
+
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("append_bin()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		b.append_bin(tests[x].bin, tests[x].len);
+
+		T.expect_mem(tests[x].exp_v, b.v(), tests[x].len, 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
+}
+
 Buffer in;
 List* lbuf;
 
@@ -1817,6 +1902,7 @@ int main()
 	test_appendd();
 	test_append();
 	test_append_raw();
+	test_append_bin();
 
 	test_split_by_char();
 
