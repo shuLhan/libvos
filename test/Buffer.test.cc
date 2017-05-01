@@ -1422,6 +1422,152 @@ void test_appendd()
 	}
 }
 
+void test_append()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		Buffer *in;
+		const char *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With nil buffer",
+			"",
+			NULL,
+			"",
+			0,
+			16,
+		},
+		{
+			"With empty buffer",
+			"",
+			new Buffer(""),
+			"",
+			0,
+			16,
+		},
+		{
+			"With init and empty buffer",
+			"abcdefghij",
+			new Buffer(""),
+			"abcdefghij",
+			10,
+			16,
+		},
+		{
+			"With non empty buffer",
+			"abcdefghij",
+			new Buffer(" klmnopqrst"),
+			"abcdefghij klmnopqrst",
+			21,
+			21,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("append()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		b.append(tests[x].in);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+
+		if (tests[x].in) {
+			delete tests[x].in;
+		}
+	}
+}
+
+void test_append_raw()
+{
+	struct {
+		const char *desc;
+		const char *init;
+		const char *in;
+		const char *exp_v;
+		const size_t exp_len;
+		const size_t exp_size;
+	} const tests[] = {
+		{
+			"With nil buffer",
+			"",
+			NULL,
+			"",
+			0,
+			16,
+		},
+		{
+			"With empty buffer",
+			"",
+			"",
+			"",
+			0,
+			16,
+		},
+		{
+			"With single char",
+			"",
+			"a",
+			"a",
+			1,
+			16,
+		},
+		{
+			"With init and single char",
+			"abcdefghijklmnopqrst",
+			"u",
+			"abcdefghijklmnopqrstu",
+			21,
+			21,
+		},
+		{
+			"With init and empty buffer",
+			"abcdefghij",
+			"",
+			"abcdefghij",
+			10,
+			16,
+		},
+		{
+			"With non empty buffer",
+			"abcdefghij",
+			" klmnopqrst",
+			"abcdefghij klmnopqrst",
+			21,
+			21,
+		},
+	};
+
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("append_raw()", tests[x].desc);
+
+		Buffer b;
+
+		b.copy_raw(tests[x].init);
+
+		b.append_raw(tests[x].in);
+
+		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
+		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+
+		T.ok();
+	}
+}
+
 Buffer in;
 List* lbuf;
 
@@ -1669,6 +1815,8 @@ int main()
 	test_appendi();
 	test_appendui();
 	test_appendd();
+	test_append();
+	test_append_raw();
 
 	test_split_by_char();
 

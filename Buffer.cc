@@ -592,14 +592,10 @@ int Buffer::appendd(double d, size_t prec)
 }
 
 /**
- * @method	: Buffer::append
- * @param	:
- *	> bfr	: pointer to Buffer object.
- * @return	:
- *	< >=0	: success, number of bytes appended.
- *	< <0	: fail.
- * @desc	:
- * Append a content of Buffer object 'bfr' to buffer.
+ * Method `append(bfr)` will append a content of Buffer object `bfr` to this
+ * buffer.
+ *
+ * On success it will return `0`, otherwise it will return `-1`.
  */
 int Buffer::append(const Buffer* bfr)
 {
@@ -610,24 +606,14 @@ int Buffer::append(const Buffer* bfr)
 }
 
 /**
- * @method	: Buffer::append_raw
- * @param	:
- *	> bfr	: pointer to raw buffer.
- *	> len	: optional, length of 'bfr', default to 0.
- * @return	:
- *	> >=0	: success, number of bytes appended.
- *	< -1	: fail.
- * @desc	: Append a raw buffer 'bfr' to buffer.
+ * Method `append_raw(bfr, len)` will append a raw buffer `bfr` to buffer with
+ * maximum length is `len`.
  *
- * If 'bfr' is nil and len is greater than zero, than this method will behave
- * like resize() method, resizing the buffer to 'len'.
+ * On success it will return `0`, otherwise it will return `-1`.
  */
 int Buffer::append_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
-		if (len > 0) {
-			return resize(len);
-		}
 		return 0;
 	}
 	if (len == 0) {
@@ -640,11 +626,17 @@ int Buffer::append_raw(const char* bfr, size_t len)
 		return -1;
 	}
 
-	memcpy(&_v[_i], bfr, len);
-	_i	+= len;
+	if (len == 1) {
+		_v[_i] = bfr[0];
+		_i++;
+	} else {
+		memcpy(&_v[_i], bfr, len);
+		_i += len;
+	}
+
 	_v[_i]	= '\0';
 
-	return (int) len;
+	return 0;
 }
 
 /**
