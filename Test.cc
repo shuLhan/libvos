@@ -80,7 +80,7 @@ int Test::expect_mem(const void *exp, const void *got, size_t len,
  *
  * Otherwise it will terminate the program with exit status `1`.
  */
-int Test::expect_ptr(void *exp, void *got, int equality)
+int Test::expect_ptr(const void *exp, const void *got, int equality)
 {
 	const char *str_equality;
 

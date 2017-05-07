@@ -23,7 +23,7 @@ public:
 
 	int expect_mem(const void *exp, const void *got, size_t len,
 		int equality = 0);
-	int expect_ptr(void *exp, void *got, int equality = 0);
+	int expect_ptr(const void *exp, const void *got, int equality = 0);
 	int expect_string(const char* exp, const char* got, int equality = 0);
 	int expect_signed(const ssize_t exp, const ssize_t got,
 		int equality = 0);
