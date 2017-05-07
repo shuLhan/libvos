@@ -156,12 +156,12 @@ int Resolver::add_server(const char* server_list)
 	SockAddr* saddr = NULL;
 
 	b.copy_raw(server_list);
-	addrs = b.split_by_char(',', 1);
+	addrs = SPLIT_BY_CHAR(&b, ',', 1);
 
 	for (x = 0; x < addrs->size(); x++) {
 		b_addr = (Buffer*) addrs->at(x);
 
-		addr_port = b_addr->split_by_char(':');
+		addr_port = SPLIT_BY_CHAR(b_addr, ':');
 
 		addr = (Buffer*) addr_port->at(0);
 		port_num = PORT;

@@ -43,7 +43,7 @@ List* SSVReader::parse(Buffer* line)
 		return NULL;
 	}
 
-	return line->split_by_whitespace();
+	return SPLIT_BY_WHITESPACE(line);
 }
 
 /**

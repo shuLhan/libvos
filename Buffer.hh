@@ -7,7 +7,7 @@
 #ifndef _LIBVOS_BUFFER_HH
 #define _LIBVOS_BUFFER_HH 1
 
-#include "List.hh"
+#include "Object.hh"
 
 namespace vos {
 
@@ -88,9 +88,6 @@ public:
 	int like_raw(const char* bfr, size_t len = 0);
 
 	int to_lint(long int *res);
-
-	List* split_by_char(const char sep, int trim = 0);
-	List* split_by_whitespace();
 
 	const char* chars();
 	void dump();

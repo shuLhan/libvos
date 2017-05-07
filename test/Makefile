@@ -16,7 +16,6 @@ TEST_OBJS=	$(BLD_D)/test.oo		\
 		$(LIBVOS_BLD_D)/libvos.oo	\
 		$(LIBVOS_BLD_D)/Object.oo	\
 		$(LIBVOS_BLD_D)/BNode.oo	\
-		$(LIBVOS_BLD_D)/List.oo		\
 		$(LIBVOS_BLD_D)/Locker.oo	\
 		$(LIBVOS_BLD_D)/Buffer.oo	\
 		$(LIBVOS_BLD_D)/File.oo		\
@@ -31,16 +30,23 @@ Buffer_OBJS=	$(TEST_OBJS)
 
 File_OBJS=	$(TEST_OBJS)
 
-List_OBJS=	$(TEST_OBJS)
+List_OBJS=	$(TEST_OBJS)				\
+		$(LIBVOS_BLD_D)/List.oo
 
 Dlogger_OBJS=	$(TEST_OBJS)
+
+ListBuffer_OBJS=					\
+			$(TEST_OBJS)			\
+			$(LIBVOS_BLD_D)/List.oo		\
+			$(LIBVOS_BLD_D)/ListBuffer.oo
+
 
 
 DSVRecordMD_OBJS=	$(List_OBJS)			\
 			$(File_OBJS)			\
 			$(LIBVOS_BLD_D)/DSVRecordMD.oo
 
-SSVReader_OBJS=		$(TEST_OBJS)			\
+SSVReader_OBJS=		$(ListBuffer_OBJS)		\
 			$(LIBVOS_BLD_D)/File.oo		\
 			$(LIBVOS_BLD_D)/DSVRecord.oo	\
 			$(LIBVOS_BLD_D)/Rowset.oo	\
@@ -65,6 +71,7 @@ Resolver_OBJS=	\
 		$(List_OBJS)			\
 		$(DNSQuery_OBJS)		\
 		$(SockAddr_OBJS)		\
+		$(LIBVOS_BLD_D)/ListBuffer.oo	\
 		$(LIBVOS_BLD_D)/Socket.oo	\
 		$(LIBVOS_BLD_D)/Resolver.oo
 
@@ -108,11 +115,11 @@ Dir_OBJS=	$(TEST_OBJS)			\
 		$(LIBVOS_BLD_D)/DirNode.oo	\
 		$(LIBVOS_BLD_D)/Dir.oo
 
-
 TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Buffer.test		\
 	$(BLD_D)/BNode.test		\
 	$(BLD_D)/List.test		\
+	$(BLD_D)/ListBuffer.test	\
 	$(BLD_D)/Dlogger.test		\
 	$(BLD_D)/SSVReader.test		\
 	$(BLD_D)/SockAddr.test		\
@@ -137,9 +144,6 @@ $(BLD_D)/%.oo: $(SRC_D)/%.cc $(SRC_D)/%.hh
 	@$(do_compile)
 
 $(BLD_D)/%.test.oo: $(SRC_D)/%.test.cc
-	@$(do_compile)
-
-$(BLD_D)/Buffer.test.oo: $(SRC_D)/Buffer.test.cc $(SRC_D)/Buffer.test.hh
 	@$(do_compile)
 
 $(BLD_D)/%.test: $(BLD_D)/%.test.oo $$(%_OBJS)

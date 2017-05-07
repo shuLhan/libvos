@@ -10,6 +10,7 @@
 #include <sys/select.h>
 #include <time.h>
 
+#include "ListBuffer.hh"
 #include "DNSQuery.hh"
 #include "Socket.hh"
 

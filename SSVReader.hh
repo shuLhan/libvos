@@ -7,6 +7,7 @@
 #ifndef _LIBVOS_HOSTSREADER_HH
 #define _LIBVOS_HOSTSREADER_HH 1
 
+#include "ListBuffer.hh"
 #include "File.hh"
 #include "Rowset.hh"
 

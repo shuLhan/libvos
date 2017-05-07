@@ -4,7 +4,12 @@
 // found in the LICENSE file.
 //
 
-#include "Buffer.test.hh"
+#include "test.hh"
+#include "../Test.hh"
+#include "../List.hh"
+
+using vos::Test;
+using vos::List;
 
 Test T("Buffer");
 
@@ -645,10 +650,10 @@ void test_copy()
 		},
 		{
 			"With buffer greater than default size",
-			new Buffer(TEST_IN_MED),
-			test_in_med_len,
-			test_in_med_len,
-			TEST_IN_MED,
+			new Buffer("1234567890 1234567890 1234567890"),
+			32,
+			32,
+			"1234567890 1234567890 1234567890",
 		},
 	};
 
@@ -692,27 +697,27 @@ void test_copy_raw()
 		},
 		{
 			"With short string",
-			TEST_IN_SHORT,
+			"a",
 			0,
-			test_in_short_len,
+			1,
 			Buffer::DFLT_SIZE,
-			TEST_IN_SHORT,
+			"a",
 		},
 		{
 			"With medium string",
-			TEST_IN_MED,
+			"1234567890 1234567890 1234567890",
 			0,
-			test_in_med_len,
-			test_in_med_len,
-			TEST_IN_MED,
+			32,
+			32,
+			"1234567890 1234567890 1234567890",
 		},
 		{
 			"With length",
-			TEST_IN_MED,
+			"1234567890 1234567890 1234567890",
 			3,
 			3,
 			Buffer::DFLT_SIZE,
-			"Use",
+			"123",
 		},
 	};
 
@@ -2430,76 +2435,6 @@ void test_to_lint()
 
 }
 
-Buffer in;
-List* lbuf;
-
-void test_split_by_char_n(const char* input, const char split
-	, const uint8_t trim, const char* exp, const int exp_size)
-{
-	in.copy_raw(input);
-	lbuf = in.split_by_char(split, trim);
-
-	expectString(exp, lbuf->chars(), 0);
-
-	assert(lbuf->size() == exp_size);
-	expectString(exp, lbuf->chars(), 0);
-	delete lbuf;
-}
-
-void test_split_by_char()
-{
-	in.reset();
-	lbuf = in.split_by_char(',');
-	assert(lbuf == NULL);
-
-	test_split_by_char_n(TEST_SPLIT_BY_00_IN, ',', 0
-		, TEST_SPLIT_BY_00_OUT, 1);
-
-	test_split_by_char_n(TEST_SPLIT_BY_01_IN, ':', 0
-		, TEST_SPLIT_BY_01_OUT, 2);
-
-	test_split_by_char_n(TEST_SPLIT_BY_02_IN, ',', 0
-		, TEST_SPLIT_BY_02_OUT, 4);
-
-	test_split_by_char_n(TEST_SPLIT_BY_02_IN, ',', 1
-		, TEST_SPLIT_BY_02_OUT_TRIM, 3);
-
-	test_split_by_char_n(TEST_SPLIT_BY_03_IN, ',', 0
-		, TEST_SPLIT_BY_03_OUT, 6);
-
-	test_split_by_char_n(TEST_SPLIT_BY_03_IN, ',', 1
-		, TEST_SPLIT_BY_03_OUT_TRIM, 3);
-}
-
-void test_split_by_whitespace_n(const char* input
-	, const char* exp, const int exp_size)
-{
-	in.copy_raw(input);
-	lbuf = in.split_by_whitespace();
-
-	expectString(exp, lbuf->chars(), 0);
-
-	assert(lbuf->size() == exp_size);
-	expectString(exp, lbuf->chars(), 0);
-	delete lbuf;
-}
-
-void test_split_by_whitespace()
-{
-	in.reset();
-
-	lbuf = in.split_by_whitespace();
-	assert(lbuf == NULL);
-
-	test_split_by_whitespace_n(TEST_SPLIT_BY_00_IN
-		, TEST_SPLIT_BY_WS_00_OUT, 1);
-	test_split_by_whitespace_n(TEST_SPLIT_BY_02_IN
-		, TEST_SPLIT_BY_WS_02_OUT, 7);
-	test_split_by_whitespace_n(TEST_SPLIT_BY_03_IN
-		, TEST_SPLIT_BY_WS_03_OUT, 8);
-	test_split_by_whitespace_n(TEST_04_IN, TEST_04_WS_OUT, 5);
-}
-
 void test_PARSE_INT()
 {
 	int s = 0;
@@ -2694,10 +2629,6 @@ int main()
 	test_like_raw();
 
 	test_to_lint();
-
-	test_split_by_char();
-
-	test_split_by_whitespace();
 
 	test_PARSE_INT();
 

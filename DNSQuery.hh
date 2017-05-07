@@ -8,6 +8,8 @@
 #define _LIBVOS_RESOLVER_DNSQUERY_HH 1
 
 #include <arpa/inet.h>
+
+#include "List.hh"
 #include "DNS_rr.hh"
 
 namespace vos {
