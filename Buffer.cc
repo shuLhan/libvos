@@ -229,7 +229,6 @@ int Buffer::resize(size_t size)
 
 	newv = (char *) realloc(_v, size + CHAR_SIZE);
 	if (!newv) {
-		perror(__cname);
 		return -1;
 	}
 
@@ -964,7 +963,6 @@ int Buffer::to_lint(long int *res)
 	li = strtol(_v, NULL, 0);
 
 	if (errno == ERANGE) {
-		perror(NULL);
 		return -1;
 	}
 
