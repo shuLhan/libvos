@@ -1646,7 +1646,6 @@ void test_append_bin()
 			14,
 			16,
 		},
-
 	};
 
 	size_t tests_len = ARRAY_SIZE(tests);
@@ -1665,6 +1664,10 @@ void test_append_bin()
 		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
 
 		T.ok();
+	}
+
+	if (exp_i) {
+		free(exp_i);
 	}
 }
 
@@ -2435,87 +2438,122 @@ void test_to_lint()
 
 }
 
+// INT_MAX = 2147483647
+// LONG_MAX = 9223372036854775807
 void test_PARSE_INT()
 {
-	int s = 0;
+	struct {
+		const char *desc;
+		const char *init;
+		const char *exp_p;
+		const int exp_v;
+		const int exp_ret;
+	} const tests[] = {
+		{
+			"With empty string",
+			"",
+			"",
+			0,
+			0,
+		},
+		{
+			"With out of range LONG_MAX",
+			"9223372036854775808",
+			"9223372036854775808",
+			0,
+			-1,
+		},
+		{
+			"With out of range LONG_MIN",
+			"-9223372036854775808",
+			"-9223372036854775808",
+			0,
+			-1,
+		},
+		{
+			"With out of range INT_MAX",
+			"2147483648",
+			"2147483648",
+			0,
+			-1,
+		},
+		{
+			"With out of range INT_MIN",
+			"-2147483649",
+			"-2147483649",
+			0,
+			-1,
+		},
+		{
+			"With zero",
+			"0",
+			"",
+			0,
+			0,
+		},
+		{
+			"With string (-asdf)",
+			"-asdf",
+			"-asdf",
+			0,
+			0,
+		},
+		{
+			"With number start with negative -0 (-012345678)",
+			"-012345678",
+			"",
+			-12345678,
+			0,
+		},
+		{
+			"With number start with positive 0 (012345678)",
+			"012345678",
+			"",
+			12345678,
+			0,
+		},
+		{
+			"With number and string (1234asdf)",
+			"1234asdf",
+			"asdf",
+			1234,
+			0,
+		},
+		{
+			"With string and number (asdf1234)",
+			"asdf1234",
+			"asdf1234",
+			0,
+			0,
+		},
+
+	};
+
 	int v = 0;
-	char* str = (char*) calloc(64, sizeof(char));
-	char* p;
+	int ret = 0;
+	char *p = 0;
+	Buffer b;
+	size_t tests_len = ARRAY_SIZE(tests);
 
-	strcpy(str, "\0");
-	p = str;
-	s = Buffer::PARSE_INT(&p, &v);
-	assert(s == 0);
-	assert(v == 0);
-	assert(*p == 0);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("PARSE_INT()", tests[x].desc);
 
-	strcpy(str, "-asdf");
-	p = str;
-	v = 0;
-	s = Buffer::PARSE_INT(&p, &v);
-	assert(s == 0);
-	assert(v == 0);
-	assert(*p == '-');
+		ret = b.copy_raw(tests[x].init);
+		if (ret) {
+			printf("b.copy_raw error");
+			exit(1);
+		}
 
-	strcpy(str, "0");
-	p = str;
-	v = 0;
-	s = Buffer::PARSE_INT(&p, &v);
-	assert(s == 0);
-	assert(v == 0);
-	assert(*p == 0);
+		p = (char *) b.v();
 
-	strcpy(str, "0123456");
-	p = str;
-	v = 0;
-	s = Buffer::PARSE_INT(&p, &v);
-	assert(s == 0);
-	assert(v == 123456);
-	assert(*p == 0);
+		ret = Buffer::PARSE_INT(&p, &v);
 
-	strcpy(str, "-0123456");
-	p = str;
-	v = 0;
-	s = Buffer::PARSE_INT(&p, &v);
-	assert(s == 0);
-	assert(v == -123456);
-	assert(*p == 0);
+		T.expect_signed(tests[x].exp_ret, ret, 0);
+		T.expect_signed(tests[x].exp_v, v, 0);
+		T.expect_string(tests[x].exp_p, p, 0);
 
-	strcpy(str, "0123as");
-	p = str;
-	v = 0;
-	s = Buffer::PARSE_INT(&p, &v);
-	assert(s == 0);
-	assert(v == 123);
-	assert(*p == 'a');
-
-	strcpy(str, "-0123as");
-	p = str;
-	v = 0;
-	s = Buffer::PARSE_INT(&p, &v);
-	assert(s == 0);
-	assert(v == -123);
-	assert(*p == 'a');
-
-	// overflow
-	strcpy(str, "9876543210as");
-	p = str;
-	v = 0;
-	s = Buffer::PARSE_INT(&p, &v);
-	assert(s == -1);
-	assert(v == 0);
-	assert(*p == '9');
-
-	// underflow
-	strcpy(str, "-9876543210as");
-	p = str;
-	v = 0;
-	s = Buffer::PARSE_INT(&p, &v);
-	assert(s == -1);
-	assert(v == 0);
-	assert(*p == '-');
-
-	free(str);
+		T.ok();
+	}
 }
 
 void test_aprint()
@@ -2617,6 +2655,8 @@ int main()
 	test_append_bin();
 
 	test_concat();
+	// TODO: aprint
+	// TODO: vprint
 
 	test_prepend();
 	test_prepend_raw();

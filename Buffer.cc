@@ -977,10 +977,7 @@ int Buffer::to_lint(long int *res)
  * `PARSE_INT()` will parse an integer in `pp`.
  *
  * It will return 0 if integer value successfully parsed and set `pp` to the
- * next invalid character.
- *
- * It will return 0 if integer value successfully parsed and set `pp` to NULL
- * if entire char is valid integer value.
+ * next invalid character or NULL if entire char is valid integer value.
  *
  * It will return `-1` if underflow/overflow or other error occured, value of
  * `v` and `pp` will not change.
@@ -995,18 +992,13 @@ int Buffer::PARSE_INT(char** pp, int* v)
 
 	lv = strtol(p, &end, 10);
 
-	// value out of range.
-	if ((errno == ERANGE && (lv == INT_MAX || lv == INT_MIN))
-	||  errno != 0
-	) {
-		perror(NULL);
+	if (errno) {
 		return -1;
 	}
 
 	// value out of integer range.
 	if (lv > INT_MAX || lv < INT_MIN) {
 		errno = ERANGE;
-		(*pp) = p;
 		return -1;
 	}
 
@@ -1022,8 +1014,7 @@ const char* Buffer::chars()
 }
 
 /**
- * @method	: Buffer::dump
- * @desc	: Dump buffer contents to standard output.
+ * Method `dump` will print buffer contents to standard output.
  */
 void Buffer::dump()
 {
@@ -1031,10 +1022,8 @@ void Buffer::dump()
 }
 
 /**
- * @method	: Buffer::dump_hex
- * @desc	:
- * Dump buffer in two column, hexadecimal in the left column and printable
- * characters in the right column.
+ * Method `dump_hex` will print buffer in two column, hexadecimal in the left
+ * column and printable characters in the right column.
  */
 void Buffer::dump_hex()
 {
