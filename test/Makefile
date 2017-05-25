@@ -18,6 +18,7 @@ TEST_OBJS=	$(BLD_D)/test.oo		\
 		$(LIBVOS_BLD_D)/BNode.oo	\
 		$(LIBVOS_BLD_D)/Locker.oo	\
 		$(LIBVOS_BLD_D)/Buffer.oo	\
+		$(LIBVOS_BLD_D)/FmtParser.oo	\
 		$(LIBVOS_BLD_D)/File.oo		\
 		$(LIBVOS_BLD_D)/Dlogger.oo	\
 		$(LIBVOS_BLD_D)/Test.oo
@@ -27,6 +28,8 @@ Object_OBJS=	$(TEST_OBJS)
 BNode_OBJS=	$(TEST_OBJS)
 
 Buffer_OBJS=	$(TEST_OBJS)
+
+FmtParser_OBJS=	$(TEST_OBJS)
 
 File_OBJS=	$(TEST_OBJS)
 
@@ -117,6 +120,7 @@ Dir_OBJS=	$(TEST_OBJS)			\
 
 TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Buffer.test		\
+	$(BLD_D)/FmtParser.test		\
 	$(BLD_D)/BNode.test		\
 	$(BLD_D)/List.test		\
 	$(BLD_D)/ListBuffer.test	\
@@ -149,7 +153,7 @@ $(BLD_D)/%.test.oo: $(SRC_D)/%.test.cc
 $(BLD_D)/%.test: $(BLD_D)/%.test.oo $$(%_OBJS)
 	@$(do_build)
 	@echo "[T] $@"
-	-$(BLD_D)/$@
+	$(BLD_D)/$@ || exit
 
 $(BLD_D)/User.test: $(BLD_D)/User.test.oo $(User_OBJS)
 	@$(do_build)
