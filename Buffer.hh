@@ -72,6 +72,8 @@ public:
 	int append(const Buffer* bfr);
 	int append_raw(const char* bfr, size_t len = 0);
 	int append_bin(const void *bin, size_t len);
+	int append_fmt(const char* fmt, ...);
+	int vappend_fmt(const char* fmt, va_list args);
 
 	int concat(const char* bfr, ...);
 	int aprint(const char* fmt, ...);

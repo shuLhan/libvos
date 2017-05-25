@@ -5,6 +5,7 @@
 //
 
 #include "Buffer.hh"
+#include "FmtParser.hh"
 
 namespace vos {
 
@@ -14,9 +15,9 @@ const char* Buffer::__cname = "Buffer";
 static char __digits[17] = "0123456789ABCDEF";
 
 enum __print_flag {
-	FL_LEFT		= (1 << 0)
+	FL_LEFT_ADJUST	= (1 << 0)
 ,	FL_SIGN		= (1 << 1)
-,	FL_ZERO		= (1 << 2)
+,	FL_ZERO_PAD	= (1 << 2)
 ,	FL_WIDTH	= (1 << 3)
 ,	FL_PREC		= (1 << 4)
 ,	FL_OCTAL	= (1 << 5)
@@ -658,6 +659,48 @@ int Buffer::append_bin(const void *bin, size_t len)
 }
 
 /**
+ * Method `append_fmt` will parse the formatted string `fmt` and apply any
+ * value from arguments `...` and append the result to current buffer.
+ *
+ * On success it will return 0, otherwise it will return -1.
+ */
+int Buffer::append_fmt(const char *fmt, ...)
+{
+	if (!fmt) {
+		return 0;
+	}
+
+	int s;
+	va_list args;
+
+	va_start(args, fmt);
+	s = vappend_fmt(fmt, args);
+	va_end(args);
+
+	return s;
+}
+
+//
+// Method `vappend_fmt(fmt, args)` will parse formatted string `fmt` and apply
+// any value from `args` and append their result to current buffer.
+//
+// On success it will return 0, otherwise it will return -1.
+//
+int Buffer::vappend_fmt(const char *fmt, va_list args)
+{
+	FmtParser fmtp;
+
+	int s = fmtp.parse(fmt, args);
+	if (s) {
+		return -1;
+	}
+
+	append(&fmtp);
+
+	return 0;
+}
+
+/**
  * Method `concat(bfr ...)` will append one or more string to current buffer.
  *
  * NOTE: The last parameter must be NULL.
@@ -1072,7 +1115,9 @@ void Buffer::dump_hex()
 }
 
 /**
- * `get_flags()` will parse '-+#0' characters from `p`.
+ * Method `get_flags(flags, pp)` will parse '-+#0' characters from `pp` save
+ * it to `flags` and return the flag value corresponding to the flag
+ * characters that has found.
  */
 int get_flags(Buffer* flags, char** pp)
 {
@@ -1082,7 +1127,7 @@ int get_flags(Buffer* flags, char** pp)
 	while (*p) {
 		switch (*p) {
 		case '-':
-			flagv |= FL_LEFT;
+			flagv |= FL_LEFT_ADJUST;
 			break;
 		case '+':
 			flagv |= FL_SIGN;
@@ -1091,11 +1136,12 @@ int get_flags(Buffer* flags, char** pp)
 			flagv |= FL_ALT_OUT;
 			break;
 		case '0':
-			flagv |= FL_ZERO;
+			flagv |= FL_ZERO_PAD;
 			break;
 		default:
 			goto out;
 		}
+
 		flags->appendc(*p);
 		p++;
 	}
@@ -1165,7 +1211,7 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 			flagv |= FL_WIDTH;
 			s = PARSE_INT(&p, &flen);
 
-			if (s < 0) {
+			if (s) {
 				b.append(&flags);
 				b.append_raw(p, strlen(p));
 				break;
@@ -1181,7 +1227,7 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 			if (isdigit(*p)) {
 				s = PARSE_INT(&p, &prec);
 
-				if (s < 0) {
+				if (s) {
 					b.append(&flags);
 					b.append_raw(p, strlen(p));
 					break;
@@ -1306,7 +1352,7 @@ int Buffer::VSNPRINTF(char* bfr, int len, const char* fmt, va_list args)
 				}
 			}
 			if ((flagv & FL_NUMBER)) {
-				if ((flagv & FL_ZERO) && flen) {
+				if ((flagv & FL_ZERO_PAD) && flen) {
 					o.shiftr(size_t(flen), '0');
 					flen = 0;
 				}
