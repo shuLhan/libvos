@@ -405,7 +405,7 @@ void FmtParser::apply_flags_to_conversion()
 	_fwidth = 0;
 }
 
-int FmtParser::on_invalid()
+void FmtParser::on_invalid()
 {
 	append(&_flags);
 

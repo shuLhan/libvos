@@ -40,7 +40,7 @@ private:
 	int parse_flags();
 	int parse_conversion();
 	void apply_flags_to_conversion();
-	int on_invalid();
+	void on_invalid();
 };
 
 } // namespace::vos
