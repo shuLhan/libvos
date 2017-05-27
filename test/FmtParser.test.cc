@@ -199,7 +199,7 @@ void test_parse_integer()
 	size_t tests_len = ARRAY_SIZE(tests);
 
 	for (size_t x = 0; x < tests_len; x++) {
-		T.start("parse()", tests[x].desc);
+		T.start("test_parse_integer()", tests[x].desc);
 
 		fmtp.parse(tests[x].fmt, tests[x].in);
 
@@ -290,7 +290,49 @@ void test_parse_float()
 	size_t tests_len = ARRAY_SIZE(tests);
 
 	for (size_t x = 0; x < tests_len; x++) {
-		T.start("parse_float()", tests[x].desc);
+		T.start("test_parse_float()", tests[x].desc);
+
+		fmtp.parse(tests[x].fmt, tests[x].in);
+
+		T.expect_string(tests[x].exp_v, fmtp.v(), 0);
+
+		T.ok();
+	}
+}
+
+void test_parse_string()
+{
+	struct {
+		const char *desc;
+		const char *fmt;
+		const char *in;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"With no field width and no precision",
+			"%s test",
+			"abcd",
+			"abcd test",
+		},
+		{
+			"With field width",
+			"'%8s' test",
+			"abcd",
+			"'    abcd' test",
+		},
+		{
+			"With left padding",
+			"'%-8s' test",
+			"abcd",
+			"'abcd    ' test",
+		},
+	};
+
+	FmtParser fmtp;
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("test_parse_string()", tests[x].desc);
 
 		fmtp.parse(tests[x].fmt, tests[x].in);
 
@@ -305,6 +347,7 @@ int main()
 	test_parse();
 	test_parse_integer();
 	test_parse_float();
+	test_parse_string();
 
 	return 0;
 }
