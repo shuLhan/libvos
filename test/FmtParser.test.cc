@@ -101,6 +101,114 @@ void test_parse()
 	}
 }
 
+void test_parse_integer()
+{
+	struct {
+		const char *desc;
+		const char *fmt;
+		const int in;
+		const char *exp_v;
+	} const tests[] = {
+		{
+			"With no field width and no precision",
+			"%d test",
+			123,
+			"123 test",
+		},
+		{
+			"With field width and no precision",
+			"%4d test",
+			123,
+			" 123 test",
+		},
+		{
+			"With 4 width and 2 precision",
+			"%4.2d test",
+			123,
+			" 123 test",
+		},
+		{
+			"With 6 width and 2 precision",
+			"'%6.2d' test",
+			123,
+			"'   123' test",
+		},
+		{
+			"With '0' flag, 6 width, and 2 precision",
+			"%06.2d test",
+			123,
+			"000123 test",
+		},
+		{
+			"With '-' flag, 6 width, and 2 precision",
+			"'%-6.2d' test",
+			123,
+			"'123   ' test",
+		},
+		{
+			"With '-0' flag, 6 width, and 2 precision",
+			"'%-06.2d' test",
+			123,
+			"'123   ' test",
+		},
+		{
+			"With '0-' flag, 6 width, and 2 precision",
+			"'%0-6.2d' test",
+			123,
+			"'123   ' test",
+		},
+		{
+			"With '+-' flag, 6 width, and 2 precision",
+			"'%+-6.2d' test",
+			-123,
+			"'-123  ' test",
+		},
+		{
+			"With '-+' flag, 6 width, and 2 precision",
+			"'%-+6.2d' test",
+			-123,
+			"'-123  ' test",
+		},
+		{
+			"With '+-' flag, no width, and 2 precision",
+			"'%+-.2d' test",
+			123,
+			"'+123' test",
+		},
+		{
+			"With zero padding and field width (%010d)",
+			"%010d test",
+			123,
+			"0000000123 test",
+		},
+		{
+			"With field width and zero precision (%010.d)",
+			"%010.d test",
+			123,
+			"0000000123 test",
+		},
+		{
+			"With field width and precision (%010.4d)",
+			"%010.4d test",
+			123,
+			"0000000123 test",
+		},
+	};
+
+	FmtParser fmtp;
+	size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("parse()", tests[x].desc);
+
+		fmtp.parse(tests[x].fmt, tests[x].in);
+
+		T.expect_string(tests[x].exp_v, fmtp.v(), 0);
+
+		T.ok();
+	}
+}
+
 void test_parse_float()
 {
 	struct {
@@ -195,6 +303,7 @@ void test_parse_float()
 int main()
 {
 	test_parse();
+	test_parse_integer();
 	test_parse_float();
 
 	return 0;
