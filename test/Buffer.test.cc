@@ -2556,7 +2556,7 @@ void test_PARSE_INT()
 	}
 }
 
-void test_aprint()
+void test_append_fmt()
 {
 	const char* exps[] = {
 			"%11209876543210"
@@ -2574,39 +2574,39 @@ void test_aprint()
 	int exp_idx = 0;
 
 	b.reset();
-	b.aprint("%11209876543210", d);
+	b.append_fmt("%11209876543210", d);
 	expectString(exps[exp_idx++], b.chars(), 0);
 
 	b.reset();
-	b.aprint("%---##++", d);
+	b.append_fmt("%---##++", d);
 	expectString(exps[exp_idx++], b.chars(), 0);
 
 
 	b.reset();
-	b.aprint("%---#1", d);
+	b.append_fmt("%---#1", d);
 	expectString(exps[exp_idx++], b.chars(), 0);
 
 	b.reset();
-	b.aprint("%-.11209876543210", d);
+	b.append_fmt("%-.11209876543210", d);
 	expectString(exps[exp_idx++], b.chars(), 0);
 
 	b.reset();
-	b.aprint("%f", d);
-
-	expectString(exps[exp_idx++], b.chars(), 0);
-
-	b.reset();
-	b.aprint("%3d", 3);
+	b.append_fmt("%f", d);
 
 	expectString(exps[exp_idx++], b.chars(), 0);
 
 	b.reset();
-	b.aprint("%.1f", d);
+	b.append_fmt("%3d", 3);
 
 	expectString(exps[exp_idx++], b.chars(), 0);
 
 	b.reset();
-	b.aprint("%.3f", d);
+	b.append_fmt("%.1f", d);
+
+	expectString(exps[exp_idx++], b.chars(), 0);
+
+	b.reset();
+	b.append_fmt("%.3f", d);
 
 	expectString(exps[exp_idx++], b.chars(), 0);
 }
@@ -2655,8 +2655,6 @@ int main()
 	test_append_bin();
 
 	test_concat();
-	// TODO: aprint
-	// TODO: vprint
 
 	test_prepend();
 	test_prepend_raw();
@@ -2671,8 +2669,6 @@ int main()
 	test_to_lint();
 
 	test_PARSE_INT();
-
-	//test_aprint();
 
 	return 0;
 }

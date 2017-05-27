@@ -75,7 +75,7 @@ void RBT::_chars(Buffer* b, TreeNode* p, int level, int n_black)
 	b->append_raw(p->chars());
 
 	if (!p->_left && !p->_right) {
-		b->aprint("  N Black (%d)", n_black);
+		b->append_fmt("  N Black (%d)", n_black);
 
 		if (_n_black < 0) {
 			_n_black = n_black;

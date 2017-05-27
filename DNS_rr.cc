@@ -103,53 +103,53 @@ const char* DNS_rr::chars()
 	Buffer o;
 
 	o.append_raw("{\n");
-	o.aprint("\t\t"  K(name)   ": " K(%s) "\n", _name.chars());
-	o.aprint("\t,\t" K(type)   ": " K(%s) "\n", DNSRecordType::GET_NAME(_type));
-	o.aprint("\t,\t" K(class)  ": %d\n", _class);
-	o.aprint("\t,\t" K(TTL)    ": %u\n", _ttl);
-	o.aprint("\t,\t" K(length) ": %d\n", _len);
+	o.append_fmt("\t\t"  K(name)   ": " K(%s) "\n", _name.chars());
+	o.append_fmt("\t,\t" K(type)   ": " K(%s) "\n", DNSRecordType::GET_NAME(_type));
+	o.append_fmt("\t,\t" K(class)  ": %d\n", _class);
+	o.append_fmt("\t,\t" K(TTL)    ": %u\n", _ttl);
+	o.append_fmt("\t,\t" K(length) ": %d\n", _len);
 
 	switch (_type) {
 	case QUERY_T_ADDRESS:
-		o.aprint("\t,\t" K(IPv4) ": " K(%s) "\n", _data.chars());
+		o.append_fmt("\t,\t" K(IPv4) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_AAAA:
-		o.aprint("\t,\t" K(IPv6) ": " K(%s) "\n", _data.chars());
+		o.append_fmt("\t,\t" K(IPv6) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_NAMESERVER:
-		o.aprint("\t,\t" K(NS) ": " K(%s) "\n", _data.chars());
+		o.append_fmt("\t,\t" K(NS) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_CNAME:
-		o.aprint("\t,\t" K(CNAME) ": " K(%s) "\n", _data.chars());
+		o.append_fmt("\t,\t" K(CNAME) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_SOA:
-		o.aprint("\t,\t" K(MNAME)   ": " K(%s) "\n", _data.chars());
-		o.aprint("\t,\t" K(RNAME)   ": " K(%s) "\n", _data2.chars());
-		o.aprint("\t,\t" K(serial)  ": %d\n", _serial);
-		o.aprint("\t,\t" K(refresh) ": %d\n", _refresh);
-		o.aprint("\t,\t" K(retry)   ": %d\n", _retry);
-		o.aprint("\t,\t" K(expire)  ": %d\n", _expire);
-		o.aprint("\t,\t" K(minimum) ": %d\n", _minimum);
+		o.append_fmt("\t,\t" K(MNAME)   ": " K(%s) "\n", _data.chars());
+		o.append_fmt("\t,\t" K(RNAME)   ": " K(%s) "\n", _data2.chars());
+		o.append_fmt("\t,\t" K(serial)  ": %d\n", _serial);
+		o.append_fmt("\t,\t" K(refresh) ": %d\n", _refresh);
+		o.append_fmt("\t,\t" K(retry)   ": %d\n", _retry);
+		o.append_fmt("\t,\t" K(expire)  ": %d\n", _expire);
+		o.append_fmt("\t,\t" K(minimum) ": %d\n", _minimum);
 		break;
 	case QUERY_T_PTR:
-		o.aprint("\t,\t" K(PTRDNAME) ": " K(%s) "\n", _data.chars());
+		o.append_fmt("\t,\t" K(PTRDNAME) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_HINFO:
-		o.aprint("\t,\t" K(CPU) ": " K(%s) "\n", _data.chars());
-		o.aprint("\t,\t" K(OS)  ": " K(%s) "\n", _data2.chars());
+		o.append_fmt("\t,\t" K(CPU) ": " K(%s) "\n", _data.chars());
+		o.append_fmt("\t,\t" K(OS)  ": " K(%s) "\n", _data2.chars());
 		break;
 	case QUERY_T_MX:
-		o.aprint("\t,\t" K(score)    ": %d\n", _priority);
-		o.aprint("\t,\t" K(exchange) ": " K(%s) "\n", _data.chars());
+		o.append_fmt("\t,\t" K(score)    ": %d\n", _priority);
+		o.append_fmt("\t,\t" K(exchange) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_TXT:
-		o.aprint("\t,\t" K(TXT) ": " K(%s) "\n", _data.chars());
+		o.append_fmt("\t,\t" K(TXT) ": " K(%s) "\n", _data.chars());
 		break;
 	case QUERY_T_SRV:
-		o.aprint("\t,\t" K(priority) ": %d\n", _priority);
-		o.aprint("\t,\t" K(weight)   ": %d\n", _weight);
-		o.aprint("\t,\t" K(port)     ": %d\n", _port);
-		o.aprint("\t,\t" K(target)   ": " K(%s) "\n", _data.chars());
+		o.append_fmt("\t,\t" K(priority) ": %d\n", _priority);
+		o.append_fmt("\t,\t" K(weight)   ": %d\n", _weight);
+		o.append_fmt("\t,\t" K(port)     ": %d\n", _port);
+		o.append_fmt("\t,\t" K(target)   ": " K(%s) "\n", _data.chars());
 		break;
 	}
 	o.append_raw("\t}");

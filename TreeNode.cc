@@ -305,7 +305,7 @@ const char* TreeNode::chars()
 	Buffer b;
 
 	if (_attr) {
-		b.aprint("{ %d:\"%s\" }", _attr, _item->chars());
+		b.append_fmt("{ %d:\"%s\" }", _attr, _item->chars());
 	} else {
 		b.append_raw(_item->chars());
 	}

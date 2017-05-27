@@ -98,7 +98,7 @@ inline void Dlogger::add_timestamp()
 	_time_s = time(NULL);
 	localtime_r(&_time_s, &_time);
 
-	_tmp.aprint("[%d.%02d.%02d %02d:%02d:%02d] ",
+	_tmp.append_fmt("[%d.%02d.%02d %02d:%02d:%02d] ",
 		1900 + _time.tm_year, 1 + _time.tm_mon, _time.tm_mday,
 		_time.tm_hour, _time.tm_min, _time.tm_sec);
 }
@@ -122,8 +122,8 @@ ssize_t Dlogger::_w(int fd, const char* fmt)
 	add_timestamp();
 	add_prefix();
 
-	s = _tmp.vprint(fmt, _args);
-	if (s <= 0) {
+	s = _tmp.vappend_fmt(fmt, _args);
+	if (s) {
 		_tmp.reset();
 		return s;
 	}

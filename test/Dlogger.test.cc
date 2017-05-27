@@ -11,24 +11,24 @@ using vos::Dlogger;
 
 Dlogger dlog;
 
-#define EXP_PREFIX "[rescached] test with prefix\n"
-#define EXP_NON_PREFIX "test without prefix\n"
+#define EXP_PREFIX "[rescached] test with prefix"
+#define EXP_NON_PREFIX "test without prefix"
 
 void test_prefix()
 {
 	dlog.open("log", 0, "[rescached] ", 0);
 
-	dlog.out("test with prefix\n");
+	dlog.out("test with prefix");
 
-	expectString(dlog.chars(), EXP_PREFIX, 0);
+	expectString(EXP_PREFIX, dlog.chars(), 0);
 
 	dlog.close();
 
 	// Test without prefix.
 	dlog.open("log", 0, "", 0);
 
-	dlog.out("test without prefix\n");
-	expectString(dlog.chars(), EXP_NON_PREFIX, 0);
+	dlog.out("test without prefix");
+	expectString(EXP_NON_PREFIX, dlog.chars(), 0);
 
 	dlog.close();
 }

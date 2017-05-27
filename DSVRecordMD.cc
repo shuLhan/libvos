@@ -65,7 +65,7 @@ const char* DSVRecordMD::chars()
 {
 	Buffer o;
 
-	o.aprint("{"			\
+	o.append_fmt("{"			\
 		" \"type\": %d"		\
 		", \"left_q\": \"%c\""	\
 		", \"name\": \"%s\""	\
@@ -96,7 +96,7 @@ const char* DSVRecordMD::chars()
 		o.append_raw("\"\\b\"");
 		break;
 	default:
-		o.aprint("\"%c\"", _sep);
+		o.append_fmt("\"%c\"", _sep);
 	}
 
 	o.append_raw(" }");

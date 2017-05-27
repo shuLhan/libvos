@@ -74,10 +74,7 @@ public:
 	int append_bin(const void *bin, size_t len);
 	int append_fmt(const char* fmt, ...);
 	int vappend_fmt(const char* fmt, va_list args);
-
 	int concat(const char* bfr, ...);
-	int aprint(const char* fmt, ...);
-	int vprint(const char* fmt, va_list args);
 
 	int prepend(Buffer* bfr);
 	int prepend_raw(const char* bfr, size_t len = 0);
@@ -96,8 +93,6 @@ public:
 	void dump_hex();
 
 	static int PARSE_INT(char** pp, int* v);
-	static int VSNPRINTF(char *bfr, int len, const char *fmt,
-				va_list args);
 	static size_t TRIM(char *bfr, size_t len);
 	static int CMP_OBJECTS(Object* x, Object* y);
 

@@ -682,7 +682,7 @@ const char* Resolver::chars()
 	}
 
 	Buffer b;
-	b.aprint("{ \"servers\": %s }", _servers.chars());
+	b.append_fmt("{ \"servers\": %s }", _servers.chars());
 
 	__str = b.detach();
 

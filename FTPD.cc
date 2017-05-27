@@ -886,7 +886,7 @@ void FTPD::on_cmd_MDTM(FTPD* s, FTPD_client* c)
 		if (!pgmt) {
 			c->_s = CODE_451;
 		} else {
-			tm.aprint("%d%02d%02d%02d%02d%02d"
+			tm.append_fmt("%d%02d%02d%02d%02d%02d"
 				, 1900 + gmt.tm_year, gmt.tm_mon + 1
 				, gmt.tm_mday , gmt.tm_hour, gmt.tm_min
 				, gmt.tm_sec);
@@ -1001,7 +1001,7 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPD_client* c)
 	p1 = pasv_port / 256;
 	p2 = pasv_port % 256;
 
-	pasv_addr.aprint(",%d,%d", p1, p2);
+	pasv_addr.append_fmt(",%d,%d", p1, p2);
 
 	c->_psrv = pasv_sock;
 
@@ -1165,14 +1165,14 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPD_client* c)
 
 		get_node_perm(pasv_c, node);
 
-		pasv_c->aprint(" 1 %d %d %13ld %s %2d "
+		pasv_c->append_fmt(" 1 %d %d %13ld %s %2d "
 				, node->_uid, node->_gid, node->_size
 				, _FTP_month[node_tm.tm_mon], node_tm.tm_mday);
 
 		if (is_old(&cur_tm, &node_tm)) {
-			pasv_c->aprint("%d ", 1900 + node_tm.tm_year);
+			pasv_c->append_fmt("%d ", 1900 + node_tm.tm_year);
 		} else {
-			pasv_c->aprint("%02d:%02d ", node_tm.tm_hour
+			pasv_c->append_fmt("%02d:%02d ", node_tm.tm_hour
 					, node_tm.tm_min);
 		}
 
@@ -1194,15 +1194,15 @@ void FTPD::on_cmd_LIST(FTPD* s, FTPD_client* c)
 
 			get_node_perm(pasv_c, node);
 
-			pasv_c->aprint(" 1 %d %d %13ld %s %2d "
+			pasv_c->append_fmt(" 1 %d %d %13ld %s %2d "
 					, node->_uid, node->_gid, node->_size
 					, _FTP_month[node_tm.tm_mon]
 					, node_tm.tm_mday);
 
 			if (is_old(&cur_tm, &node_tm)) {
-				pasv_c->aprint("%d ", 1900 + node_tm.tm_year);
+				pasv_c->append_fmt("%d ", 1900 + node_tm.tm_year);
 			} else {
-				pasv_c->aprint("%02d:%02d ", node_tm.tm_hour
+				pasv_c->append_fmt("%02d:%02d ", node_tm.tm_hour
 						, node_tm.tm_min);
 			}
 

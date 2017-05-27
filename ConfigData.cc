@@ -239,16 +239,16 @@ void ConfigData::dump()
 
 	o.append_raw("[vos::CnfgData] dump: ----------------------------\n");
 	while (h) {
-		o.aprint("[%s]\n", h->_v);
+		o.append_fmt("[%s]\n", h->_v);
 
 		k = h->_next_key;
 		while (k) {
 			if (CONFIG_T_KEY == k->_t) {
-				o.aprint("\t%s = %s\n", k->chars()
+				o.append_fmt("\t%s = %s\n", k->chars()
 					, k->_value ? k->_value->chars()
 						: "\0");
 			} else {
-				o.aprint("%s\n", k->chars());
+				o.append_fmt("%s\n", k->chars());
 			}
 			k = k->_next_key;
 		}

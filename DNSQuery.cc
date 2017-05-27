@@ -1174,14 +1174,14 @@ const char* DNSQuery::chars()
 
 	b.append_raw("{\n");
 
-	b.aprint("\t" K(ID)     ": %d\n", _id);
-	b.aprint(",\t" K(TYPE)   ": " K(%s) "\n", get_type(_flag));
-	b.aprint(",\t" K(OPCODE) ": " K(%s) "\n", get_opcode(_flag));
-	b.aprint(",\t" K(AA)     ": %d\n", (_flag & RTYPE_AA) ? 1 : 0);
-	b.aprint(",\t" K(TC)     ": %d\n", (_flag & RTYPE_TC_ON) ? 1 : 0);
-	b.aprint(",\t" K(RD)     ": %d\n", (_flag & RTYPE_RD) ? 1 : 0);
-	b.aprint(",\t" K(RA)     ": %d\n", (_flag & RTYPE_RA) ? 1 : 0);
-	b.aprint(",\t" K(RCODE)  ": " K(%s) "\n", get_rcode_name());
+	b.append_fmt("\t" K(ID)     ": %d\n", _id);
+	b.append_fmt(",\t" K(TYPE)   ": " K(%s) "\n", get_type(_flag));
+	b.append_fmt(",\t" K(OPCODE) ": " K(%s) "\n", get_opcode(_flag));
+	b.append_fmt(",\t" K(AA)     ": %d\n", (_flag & RTYPE_AA) ? 1 : 0);
+	b.append_fmt(",\t" K(TC)     ": %d\n", (_flag & RTYPE_TC_ON) ? 1 : 0);
+	b.append_fmt(",\t" K(RD)     ": %d\n", (_flag & RTYPE_RD) ? 1 : 0);
+	b.append_fmt(",\t" K(RA)     ": %d\n", (_flag & RTYPE_RA) ? 1 : 0);
+	b.append_fmt(",\t" K(RCODE)  ": " K(%s) "\n", get_rcode_name());
 
 	b.append_raw(",\t" K(ANSWERS) ": ");
 	b.append_raw(_rr_ans.chars());

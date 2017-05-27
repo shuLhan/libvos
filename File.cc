@@ -594,7 +594,7 @@ ssize_t File::writef(const char* fmt, va_list args)
 	int s = 0;
 	Buffer b;
 
-	s = b.vprint(fmt, args);
+	s = b.vappend_fmt(fmt, args);
 	if (s < 0) {
 		return -1;
 	}
@@ -623,7 +623,7 @@ ssize_t File::writes(const char* fmt, ...)
 	va_list		al;
 
 	va_start(al, fmt);
-	s = b.vprint(fmt, al);
+	s = b.vappend_fmt(fmt, al);
 	va_end(al);
 
 	if (s < 0) {
