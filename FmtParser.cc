@@ -354,10 +354,6 @@ int FmtParser::parse_conversion()
 
 void FmtParser::apply_flags_to_conversion()
 {
-	if (! _flag) {
-		return;
-	}
-
 	int convlen = int(_conv.len());
 
 	if (_fwidth > convlen) {
@@ -390,6 +386,7 @@ void FmtParser::apply_flags_to_conversion()
 			}
 		} else {
 			_conv.shiftr(size_t(_fwidth), ' ');
+			_fwidth = 0;
 		}
 	}
 
