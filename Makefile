@@ -41,6 +41,7 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/Dir.oo			\
 			$(LIBVOS_BLD_D)/DirNode.oo		\
 			$(LIBVOS_BLD_D)/SockAddr.oo		\
+			$(LIBVOS_BLD_D)/ListSockAddr.oo		\
 			$(LIBVOS_BLD_D)/Socket.oo		\
 			$(LIBVOS_BLD_D)/SockServer.oo		\
 			$(LIBVOS_BLD_D)/DNSRecordType.oo	\

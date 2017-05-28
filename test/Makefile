@@ -59,6 +59,10 @@ SSVReader_OBJS=		$(ListBuffer_OBJS)		\
 SockAddr_OBJS=	$(TEST_OBJS)			\
 		$(LIBVOS_BLD_D)/SockAddr.oo
 
+ListSockAddr_OBJS=	$(SockAddr_OBJS) \
+			$(ListBuffer_OBJS) \
+			$(LIBVOS_BLD_D)/ListSockAddr.oo
+
 DNSQuery_OBJS=		$(SSVReader_OBJS)		\
 			$(LIBVOS_BLD_D)/DNS_rr.oo	\
 			$(LIBVOS_BLD_D)/DNSQuery.oo	\
@@ -71,9 +75,8 @@ Rowset_OBJS=	$(List_OBJS)			\
 		$(LIBVOS_BLD_D)/Rowset.oo
 
 Resolver_OBJS=	\
-		$(List_OBJS)			\
+		$(ListSockAddr_OBJS)		\
 		$(DNSQuery_OBJS)		\
-		$(SockAddr_OBJS)		\
 		$(LIBVOS_BLD_D)/ListBuffer.oo	\
 		$(LIBVOS_BLD_D)/Socket.oo	\
 		$(LIBVOS_BLD_D)/Resolver.oo
@@ -127,6 +130,7 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Dlogger.test		\
 	$(BLD_D)/SSVReader.test		\
 	$(BLD_D)/SockAddr.test		\
+	$(BLD_D)/ListSockAddr.test	\
 	$(BLD_D)/host_to_dnsquery.test	\
 	$(BLD_D)/Resolver.test		\
 	$(BLD_D)/Rowset.test		\
