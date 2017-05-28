@@ -40,7 +40,7 @@ public:
 	~SockAddr();
 
 	int set(const int type, const char* addr, const uint16_t port);
-	int set_port(const int type, const uint16_t port);
+	void set_port(const int type, const uint16_t port);
 	uint16_t get_port(const int type = AF_INET);
 	const char* get_address(const int type = AF_INET);
 	const char* chars();

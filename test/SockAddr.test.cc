@@ -1,93 +1,195 @@
+/**
+ * Copyright 2017 M. Shulhan (ms@kilabit.info). All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
 #include "test.hh"
+#include "../Test.hh"
 #include "../SockAddr.hh"
 
-#define TEST_0_ADDR4		"0.0.0.0"
-#define TEST_0_ADDR6		"::"
-#define TEST_0_PORT		0
-#define	TEST_0_CHARS_EXP	TEST_0_ADDR4 ":0 " TEST_0_ADDR6 ":0"
-
-#define TEST_1_ADDR4		"8.8.8.8"
-#define TEST_1_ADDR6		"2001:0db8:0000:0042:0000:8a2e:0370:7334"
-#define TEST_1_ADDR6_EXP	"2001:db8:0:42:0:8a2e:370:7334"
-#define TEST_1_PORT		53
-#define TEST_1_CHARS_EXP_1	TEST_1_ADDR4 ":53 " TEST_0_ADDR6 ":0"
-#define TEST_1_CHARS_EXP_2	TEST_1_ADDR4 ":53 " TEST_1_ADDR6_EXP ":53"
-
-#define TEST_2_PORT		70000
-#define TEST_2_PORT_EXP		4464
-
+using vos::Test;
 using vos::SockAddr;
 
-SockAddr sa;
+Test T("SockAddr");
 
-void check_ip4(int exp_type, const char* exp_addr, uint16_t exp_port)
+void test_set_ipv4()
 {
-	assert((sa._t & exp_type) == exp_type);
-	assert(strcmp(exp_addr, sa.get_address(AF_INET)) == 0);
-	assert(exp_port == sa.get_port(AF_INET));
+	struct {
+		const char     *desc;
+		const char     *in_addr;
+		const uint16_t in_port;
+		const int      exp_res;
+		const int      exp_t;
+		const char     *exp_addr;
+		const uint16_t exp_port;
+		const char     *exp_chars;
+	} const tests[] = {
+		{
+			"With NULL address",
+			NULL,
+			0,
+			-1,
+			IP_NO,
+			"0.0.0.0",
+			0,
+			"",
+		},
+		{
+			"With invalid IP",
+			"444.0..1",
+			0,
+			-1,
+			IP_NO,
+			"0.0.0.0",
+			0,
+			"",
+		},
+		{
+			"With IPv6",
+			"::1",
+			0,
+			-1,
+			IP_NO,
+			"0.0.0.0",
+			0,
+			"",
+		},
+		{
+			"With AF_INET, 8.8.8.8, 53",
+			"8.8.8.8",
+			53,
+			0,
+			IP_V4,
+			"8.8.8.8",
+			53,
+			"8.8.8.8:53",
+		},
+	};
+
+	int got;
+	SockAddr sa;
+	const size_t tests_len = ARRAY_SIZE(tests);
+
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("set()", tests[x].desc);
+
+		got = sa.set(AF_INET, tests[x].in_addr, tests[x].in_port);
+
+		if (tests[x].exp_res != 0) {
+			T.expect_signed(tests[x].exp_res, got, 0);
+			T.ok();
+			continue;
+		}
+
+		T.expect_signed(tests[x].exp_t, sa._t, 0);
+		T.expect_string(tests[x].exp_addr, sa.get_address(AF_INET), 0);
+		T.expect_signed(tests[x].exp_port, sa.get_port(AF_INET), 0);
+		T.expect_string(tests[x].exp_chars, sa.chars(), 0);
+
+		T.ok();
+	}
 }
 
-void check_ip6(int exp_type, const char* exp_addr, uint16_t exp_port)
+void test_set_ipv6()
 {
-	assert((sa._t & exp_type) == exp_type);
-	assert(strcmp(exp_addr, sa.get_address(AF_INET6)) == 0);
-	assert(sa.get_port(AF_INET6) == exp_port);
-}
+	struct {
+		const char     *desc;
+		const char     *in_addr;
+		const uint16_t in_port;
+		const int      exp_res;
+		const int      exp_t;
+		const char     *exp_addr;
+		const uint16_t exp_port;
+		const char     *exp_chars;
+	} const tests[] = {
+		{
+			"With NULL address",
+			NULL,
+			0,
+			-1,
+			IP_NO,
+			"0.0.0.0",
+			0,
+			"",
+		},
+		{
+			"With invalid IP",
+			"1:1:x:1",
+			0,
+			-1,
+			IP_NO,
+			"0.0.0.0",
+			0,
+			"",
+		},
+		{
+			"With IPv4",
+			"0.0.0.0",
+			0,
+			-1,
+			IP_NO,
+			"0.0.0.0",
+			0,
+			"",
+		},
+		{
+			"With AF_INET6, 8.8.8.8, 53",
+			"::1",
+			53,
+			0,
+			IP_V6,
+			"::1",
+			53,
+			"[::1]:53",
+		},
+	};
 
-void test_set()
-{
-	check_ip4(0, TEST_0_ADDR4, TEST_0_PORT);
-	check_ip6(0, TEST_0_ADDR6, TEST_0_PORT);
+	int got;
+	SockAddr sa;
+	const size_t tests_len = ARRAY_SIZE(tests);
 
-	assert(strcmp(TEST_0_CHARS_EXP, sa.chars()) == 0);
+	for (size_t x = 0; x < tests_len; x++) {
+		T.start("set(AF_INET6)", tests[x].desc);
 
-	//
-	// Set ipv4
-	//
-	sa.set(AF_INET, TEST_1_ADDR4, TEST_1_PORT);
+		got = sa.set(AF_INET6, tests[x].in_addr, tests[x].in_port);
 
-	check_ip4(AF_INET, TEST_1_ADDR4, TEST_1_PORT);
-	check_ip6(AF_INET, TEST_0_ADDR6, TEST_0_PORT);
+		if (tests[x].exp_res != 0) {
+			T.expect_signed(tests[x].exp_res, got, 0);
+			T.ok();
+			continue;
+		}
 
-	assert(strcmp(TEST_1_CHARS_EXP_1, sa.chars()) == 0);
+		T.expect_signed(tests[x].exp_t, sa._t, 0);
+		T.expect_string(tests[x].exp_addr, sa.get_address(AF_INET6), 0);
+		T.expect_signed(tests[x].exp_port, sa.get_port(AF_INET6), 0);
+		T.expect_string(tests[x].exp_chars, sa.chars(), 0);
 
-	//
-	// Set ipv6
-	//
-	sa.set(AF_INET6, TEST_1_ADDR6, TEST_1_PORT);
-
-	check_ip4(AF_INET, TEST_1_ADDR4, TEST_1_PORT);
-	check_ip6(AF_INET6, TEST_1_ADDR6_EXP, TEST_1_PORT);
-
-	// test set port out of range
-	sa.set_port(AF_INET, (uint16_t) TEST_2_PORT);
-
-	// the port in addr4 will be overflow, since its uin16_t
-	check_ip4(AF_INET, TEST_1_ADDR4, TEST_2_PORT_EXP);
-
-	// the port in addr6 should not change
-	check_ip6(AF_INET6, TEST_1_ADDR6_EXP, TEST_1_PORT);
+		T.ok();
+	}
 }
 
 void test_IS_IPV4()
 {
-	assert(SockAddr::IS_IPV4("0.0.0.0") == 1);
-	assert(SockAddr::IS_IPV4("127.0.0.1") == 1);
-	assert(SockAddr::IS_IPV4("192.168.1.0") == 1);
-	assert(SockAddr::IS_IPV4("192.168.1.1") == 1);
-	assert(SockAddr::IS_IPV4("192.168.1.255") == 1);
-	assert(SockAddr::IS_IPV4("192.168.1.265") == 0);
-	assert(SockAddr::IS_IPV4("192.168.1a.254") == 0);
-	assert(SockAddr::IS_IPV4("192.1680.1.254") == 0);
-	assert(SockAddr::IS_IPV4("1.168.1.256") == 0);
-	assert(SockAddr::IS_IPV4("1.168.1.2520") == 0);
-	assert(SockAddr::IS_IPV4("1.168.1.") == 0);
-	assert(SockAddr::IS_IPV4("192.168.1") == 0);
-	assert(SockAddr::IS_IPV4("192..168.1") == 0);
+	T.expect_signed(1, SockAddr::IS_IPV4("0.0.0.0"), 0);
+	T.expect_signed(1, SockAddr::IS_IPV4("127.0.0.1"), 0);
+	T.expect_signed(1, SockAddr::IS_IPV4("192.168.1.0"), 0);
+	T.expect_signed(1, SockAddr::IS_IPV4("192.168.1.1"), 0);
+	T.expect_signed(1, SockAddr::IS_IPV4("192.168.1.255"), 0);
+	T.expect_signed(0, SockAddr::IS_IPV4("192.168.1.265"), 0);
+	T.expect_signed(0, SockAddr::IS_IPV4("192.168.1a.254"), 0);
+	T.expect_signed(0, SockAddr::IS_IPV4("192.1680.1.254"), 0);
+	T.expect_signed(0, SockAddr::IS_IPV4("1.168.1.256"), 0);
+	T.expect_signed(0, SockAddr::IS_IPV4("1.168.1.2520"), 0);
+	T.expect_signed(0, SockAddr::IS_IPV4("1.168.1."), 0);
+	T.expect_signed(0, SockAddr::IS_IPV4("192.168.1"), 0);
+	T.expect_signed(0, SockAddr::IS_IPV4("192..168.1"), 0);
 }
 
 int main()
 {
+	test_set_ipv4();
+	test_set_ipv6();
 	test_IS_IPV4();
 
 	return 0;

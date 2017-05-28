@@ -33,22 +33,23 @@ SockAddr::~SockAddr()
 //
 // `set_port()` will set port in address `type`.
 //
-int SockAddr::set_port(const int type, const uint16_t port)
+void SockAddr::set_port(const int type, const uint16_t port)
 {
 	switch (type) {
-	case AF_INET:
-		_in.sin_port = htons(port);
-		break;
-	case AF_INET6:
-		_in6.sin6_port = htons(port);
-		break;
 	case AF_INETS:
 		_in.sin_port	= htons(port);
 		_in6.sin6_port	= htons(port);
 		break;
-	}
 
-	return 0;
+	case AF_INET6:
+		_in6.sin6_port = htons(port);
+		break;
+
+	case AF_INET:
+	default:
+		_in.sin_port = htons(port);
+		break;
+	}
 }
 
 /**
@@ -64,29 +65,23 @@ int SockAddr::set_port(const int type, const uint16_t port)
  */
 int SockAddr::set(const int type, const char* addr, const uint16_t port)
 {
-	if (!addr) {
-		return set_port(type, port);
-	}
-
 	int s;
 
 	switch (type) {
-	case AF_INET:
-		s = CREATE_ADDR(&_in, addr, port);
-		if (s == 0) {
-			_t |= IP_V4;
-		}
-		break;
 	case AF_INET6:
 		s = CREATE_ADDR6(&_in6, addr, port);
 		if (s == 0) {
 			_t |= IP_V6;
 		}
 		break;
+
+	case AF_INET:
 	default:
-		fprintf(stderr, "[%s] set: invalid type '%d'\n", __cname
-			, type);
-		s = -1;
+		s = CREATE_ADDR(&_in, addr, port);
+		if (s == 0) {
+			_t |= IP_V4;
+		}
+		break;
 	}
 
 	return s;
@@ -103,11 +98,13 @@ int SockAddr::set(const int type, const char* addr, const uint16_t port)
 uint16_t SockAddr::get_port(const int type)
 {
 	switch (type) {
-	case AF_INET:
-		return ntohs(_in.sin_port);
 	case AF_INET6:
 	case AF_INETS:
 		return ntohs(_in6.sin6_port);
+
+	case AF_INET:
+	default:
+		return ntohs(_in.sin_port);
 	}
 	return 0;
 }
@@ -125,13 +122,15 @@ const char* SockAddr::get_address(const int type)
 	const char* p = NULL;
 
 	switch (type) {
-	case AF_INET:
-		p = inet_ntop(AF_INET, &_in.sin_addr, _p_address
-				, INET6_ADDRSTRLEN);
-		break;
 	case AF_INET6:
 	case AF_INETS:
 		p = inet_ntop(AF_INET6, &_in6.sin6_addr, _p_address
+				, INET6_ADDRSTRLEN);
+		break;
+
+	case AF_INET:
+	default:
+		p = inet_ntop(AF_INET, &_in.sin_addr, _p_address
 				, INET6_ADDRSTRLEN);
 		break;
 	}
@@ -151,9 +150,8 @@ const char* SockAddr::chars()
 	Buffer b;
 
 	if (_t & IP_V4) {
-		b.copy_raw(get_address());
-		b.appendc(':');
-		b.appendi(get_port());
+		b.append_fmt("%s:%d", get_address(),
+			get_port());
 
 		if (_t & IP_V6) {
 			b.appendc(' ');
@@ -161,10 +159,8 @@ const char* SockAddr::chars()
 	}
 
 	if (_t & IP_V6) {
-
-		b.append_raw(get_address(AF_INET6));
-		b.appendc(':');
-		b.appendi(get_port(AF_INET6));
+		b.append_fmt("[%s]:%d", get_address(AF_INET6),
+			get_port(AF_INET6));
 	}
 
 	__str = b.detach();
