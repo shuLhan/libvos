@@ -34,24 +34,7 @@ void check_ip6(int exp_type, const char* exp_addr, uint16_t exp_port)
 	assert(sa.get_port(AF_INET6) == exp_port);
 }
 
-void test_IS_IPV4()
-{
-	assert(SockAddr::IS_IPV4("0.0.0.0") == 1);
-	assert(SockAddr::IS_IPV4("127.0.0.1") == 1);
-	assert(SockAddr::IS_IPV4("192.168.1.0") == 1);
-	assert(SockAddr::IS_IPV4("192.168.1.1") == 1);
-	assert(SockAddr::IS_IPV4("192.168.1.255") == 1);
-	assert(SockAddr::IS_IPV4("192.168.1.265") == 0);
-	assert(SockAddr::IS_IPV4("192.168.1a.254") == 0);
-	assert(SockAddr::IS_IPV4("192.1680.1.254") == 0);
-	assert(SockAddr::IS_IPV4("1.168.1.256") == 0);
-	assert(SockAddr::IS_IPV4("1.168.1.2520") == 0);
-	assert(SockAddr::IS_IPV4("1.168.1.") == 0);
-	assert(SockAddr::IS_IPV4("192.168.1") == 0);
-	assert(SockAddr::IS_IPV4("192..168.1") == 0);
-}
-
-int main()
+void test_set()
 {
 	check_ip4(0, TEST_0_ADDR4, TEST_0_PORT);
 	check_ip6(0, TEST_0_ADDR6, TEST_0_PORT);
@@ -84,7 +67,27 @@ int main()
 
 	// the port in addr6 should not change
 	check_ip6(AF_INET6, TEST_1_ADDR6_EXP, TEST_1_PORT);
+}
 
+void test_IS_IPV4()
+{
+	assert(SockAddr::IS_IPV4("0.0.0.0") == 1);
+	assert(SockAddr::IS_IPV4("127.0.0.1") == 1);
+	assert(SockAddr::IS_IPV4("192.168.1.0") == 1);
+	assert(SockAddr::IS_IPV4("192.168.1.1") == 1);
+	assert(SockAddr::IS_IPV4("192.168.1.255") == 1);
+	assert(SockAddr::IS_IPV4("192.168.1.265") == 0);
+	assert(SockAddr::IS_IPV4("192.168.1a.254") == 0);
+	assert(SockAddr::IS_IPV4("192.1680.1.254") == 0);
+	assert(SockAddr::IS_IPV4("1.168.1.256") == 0);
+	assert(SockAddr::IS_IPV4("1.168.1.2520") == 0);
+	assert(SockAddr::IS_IPV4("1.168.1.") == 0);
+	assert(SockAddr::IS_IPV4("192.168.1") == 0);
+	assert(SockAddr::IS_IPV4("192..168.1") == 0);
+}
+
+int main()
+{
 	test_IS_IPV4();
 
 	return 0;

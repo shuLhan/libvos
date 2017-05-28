@@ -7,12 +7,19 @@
 #ifndef _LIBVOS_SOCKET_ADDRESS_HH
 #define _LIBVOS_SOCKET_ADDRESS_HH 1
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include "Buffer.hh"
 
 namespace vos {
+
+#define IP_NO  0
+#define IP_V4   1
+#define IP_V6   2
+#define IP_V4_6 4
 
 #define	AF_INETS	(AF_INET + AF_INET6)
 

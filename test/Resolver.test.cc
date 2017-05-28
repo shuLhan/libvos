@@ -8,11 +8,11 @@ vos::Resolver res;
 #define	DEF_IPV6	":::0"
 
 #define TEST_0		"8.8.8.8"
-#define TEST_0_CHARS	V_STR( TEST_0 ":53 " DEF_IPV6 )
+#define TEST_0_CHARS	V_STR( TEST_0 ":53" )
 #define TEST_0_EXP	CB( K(servers) SEP_KV SB(TEST_0_CHARS) )
 
 #define TEST_1		"127.0.0.1:54"
-#define TEST_1_CHARS	V_STR( TEST_1 " " DEF_IPV6 )
+#define TEST_1_CHARS	V_STR( TEST_1 )
 #define TEST_1_EXP	CB( \
 				K(servers) SEP_KV SB( \
 					TEST_0_CHARS \
@@ -26,7 +26,7 @@ vos::Resolver res;
 			SEP_ITEM \
 			TEST_1_CHARS \
 			SEP_ITEM \
-			V_STR("8.8.4.4:53 " DEF_IPV6)
+			V_STR("8.8.4.4:53")
 #define TEST_2_EXP	CB( \
 				K(servers) SEP_KV SB( TEST_2_CHARS ) \
 			)

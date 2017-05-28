@@ -73,17 +73,21 @@ int SockAddr::set(const int type, const char* addr, const uint16_t port)
 	switch (type) {
 	case AF_INET:
 		s = CREATE_ADDR(&_in, addr, port);
+		if (s == 0) {
+			_t |= IP_V4;
+		}
 		break;
 	case AF_INET6:
 		s = CREATE_ADDR6(&_in6, addr, port);
+		if (s == 0) {
+			_t |= IP_V6;
+		}
 		break;
 	default:
 		fprintf(stderr, "[%s] set: invalid type '%d'\n", __cname
 			, type);
 		s = -1;
 	}
-
-	_t |= type;
 
 	return s;
 }
@@ -143,17 +147,25 @@ const char* SockAddr::chars()
 		free(__str);
 		__str = NULL;
 	}
+
 	Buffer b;
 
-	b.copy_raw(get_address());
-	b.appendc(':');
-	b.appendi(get_port());
+	if (_t & IP_V4) {
+		b.copy_raw(get_address());
+		b.appendc(':');
+		b.appendi(get_port());
 
-	b.appendc(' ');
+		if (_t & IP_V6) {
+			b.appendc(' ');
+		}
+	}
 
-	b.append_raw(get_address(AF_INET6));
-	b.appendc(':');
-	b.appendi(get_port(AF_INET6));
+	if (_t & IP_V6) {
+
+		b.append_raw(get_address(AF_INET6));
+		b.appendc(':');
+		b.appendi(get_port(AF_INET6));
+	}
 
 	__str = b.detach();
 
@@ -279,11 +291,7 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
 		return -1;
 	}
 
-	int			s;
-	int			err	= 0;
-	struct hostent		he;
-	struct hostent*		hep	= NULL;
-	Buffer			ip_addr;
+	int s;
 
 	memset(sin, 0, IN_SIZE);
 
@@ -293,21 +301,22 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
 			return -1;
 		}
 	} else {
-		ip_addr.resize(512);
-		do {
-			s = gethostbyname2_r(addr, AF_INET, &he
-				, (char*) ip_addr.v()
-				, ip_addr.size(), &hep, &err);
-			if (ERANGE == s) {
-				ip_addr.resize(ip_addr.size() * 2);
-			}
-		} while (ERANGE == s);
+		struct addrinfo sai;
+		struct addrinfo *res = NULL;
 
-		if (err) {
+		memset(&sai, 0, sizeof(sai));
+		sai.ai_family = AF_INET;
+
+		s = ::getaddrinfo(addr, NULL, &sai, &res);
+
+		if (s) {
 			return -1;
 		}
 
-		memcpy(&sin->sin_addr, hep->h_addr, size_t(hep->h_length));
+		struct sockaddr_in *res_sin = (struct sockaddr_in *) res->ai_addr;
+		int res_sin_len = sizeof(res_sin->sin_addr);
+
+		memcpy(&sin->sin_addr, &res_sin->sin_addr, res_sin_len);
 	}
 
 	sin->sin_family	= AF_INET;
@@ -335,11 +344,7 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 		return -1;
 	}
 
-	int		s;
-	int		err	= 0;
-	struct hostent	he;
-	struct hostent*	hep	= NULL;
-	Buffer		ip_addr;
+	int s;
 
 	memset(sin6, 0, IN6_SIZE);
 
@@ -350,21 +355,22 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 			return -1;
 		}
 	} else {
-		ip_addr.resize(512);
-		do {
-			s = gethostbyname2_r(addr, AF_INET6, &he
-				, (char*) ip_addr.v()
-				, ip_addr.size(), &hep, &err);
-			if (ERANGE == s) {
-				ip_addr.resize(ip_addr.size() * 2);
-			}
-		} while (ERANGE == s);
+		struct addrinfo sai;
+		struct addrinfo *res = NULL;
 
-		if (err) {
+		memset(&sai, 0, sizeof(sai));
+		sai.ai_family = AF_INET6;
+
+		s = ::getaddrinfo(addr, NULL, &sai, &res);
+
+		if (s) {
 			return -1;
 		}
 
-		memcpy(&sin6->sin6_addr, hep->h_addr, size_t(hep->h_length));
+		struct sockaddr_in6 *res_sin = (struct sockaddr_in6*) res->ai_addr;
+		int res_sin_len = sizeof(res_sin->sin6_addr);
+
+		memcpy(&sin6->sin6_addr, &res_sin->sin6_addr, res_sin_len);
 	}
 
 	sin6->sin6_family	= AF_INET6;
