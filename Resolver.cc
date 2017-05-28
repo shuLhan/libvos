@@ -139,60 +139,21 @@ int Resolver::set_server(const char* server_list)
  */
 int Resolver::add_server(const char* server_list)
 {
-	if (!server_list) {
-		return 0;
+	List *list_servers = LISTSOCKADDR_CREATE(server_list, ',', PORT);
+
+	if (list_servers == NULL) {
+		return -1;
 	}
 
-	int s = 0;
-	long int port_num;
-
-	int x;
-	Buffer b;
-	List* addrs;
-	List* addr_port = NULL;
-	Buffer* b_addr = NULL;
-	Buffer* addr = NULL;
-	Buffer* port = NULL;
-	SockAddr* saddr = NULL;
-
-	b.copy_raw(server_list);
-	addrs = SPLIT_BY_CHAR(&b, ',', 1);
-
-	for (x = 0; x < addrs->size(); x++) {
-		b_addr = (Buffer*) addrs->at(x);
-
-		addr_port = SPLIT_BY_CHAR(b_addr, ':');
-
-		addr = (Buffer*) addr_port->at(0);
-		port_num = PORT;
-
-		if (addr_port->size() == 2) {
-			port = (Buffer*) addr_port->at(1);
-
-			s = port->to_lint(&port_num);
-			if (s != 0 || port_num <= 0 || port_num > 65535) {
-				port_num = PORT;
-			}
-		}
-
-		s = SockAddr::INIT(&saddr, AF_INET, addr->chars(),
-			(uint16_t) port_num);
-		if (s < 0) {
-			goto err;
-		}
-
-		_servers.push_tail(saddr);
-
-		delete addr_port;
-		addr_port = NULL;
+	Object *item = list_servers->pop_head();
+	while (item) {
+		_servers.push_tail(item);
+		item = list_servers->pop_head();
 	}
-err:
-	if (addr_port) {
-		delete addr_port;
-	}
-	delete addrs;
 
-	return s;
+	delete list_servers;
+
+	return 0;
 }
 
 /**

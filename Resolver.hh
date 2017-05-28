@@ -13,6 +13,7 @@
 #include "ListBuffer.hh"
 #include "DNSQuery.hh"
 #include "Socket.hh"
+#include "ListSockAddr.hh"
 
 namespace vos {
 
