@@ -331,6 +331,7 @@ int FmtParser::parse_conversion()
 		break;
 	case 'p':
 		_flag |= FL_ALT_OUT;
+		__attribute__ ((fallthrough));
 	case 'x':
 	case 'X':
 		_flag |= FL_HEX | FL_NUMBER;
