@@ -512,6 +512,7 @@ inline int Config::parsing()
 
 			++_p;
 			/* no break, keep it flow */
+			__attribute__ ((fallthrough));
 
 		case P_CFG_VALUE:
 			start = _p;
