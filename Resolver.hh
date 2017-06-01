@@ -70,6 +70,7 @@ public:
 	unsigned int	_n_try;
 	struct timeval	_timeout;
 	ListSockAddr	*_servers;
+
 	static uint16_t PORT;
 	static unsigned int UDP_PACKET_SIZE;
 	static unsigned int TIMEOUT;

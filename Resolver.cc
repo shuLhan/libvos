@@ -337,6 +337,12 @@ int Resolver::send_tcp(DNSQuery* question)
 		return -1;
 	}
 
+	if (LIBVOS_DEBUG) {
+		fprintf(stdout
+		, "[%s] send_tcp: %s\n", __cname, question->_name.v());
+
+	}
+
 	return 0;
 }
 
@@ -414,6 +420,8 @@ int Resolver::recv_tcp(DNSQuery* answer)
 			printf ("[%s] recv_tcp: connection closed.\n"
 				, __cname);
 		}
+		reset();
+		close();
 		FD_CLR (_d, &_fd_all);
 		return 0;
 	}
@@ -562,7 +570,7 @@ int Resolver::resolve_tcp(DNSQuery* question, DNSQuery* answer)
 
 		s = recv_tcp(answer);
 		if (s < 0) {
-			continue;
+			break;
 		}
 
 		s = question->_name.like(&answer->_name);
