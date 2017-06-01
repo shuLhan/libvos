@@ -10,10 +10,11 @@
 
 using vos::Test;
 using vos::List;
+using vos::ListSockAddr;
 
 Test T("ListSockAddr");
 
-void test_LISTSOCKADDR_CREATE()
+void test_NEW()
 {
 	struct {
 		const char *desc;
@@ -125,17 +126,21 @@ void test_LISTSOCKADDR_CREATE()
 	const size_t tests_len = ARRAY_SIZE(tests);
 
 	for (size_t x = 0; x < tests_len; x++) {
-		T.start("LISTSOCKADDR_CREATE", tests[x].desc);
+		T.start("NEW", tests[x].desc);
 
-		List *got = vos::LISTSOCKADDR_CREATE(tests[x].in,
+		ListSockAddr *lsa = NULL;
+
+		int s = ListSockAddr::NEW(&lsa, tests[x].in,
 			tests[x].sep, tests[x].def_port);
 
-		if (got == NULL) {
-			T.expect_ptr(tests[x].exp_v, got, 0);
+		if (s) {
+			T.expect_ptr(tests[x].exp_v, lsa, 0);
 		} else {
-			T.expect_string(tests[x].exp_v, got->chars(), 0);
-			delete got;
+			T.expect_string(tests[x].exp_v, lsa->chars(), 0);
+			delete lsa;
 		}
+
+		lsa = NULL;
 
 		T.ok();
 	}
@@ -143,7 +148,7 @@ void test_LISTSOCKADDR_CREATE()
 
 int main()
 {
-	test_LISTSOCKADDR_CREATE();
+	test_NEW();
 
 	return 0;
 }

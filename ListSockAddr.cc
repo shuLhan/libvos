@@ -8,36 +8,36 @@
 
 namespace vos {
 
+const char* ListSockAddr::__cname = "ListSockAddr";
+
 /**
- * Method `LISTSOCKADDR_CREATE(list, sep, def_port)` will parse list of
- * address in `str` where each address is separated by `sep` (default to
- * comma).
- *
- * On success it will return List of SockAddr, otherwise it will return NULL.
+ * Method `NEW(lsa, str, sep, def_port)` will create a list of SockAddr by
+ * parsing list of address in `str`, where each address is separated by `sep`
+ * (default to comma).
  */
-List* LISTSOCKADDR_CREATE(const char *str, const char sep,
-	const uint16_t def_port)
+int ListSockAddr::NEW(ListSockAddr **lsa, const char *str, const char sep
+	, const uint16_t def_port)
 {
 	if (str == NULL) {
-		return NULL;
+		return -1;
 	}
 
 	size_t str_len = strlen(str);
 	if (str_len <= 0) {
-		return NULL;
+		return -1;
 	}
 
 	Buffer b(str, str_len);
 
 	List *addrs = SPLIT_BY_CHAR(&b, sep, 1);
 	if (addrs == NULL) {
-		return NULL;
+		return -1;
 	}
 
 	int s;
 	long int port;
 	SockAddr* saddr = NULL;
-	List *list_address = new List();
+	ListSockAddr* list_sa = new ListSockAddr();
 
 	for (int x = 0; x < addrs->size(); x++) {
 		Buffer *b_addr = (Buffer*) addrs->at(x);
@@ -63,7 +63,7 @@ List* LISTSOCKADDR_CREATE(const char *str, const char sep,
 
 		s = SockAddr::INIT(&saddr, AF_INET, addr->v(), (uint16_t) port);
 		if (s == 0) {
-			list_address->push_tail(saddr);
+			list_sa->push_tail(saddr);
 		}
 
 		delete addr_port;
@@ -71,12 +71,67 @@ List* LISTSOCKADDR_CREATE(const char *str, const char sep,
 
 	delete addrs;
 
-	if (list_address->size() == 0) {
-		delete list_address;
-		return NULL;
+	if (list_sa->size() == 0) {
+		delete list_sa;
+		return -1;
 	}
 
-	return list_address;
+	*lsa = list_sa;
+
+	return 0;
+}
+
+ListSockAddr::ListSockAddr()
+: List()
+, _p_current(NULL)
+, _p_current_sa(NULL)
+{}
+
+ListSockAddr::~ListSockAddr()
+{}
+
+/**
+ * Method `reset()` will clear all addresses.
+ */
+void ListSockAddr::reset()
+{
+	_p_current_sa = (SockAddr*) pop_head();
+	while (_p_current_sa) {
+		delete _p_current_sa;
+		_p_current_sa = (SockAddr*) pop_head();
+	}
+}
+
+/**
+ * Method `rotate()` will switch pointer of current socket address to another
+ * one in the list and return it.
+ */
+SockAddr* ListSockAddr::rotate()
+{
+	if (!_p_current) {
+		_p_current = _head;
+		if (_p_current) {
+			_p_current_sa = (SockAddr*) _p_current->_item;
+		}
+	} else {
+		_p_current = _p_current->_right;
+		_p_current_sa = (SockAddr*) _p_current->_item;
+	}
+
+	if (LIBVOS_DEBUG && _p_current_sa) {
+		fprintf(stderr, "[%s] Switch to '%s'\n", __cname
+			, _p_current_sa->chars());
+	}
+
+	return _p_current_sa;
+}
+
+/**
+ * Method `get()` will return the current socket address.
+ */
+SockAddr* ListSockAddr::get()
+{
+	return _p_current_sa;
 }
 
 } // namespace::vos

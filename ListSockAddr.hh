@@ -16,8 +16,31 @@ namespace vos {
 
 #define DEF_ADDR_PORT_SEP ':'
 
-List* LISTSOCKADDR_CREATE(const char *list, const char sep,
-	const uint16_t def_port);
+class ListSockAddr : public List {
+public:
+	// `__cname` contain canonical name of this object.
+	static const char* __cname;
+
+	static int NEW(ListSockAddr **lsa, const char *str, const char sep,
+		const uint16_t def_port);
+
+	ListSockAddr();
+	~ListSockAddr();
+
+	void reset();
+	SockAddr* rotate();
+	SockAddr* get();
+private:
+	ListSockAddr(const ListSockAddr&);
+	void operator=(const ListSockAddr&);
+
+	// _p_current is a pointer to current (active) address in list of
+	// addresses.
+	BNode *_p_current;
+
+	// _p_current_Sa is a pointer to current SockAddr object.
+	SockAddr *_p_current_sa;
+};
 
 } // namespace::vos
 #endif
