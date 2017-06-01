@@ -46,11 +46,11 @@ public:
 	Resolver();
 	~Resolver();
 
+	int is_servers_set();
 	int init(const int type = SOCK_DGRAM);
 	void servers_reset();
 	int set_server(const char* server_list);
 	int add_server(const char* server_list);
-	void rotate_server();
 
 	int send_udp(DNSQuery* question);
 	int recv_udp(DNSQuery* answer);
@@ -69,7 +69,7 @@ public:
 	fd_set		_fd_read;
 	unsigned int	_n_try;
 	struct timeval	_timeout;
-	List		_servers;
+	ListSockAddr	*_servers;
 	static uint16_t PORT;
 	static unsigned int UDP_PACKET_SIZE;
 	static unsigned int TIMEOUT;
@@ -79,12 +79,6 @@ public:
 private:
 	Resolver(const Resolver&);
 	void operator=(const Resolver&);
-
-	// _p_server is a pointer to current (active) server in list of server
-	// (_servers)
-	BNode*		_p_server;
-	// _p_saddr is a pointer to current server address.
-	SockAddr*	_p_saddr;
 };
 
 }

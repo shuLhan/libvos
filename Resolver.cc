@@ -27,9 +27,7 @@ Resolver::Resolver() : Socket()
 ,	_fd_read()
 ,	_n_try(0)
 ,	_timeout()
-,	_servers()
-,	_p_server(NULL)
-,	_p_saddr(NULL)
+,	_servers(NULL)
 {
 	srand((unsigned int) time(NULL));
 }
@@ -39,7 +37,23 @@ Resolver::Resolver() : Socket()
  * @desc	: Resolver object destructor.
  */
 Resolver::~Resolver()
-{}
+{
+	if (_servers) {
+		delete _servers;
+	}
+}
+
+/**
+ * Method `is_servers_set()` will return 1 if list of servers contain one
+ * address. If its empty, no address added, it will return 0.
+ */
+int Resolver::is_servers_set()
+{
+	if (_servers && _servers->size() > 0) {
+		return 1;
+	}
+	return 0;
+}
 
 /**
  * @method	: Resolver::init
@@ -65,7 +79,7 @@ int Resolver::init(const int type)
 {
 	int s;
 
-	if (_servers.size() <= 0) {
+	if (! is_servers_set()) {
 		fprintf(stderr, "[%s] init: no server set!\n", __cname);
 		return -1;
 	}
@@ -95,16 +109,14 @@ int Resolver::init(const int type)
 }
 
 //
-// `servers_reset()` will clear all parent resolver addresses.
+// `servers_reset()` will clear all parent resolver addresses and buffer.
 //
 void Resolver::servers_reset()
 {
-	_p_saddr = (SockAddr*) _servers.pop_head();
-	while (_p_saddr) {
-		delete _p_saddr;
-		_p_saddr = (SockAddr*) _servers.pop_head();
+	if (_servers) {
+		_servers->reset();
 	}
-	_p_server = NULL;
+	Socket::reset();
 }
 
 /**
@@ -121,8 +133,8 @@ int Resolver::set_server(const char* server_list)
 	if (!server_list) {
 		return 0;
 	}
-	if (_servers.size() > 0) {
-		servers_reset();
+	if (is_servers_set()) {
+		reset();
 	}
 
 	return add_server(server_list);
@@ -139,43 +151,25 @@ int Resolver::set_server(const char* server_list)
  */
 int Resolver::add_server(const char* server_list)
 {
-	List *list_servers = LISTSOCKADDR_CREATE(server_list, ',', PORT);
+	ListSockAddr *list_server;
 
-	if (list_servers == NULL) {
+	int s = ListSockAddr::NEW(&list_server, server_list, ',', PORT);
+	if (s) {
 		return -1;
 	}
 
-	Object *item = list_servers->pop_head();
+	Object *item = list_server->pop_head();
 	while (item) {
-		_servers.push_tail(item);
-		item = list_servers->pop_head();
+		if (!_servers) {
+			_servers = new ListSockAddr();
+		}
+		_servers->push_tail(item);
+		item = list_server->pop_head();
 	}
 
-	delete list_servers;
+	delete list_server;
 
 	return 0;
-}
-
-/**
- * @method	: Resolver::rotate_server
- * @desc	: switch or change parent server to another one in the list.
- */
-void Resolver::rotate_server()
-{
-	if (!_p_server) {
-		_p_server = _servers._head;
-		if (_p_server) {
-			_p_saddr = (SockAddr*) _p_server->_item;
-		}
-	} else {
-		_p_server = _p_server->_right;
-		_p_saddr = (SockAddr*) _p_server->_item;
-	}
-
-	if (LIBVOS_DEBUG && _p_saddr) {
-		fprintf(stderr, "[%s] server switch: %s\n", __cname
-			, _p_saddr->chars());
-	}
 }
 
 /**
@@ -192,17 +186,12 @@ int Resolver::send_udp(DNSQuery* question)
 	if (!question || _type != SOCK_DGRAM) {
 		return -1;
 	}
-	if (_servers.size() <= 0) {
+	if (! is_servers_set()) {
 		fprintf(stderr, "[%s] send_udp: no server!\n", __cname);
 		return -1;
 	}
 
-	rotate_server();
-
-	if (LIBVOS_DEBUG) {
-		printf("[%s] send_udp: server '%s' ...\n", __cname
-			, _p_saddr->chars());
-	}
+	SockAddr* sockaddr = _servers->rotate();
 
 	int s;
 
@@ -213,7 +202,7 @@ int Resolver::send_udp(DNSQuery* question)
 		}
 	}
 
-	s = (int) Socket::send_udp(&_p_saddr->_in, question);
+	s = (int) Socket::send_udp(&sockaddr->_in, question);
 
 	return s;
 }
@@ -284,32 +273,31 @@ int Resolver::send_tcp(DNSQuery* question)
 		return -1;
 	}
 	// (3)
-	if (_servers.size() <= 0) {
+	if (! is_servers_set()) {
 		fprintf(stderr, "[%s] send_tcp: no server!\n", __cname);
 		return -1;
 	}
 
 	int s;
+	SockAddr *sockaddr;
 
 	// (4)
 	if (_status < 0) {
 		// (4.1)
 		init (_type);
 
-		if (!_p_server) {
-			rotate_server();
-		}
+		sockaddr = _servers->rotate();
 
 		_n_try = 0;
 		do {
 			// (4.2)
-			s = connect_to(&_p_saddr->_in);
+			s = connect_to(&sockaddr->_in);
 			if (s < 0) {
 				// (4.3)
 				if (EISCONN == errno) {
 					shutdown (_d, SHUT_RDWR);
 				}
-				rotate_server();
+				sockaddr = _servers->rotate();
 				_n_try++;
 			} else {
 				// (4.4)
@@ -319,7 +307,7 @@ int Resolver::send_tcp(DNSQuery* question)
 				if (LIBVOS_DEBUG) {
 					fprintf(stderr
 					, "[%s] send_tcp: connected to server '%s'\n"
-					, __cname, _p_saddr->chars());
+					, __cname, sockaddr->chars());
 				}
 			}
 		} while (s != 0 && _n_try < N_TRY);
@@ -642,8 +630,12 @@ const char* Resolver::chars()
 		__str = NULL;
 	}
 
+	if (!_servers) {
+		return NULL;
+	}
+
 	Buffer b;
-	b.append_fmt("{ \"servers\": %s }", _servers.chars());
+	b.append_fmt("{ \"servers\": %s }", _servers->chars());
 
 	__str = b.detach();
 
