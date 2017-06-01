@@ -134,7 +134,7 @@ int Resolver::set_server(const char* server_list)
 		return 0;
 	}
 	if (is_servers_set()) {
-		reset();
+		servers_reset();
 	}
 
 	return add_server(server_list);
