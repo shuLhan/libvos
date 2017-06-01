@@ -190,7 +190,14 @@ int SockAddr::INIT(SockAddr** o, const int type, const char* addr
 	if (!(*o)) {
 		return -1;
 	}
-	return (*o)->set(type, addr, port);
+
+	int s = (*o)->set(type, addr, port);
+	if (s) {
+		delete (*o);
+		(*o) = NULL;
+	}
+
+	return s;
 }
 
 /**
@@ -297,14 +304,12 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
 			return -1;
 		}
 	} else {
-		struct addrinfo sai;
+		struct addrinfo sai = {};
 		struct addrinfo *res = NULL;
 
-		memset(&sai, 0, sizeof(sai));
 		sai.ai_family = AF_INET;
 
 		s = ::getaddrinfo(addr, NULL, &sai, &res);
-
 		if (s) {
 			return -1;
 		}
@@ -313,6 +318,9 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
 		int res_sin_len = sizeof(res_sin->sin_addr);
 
 		memcpy(&sin->sin_addr, &res_sin->sin_addr, res_sin_len);
+
+		res_sin = NULL;
+		freeaddrinfo(res);
 	}
 
 	sin->sin_family	= AF_INET;
@@ -351,14 +359,12 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 			return -1;
 		}
 	} else {
-		struct addrinfo sai;
+		struct addrinfo sai = {};
 		struct addrinfo *res = NULL;
 
-		memset(&sai, 0, sizeof(sai));
 		sai.ai_family = AF_INET6;
 
 		s = ::getaddrinfo(addr, NULL, &sai, &res);
-
 		if (s) {
 			return -1;
 		}
@@ -367,6 +373,9 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 		int res_sin_len = sizeof(res_sin->sin6_addr);
 
 		memcpy(&sin6->sin6_addr, &res_sin->sin6_addr, res_sin_len);
+
+		res_sin = NULL;
+		freeaddrinfo(res);
 	}
 
 	sin6->sin6_family	= AF_INET6;
