@@ -607,11 +607,11 @@ TreeNode* RBT::_remove_unsafe(TreeNode* x)
 	}
 	if (left && !right) {
 		swap_content(x, left);
-		return _removed_have_no_child(left);
+		return _remove_unsafe(left);
 	}
 	if (right && !left) {
 		swap_content(x, right);
-		return _removed_have_no_child(right);
+		return _remove_unsafe(right);
 	}
 
 	return _removed_have_both_childs(x);
