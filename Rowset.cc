@@ -53,7 +53,7 @@ const char* Rowset::chars()
 		b.append_raw(node->chars());
 		b.appendc(_sep);
 
-		node = node->_right;
+		node = node->get_right();
 	}
 	b.append_raw(node->chars());
 	b.append_raw(" ]");

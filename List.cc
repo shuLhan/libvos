@@ -43,8 +43,8 @@ void List::first_push(BNode* node)
 {
 	_head = node;
 	_tail = node;
-	_head->_left = _tail;
-	_tail->_right = _head;
+	_head->set_left(_tail);
+	_tail->set_right(_head);
 	_n++;
 }
 
@@ -54,11 +54,11 @@ void List::first_push(BNode* node)
 //
 void List::insert_before_unsafe(BNode* x, BNode* y)
 {
-	x->_right = y;
-	x->_left = y->_left;
+	x->set_right(y);
+	x->set_left(y->get_left());
 
-	y->_left->_right = x;
-	y->_left = x;
+	y->get_left()->set_right(x);
+	y->set_left(x);
 
 	if (y == _head) {
 		_head = x;
@@ -72,11 +72,11 @@ void List::insert_before_unsafe(BNode* x, BNode* y)
 //
 void List::insert_after_unsafe(BNode* x, BNode* y)
 {
-	x->_right = y->_right;
-	x->_left = y;
+	x->set_right(y->get_right());
+	x->set_left(y);
 
-	y->_right->_left = x;
-	y->_right = x;
+	y->get_right()->set_left(x);
+	y->set_right(x);
 
 	if (y == _tail) {
 		_tail = x;
@@ -98,11 +98,11 @@ BNode* List::push_circular(BNode** p, Object* item)
 	if (!_head) {
 		first_push(node);
 	} else {
-		node->_left = _tail;
-		node->_right = _head;
+		node->set_left(_tail);
+		node->set_right(_head);
 
-		_tail->_right = node;
-		_head->_left = node;
+		_tail->set_right(node);
+		_head->set_left(node);
 
 		_n++;
 		(*p) = node;
@@ -180,11 +180,11 @@ void List::reset()
 
 	if (_tail) {
 		// break circular link.
-		_tail->_right = NULL;
-		_head->_left = NULL;
+		_tail->set_right(NULL);
+		_head->set_left(NULL);
 	}
 	while (_head) {
-		_tail = _head->_right;
+		_tail = _head->get_right();
 		delete _head;
 		_head = _tail;
 	}
@@ -214,9 +214,9 @@ void List::swap_by_idx_unsafe(int x, int y)
 		return;
 	}
 
-	item = nx->_item;
-	nx->_item = ny->_item;
-	ny->_item = item;
+	item = nx->get_content();
+	nx->set_content(ny->get_content());
+	ny->set_content(item);
 }
 
 //
@@ -233,40 +233,40 @@ void List::sort_conqueror(List* left, List* right
 	BNode* pleft = left->_head;
 	BNode* pright = right->_head;
 	BNode* endleft = right->_head;
-	BNode* endright = right->_tail->_right;
+	BNode* endright = right->_tail->get_right();
 
 	while (pleft != endleft && pright != endright && pleft != pright) {
-		s = fn_compare(pleft->_item, pright->_item);
+		s = fn_compare(pleft->get_content(), pright->get_content());
 		if (s == 0) {
 			goto next;
 		}
 		if (asc) {
 			// left < right
 			if (s == -1) {
-				pleft = pleft->_right;
+				pleft = pleft->get_right();
 				goto checkend;
 			}
 		} else {
 			// left > right
 			if (s == 1) {
-				pleft = pleft->_right;
+				pleft = pleft->get_right();
 				goto checkend;
 			}
 		}
 
 		// swap
-		tmp = pleft->_item;
-		pleft->_item = pright->_item;
-		pright->_item = tmp;
+		tmp = pleft->get_content();
+		pleft->set_content(pright->get_content());
+		pright->set_content(tmp);
 next:
-		pleft = pleft->_right;
-		pright = pright->_right;
+		pleft = pleft->get_right();
+		pright = pright->get_right();
 
 checkend:
 		if (pleft == endleft) {
 			if (pright != endright) {
 				pleft = pright;
-				pright = pright->_right;
+				pright = pright->get_right();
 				endleft = endright;
 			}
 		}
@@ -290,17 +290,17 @@ void List::sort_divide(int (*fn_compare)(Object*, Object*), int asc)
 	left._tail = _head;
 	left._n = mid;
 	for (; n < mid; n++) {
-		left._tail = left._tail->_right;
+		left._tail = left._tail->get_right();
 	}
 
-	right._head = left._tail->_right;
+	right._head = left._tail->get_right();
 	right._tail = _tail;
 	right._n = _n - mid;
 
 	left.sort(fn_compare, asc);
 	right.sort(fn_compare, asc);
 
-	int s = fn_compare(left._tail->_item, right._head->_item);
+	int s = fn_compare(left._tail->get_content(), right._head->get_content());
 
 	if (s == 0) {
 		return;
@@ -380,22 +380,22 @@ void List::detach(BNode* node)
 		goto out;
 	}
 
-	node->_right->_left = node->_left;
-	node->_left->_right = node->_right;
+	node->get_right()->set_left(node->get_left());
+	node->get_left()->set_right(node->get_right());
 
 	// (0)
 	if (node == _head) {
-		_head = node->_right;
+		_head = node->get_right();
 	}
 
 	// (2)
 	if (node == _tail) {
-		_tail = node->_left;
+		_tail = node->get_left();
 	}
 
 out:
-	node->_right = NULL;
-	node->_left = NULL;
+	node->set_right(NULL);
+	node->set_left(NULL);
 	_n--;
 
 	unlock();
@@ -424,9 +424,9 @@ void List::node_push_head_sorted(BNode* node, int asc
 
 	do {
 		if (fn_cmp) {
-			s = fn_cmp(p->_item, node->_item);
+			s = fn_cmp(p->get_content(), node->get_content());
 		} else {
-			s = p->_item->cmp(node->_item);
+			s = p->get_content()->cmp(node->get_content());
 		}
 
 		// P > ITEM
@@ -445,11 +445,11 @@ void List::node_push_head_sorted(BNode* node, int asc
 			}
 		}
 
-		p = p->_right;
+		p = p->get_right();
 	} while(p != _head);
 
 	// node has not been inserted, push it to the bottom.
-	if (!node->_left) {
+	if (!node->get_left()) {
 		insert_after_unsafe(node, _tail);
 	}
 out:
@@ -479,9 +479,9 @@ void List::node_push_tail_sorted(BNode* node, int asc
 
 	do {
 		if (fn_cmp) {
-			s = fn_cmp(p->_item, node->_item);
+			s = fn_cmp(p->get_content(), node->get_content());
 		} else {
-			s = p->_item->cmp(node->_item);
+			s = p->get_content()->cmp(node->get_content());
 		}
 
 		// P > ITEM
@@ -500,11 +500,11 @@ void List::node_push_tail_sorted(BNode* node, int asc
 			}
 		}
 
-		p = p->_left;
+		p = p->get_left();
 	} while(p != _tail);
 
 	// node has not been inserted, push it to the top.
-	if (!node->_left) {
+	if (!node->get_left()) {
 		insert_before_unsafe(node, _head);
 	}
 out:
@@ -532,15 +532,15 @@ BNode* List::node_search(Object* item, int (*fn_compare)(Object*, Object*))
 
 	do {
 		if (fn_compare) {
-			s = fn_compare(bnode->_item, item);
+			s = fn_compare(bnode->get_content(), item);
 		} else {
-			s = bnode->_item->cmp(item);
+			s = bnode->get_content()->cmp(item);
 		}
 		if (s == 0) {
 			goto out;
 		}
 
-		bnode = bnode->_right;
+		bnode = bnode->get_right();
 	} while(bnode != _head);
 
 	bnode = NULL;
@@ -569,14 +569,14 @@ BNode* List::node_pop_head()
 		_head = NULL;
 		_tail = NULL;
 	} else {
-		_head = oldhead->_right;
+		_head = oldhead->get_right();
 
-		_tail->_right = _head;
-		_head->_left = _tail;
+		_tail->set_right(_head);
+		_head->set_left(_tail);
 	}
 
-	oldhead->_left = NULL;
-	oldhead->_right = NULL;
+	oldhead->set_left(NULL);
+	oldhead->set_right(NULL);
 
 	_n--;
 out:
@@ -604,14 +604,14 @@ BNode* List::node_pop_tail()
 		_head = NULL;
 		_tail = NULL;
 	} else {
-		_tail = oldtail->_left;
+		_tail = oldtail->get_left();
 
-		_tail->_right = _head;
-		_head->_left = _tail;
+		_tail->set_right(_head);
+		_head->set_left(_tail);
 	}
 
-	oldtail->_left = NULL;
-	oldtail->_right = NULL;
+	oldtail->set_left(NULL);
+	oldtail->set_right(NULL);
 
 	_n--;
 out:
@@ -673,12 +673,12 @@ BNode* List::node_at_unsafe(int idx)
 
 	if (rev) {
 		while (idx > 0) {
-			p = p->_left;
+			p = p->get_left();
 			idx--;
 		}
 	} else {
 		while (idx > 0) {
-			p = p->_right;
+			p = p->get_right();
 			idx--;
 		}
 	}
@@ -699,8 +699,8 @@ Object* List::pop_head()
 		return NULL;
 	}
 
-	item = oldhead->_item;
-	oldhead->_item = NULL;
+	item = oldhead->get_content();
+	oldhead->set_content(NULL);
 	delete oldhead;
 
 	return item;
@@ -719,8 +719,8 @@ Object* List::pop_tail()
 		return NULL;
 	}
 
-	item = oldtail->_item;
-	oldtail->_item = NULL;
+	item = oldtail->get_content();
+	oldtail->set_content(NULL);
 	delete oldtail;
 
 	return item;
@@ -741,7 +741,7 @@ Object* List::node_remove_unsafe(BNode* bnode)
 		return NULL;
 	}
 
-	Object* item = bnode->_item;
+	Object* item = bnode->get_content();
 
 	// (C0)
 	if (_head == _tail) {
@@ -750,20 +750,20 @@ Object* List::node_remove_unsafe(BNode* bnode)
 	} else {
 		// (C1)
 		if (bnode == _head) {
-			_head = _head->_right;
+			_head = _head->get_right();
 		}
 		// (C2)
 		if (bnode == _tail) {
-			_tail = _tail->_left;
+			_tail = _tail->get_left();
 		}
 		// (C3)
-		bnode->_left->_right = bnode->_right;
-		bnode->_right->_left = bnode->_left;
+		bnode->get_left()->set_right(bnode->get_right());
+		bnode->get_right()->set_left(bnode->get_left());
 	}
 
-	bnode->_left = NULL;
-	bnode->_right = NULL;
-	bnode->_item = NULL;
+	bnode->set_left(NULL);
+	bnode->set_right(NULL);
+	bnode->set_content(NULL);
 
 	delete bnode;
 	_n--;
@@ -794,11 +794,11 @@ int List::remove(Object* item)
 	}
 
 	for (; x < _n; x++) {
-		if (p->_item == item) {
+		if (p->get_content() == item) {
 			break;
 		}
 
-		p = p->_right;
+		p = p->get_right();
 	}
 
 	// (C1)
@@ -833,7 +833,7 @@ Object* List::at(int idx)
 		return NULL;
 	}
 
-	return p->_item;
+	return p->get_content();
 }
 
 Object* List::at_unsafe(int idx)
@@ -844,7 +844,7 @@ Object* List::at_unsafe(int idx)
 		return NULL;
 	}
 
-	return p->_item;
+	return p->get_content();
 }
 
 //
@@ -887,11 +887,11 @@ const char* List::chars()
 			b.append_raw(p);
 		}
 
-		node = node->_right;
+		node = node->get_right();
 		if (node != _head) {
 			b.appendc(_sep);
 		}
-	} while (node != _tail->_right);
+	} while (! node->is_right_of(_tail));
 
 	b.append_raw(" ]");
 

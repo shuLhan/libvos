@@ -17,6 +17,8 @@ namespace vos {
 //
 class BNode : public Object {
 public:
+	static const char* __cname;
+
 	explicit BNode(Object* item);
 	virtual ~BNode();
 
@@ -48,11 +50,11 @@ public:
 
 	const char* chars();
 
+protected:
 	BNode* _left;
 	BNode* _right;
 	Object* _item;
 
-	static const char* __cname;
 private:
 	BNode(const BNode&);
 	void operator=(const BNode&);

@@ -29,15 +29,15 @@ void test_insert_left(BNode* node)
 	// NULL <= nodeL <=> node => NULL
 	//
 
-	assert(nodeL == node->_left);
-	assert(node->_right == NULL);
-	assert(strcmp(STR_TEST_1, node->_left->chars()) == 0);
+	assert(nodeL == node->get_left());
+	assert(node->get_right() == NULL);
+	assert(strcmp(STR_TEST_1, node->get_left()->chars()) == 0);
 	assert(strcmp(STR_TEST_0, node->chars()) == 0);
 
-	assert(NULL == nodeL->_left);
-	assert(nodeL->_right == node);
+	assert(NULL == nodeL->get_left());
+	assert(nodeL->get_right() == node);
 	assert(strcmp(STR_TEST_1, nodeL->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeL->_right->chars()) == 0);
+	assert(strcmp(STR_TEST_0, nodeL->get_right()->chars()) == 0);
 
 	b = new Buffer();
 	b->copy_raw(STR_TEST_2);
@@ -49,22 +49,22 @@ void test_insert_left(BNode* node)
 	// NULL <= nodeL <=> nodeL2 <=> node => NULL
 	//
 
-	assert(NULL == nodeL->_left);
-	assert(nodeL->_right == nodeL2);
-	assert(strcmp(STR_TEST_2, nodeL->_right->chars()) == 0);
+	assert(NULL == nodeL->get_left());
+	assert(nodeL->get_right() == nodeL2);
+	assert(strcmp(STR_TEST_2, nodeL->get_right()->chars()) == 0);
 	assert(strcmp(STR_TEST_1, nodeL->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeL->_right->_right->chars()) == 0);
+	assert(strcmp(STR_TEST_0, nodeL->get_right()->get_right()->chars()) == 0);
 
-	assert(nodeL == nodeL2->_left);
-	assert(nodeL2->_right == node);
+	assert(nodeL == nodeL2->get_left());
+	assert(nodeL2->get_right() == node);
 	assert(strcmp(STR_TEST_2, nodeL2->chars()) == 0);
-	assert(strcmp(STR_TEST_1, nodeL2->_left->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeL2->_right->chars()) == 0);
+	assert(strcmp(STR_TEST_1, nodeL2->get_left()->chars()) == 0);
+	assert(strcmp(STR_TEST_0, nodeL2->get_right()->chars()) == 0);
 
-	assert(nodeL2 == node->_left);
-	assert(node->_right == NULL);
-	assert(strcmp(STR_TEST_2, node->_left->chars()) == 0);
-	assert(strcmp(STR_TEST_1, node->_left->_left->chars()) == 0);
+	assert(nodeL2 == node->get_left());
+	assert(node->get_right() == NULL);
+	assert(strcmp(STR_TEST_2, node->get_left()->chars()) == 0);
+	assert(strcmp(STR_TEST_1, node->get_left()->get_left()->chars()) == 0);
 	assert(strcmp(STR_TEST_0, node->chars()) == 0);
 }
 
@@ -86,15 +86,15 @@ void test_insert_right(BNode *node)
 	// NULL <= node <=> nodeR => NULL
 	//
 
-	assert(NULL == node->_left);
-	assert(node->_right == nodeR);
-	assert(strcmp(STR_TEST_1, node->_right->chars()) == 0);
+	assert(NULL == node->get_left());
+	assert(node->get_right() == nodeR);
+	assert(strcmp(STR_TEST_1, node->get_right()->chars()) == 0);
 	assert(strcmp(STR_TEST_0, node->chars()) == 0);
 
-	assert(node == nodeR->_left);
-	assert(nodeR->_right == NULL);
+	assert(node == nodeR->get_left());
+	assert(nodeR->get_right() == NULL);
 	assert(strcmp(STR_TEST_1, nodeR->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeR->_left->chars()) == 0);
+	assert(strcmp(STR_TEST_0, nodeR->get_left()->chars()) == 0);
 
 	// TEST INSERT RIGHT 2
 
@@ -108,17 +108,17 @@ void test_insert_right(BNode *node)
 	// NULL <= node <=> nodeR2 <=> nodeR => NULL
 	//
 
-	assert(NULL == node->_left);
-	assert(node->_right == nodeR2);
-	assert(strcmp(STR_TEST_2, node->_right->chars()) == 0);
-	assert(strcmp(STR_TEST_1, node->_right->_right->chars()) == 0);
+	assert(NULL == node->get_left());
+	assert(node->get_right() == nodeR2);
+	assert(strcmp(STR_TEST_2, node->get_right()->chars()) == 0);
+	assert(strcmp(STR_TEST_1, node->get_right()->get_right()->chars()) == 0);
 	assert(strcmp(STR_TEST_0, node->chars()) == 0);
 
-	assert(node == nodeR2->_left);
-	assert(nodeR2->_right == nodeR);
+	assert(node == nodeR2->get_left());
+	assert(nodeR2->get_right() == nodeR);
 	assert(strcmp(STR_TEST_2, nodeR2->chars()) == 0);
-	assert(strcmp(STR_TEST_1, nodeR2->_right->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeR2->_left->chars()) == 0);
+	assert(strcmp(STR_TEST_1, nodeR2->get_right()->chars()) == 0);
+	assert(strcmp(STR_TEST_0, nodeR2->get_left()->chars()) == 0);
 }
 
 //
@@ -139,12 +139,12 @@ void test_push_left(BNode *node)
 	// NULL <= nodeL2 <=> node <=> nodeR2 <=> nodeR => NULL
 	//
 
-	assert(node->_left == nodeL2);
-	assert(nodeL2->_left == NULL);
-	assert(nodeL2->_right == node);
+	assert(node->get_left() == nodeL2);
+	assert(nodeL2->get_left() == NULL);
+	assert(nodeL2->get_right() == node);
 
 	assert(strcmp(STR_TEST_2, nodeL2->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeL2->_right->chars()) == 0);
+	assert(strcmp(STR_TEST_0, nodeL2->get_right()->chars()) == 0);
 
 	b = new Buffer();
 	b->copy_raw(STR_TEST_1);
@@ -157,13 +157,13 @@ void test_push_left(BNode *node)
 	// NULL <= nodeL <=> nodeL2 <=> node <=> nodeR2 <=> nodeR => NULL
 	//
 
-	assert(nodeL2->_left == nodeL);
-	assert(nodeL->_left == NULL);
-	assert(nodeL->_right == nodeL2);
+	assert(nodeL2->get_left() == nodeL);
+	assert(nodeL->get_left() == NULL);
+	assert(nodeL->get_right() == nodeL2);
 
-	assert(strcmp(STR_TEST_2, nodeL->_right->chars()) == 0);
+	assert(strcmp(STR_TEST_2, nodeL->get_right()->chars()) == 0);
 	assert(strcmp(STR_TEST_1, nodeL->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeL->_right->_right->chars()) == 0);
+	assert(strcmp(STR_TEST_0, nodeL->get_right()->get_right()->chars()) == 0);
 }
 
 // Precondition:
@@ -183,12 +183,12 @@ void test_push_right(BNode *node)
 	// NULL <= nodeL <=> nodeL2 <=> node => nodeR2 => NULL
 	//
 
-	assert(node->_right == nodeR2);
-	assert(nodeR2->_left == node);
-	assert(nodeR2->_right == NULL);
+	assert(node->get_right() == nodeR2);
+	assert(nodeR2->get_left() == node);
+	assert(nodeR2->get_right() == NULL);
 
 	assert(strcmp(STR_TEST_2, nodeR2->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeR2->_left->chars()) == 0);
+	assert(strcmp(STR_TEST_0, nodeR2->get_left()->chars()) == 0);
 
 	b = new Buffer();
 	b->copy_raw(STR_TEST_1);
@@ -201,13 +201,13 @@ void test_push_right(BNode *node)
 	// NULL <= nodeL <=> nodeL2 <=> node => nodeR2 <=> nodeR => NULL
 	//
 
-	assert(nodeR2->_right == nodeR);
-	assert(nodeR->_left == nodeR2);
-	assert(nodeR->_right == NULL);
+	assert(nodeR2->get_right() == nodeR);
+	assert(nodeR->get_left() == nodeR2);
+	assert(nodeR->get_right() == NULL);
 
-	assert(strcmp(STR_TEST_2, nodeR->_left->chars()) == 0);
+	assert(strcmp(STR_TEST_2, nodeR->get_left()->chars()) == 0);
 	assert(strcmp(STR_TEST_1, nodeR->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeR->_left->_left->chars()) == 0);
+	assert(strcmp(STR_TEST_0, nodeR->get_left()->get_left()->chars()) == 0);
 }
 
 // Precondition:
@@ -220,9 +220,9 @@ void test_pop_edge(BNode *node)
 
 	// NULL <= nodeL2 <=> node => nodeR <=> nodeR2 => NULL
 
-	assert(pop->_left == NULL);
-	assert(pop->_right == NULL);
-	assert(node->_left->_left == NULL);
+	assert(pop->get_left() == NULL);
+	assert(pop->get_right() == NULL);
+	assert(node->get_left()->get_left() == NULL);
 	assert(strcmp(STR_TEST_1, pop->chars()) == 0);
 	delete pop;
 
@@ -230,9 +230,9 @@ void test_pop_edge(BNode *node)
 
 	// NULL <= node => nodeR <=> nodeR2 => NULL
 
-	assert(pop->_left == NULL);
-	assert(pop->_right == NULL);
-	assert(node->_left == NULL);
+	assert(pop->get_left() == NULL);
+	assert(pop->get_right() == NULL);
+	assert(node->get_left() == NULL);
 	assert(strcmp(STR_TEST_2, pop->chars()) == 0);
 	delete pop;
 
@@ -243,18 +243,18 @@ void test_pop_edge(BNode *node)
 
 	// NULL <= node => nodeR => NULL
 
-	assert(pop->_left == NULL);
-	assert(pop->_right == NULL);
-	assert(node->_right->_right == NULL);
+	assert(pop->get_left() == NULL);
+	assert(pop->get_right() == NULL);
+	assert(node->get_right()->get_right() == NULL);
 	assert(strcmp(STR_TEST_1, pop->chars()) == 0);
 	delete pop;
 
 	pop = node->pop_right_edge();
 
 	// NULL <= node => NULL;
-	assert(pop->_left == NULL);
-	assert(pop->_right == NULL);
-	assert(node->_right == NULL);
+	assert(pop->get_left() == NULL);
+	assert(pop->get_right() == NULL);
+	assert(node->get_right() == NULL);
 	assert(strcmp(STR_TEST_2, pop->chars()) == 0);
 	delete pop;
 
@@ -271,17 +271,17 @@ int main()
 
 	assert(strcmp("BNode", node1->__cname) == 0);
 
-	assert(NULL == node1->_left);
-	assert(NULL == node1->_right);
+	assert(NULL == node1->get_left());
+	assert(NULL == node1->get_right());
 	assert(NULL == node1->chars());
 
 	b = new Buffer();
 	b->copy_raw(STR_TEST_0);
 
-	node1->_item = b;
+	node1->set_content(b);
 
-	assert(NULL == node1->_left);
-	assert(NULL == node1->_right);
+	assert(NULL == node1->get_left());
+	assert(NULL == node1->get_right());
 	assert(strcmp(STR_TEST_0, node1->chars()) == 0);
 
 	test_insert_left(node1);
@@ -295,7 +295,7 @@ int main()
 	b = new Buffer();
 	b->copy_raw(STR_TEST_0);
 
-	node2->_item = b;
+	node2->set_content(b);
 
 	test_insert_right(node2);
 
@@ -309,10 +309,10 @@ int main()
 	test_pop_edge(node1);
 	test_pop_edge(node2);
 
-	assert(node1->_left == NULL);
-	assert(node1->_right == NULL);
-	assert(node1->_left == NULL);
-	assert(node1->_right == NULL);
+	assert(node1->get_left() == NULL);
+	assert(node1->get_right() == NULL);
+	assert(node1->get_left() == NULL);
+	assert(node1->get_right() == NULL);
 	assert(strcmp(STR_TEST_0, node1->chars()) == 0);
 	assert(strcmp(STR_TEST_0, node2->chars()) == 0);
 

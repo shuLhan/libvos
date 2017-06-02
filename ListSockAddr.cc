@@ -111,11 +111,11 @@ SockAddr* ListSockAddr::rotate()
 	if (!_p_current) {
 		_p_current = _head;
 		if (_p_current) {
-			_p_current_sa = (SockAddr*) _p_current->_item;
+			_p_current_sa = (SockAddr*) _p_current->get_content();
 		}
 	} else {
-		_p_current = _p_current->_right;
-		_p_current_sa = (SockAddr*) _p_current->_item;
+		_p_current = _p_current->get_right();
+		_p_current_sa = (SockAddr*) _p_current->get_content();
 	}
 
 	if (LIBVOS_DEBUG && _p_current_sa) {

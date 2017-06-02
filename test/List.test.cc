@@ -581,7 +581,7 @@ void test_detach()
 	assert(list.size() == 2);
 	assert(strcmp(EXP_1_2, list.chars()) == 0);
 
-	node->_item = NULL;
+	node->set_content(NULL);
 	delete node;
 
 	list.push_head(b0);
