@@ -23,6 +23,7 @@ public:
 	virtual ~RBT();
 
 	const char* chars();
+	void swap_node(TreeNode* x, TreeNode* y);
 	void swap_content(TreeNode* x, TreeNode* y);
 	const char* get_red_node_chars();
 

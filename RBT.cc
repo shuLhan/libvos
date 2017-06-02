@@ -129,6 +129,67 @@ const char* RBT::chars()
 	return __str;
 }
 
+/**
+ * `swap_node(x, y)` will swap the parent, left, and right pointer of node `x`
+ * with `y` in tree.
+ */
+void RBT::swap_node(TreeNode* x, TreeNode* y)
+{
+	TreeNode* xparent = x->get_parent();
+	TreeNode* xleft = x->get_left();
+	TreeNode* xright = x->get_right();
+
+	TreeNode* yparent = y->get_parent();
+	TreeNode* yleft = y->get_left();
+	TreeNode* yright = y->get_right();
+
+	if (xparent) {
+		if (x->is_left_of(xparent)) {
+			xparent->set_left(y);
+		} else {
+			xparent->set_right(y);
+		}
+	}
+	if (xleft) {
+		xleft->set_parent(y);
+	}
+	if (xright) {
+		xright->set_parent(y);
+	}
+
+	x->set_parent(yparent);
+	x->set_left(yleft);
+	x->set_right(yright);
+
+	if (yparent) {
+		if (y->is_left_of(yparent)) {
+			yparent->set_left(x);
+		} else {
+			yparent->set_right(x);
+		}
+	}
+	if (yleft) {
+		yleft->set_parent(x);
+	}
+	if (yright) {
+		yright->set_parent(x);
+	}
+
+	y->set_parent(xparent);
+	y->set_left(xleft);
+	y->set_right(xright);
+
+	int xattr = x->_attr;
+	x->_attr = y->_attr;
+	y->_attr = xattr;
+
+	if (_root == x) {
+		_root = y;
+	} else if (_root == y) {
+		_root = x;
+	}
+}
+
 void RBT::swap_content(TreeNode* x, TreeNode* y)
 {
 	Object* ox = x->get_content();
