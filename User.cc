@@ -38,7 +38,7 @@ const char* User::chars()
 	}
 
 	Buffer b;
-	b.aprint("{ " K(name) ": " K(%s) ", " K(id) ": %d, " K(gid) ": %d, " K(eid) ": %d, " K(egid) ": %d }"
+	b.append_fmt("{ " K(name) ": " K(%s) ", " K(id) ": %d, " K(gid) ": %d, " K(eid) ": %d, " K(egid) ": %d }"
 		, name.chars(), id, gid, eid, egid);
 
 	__str = b.detach();
