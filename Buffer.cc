@@ -1,18 +1,20 @@
-//
-// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-//
+/**
+ * Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #include "Buffer.hh"
 #include "FmtParser.hh"
 
 namespace vos {
 
-const char* Buffer::__cname = "Buffer";
+const char* Buffer::__CNAME = "Buffer";
 
-/* a 16 characters for <= 16 base digits */
-static char __digits[17] = "0123456789ABCDEF";
+/**
+ * `_digits` contains 16 characters for 16 base number.
+ */
+static const char __digits[17] = "0123456789ABCDEF";
 
 enum __print_flag {
 	FL_LEFT_ADJUST	= (1 << 0)
@@ -30,14 +32,126 @@ enum __print_flag {
 };
 
 /**
- * Static DFLT_SIZE default buffer size
+ * Variable CHAR_SIZE is a constant for size of char, to minimize calling the
+ * sizeof.
  */
-uint16_t Buffer::DFLT_SIZE = 16;
+const uint8_t Buffer::CHAR_SIZE = sizeof(char);
 
 /**
- * Static CHAR_SIZE size of char, to minimize calling the sizeof
+ * Variable DFLT_SIZE is a constant for default buffer size.
  */
-uint8_t Buffer::CHAR_SIZE = sizeof(char);
+const uint16_t Buffer::DFLT_SIZE = 16;
+
+
+/**
+ * Method CMP_OBJECTS() will compare object of buffer `x` and `y`.
+ *
+ * It will return,
+ *
+ * (0) 0 if x and y is NULL,
+ * (1) 0 if x and y has the same content,
+ * (2) -1 if x is NULL and y is not NULL,
+ * (3) -1 if x is less than y
+ * (4) 1 if x is not NULL and y is NULL
+ * (5) 1 if x is greater than y
+ */
+int Buffer::CMP_OBJECTS(Object* x, Object* y)
+{
+	if (x == y) {
+		return 0;
+	}
+	if (x == NULL) {
+		return -1;
+	}
+	if (y == NULL) {
+		return 1;
+	}
+
+	Buffer* bx = (Buffer*) x;
+
+	return bx->cmp(y);
+}
+
+/**
+ * Method PARSE_INT() will parse an integer value from string `pp` and save it
+ * to `v`.
+ *
+ * It will return 0 if integer value successfully parsed and set `pp` to the
+ * next invalid character or NULL if entire char is valid integer value.
+ *
+ * It will return `-1` if underflow/overflow or other error occured, value of
+ * `v` and `pp` will not change.
+ */
+int Buffer::PARSE_INT(char** pp, int* v)
+{
+	long int lv = 0;
+	char* p = (*pp);
+	char* end = p;
+
+	errno = 0;
+
+	lv = strtol(p, &end, 10);
+
+	if (errno) {
+		return -1;
+	}
+
+	// value out of integer range.
+	if (lv > INT_MAX || lv < INT_MIN) {
+		errno = ERANGE;
+		return -1;
+	}
+
+	(*pp) = end;
+	(*v) = (int) lv;
+
+	return 0;
+}
+
+/**
+ * Method TRIM(bfr,len) will remove leading and trailing white-spaces from
+ * buffer `bfr`.
+ *
+ * On success it will return length of `bfr` after trimmed.
+ */
+size_t Buffer::TRIM(char* bfr, size_t len)
+{
+	if (! bfr) {
+		return 0;
+	}
+	if (! len) {
+		len = strlen(bfr);
+		if (! len) {
+			return 0;
+		}
+	}
+
+	do {
+		--len;
+	} while (len > 0 && isspace(bfr[len]));
+
+	if (len == 0) {
+		if (! isspace(bfr[len])) {
+			++len;
+		}
+	} else {
+		size_t x = 0;
+
+		while (x < len && isspace(bfr[x])) {
+			++x;
+		}
+		if (x > 0 && x <= len) {
+			len = len - x + CHAR_SIZE;
+			memmove(bfr, &bfr[x], len);
+		} else {
+			++len;
+		}
+	}
+
+	bfr[len] = '\0';
+
+	return len;
+}
 
 /**
  * Method `Buffer(size)` will allocated a buffer with `size`.
@@ -59,7 +173,7 @@ Buffer::Buffer(const size_t size)
  * Method `Buffer(v)` will create a new Buffer object and initialize
  * its content from `v` with length of `v` is defined by `vlen`.
  */
-Buffer::Buffer(const char *v, size_t vlen)
+Buffer::Buffer(const char* v, size_t vlen)
 :	Object()
 ,	_i(0)
 ,	_l(0)
@@ -228,7 +342,7 @@ int Buffer::resize(size_t size)
 		return 0;
 	}
 
-	newv = (char *) realloc(_v, size + CHAR_SIZE);
+	newv = (char*) realloc(_v, size + CHAR_SIZE);
 	if (!newv) {
 		return -1;
 	}
@@ -475,9 +589,9 @@ int Buffer::appendc(const char c)
 		}
 	}
 
-	_v[_i]	= c;
+	_v[_i] = c;
 	_i++;
-	_v[_i]	= '\0';
+	_v[_i] = '\0';
 
 	return 0;
 }
@@ -631,7 +745,7 @@ int Buffer::append_raw(const char* bfr, size_t len)
 		_i += len;
 	}
 
-	_v[_i]	= '\0';
+	_v[_i] = '\0';
 
 	return 0;
 }
@@ -642,7 +756,7 @@ int Buffer::append_raw(const char* bfr, size_t len)
  *
  * On success it will return `0`, otherwise it will return `-1`.
  */
-int Buffer::append_bin(const void *bin, size_t len)
+int Buffer::append_bin(const void* bin, size_t len)
 {
 	if (!bin || len == 0) {
 		return 0;
@@ -664,7 +778,7 @@ int Buffer::append_bin(const void *bin, size_t len)
  *
  * On success it will return 0, otherwise it will return -1.
  */
-int Buffer::append_fmt(const char *fmt, ...)
+int Buffer::append_fmt(const char* fmt, ...)
 {
 	if (!fmt) {
 		return 0;
@@ -680,13 +794,13 @@ int Buffer::append_fmt(const char *fmt, ...)
 	return s;
 }
 
-//
-// Method `vappend_fmt(fmt, args)` will parse formatted string `fmt` and apply
-// any value from `args` and append their result to current buffer.
-//
-// On success it will return 0, otherwise it will return -1.
-//
-int Buffer::vappend_fmt(const char *fmt, va_list args)
+/**
+ * Method `vappend_fmt(fmt, args)` will parse formatted string `fmt` and apply
+ * any value from `args` and append their result to current buffer.
+ *
+ * On success it will return 0, otherwise it will return -1.
+ */
+int Buffer::vappend_fmt(const char* fmt, va_list args)
 {
 	FmtParser fmtp;
 
@@ -713,7 +827,7 @@ int Buffer::concat(const char* bfr, ...)
 		return 0;
 	}
 
-	const char *p;
+	const char* p;
 	va_list al;
 	int s = 0;
 
@@ -724,7 +838,7 @@ int Buffer::concat(const char* bfr, ...)
 		if (s < 0) {
 			break;
 		}
-		p = va_arg(al, const char *);
+		p = va_arg(al, const char*);
 	}
 	va_end(al);
 
@@ -924,7 +1038,7 @@ int Buffer::like_raw(const char* bfr, size_t len)
  * On success, it will return 0.
  * On fail, the value of `res` will not changed and it will return `-1`.
  */
-int Buffer::to_lint(long int *res)
+int Buffer::to_lint(long int* res)
 {
 	if (!_v) {
 		return 0;
@@ -945,41 +1059,6 @@ int Buffer::to_lint(long int *res)
 	return 0;
 }
 
-/**
- * `PARSE_INT()` will parse an integer in `pp`.
- *
- * It will return 0 if integer value successfully parsed and set `pp` to the
- * next invalid character or NULL if entire char is valid integer value.
- *
- * It will return `-1` if underflow/overflow or other error occured, value of
- * `v` and `pp` will not change.
- */
-int Buffer::PARSE_INT(char** pp, int* v)
-{
-	long int lv = 0;
-	char* p = (*pp);
-	char* end = p;
-
-	errno = 0;
-
-	lv = strtol(p, &end, 10);
-
-	if (errno) {
-		return -1;
-	}
-
-	// value out of integer range.
-	if (lv > INT_MAX || lv < INT_MIN) {
-		errno = ERANGE;
-		return -1;
-	}
-
-	(*pp) = end;
-	(*v) = (int) lv;
-
-	return 0;
-}
-
 const char* Buffer::chars()
 {
 	return _v;
@@ -990,7 +1069,7 @@ const char* Buffer::chars()
  */
 void Buffer::dump()
 {
-	printf("[%s] dump: [%zu|%zu|%s]\n", __cname, _i, _l, _v);
+	printf("[%s] dump: [%zu|%zu|%s]\n", __CNAME, _i, _l, _v);
 }
 
 /**
@@ -1045,80 +1124,6 @@ void Buffer::dump_hex()
 	printf("%s", o._v);
 }
 
-/**
- * @method	: Buffer::TRIM
- * @param	:
- *	> bfr 	: buffer to be trimmed.
- *	> len	: optional, length of 'bfr'.
- * @return	:
- *	< >=0	: success, length of 'bfr' after trimmed left and right.
- * @desc	: remove leading and trailing white-space from buffer.
- */
-size_t Buffer::TRIM(char *bfr, size_t len)
-{
-	if (! bfr) {
-		return 0;
-	}
-	if (! len) {
-		len = strlen(bfr);
-		if (! len) {
-			return 0;
-		}
-	}
+}// namespace::vos
 
-	do {
-		--len;
-	} while (len > 0 && isspace(bfr[len]));
-
-	if (len == 0) {
-		if (! isspace(bfr[len])) {
-			++len;
-		}
-	} else {
-		size_t x = 0;
-
-		while (x < len && isspace(bfr[x])) {
-			++x;
-		}
-		if (x > 0 && x <= len) {
-			len = len - x + CHAR_SIZE;
-			memmove(bfr, &bfr[x], len);
-		} else {
-			++len;
-		}
-	}
-
-	bfr[len] = '\0';
-
-	return len;
-}
-
-//
-// `CMP_OBJETS()` will compare object of buffer `x` and `y`.
-// It will return,
-// (0) 0 if x and y is NULL,
-// (1) 0 if x and y has the same content,
-// (2) -1 if x is NULL and y is not NULL,
-// (3) -1 if x is less than y
-// (4) 1 if x is not NULL and y is NULL
-// (5) 1 if x is greater than y
-//
-int Buffer::CMP_OBJECTS(Object* x, Object* y)
-{
-	if (x == y) {
-		return 0;
-	}
-	if (x == NULL) {
-		return -1;
-	}
-	if (y == NULL) {
-		return 1;
-	}
-
-	Buffer* bx = (Buffer*) x;
-
-	return bx->cmp(y);
-}
-
-} /* namespace::vos */
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:

@@ -1,8 +1,8 @@
-//
-// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-//
+/**
+ * Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef _LIBVOS_BUFFER_HH
 #define _LIBVOS_BUFFER_HH 1
@@ -12,29 +12,27 @@
 namespace vos {
 
 /**
- * @class		: Buffer
- * @attr		:
- *	- _i		: index of buffer.
- *	- _l		: current size of buffer.
- *	- _v		: pointer to the raw buffer.
- *	- DFLT_SIZE	: static, default buffer size for (re)allocating a new
- *                        buffer object.
- *	- CHAR_SIZE	: static, size of one character.
+ * Class `Buffer` represent generic buffer (list of characters).
  *
- * @desc		:
- *
- *	Buffer object can be used as pointer to an raw string, by
- *	passing 0 to '_l' and later set '_v' point to array of char and use
- *	'_i' to count the length of '_v'.
- *
- *	if you set '_l' to value other than zero, Buffer destructor will
- *	destroy any value in '_v' at exit.
+ * Field `_i` contains index of buffer.
+ * Field `_l` contains size of buffer.
+ * Field `_v` contains pointer of buffer in memory.
  */
 class Buffer : public Object {
 public:
+	static const char* __CNAME;
+
+	static const uint8_t CHAR_SIZE;
+	static const uint16_t DFLT_SIZE;
+
+	static int CMP_OBJECTS(Object* x, Object* y);
+	static int PARSE_INT(char** pp, int* v);
+	static size_t TRIM(char* bfr, size_t len);
+
 	explicit Buffer(const size_t size = DFLT_SIZE);
-	Buffer(const char *v, size_t vlen = 0);
+	Buffer(const char* v, size_t vlen = 0);
 	explicit Buffer(const Buffer* v);
+
 	virtual ~Buffer();
 
 	char* detach();
@@ -71,7 +69,7 @@ public:
 	int appendd(double d, size_t prec = 6);
 	int append(const Buffer* bfr);
 	int append_raw(const char* bfr, size_t len = 0);
-	int append_bin(const void *bin, size_t len);
+	int append_bin(const void* bin, size_t len);
 	int append_fmt(const char* fmt, ...);
 	int vappend_fmt(const char* fmt, va_list args);
 	int concat(const char* bfr, ...);
@@ -86,20 +84,11 @@ public:
 	int like(const Buffer* bfr);
 	int like_raw(const char* bfr, size_t len = 0);
 
-	int to_lint(long int *res);
+	int to_lint(long int* res);
 
 	const char* chars();
 	void dump();
 	void dump_hex();
-
-	static int PARSE_INT(char** pp, int* v);
-	static size_t TRIM(char *bfr, size_t len);
-	static int CMP_OBJECTS(Object* x, Object* y);
-
-	static uint16_t	DFLT_SIZE;
-	static uint8_t	CHAR_SIZE;
-
-	static const char* __cname;
 
 protected:
 	size_t _i;
@@ -111,7 +100,7 @@ private:
 	void operator=(const Buffer&);
 };
 
-} /* namespace::vos */
-
+}// namespace::vos
 #endif
-// vi: ts=8 sw=8 tw=78:
+
+// vi: ts=8 sw=8 tw=80:

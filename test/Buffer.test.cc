@@ -1,8 +1,8 @@
-//
-// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-//
+/**
+ * Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #include "test.hh"
 #include "../Test.hh"
@@ -19,8 +19,8 @@ void test_constructor()
 
 	Buffer a;
 
-	T.expect_string(a.__cname, "Buffer");
-	T.expect_string(a.Object::__cname, "Object");
+	T.expect_string(a.__CNAME, "Buffer");
+	T.expect_string(a.Object::__CNAME, "Object");
 
 	assert(a.size() == Buffer::DFLT_SIZE);
 	assert(a.len() == 0);
@@ -32,10 +32,10 @@ void test_constructor()
 void test_constructor_size()
 {
 	struct {
-		const char *desc;
-		size_t     in_size;
-		size_t     exp_len;
-		size_t     exp_size;
+		const char* desc;
+		size_t      in_size;
+		size_t      exp_len;
+		size_t      exp_size;
 	} const tests[] = {
 		{
 			"Without size or zero size",
@@ -68,12 +68,12 @@ void test_constructor_size()
 void test_constructor_raw()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
-		size_t     in_len;
-		size_t     exp_len;
-		size_t     exp_size;
-		const char *exp_v;
+		const char* desc;
+		const char* in_v;
+		size_t      in_len;
+		size_t      exp_len;
+		size_t      exp_size;
+		const char* exp_v;
 	} const tests[] = {
 		{
 			"With empty string",
@@ -104,7 +104,7 @@ void test_constructor_raw()
 	const size_t tests_len = ARRAY_SIZE(tests);
 
 	for (size_t x = 0; x < tests_len; x++) {
-		T.start("Buffer(const char *, size_t)", tests[x].desc);
+		T.start("Buffer(const char*, size_t)", tests[x].desc);
 
 		Buffer b(tests[x].in_v, tests[x].in_len);
 
@@ -119,11 +119,11 @@ void test_constructor_raw()
 void test_constructor_buffer()
 {
 	struct {
-		const char *desc;
-		Buffer     *in_buffer;
-		size_t     exp_len;
-		size_t     exp_size;
-		const char *exp_v;
+		const char* desc;
+		Buffer*     in_buffer;
+		size_t      exp_len;
+		size_t      exp_size;
+		const char* exp_v;
 	} const tests[] = {
 		{
 			"With empty buffer",
@@ -144,7 +144,7 @@ void test_constructor_buffer()
 	const size_t tests_len = ARRAY_SIZE(tests);
 
 	for (size_t x = 0; x < tests_len; x++) {
-		T.start("Buffer(const Buffer *)", tests[x].desc);
+		T.start("Buffer(const Buffer*)", tests[x].desc);
 
 		Buffer b(tests[x].in_buffer);
 
@@ -163,12 +163,12 @@ void test_constructor_buffer()
 void test_detach()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
-		size_t     exp_len;
-		size_t     exp_size;
-		const char *exp_v;
-		const char *exp_ret;
+		const char* desc;
+		const char* in_v;
+		size_t      exp_len;
+		size_t      exp_size;
+		const char* exp_v;
+		const char* exp_ret;
 	} const tests[] = {
 		{
 			"With empty buffer",
@@ -197,11 +197,11 @@ void test_detach()
 
 		b.copy_raw(tests[x].in_v);
 
-		char *got = b.detach();
+		char* got = b.detach();
 
 		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
 		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_ptr((void *) tests[x].exp_v, (void *) b.v(), 0);
+		T.expect_ptr((void*) tests[x].exp_v, (void*) b.v(), 0);
 		T.expect_string(tests[x].exp_ret, got, 0);
 
 		if (got) {
@@ -215,11 +215,11 @@ void test_detach()
 void test_release()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
-		size_t     exp_len;
-		size_t     exp_size;
-		const char *exp_v;
+		const char* desc;
+		const char* in_v;
+		size_t      exp_len;
+		size_t      exp_size;
+		const char* exp_v;
 	} const tests[] = {
 		{
 			"With empty buffer",
@@ -250,7 +250,7 @@ void test_release()
 
 		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
 		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_ptr((void *) tests[x].exp_v, (void *) b.v(), 0);
+		T.expect_ptr((void*) tests[x].exp_v, (void*) b.v(), 0);
 
 		T.ok();
 	}
@@ -259,11 +259,11 @@ void test_release()
 void test_reset()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
-		size_t     exp_len;
-		size_t     exp_size;
-		const char *exp_v;
+		const char* desc;
+		const char* in_v;
+		size_t      exp_len;
+		size_t      exp_size;
+		const char* exp_v;
 	} const tests[] = {
 		{
 			"When buffer empty",
@@ -303,9 +303,9 @@ void test_reset()
 void test_trim()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
-		const char *exp;
+		const char* desc;
+		const char* in_v;
+		const char* exp;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -353,12 +353,12 @@ void test_trim()
 void test_truncate()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
-		size_t     in_len;
-		size_t     exp_len;
-		size_t     exp_size;
-		const char *exp_v;
+		const char* desc;
+		const char* in_v;
+		size_t      in_len;
+		size_t      exp_len;
+		size_t      exp_size;
+		const char* exp_v;
 	} const tests[] = {
 		{
 			"With length greater than buffer len",
@@ -400,9 +400,9 @@ void test_truncate()
 void test_is_empty()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
-		int        exp_res;
+		const char* desc;
+		const char* in_v;
+		int         exp_res;
 	} const tests[] = {
 		{
 			"Empty",
@@ -433,10 +433,10 @@ void test_is_empty()
 void test_set_len()
 {
 	struct {
-		const char *desc;
-		size_t     in_len;
-		size_t     exp_len;
-		size_t     exp_size;
+		const char* desc;
+		size_t      in_len;
+		size_t      exp_len;
+		size_t      exp_size;
 	} const tests[] = {
 		{
 			"With new len less than current size",
@@ -471,12 +471,12 @@ void test_set_len()
 void test_resize()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
+		const char* desc;
+		const char* in_v;
 		size_t      in_resize_to;
 		size_t      exp_len;
 		size_t      exp_size;
-		const char *exp_v;
+		const char* exp_v;
 	} const tests[] = {
 		{
 			"Greater than current size",
@@ -517,10 +517,10 @@ void test_resize()
 void test_char_at()
 {
 	struct {
-		const char *desc;
-		const char *in;
-		size_t     idx;
-		char       exp;
+		const char* desc;
+		const char* in;
+		size_t      idx;
+		char        exp;
 	} const tests[] = {
 		{
 			"With empty buffer",
@@ -573,12 +573,12 @@ void test_char_at()
 void test_set_char_at()
 {
 	struct {
-		const char *desc;
-		const char *in;
-		size_t     idx;
-		char       v;
-		int        exp_ret;
-		const char *exp_res;
+		const char* desc;
+		const char* in;
+		size_t      idx;
+		char        v;
+		int         exp_ret;
+		const char* exp_res;
 	} const tests[] = {
 		{
 			"With empty input",
@@ -635,11 +635,11 @@ void test_set_char_at()
 void test_copy()
 {
 	struct {
-		const char   *desc;
-		Buffer       *in;
+		const char*  desc;
+		Buffer*      in;
 		const size_t exp_len;
 		const size_t exp_size;
-		const char   *exp_v;
+		const char*  exp_v;
 	} const tests[] = {
 		{
 			"With null",
@@ -680,12 +680,12 @@ void test_copy()
 void test_copy_raw()
 {
 	struct {
-		const char   *desc;
-		const char   *in;
+		const char*  desc;
+		const char*  in;
 		size_t       in_len;
 		const size_t exp_len;
 		const size_t exp_size;
-		const char   *exp_v;
+		const char*  exp_v;
 	} const tests[] = {
 		{
 			"With empty string",
@@ -741,14 +741,14 @@ void test_copy_raw()
 void test_copy_raw_at()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		size_t     in_idx;
-		const char *in_v;
-		size_t     in_len;
-		size_t     exp_len;
-		size_t     exp_size;
-		const char *exp_v;
+		const char* desc;
+		const char* init;
+		size_t      in_idx;
+		const char* in_v;
+		size_t      in_len;
+		size_t      exp_len;
+		size_t      exp_size;
+		const char* exp_v;
 	} const tests[] = {
 		{
 			"With empty buffer: zero index and empty value",
@@ -843,11 +843,11 @@ void test_copy_raw_at()
 void test_set()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
-		Buffer     *in_bfr;
-		Buffer     *in_dflt;
-		const char *exp_v;
+		const char* desc;
+		const char* in_v;
+		Buffer*     in_bfr;
+		Buffer*     in_dflt;
+		const char* exp_v;
 	} const tests[] = {
 		{
 			"With both parameters are NULL",
@@ -926,11 +926,11 @@ void test_set()
 void test_set_raw()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
-		const char *in_bfr;
-		const char *in_dflt;
-		const char *exp_v;
+		const char* desc;
+		const char* in_v;
+		const char* in_bfr;
+		const char* in_dflt;
+		const char* exp_v;
 	} const tests[] = {
 		{
 			"With both parameters are NULL",
@@ -1002,10 +1002,10 @@ void test_set_raw()
 void test_shiftr()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
+		const char*  desc;
+		const char*  in_v;
 		const size_t in_nbyte;
-		const char *exp_v;
+		const char*  exp_v;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -1065,10 +1065,10 @@ void test_shiftr()
 void test_appendc()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
-		const char in_c;
-		const char *exp_v;
+		const char*  desc;
+		const char*  in_v;
+		const char   in_c;
+		const char*  exp_v;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -1128,13 +1128,13 @@ void test_appendc()
 void test_appendi()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
+		const char*    desc;
+		const char*    in_v;
 		const long int in_i;
 		const long int in_base;
-		const char *exp_v;
-		const size_t exp_len;
-		const size_t exp_size;
+		const char*    exp_v;
+		const size_t   exp_len;
+		const size_t   exp_size;
 	} const tests[] = {
 		{
 			"With negative number",
@@ -1232,13 +1232,13 @@ void test_appendi()
 void test_appendui()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
+		const char*    desc;
+		const char*    in_v;
 		const long int in_i;
 		const long int in_base;
-		const char *exp_v;
-		const size_t exp_len;
-		const size_t exp_size;
+		const char*    exp_v;
+		const size_t   exp_len;
+		const size_t   exp_size;
 	} const tests[] = {
 		{
 			"With negative number",
@@ -1336,11 +1336,11 @@ void test_appendui()
 void test_appendd()
 {
 	struct {
-		const char *desc;
-		const char *in_v;
+		const char*  desc;
+		const char*  in_v;
 		const double in_d;
 		const size_t in_prec;
-		const char *exp_v;
+		const char*  exp_v;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -1440,10 +1440,10 @@ void test_appendd()
 void test_append()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		Buffer *in;
-		const char *exp_v;
+		const char*  desc;
+		const char*  init;
+		Buffer*      in;
+		const char*  exp_v;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -1507,10 +1507,10 @@ void test_append()
 void test_append_raw()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		const char *in;
-		const char *exp_v;
+		const char*  desc;
+		const char*  init;
+		const char*  in;
+		const char*  exp_v;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -1585,19 +1585,19 @@ void test_append_raw()
 
 void test_append_bin()
 {
-	const char *chars = "1234567890";
+	const char* chars = "1234567890";
 	int i = 1234567890;
 
-	char *exp_i = (char *) calloc(14, 1);
+	char* exp_i = (char*) calloc(14, 1);
 	memcpy(exp_i, chars, 10);
 	memcpy(&exp_i[10], &i, 4);
 
 	struct {
-		const char *desc;
-		const char *init;
-		const void *bin;
+		const char*  desc;
+		const char*  init;
+		const void*  bin;
 		const size_t len;
-		const void *exp_v;
+		const void*  exp_v;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -1674,12 +1674,12 @@ void test_append_bin()
 void test_concat()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		const char *in_v0;
-		const char *in_v1;
-		const char *in_v2;
-		const char *exp_v;
+		const char*  desc;
+		const char*  init;
+		const char*  in_v0;
+		const char*  in_v1;
+		const char*  in_v2;
+		const char*  exp_v;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -1747,10 +1747,10 @@ void test_concat()
 void test_prepend()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		Buffer *in;
-		const char *exp_v;
+		const char*  desc;
+		const char*  init;
+		Buffer*      in;
+		const char*  exp_v;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -1814,10 +1814,10 @@ void test_prepend()
 void test_prepend_raw()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		const char *in;
-		const char *exp_v;
+		const char*  desc;
+		const char*  init;
+		const char*  in;
+		const char*  exp_v;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -1893,12 +1893,12 @@ void test_prepend_raw()
 void test_subc()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		const char from;
-		const char to;
-		const char *exp_v;
-		const int exp_res;
+		const char*  desc;
+		const char*  init;
+		const char   from;
+		const char   to;
+		const char*  exp_v;
+		const int    exp_res;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -1957,9 +1957,9 @@ void test_subc()
 void test_cmp()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		Buffer *in;
+		const char* desc;
+		const char* init;
+		Buffer*     in;
 		const int exp_res;
 	} const tests[] = {
 		{
@@ -2066,9 +2066,9 @@ void test_cmp()
 void test_cmp_raw()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		const char *in_bfr;
+		const char* desc;
+		const char* init;
+		const char* in_bfr;
 		const int exp_res;
 	} const tests[] = {
 		{
@@ -2171,9 +2171,9 @@ void test_cmp_raw()
 void test_like()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		Buffer *in;
+		const char* desc;
+		const char* init;
+		Buffer*     in;
 		const int exp_res;
 	} const tests[] = {
 		{
@@ -2280,10 +2280,10 @@ void test_like()
 void test_like_raw()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		const char *in_bfr;
-		const int exp_res;
+		const char* desc;
+		const char* init;
+		const char* in_bfr;
+		const int   exp_res;
 	} const tests[] = {
 		{
 			"With empty and NULL object",
@@ -2379,8 +2379,8 @@ void test_like_raw()
 void test_to_lint()
 {
 	struct {
-		const char *desc;
-		const char *init;
+		const char*    desc;
+		const char*    init;
 		const long int exp_v;
 		const long int exp_ret;
 	} const tests[] = {
@@ -2443,11 +2443,11 @@ void test_to_lint()
 void test_PARSE_INT()
 {
 	struct {
-		const char *desc;
-		const char *init;
-		const char *exp_p;
-		const int exp_v;
-		const int exp_ret;
+		const char* desc;
+		const char* init;
+		const char* exp_p;
+		const int   exp_v;
+		const int   exp_ret;
 	} const tests[] = {
 		{
 			"With empty string",
@@ -2531,7 +2531,7 @@ void test_PARSE_INT()
 
 	int v = 0;
 	int ret = 0;
-	char *p = 0;
+	char* p = 0;
 	Buffer b;
 	size_t tests_len = ARRAY_SIZE(tests);
 
@@ -2544,7 +2544,7 @@ void test_PARSE_INT()
 			exit(1);
 		}
 
-		p = (char *) b.v();
+		p = (char*) b.v();
 
 		ret = Buffer::PARSE_INT(&p, &v);
 
