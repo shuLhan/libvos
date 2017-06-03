@@ -15,7 +15,7 @@ LIBVOS_OPTS     +=NO_DEFAULT_LIBS
 TEST_OBJS=	$(BLD_D)/test.oo		\
 		$(LIBVOS_BLD_D)/libvos.oo	\
 		$(LIBVOS_BLD_D)/Object.oo	\
-		$(LIBVOS_BLD_D)/BNode.oo	\
+		$(LIBVOS_BLD_D)/Error.oo	\
 		$(LIBVOS_BLD_D)/Locker.oo	\
 		$(LIBVOS_BLD_D)/Buffer.oo	\
 		$(LIBVOS_BLD_D)/FmtParser.oo	\
@@ -25,7 +25,10 @@ TEST_OBJS=	$(BLD_D)/test.oo		\
 
 Object_OBJS=	$(TEST_OBJS)
 
-BNode_OBJS=	$(TEST_OBJS)
+Error_OBJS=	$(TEST_OBJS)
+
+BNode_OBJS=	$(TEST_OBJS) \
+		$(LIBVOS_BLD_D)/BNode.oo
 
 Buffer_OBJS=	$(TEST_OBJS)
 
@@ -33,13 +36,13 @@ FmtParser_OBJS=	$(TEST_OBJS)
 
 File_OBJS=	$(TEST_OBJS)
 
-List_OBJS=	$(TEST_OBJS)				\
+List_OBJS=	$(BNode_OBJS)				\
 		$(LIBVOS_BLD_D)/List.oo
 
 Dlogger_OBJS=	$(TEST_OBJS)
 
 ListBuffer_OBJS=					\
-			$(TEST_OBJS)			\
+			$(List_OBJS)			\
 			$(LIBVOS_BLD_D)/List.oo		\
 			$(LIBVOS_BLD_D)/ListBuffer.oo
 
@@ -122,6 +125,7 @@ Dir_OBJS=	$(TEST_OBJS)			\
 		$(LIBVOS_BLD_D)/Dir.oo
 
 TARGET=	$(BLD_D)/Object.test		\
+	$(BLD_D)/Error.test		\
 	$(BLD_D)/Buffer.test		\
 	$(BLD_D)/FmtParser.test		\
 	$(BLD_D)/BNode.test		\
