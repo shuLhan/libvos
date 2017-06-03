@@ -25,7 +25,7 @@ public:
 	static const uint8_t CHAR_SIZE;
 	static const uint16_t DFLT_SIZE;
 
-	static int CMP_OBJECTS(Object* x, Object* y);
+	static int CMP(Object* x, Object* y);
 	static int PARSE_INT(char** pp, int* v);
 	static size_t TRIM(char* bfr, size_t len);
 

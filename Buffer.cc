@@ -44,7 +44,7 @@ const uint16_t Buffer::DFLT_SIZE = 16;
 
 
 /**
- * Method CMP_OBJECTS() will compare object of buffer `x` and `y`.
+ * Method CMP() will compare object of buffer `x` and `y`.
  *
  * It will return,
  *
@@ -55,7 +55,7 @@ const uint16_t Buffer::DFLT_SIZE = 16;
  * (4) 1 if x is not NULL and y is NULL
  * (5) 1 if x is greater than y
  */
-int Buffer::CMP_OBJECTS(Object* x, Object* y)
+int Buffer::CMP(Object* x, Object* y)
 {
 	if (x == y) {
 		return 0;

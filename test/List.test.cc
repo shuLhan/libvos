@@ -307,17 +307,17 @@ void test_sort()
 	assert(list.size() == 0);
 
 	list.push_tail(b2);
-	list.sort(Buffer::CMP_OBJECTS);
+	list.sort(Buffer::CMP);
 	assert(list.size() == 1);
 	assert(strcmp(EXP_2, list.chars()) == 0);
 
 	list.push_tail(b1);
-	list.sort(Buffer::CMP_OBJECTS);
+	list.sort(Buffer::CMP);
 	assert(list.size() == 2);
 	assert(strcmp(EXP_1_2, list.chars()) == 0);
 
 	list.push_tail(b0);
-	list.sort(Buffer::CMP_OBJECTS);
+	list.sort(Buffer::CMP);
 	assert(list.size() == 3);
 	assert(strcmp(EXP_0_1_2, list.chars()) == 0);
 
@@ -351,7 +351,7 @@ void test_search()
 	assert(node_found != NULL);
 	assert(node_found == list.node_at(1));
 
-	node_found = list.node_search(b2, Buffer::CMP_OBJECTS);
+	node_found = list.node_search(b2, Buffer::CMP);
 	assert(node_found != NULL);
 	assert(node_found == list.node_at(2));
 
@@ -360,7 +360,7 @@ void test_search()
 	assert(list.size() == 2);
 	assert(bdel == b2);
 
-	node_found = list.node_search(b2, Buffer::CMP_OBJECTS);
+	node_found = list.node_search(b2, Buffer::CMP);
 	assert(node_found == NULL);
 
 	list.reset();
