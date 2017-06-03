@@ -1,10 +1,16 @@
-v0.5.0 (2017-04-xx)
+v0.5.0 (2017-06-03)
 ===================
 
 Breaking Changes
 ----------------
 
 * Buffer
+  - Remove aprintf()`, `vprintf()`, and `VSNPRINTF()`
+  - Move split_x methods to class ListBuffer
+  - subc(): change parameter type from `int` to `const char`
+  - append_bin(): return 0 on success instead of length of appended buffer
+  - concat(): return -1 when fail to append raw buffer
+  - copy_raw(): do not resize buffer if `bfr` param is NULL
   - refactoring buffer size, `_l`, from public to protected
   - refactoring buffer index, `_i`, from public to protected
   - Remove method `set()`
@@ -13,12 +19,22 @@ Breaking Changes
   - to_lint(): add parameter to return the result of conversion. Method now
     return 0 on success or -1 if fail (out of range).
 
+* BNode:
+  - set `_left`, `_right`, and `_item` fields to be protected
+
 New Features
 ------------
 
 * Buffer:
+  - add method `append_fmt()` and `vappend_fmt()`
   - set_len(): new method to set buffer index position directly
   - truncate(): new method to truncate buffer
+
+* FmtParser: new class for parsing formatted string
+
+* ListSockAddr: new class for managing list of socket addresses (SockAddr)
+
+* RBT: add method to swap nodes position in tree
 
 * Test: new class for testing
 
@@ -26,6 +42,11 @@ Fixes
 -----
 
 * Buffer:
+  - cmp_raw(): cmp_raw: fix return value if current buffer longer than
+    comparison
+  - like_raw(): fix return value if current buffer longer than comparison
+  - set_raw(): check for empty string on parameters
+  - set(): check whether buffer and default is empty
   - Buffer(size_t): check if size is zero, so object always created
     with non null buffer
   - truncate(): always truncate at the index pointed by `len`
@@ -33,10 +54,25 @@ Fixes
 * DNSQuery:
   - Remove recursive-desired flag when creating question and answer
 
+* RBT
+  - _remove_unsafe: fix deleted node that still have childs
+
+* Resolver:
+  - recv_tcp: reset buffer and close socket when read return 0
+
 Internal
 --------
 
+* Buffer:
+  - Do not call perror, let the program call it
+  - appendd(): rewrite to use number conversion instead of snprintfa
+  - append_raw(): optimize for appending single char
+
+* SockAddr:
+  - CREATE_ADDR: replace gethostbyname2_r with getaddrinfo
+
 * Make code complient with `C++11`
+
 * Library now can be compiled with Musl libc
 
 
