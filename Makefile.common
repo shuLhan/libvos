@@ -27,12 +27,18 @@ endif
 
 CXXFLAGS_GLOBAL = -fno-rtti -fno-exceptions -pipe \
 		-Wall -Wextra \
-		-Weffc++ -Wconversion -Wpedantic \
-		-Wimplicit-fallthrough=1
+		-Weffc++ -Wconversion -Wpedantic
 
 ifndef CXXFLAGS
 CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os
 endif
+
+ifeq ($(CXX),clang)
+CXXFLAGS_GLOBAL += -Wno-implicit-fallthrough
+else
+CXXFLAGS_GLOBAL += -Wimplicit-fallthrough=1
+endif
+
 CXXFLAGS_DEBUG	= $(CXXFLAGS_GLOBAL) -g -O0
 CXXFLAGS_ADD	=
 LDFLAGS		= -Os -lpthread
