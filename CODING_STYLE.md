@@ -60,9 +60,9 @@ private:
 
 ## Comment Syntax
 
-* Use `/**/` style for comment.
+* Use `/** ... */` style for documented comment.
 
-* Use `//` for comment inside code.
+* Use `//` for undocumented code or comment inside code.
 
 * Write comment in the `.cc` file, not in the header.
 
