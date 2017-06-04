@@ -51,14 +51,14 @@ File::~File()
  */
 int File::_open(const char* path, const int mode, const int perm)
 {
-	int s = 0;
+	Error err;
 
 	if (!path) {
 		return -1;
 	}
 	if (!_v) {
-		s = resize(DFLT_SIZE);
-		if (s < 0) {
+		err = resize(DFLT_SIZE);
+		if (err != NULL) {
 			return -1;
 		}
 	}
@@ -70,8 +70,8 @@ int File::_open(const char* path, const int mode, const int perm)
 		return -1;
 	}
 
-	s = _name.copy_raw(path);
-	if (s < 0) {
+	err = _name.copy_raw(path);
+	if (err != NULL) {
 		return -1;
 	}
 
@@ -305,17 +305,15 @@ ssize_t File::readn(size_t n)
 		return 0;
 	}
 
-	ssize_t s;
-
 	if (n > _l) {
-		s = resize(n);
-		if (s != 0) {
+		Error err = resize(n);
+		if (err != NULL) {
 			return -1;
 		}
 	}
 	_i = 0;
 	while (n > 0) {
-		s = ::read(_d, &_v[_i], n);
+		ssize_t s = ::read(_d, &_v[_i], n);
 		if (s < 0) {
 			if (s == EAGAIN || s == EWOULDBLOCK) {
 				break;
@@ -484,8 +482,8 @@ int File::get_line(Buffer* line)
 		return 0;
 	}
 
-	s = line->copy_raw(&_v[start], size_t(len));
-	if (s < 0) {
+	Error err = line->copy_raw(&_v[start], size_t(len));
+	if (err != NULL) {
 		return -1;
 	}
 
@@ -562,8 +560,8 @@ ssize_t File::write_raw(const char* bfr, size_t len)
 				return -1;
 			}
 		}
-		s = append_raw(bfr, len);
-		if (s < 0) {
+		Error err = append_raw(bfr, len);
+		if (err != NULL) {
 			return -1;
 		}
 		if (_status & O_SYNC) {
@@ -591,11 +589,10 @@ ssize_t File::writef(const char* fmt, va_list args)
 		return 0;
 	}
 
-	int s = 0;
 	Buffer b;
 
-	s = b.vappend_fmt(fmt, args);
-	if (s < 0) {
+	Error err = b.vappend_fmt(fmt, args);
+	if (err != NULL) {
 		return -1;
 	}
 
@@ -618,15 +615,14 @@ ssize_t File::writes(const char* fmt, ...)
 		return 0;
 	}
 
-	int s = 0;
 	Buffer		b;
 	va_list		al;
 
 	va_start(al, fmt);
-	s = b.vappend_fmt(fmt, al);
+	Error err = b.vappend_fmt(fmt, al);
 	va_end(al);
 
-	if (s < 0) {
+	if (err != NULL) {
 		return -1;
 	}
 
@@ -812,20 +808,20 @@ int File::BASENAME(Buffer* name, const char* path)
 		return -1;
 	}
 
-	int s = 0;
+	Error err;
 
 	name->reset();
 
 	if (!path) {
-		s = name->appendc('.');
-		if (s < 0) {
+		err = name->appendc('.');
+		if (err != NULL) {
 			return -1;
 		}
 	} else {
 		size_t len = strlen(path);
 		if (path[0] == '/' && len == 1) {
-			s = name->appendc('/');
-			if (s < 0) {
+			err = name->appendc('/');
+			if (err != NULL) {
 				return -1;
 			}
 		} else {
@@ -840,8 +836,8 @@ int File::BASENAME(Buffer* name, const char* path)
 			if (path[p] == '/' && path[p + 1] != '/') {
 				++p;
 			}
-			s = name->copy_raw(&path[p], size_t(len - p));
-			if (s < 0) {
+			err = name->copy_raw(&path[p], size_t(len - p));
+			if (err != NULL) {
 				return -1;
 			}
 		}
@@ -957,7 +953,10 @@ int File::WRITE_PID(const char* file)
 
 	s = f.open_wx(file);
 	if (0 == s) {
-		s = f.appendi(getpid());
+		Error err = f.appendi(getpid());
+		if (err != NULL) {
+			return -1;
+		}
 	}
 
 	return s;

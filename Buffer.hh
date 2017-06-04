@@ -7,9 +7,11 @@
 #ifndef _LIBVOS_BUFFER_HH
 #define _LIBVOS_BUFFER_HH 1
 
-#include "Object.hh"
+#include "Error.hh"
 
 namespace vos {
+
+extern const Error ErrBufferInvalidIndex;
 
 /**
  * Class `Buffer` represent generic buffer (list of characters).
@@ -26,7 +28,7 @@ public:
 	static const uint16_t DFLT_SIZE;
 
 	static int CMP(Object* x, Object* y);
-	static int PARSE_INT(char** pp, int* v);
+	static Error PARSE_INT(char** pp, int* v);
 	static size_t TRIM(char* bfr, size_t len);
 
 	explicit Buffer(const size_t size = DFLT_SIZE);
@@ -44,38 +46,38 @@ public:
 	int is_empty() const;
 
 	size_t len() const;
-	int set_len(size_t len);
+	Error set_len(size_t len);
 
 	size_t size() const;
-	int resize(size_t len);
+	Error resize(size_t len);
 
 	const char* v(size_t idx = 0) const;
 
 	char char_at(size_t idx);
-	int set_char_at(size_t idx, char v);
+	Error set_char_at(size_t idx, char v);
 
-	int copy(const Buffer* bfr);
-	int copy_raw(const char* bfr, size_t len = 0);
-	int copy_raw_at(size_t idx, const char* v, size_t vlen);
+	Error copy(const Buffer* bfr);
+	Error copy_raw(const char* bfr, size_t len = 0);
+	Error copy_raw_at(size_t idx, const char* v, size_t vlen);
 
-	int set(const Buffer* bfr, const Buffer* dflt);
-	int set_raw(const char* bfr, const char* dflt);
+	Error set(const Buffer* bfr, const Buffer* dflt);
+	Error set_raw(const char* bfr, const char* dflt);
 
-	int shiftr(const size_t nbyte, int c = 0);
+	Error shiftr(const size_t nbyte, int c = 0);
 
-	int appendc(const char c);
-	int appendi(long int i, size_t base = 10);
-	int appendui(long unsigned int i, size_t base = 10);
-	int appendd(double d, size_t prec = 6);
-	int append(const Buffer* bfr);
-	int append_raw(const char* bfr, size_t len = 0);
-	int append_bin(const void* bin, size_t len);
-	int append_fmt(const char* fmt, ...);
-	int vappend_fmt(const char* fmt, va_list args);
-	int concat(const char* bfr, ...);
+	Error appendc(const char c);
+	Error appendi(long int i, size_t base = 10);
+	Error appendui(long unsigned int i, size_t base = 10);
+	Error appendd(double d, size_t prec = 6);
+	Error append(const Buffer* bfr);
+	Error append_raw(const char* bfr, size_t len = 0);
+	Error append_bin(const void* bin, size_t len);
+	Error append_fmt(const char* fmt, ...);
+	Error vappend_fmt(const char* fmt, va_list args);
+	Error concat(const char* bfr, ...);
 
-	int prepend(Buffer* bfr);
-	int prepend_raw(const char* bfr, size_t len = 0);
+	Error prepend(Buffer* bfr);
+	Error prepend_raw(const char* bfr, size_t len = 0);
 
 	size_t subc(const char from, const char to);
 
@@ -84,11 +86,11 @@ public:
 	int like(const Buffer* bfr);
 	int like_raw(const char* bfr, size_t len = 0);
 
-	int to_lint(long int* res);
+	Error to_lint(long int* res);
 
 	const char* chars();
-	void dump();
-	void dump_hex();
+	const char* dump();
+	const char* dump_hex();
 
 protected:
 	size_t _i;

@@ -485,8 +485,8 @@ List* DSVRecordMD::INIT_FROM_FILE(const char* fmeta)
 		return NULL;
 	}
 
-	s = f.resize(size_t(f.get_size()));
-	if (s < 0) {
+	Error err = f.resize(size_t(f.get_size()));
+	if (err != NULL) {
 		return NULL;
 	}
 

@@ -8,6 +8,10 @@
 
 namespace vos {
 
+const Error ErrInvalidConversion = Error("FmtParser: invalid conversion specifiers");
+const Error ErrFlagDuplicate = Error("FmtParser: duplicate flag");
+const Error ErrInvalidFormat = Error("FmtParser: invalid format string");
+
 enum __print_flag {
 	FL_LEFT_ADJUST	= (1 << 0)
 ,	FL_SIGN		= (1 << 1)
@@ -65,15 +69,22 @@ void FmtParser::reset()
  *
  * The flag character `-`, `+`, `#`, and `0` only allowed once.
  *
- * On success it will return 0, otherwise it will return `-1`.
+ * On success it will return NULL.
+ *
+ * On fail it will return,
+ * - ErrFlagDuplicate if flag occured more than once.
+ * - ErrInvalidFormat if formatted string is end without any conversion.
+ * - ErrMemory if out of memory.
  */
-int FmtParser::parse_flag_chars()
+Error FmtParser::parse_flag_chars()
 {
+	Error err;
+
 	while (*_p) {
 		switch (*_p) {
 		case '-':
 			if (_flag & FL_LEFT_ADJUST) {
-				return -1;
+				return ErrFlagDuplicate;
 			}
 			_flag |= FL_LEFT_ADJUST;
 			// Disable 0 flag.
@@ -82,21 +93,21 @@ int FmtParser::parse_flag_chars()
 
 		case '+':
 			if (_flag & FL_SIGN) {
-				return -1;
+				return ErrFlagDuplicate;
 			}
 			_flag |= FL_SIGN;
 			break;
 
 		case '#':
 			if (_flag & FL_ALT_OUT) {
-				return -1;
+				return ErrFlagDuplicate;
 			}
 			_flag |= FL_ALT_OUT;
 			break;
 
 		case '0':
 			if (_flag & FL_ZERO_PAD) {
-				return -1;
+				return ErrFlagDuplicate;
 			}
 			if (! (_flag & FL_LEFT_ADJUST)) {
 				_flag |= FL_ZERO_PAD;
@@ -104,18 +115,22 @@ int FmtParser::parse_flag_chars()
 			break;
 
 		default:
-			return 0;
+			return NULL;
 		}
 
-		_flags.appendc(*_p);
+		err = _flags.appendc(*_p);
+		if (err != NULL) {
+			return err;
+		}
+
 		_p++;
 	}
 
 	if (! *_p) {
-		return -1;
+		return ErrInvalidFormat;
 	}
 
-	return 0;
+	return NULL;
 }
 
 /**
@@ -131,15 +146,17 @@ int FmtParser::parse_flag_chars()
  * On success it will return 0 and modified the pointer of formatted string
  * `_p`.
  *
- * On fail it will return `-1` and will NOT modified the pointer to formatted
- * string `_p`.
+ * On fail it will return ErrRange and will NOT modified the pointer to
+ * formatted string `_p`.
  */
-int FmtParser::parse_flag_width_prec()
+Error FmtParser::parse_flag_width_prec()
 {
+	Error err;
+
 	if (isdigit(*_p)) {
-		int s = Buffer::PARSE_INT(&_p, &_fwidth);
-		if (s) {
-			return -1;
+		err = Buffer::PARSE_INT(&_p, &_fwidth);
+		if (err != NULL) {
+			return err;
 		}
 	}
 	if (*_p == '.') {
@@ -147,11 +164,11 @@ int FmtParser::parse_flag_width_prec()
 		_flag |= FL_PREC;
 
 		if (isdigit(*_p)) {
-			int s = Buffer::PARSE_INT(&_p, &_fprec);
-			if (s) {
+			err = Buffer::PARSE_INT(&_p, &_fprec);
+			if (err != NULL) {
 				_fwidth = 0;
 				_fprec = 0;
-				return -1;
+				return err;
 			}
 		}
 	}
@@ -196,9 +213,10 @@ void FmtParser::parse_flag_length_mod()
  * Method `check_flag_conversion(c)` will check if `c` is conformed to one of
  * the format conversion.
  *
- * On success it will return 0, otherwise it will return -1.
+ * On success it will return NULL, otherwise it will return
+ * ErrInvalidConversion.
  */
-int FmtParser::check_flag_conversion(char c)
+Error FmtParser::check_flag_conversion(char c)
 {
 	switch (c) {
 	case 'c':
@@ -212,7 +230,7 @@ int FmtParser::check_flag_conversion(char c)
 		return 0;
 	}
 
-	return -1;
+	return ErrInvalidConversion;
 }
 
 /**
@@ -220,38 +238,35 @@ int FmtParser::check_flag_conversion(char c)
  * precision from `fmt`; and save it to `flags` as bitmask of flag value
  * corresponding to the characters that found in `fmt`.
  *
- * It will return `0` on success, `1` if flags is `%%`, `-1` if error occured.
- *
  * '%' -> ['-'] ---> [digit] -> ['.'] -> [digit] -> ['h'] --> [conversion]
  *     \- ['+'] -/                               \- ['l'] -/
  *     \- ['#'] -/                               \- ['L'] -/
  *     \- ['0'] -/
+ *
+ * On success it will return NULL.
+ *
+ * On fail it will return ErrMemory.
  */
-int FmtParser::parse_flags()
+Error FmtParser::parse_flags()
 {
-	int s;
+	Error err;
 
 	_flags.reset();
 	_flag = 0;
 
-	// '%'
-	_flags.appendc(*_p);
-	_p++;
-
-	// Escaped format '%%'
-	if (*_p == '%') {
-		_p++;
-		return 1;
+	err = _flags.appendc('%');
+	if (err != NULL) {
+		return err;
 	}
 
-	s = parse_flag_chars();
-	if (s < 0) {
-		return s;
+	err = parse_flag_chars();
+	if (err != NULL) {
+		return err;
 	}
 
-	s = parse_flag_width_prec();
-	if (s < 0) {
-		return s;
+	err = parse_flag_width_prec();
+	if (err != NULL) {
+		return err;
 	}
 
 	parse_flag_length_mod();
@@ -259,10 +274,10 @@ int FmtParser::parse_flags()
 	return check_flag_conversion(*_p);
 }
 
-int FmtParser::parse_conversion()
+Error FmtParser::parse_conversion()
 {
-	char c;
-	int s, i32;
+	int i32;
+	Error err;
 
 	_conv.reset();
 
@@ -270,10 +285,10 @@ int FmtParser::parse_conversion()
 	case 'c':
 		i32 = va_arg(_args, int);
 		if (i32 > 0) {
-			c = char(i32);
-			s = _conv.appendc(c);
-			if (s < 0) {
-				return -1;
+			char c = char(i32);
+			err = _conv.appendc(c);
+			if (err != NULL) {
+				return err;
 			}
 		}
 		break;
@@ -282,38 +297,38 @@ int FmtParser::parse_conversion()
 	case 'i':
 		_flag |= FL_NUMBER;
 		if (_flag & FL_LONG) {
-			s =_conv.appendi(va_arg(_args, long int));
+			err =_conv.appendi(va_arg(_args, long int));
 		} else {
-			s =_conv.appendi(va_arg(_args, int));
+			err =_conv.appendi(va_arg(_args, int));
 		}
-		if (s < 0) {
-			return -1;
+		if (err != NULL) {
+			return err;
 		}
 		break;
 
 	case 'u':
 		_flag |= FL_NUMBER;
 		if (_flag & FL_LONG) {
-			s = _conv.appendui(va_arg(_args, long unsigned));
+			err = _conv.appendui(va_arg(_args, long unsigned));
 		} else {
-			s = _conv.appendui(va_arg(_args, unsigned int));
+			err = _conv.appendui(va_arg(_args, unsigned int));
 		}
-		if (s < 0) {
-			return -1;
+		if (err != NULL) {
+			return err;
 		}
 		break;
 	case 's':
-		s = _conv.append_raw(va_arg(_args, const char*));
-		if (s < 0) {
-			return -1;
+		err = _conv.append_raw(va_arg(_args, const char*));
+		if (err != NULL) {
+			return err;
 		}
 		break;
 	case 'f':
 		_flag |= FL_NUMBER;
-		s = _conv.appendd(va_arg(_args, double),
+		err = _conv.appendd(va_arg(_args, double),
 			_fprec ? _fprec : DEF_PREC);
-		if (s < 0) {
-			return -1;
+		if (err != NULL) {
+			return err;
 		}
 		break;
 	case 'o':
@@ -324,9 +339,9 @@ int FmtParser::parse_conversion()
 				--_fwidth;
 			}
 		}
-		s = _conv.appendi(va_arg(_args, int), 8);
-		if (s < 0) {
-			return -1;
+		err = _conv.appendi(va_arg(_args, int), 8);
+		if (err != NULL) {
+			return err;
 		}
 		break;
 	case 'p':
@@ -343,9 +358,9 @@ int FmtParser::parse_conversion()
 		} else {
 			_fwidth = 0;
 		}
-		s = _conv.appendi(va_arg(_args, int), 16);
-		if (s < 0) {
-			return -1;
+		err = _conv.appendi(va_arg(_args, int), 16);
+		if (err != NULL) {
+			return err;
 		}
 		break;
 	}
@@ -423,9 +438,9 @@ void FmtParser::on_invalid()
 // (1.1) If its not `%` append it to temporary buffer `b`.
 // (1.2) If its `%` start parsing for flags
 //
-int FmtParser::parse(const char *fmt, va_list args)
+Error FmtParser::parse(const char *fmt, va_list args)
 {
-	int s;
+	Error err;
 
 	reset();
 	_p = (char *) fmt;
@@ -434,9 +449,9 @@ int FmtParser::parse(const char *fmt, va_list args)
 	while (*_p) {
 		// (1.1)
 		while (*_p && *_p != '%') {
-			s = appendc(*_p);
-			if (s < 0) {
-				return -1;
+			err = appendc(*_p);
+			if (err != NULL) {
+				return err;
 			}
 
 			_p++;
@@ -446,15 +461,36 @@ int FmtParser::parse(const char *fmt, va_list args)
 			break;
 		}
 
+		_p++;
+
+		if (! *_p) {
+			err = appendc('%');
+			if (err != NULL) {
+				return err;
+			}
+
+			break;
+		}
+
+		// Escaped format '%%'
+		if (*_p == '%') {
+			err = appendc('%');
+			if (err != NULL) {
+				return err;
+			}
+			_p++;
+			continue;
+		}
+
 		// (1.2)
-		s = parse_flags();
-		if (s) {
+		err = parse_flags();
+		if (err != NULL) {
 			on_invalid();
 			continue;
 		}
 
-		s = parse_conversion();
-		if (s) {
+		err = parse_conversion();
+		if (err != NULL) {
 			on_invalid();
 			continue;
 		}
@@ -471,20 +507,20 @@ int FmtParser::parse(const char *fmt, va_list args)
 	return 0;
 }
 
-int FmtParser::parse(const char *fmt, ...)
+Error FmtParser::parse(const char *fmt, ...)
 {
 	if (!fmt) {
 		return 0;
 	}
 
-	int s;
+	Error err;
 	va_list args;
 
 	va_start(args, fmt);
-	s = parse(fmt, args);
+	err = parse(fmt, args);
 	va_end(args);
 
-	return s;
+	return err;
 }
 
 } // namespace::vos

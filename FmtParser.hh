@@ -11,13 +11,17 @@
 
 namespace vos {
 
+extern const Error ErrInvalidConversion;
+extern const Error ErrFlagDuplicate;
+extern const Error ErrInvalidFormat;
+
 class FmtParser : public Buffer {
 public:
 	FmtParser();
 	~FmtParser();
 
-	int parse(const char *fmt, va_list args);
-	int parse(const char *fmt, ...);
+	Error parse(const char *fmt, va_list args);
+	Error parse(const char *fmt, ...);
 
 protected:
 	Buffer  _flags;
@@ -33,12 +37,12 @@ private:
 	void operator=(const FmtParser&);
 
 	void reset();
-	int parse_flag_chars();
-	int parse_flag_width_prec();
+	Error parse_flag_chars();
+	Error parse_flag_width_prec();
 	void parse_flag_length_mod();
-	int check_flag_conversion(char c);
-	int parse_flags();
-	int parse_conversion();
+	Error check_flag_conversion(char c);
+	Error parse_flags();
+	Error parse_conversion();
 	void apply_flags_to_conversion();
 	void on_invalid();
 };

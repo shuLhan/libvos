@@ -86,16 +86,14 @@ int Config::save()
 
 	Buffer ini;
 
-	int s = ini.copy(&_name);
-	if (s < 0) {
+	Error err = ini.copy(&_name);
+	if (err != NULL) {
 		return -1;
 	}
 
 	close();
 
-	s = save_as(ini.v(), CONFIG_SAVE_WITH_COMMENT);
-
-	return s;
+	return save_as(ini.v(), CONFIG_SAVE_WITH_COMMENT);
 }
 
 /**
@@ -274,9 +272,9 @@ long int Config::get_number(const char* head, const char* key, const int dflt)
  */
 int Config::set(const char* head, const char* key, const char* value)
 {
-	int		s;
 	ConfigData*	h = &_data;
 	ConfigData*	k = NULL;
+	Error err;
 
 	if (!head || !key || !value) {
 		return 0;
@@ -294,13 +292,13 @@ int Config::set(const char* head, const char* key, const char* value)
 			}
 
 			/* add key:value to config list, if not found */
-			s = ConfigData::INIT(&k, CONFIG_T_KEY, key);
-			if (s < 0) {
+			err = ConfigData::INIT(&k, CONFIG_T_KEY, key);
+			if (err != NULL) {
 				return -1;
 			}
 
-			s = ConfigData::INIT(&k->_value, CONFIG_T_VALUE, value);
-			if (s < 0) {
+			err = ConfigData::INIT(&k->_value, CONFIG_T_VALUE, value);
+			if (err != NULL) {
 				return -1;
 			}
 
@@ -311,29 +309,29 @@ int Config::set(const char* head, const char* key, const char* value)
 		h = h->_next_head;
 	}
 
-	s = ConfigData::INIT(&h, CONFIG_T_HEAD, head);
-	if (s < 0) {
+	err = ConfigData::INIT(&h, CONFIG_T_HEAD, head);
+	if (err != NULL) {
 		return -1;
 	}
 
 	_data.add_head(h);
 
-	s = ConfigData::INIT(&k, CONFIG_T_KEY, key);
-	if (s < 0) {
+	err = ConfigData::INIT(&k, CONFIG_T_KEY, key);
+	if (err != NULL) {
 		return -1;
 	}
 
 	_data.add_key(k);
 
 	k = NULL;
-	s = ConfigData::INIT(&k, CONFIG_T_VALUE, value);
-	if (s < 0) {
+	err = ConfigData::INIT(&k, CONFIG_T_VALUE, value);
+	if (err != NULL) {
 		return -1;
 	}
 
-	s = _data.add_value(k);
+	_data.add_value(k);
 
-	return s;
+	return 0;
 }
 
 /**
@@ -379,8 +377,8 @@ inline int Config::parsing()
 	size_t _e_col = 0;
 	Buffer	b;
 
-	s = resize(size_t(get_size()));
-	if (s < 0) {
+	Error err = resize(size_t(get_size()));
+	if (err != NULL) {
 		return -1;
 	}
 
@@ -414,15 +412,15 @@ inline int Config::parsing()
 			++_p;
 			++_e_row;
 
-			s = b.append_raw(&_v[start], _p - start);
-			if (s < 0) {
+			err = b.append_raw(&_v[start], _p - start);
+			if (err != NULL) {
 				return -1;
 			}
 
 			b.trim();
 
-			s = _data.add_misc_raw(b.v());
-			if (s < 0) {
+			err = _data.add_misc_raw(b.v());
+			if (err != NULL) {
 				return -1;
 			}
 
@@ -451,8 +449,8 @@ inline int Config::parsing()
 				goto bad_cfg;
 			}
 
-			s = b.append_raw(&_v[start], _p - start);
-			if (s < 0) {
+			err = b.append_raw(&_v[start], _p - start);
+			if (err != NULL) {
 				return -1;
 			}
 
@@ -463,8 +461,8 @@ inline int Config::parsing()
 				goto bad_cfg;
 			}
 
-			s = _data.add_head_raw(b.v(), b.len());
-			if (s < 0) {
+			err = _data.add_head_raw(b.v(), b.len());
+			if (err != NULL) {
 				return -1;
 			}
 
@@ -491,8 +489,8 @@ inline int Config::parsing()
 				goto bad_cfg;
 			}
 
-			s = b.append_raw(&_v[start], _p - start);
-			if (s < 0) {
+			err = b.append_raw(&_v[start], _p - start);
+			if (err != NULL) {
 				return -1;
 			}
 
@@ -503,8 +501,8 @@ inline int Config::parsing()
 				goto bad_cfg;
 			}
 
-			s = _data.add_key_raw(b.v(), b.len());
-			if (s < 0) {
+			err = _data.add_key_raw(b.v(), b.len());
+			if (err != NULL) {
 				return -1;
 			}
 
@@ -525,8 +523,8 @@ inline int Config::parsing()
 			}
 
 			if (_p > start) {
-				s = b.append_raw(&_v[start], _p - start);
-				if (s < 0) {
+				err = b.append_raw(&_v[start], _p - start);
+				if (err != NULL) {
 					return -1;
 				}
 
@@ -537,8 +535,8 @@ inline int Config::parsing()
 				}
 			}
 
-			s = _data.add_value_raw(b.v(), b.len());
-			if (s < 0) {
+			err = _data.add_value_raw(b.v(), b.len());
+			if (err != NULL) {
 				return -1;
 			}
 

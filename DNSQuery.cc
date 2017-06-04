@@ -83,20 +83,24 @@ int DNSQuery::set(const Buffer* bfr, const int type)
 	}
 
 	_bfr_type = type;
-	return copy(bfr);
+	Error err = copy(bfr);
+	if (err != NULL) {
+		return -1;
+	}
+
+	return 0;
 }
 
 DNSQuery* DNSQuery::duplicate ()
 {
-	int		s	= 0;
 	DNSQuery*	dup	= new DNSQuery ();
 
 	if (! dup) {
 		return NULL;
 	}
 
-	s = dup->copy_raw (_v, _i);
-	if (s != 0) {
+	Error err = dup->copy_raw (_v, _i);
+	if (err != NULL) {
 		delete dup;
 		dup = NULL;
 		return NULL;
@@ -133,9 +137,9 @@ int DNSQuery::to_udp(const Buffer *tcp)
 		memmove(_v, &_v[DNS_TCP_HDR_SIZE], _i);
 		_v[_i] = 0;
 	} else {
-		int s = copy_raw(tcp->v(DNS_TCP_HDR_SIZE)
+		Error err = copy_raw(tcp->v(DNS_TCP_HDR_SIZE)
 				, tcp->len() - DNS_TCP_HDR_SIZE);
-		if (s < 0) {
+		if (err != NULL) {
 			return -1;
 		}
 	}
@@ -156,16 +160,16 @@ int DNSQuery::to_udp(const Buffer *tcp)
  */
 int DNSQuery::to_tcp(const Buffer* udp)
 {
-	int s;
 	uint16_t size;
+	Error err;
 
 	if (!udp) {
 		if (_bfr_type == BUFFER_IS_TCP) {
 			return 0;
 		}
 
-		s = shiftr(DNS_TCP_HDR_SIZE);
-		if (s < 0) {
+		err = shiftr(DNS_TCP_HDR_SIZE);
+		if (err != NULL) {
 			return -1;
 		}
 
@@ -173,8 +177,8 @@ int DNSQuery::to_tcp(const Buffer* udp)
 		size = htons(size);
 		memcpy(_v, &size, DNS_TCP_HDR_SIZE);
 	} else {
-		s = resize(udp->len() + DNS_TCP_HDR_SIZE);
-		if (s < 0) {
+		err = resize(udp->len() + DNS_TCP_HDR_SIZE);
+		if (err != NULL) {
 			return -1;
 		}
 		reset();
@@ -183,8 +187,8 @@ int DNSQuery::to_tcp(const Buffer* udp)
 		memcpy(_v, &size, DNS_TCP_HDR_SIZE);
 		_i = DNS_TCP_HDR_SIZE;
 
-		s = append(udp);
-		if (s < 0) {
+		err = append(udp);
+		if (err != NULL) {
 			return -1;
 		}
 	}
@@ -253,8 +257,8 @@ int DNSQuery::create_question(const char* qname, const int type)
 	len = _name.len() + 16;
 
 	if (len > _l) {
-		int s = resize(len);
-		if (s < 0) {
+		Error err = resize(len);
+		if (err != NULL) {
 			return -1;
 		}
 	}
@@ -493,6 +497,7 @@ DNS_rr* DNSQuery::extract_rr(size_t* offset)
 {
 	int	s	= 0;
 	DNS_rr*	rr = new DNS_rr();
+	Error err;
 
 	if (!rr) {
 		return NULL;
@@ -559,8 +564,8 @@ DNS_rr* DNSQuery::extract_rr(size_t* offset)
 
 	/* Check if buffer size is enough, if not resize it DATALEN */
 	if (rr->_len > rr->size()) {
-		s = rr->resize(rr->_len);
-		if (s < 0) {
+		err = rr->resize(rr->_len);
+		if (err != NULL) {
 			goto err;
 		}
 	}
@@ -1225,11 +1230,15 @@ int DNSQuery::INIT(DNSQuery **o, const Buffer *bfr, const int type)
 	}
 
 	int s;
+	Error err;
 
 	if (type == BUFFER_IS_TCP) {
 		s = (*o)->to_udp(bfr);
 	} else {
-		s = (*o)->copy(bfr);
+		err = (*o)->copy(bfr);
+		if (err != NULL) {
+			s = -1;
+		}
 	}
 	if (s != 0) {
 		delete (*o);

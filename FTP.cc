@@ -215,13 +215,14 @@ int FTP::send_cmd(const char* cmd, const char *parm)
 	reset();
 
 	ssize_t s = 0;
+	Error err;
 
 	if (parm) {
-		s = concat(cmd, " ", parm, _eols, NULL);
+		err = concat(cmd, " ", parm, _eols, NULL);
 	} else {
-		s = concat(cmd, _eols, NULL);
+		err = concat(cmd, _eols, NULL);
 	}
-	if (s < 0) {
+	if (err != NULL) {
 		return -1;
 	}
 

@@ -122,10 +122,10 @@ ssize_t Dlogger::_w(int fd, const char* fmt)
 	add_timestamp();
 	add_prefix();
 
-	s = _tmp.vappend_fmt(fmt, _args);
-	if (s) {
+	Error err = _tmp.vappend_fmt(fmt, _args);
+	if (err != NULL) {
 		_tmp.reset();
-		return s;
+		return -1;
 	}
 
 	if (_d != STDERR_FILENO || !fd) {

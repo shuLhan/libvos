@@ -577,7 +577,7 @@ void test_set_char_at()
 		const char* in;
 		size_t      idx;
 		char        v;
-		int         exp_ret;
+		Error       exp_err;
 		const char* exp_res;
 	} const tests[] = {
 		{
@@ -585,7 +585,7 @@ void test_set_char_at()
 			"",
 			0,
 			'x',
-			-1,
+			vos::ErrBufferInvalidIndex,
 			"",
 		},
 		{
@@ -593,7 +593,7 @@ void test_set_char_at()
 			"Test",
 			10,
 			'x',
-			-1,
+			vos::ErrBufferInvalidIndex,
 			"Test",
 		},
 		{
@@ -601,7 +601,7 @@ void test_set_char_at()
 			"Test",
 			4,
 			'x',
-			-1,
+			vos::ErrBufferInvalidIndex,
 			"Test",
 		},
 		{
@@ -622,9 +622,9 @@ void test_set_char_at()
 
 		b.copy_raw(tests[x].in);
 
-		int got_ret = b.set_char_at(tests[x].idx, tests[x].v);
+		Error err = b.set_char_at(tests[x].idx, tests[x].v);
 
-		assert(tests[x].exp_ret == got_ret);
+		assert(tests[x].exp_err == err);
 
 		T.expect_string(tests[x].exp_res, b.v(), 0);
 
@@ -2382,7 +2382,7 @@ void test_to_lint()
 		const char*    desc;
 		const char*    init;
 		const long int exp_v;
-		const long int exp_ret;
+		const Error    exp_err;
 	} const tests[] = {
 		{
 			"With empty buffer",
@@ -2406,7 +2406,7 @@ void test_to_lint()
 			"With out of range number",
 			"9223372036854775808",
 			0,
-			-1,
+			vos::ErrNumRange,
 		},
 		{
 			"With success",
@@ -2428,10 +2428,10 @@ void test_to_lint()
 
 		got = 0;
 
-		int ret = b.to_lint(&got);
+		Error err = b.to_lint(&got);
 
 		T.expect_unsigned(tests[x].exp_v, got, 0);
-		T.expect_signed(tests[x].exp_ret, ret, 0);
+		T.expect_signed(1, tests[x].exp_err == err, 0);
 
 		T.ok();
 	}
@@ -2447,7 +2447,7 @@ void test_PARSE_INT()
 		const char* init;
 		const char* exp_p;
 		const int   exp_v;
-		const int   exp_ret;
+		const Error exp_err;
 	} const tests[] = {
 		{
 			"With empty string",
@@ -2461,28 +2461,28 @@ void test_PARSE_INT()
 			"9223372036854775808",
 			"9223372036854775808",
 			0,
-			-1,
+			vos::ErrNumRange,
 		},
 		{
 			"With out of range LONG_MIN",
 			"-9223372036854775808",
 			"-9223372036854775808",
 			0,
-			-1,
+			vos::ErrNumRange,
 		},
 		{
 			"With out of range INT_MAX",
 			"2147483648",
 			"2147483648",
 			0,
-			-1,
+			vos::ErrNumRange,
 		},
 		{
 			"With out of range INT_MIN",
 			"-2147483649",
 			"-2147483649",
 			0,
-			-1,
+			vos::ErrNumRange,
 		},
 		{
 			"With zero",
@@ -2530,25 +2530,26 @@ void test_PARSE_INT()
 	};
 
 	int v = 0;
-	int ret = 0;
 	char* p = 0;
 	Buffer b;
+	Error err;
+
 	size_t tests_len = ARRAY_SIZE(tests);
 
 	for (size_t x = 0; x < tests_len; x++) {
 		T.start("PARSE_INT()", tests[x].desc);
 
-		ret = b.copy_raw(tests[x].init);
-		if (ret) {
+		err = b.copy_raw(tests[x].init);
+		if (err != NULL) {
 			printf("b.copy_raw error");
 			exit(1);
 		}
 
 		p = (char*) b.v();
 
-		ret = Buffer::PARSE_INT(&p, &v);
+		Error err = Buffer::PARSE_INT(&p, &v);
 
-		T.expect_signed(tests[x].exp_ret, ret, 0);
+		T.expect_signed(1, tests[x].exp_err == err, 0);
 		T.expect_signed(tests[x].exp_v, v, 0);
 		T.expect_string(tests[x].exp_p, p, 0);
 

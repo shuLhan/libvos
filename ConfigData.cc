@@ -56,7 +56,7 @@ ConfigData::~ConfigData()
  *	< -1	: fail.
  * @desc	: initialize ConfigData object.
  */
-int ConfigData::init(const int type, const char* data, size_t data_len)
+Error ConfigData::init(const int type, const char* data, size_t data_len)
 {
 	_t = type;
 	return Buffer::copy_raw(data, data_len);
@@ -86,19 +86,22 @@ void ConfigData::add_head(const ConfigData* head)
  *	< -1	: fail.
  * @desc	: add new header to Config list.
  */
-int ConfigData::add_head_raw(const char* head, const size_t head_len)
+Error ConfigData::add_head_raw(const char* head, const size_t head_len)
 {
 	if (!head) {
-		return -1;
+		return NULL;
 	}
 
 	ConfigData* h = NULL;
 
-	int s = ConfigData::INIT(&h, CONFIG_T_HEAD, head, head_len);
-	if (0 == s) {
-		add_head(h);
+	Error err = ConfigData::INIT(&h, CONFIG_T_HEAD, head, head_len);
+	if (err != NULL) {
+		return err;
 	}
-	return s;
+
+	add_head(h);
+
+	return NULL;
 }
 
 /**
@@ -125,43 +128,42 @@ void ConfigData::add_key(const ConfigData* key)
  *	< -1	: fail.
  * @desc	: add new key to the last header in Config list.
  */
-int ConfigData::add_key_raw(const char* key, const size_t key_len)
+Error ConfigData::add_key_raw(const char* key, const size_t key_len)
 {
 	if (!key) {
-		return -1;
+		return NULL;
 	}
 
 	ConfigData* k = NULL;
 
-	int s = ConfigData::INIT(&k, CONFIG_T_KEY, key, key_len);
-	if (0 == s) {
-		add_key(k);
+	Error err = ConfigData::INIT(&k, CONFIG_T_KEY, key, key_len);
+	if (err != NULL) {
+		return err;
 	}
-	return s;
+
+	add_key(k);
+
+	return NULL;
 }
 
 /**
  * @method	: ConfigData::add_value
  * @param	:
  *	> value	: pointer to a new ConfigData value object.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
  * @desc	: Add value to the last key in the last header in Config list.
  */
-int ConfigData::add_value(const ConfigData* value)
+void ConfigData::add_value(const ConfigData* value)
 {
 	if (!value) {
-		return -1;
+		return;
 	}
 	if (CONFIG_T_KEY != _last_head->_last_key->_t) {
-		return -1;
+		return;
 	}
 	if (_last_head->_last_key->_value != NULL) {
-		return -1;
+		return;
 	}
 	_last_head->_last_key->_value = (ConfigData *) value;
-	return 0;
 }
 
 /**
@@ -174,15 +176,18 @@ int ConfigData::add_value(const ConfigData* value)
  *	< -1	: fail.
  * @desc	: add value to the last key in the last header in Config list.
  */
-int ConfigData::add_value_raw(const char* value, const size_t value_len)
+Error ConfigData::add_value_raw(const char* value, const size_t value_len)
 {
 	ConfigData* v = NULL;
 
-	int s = ConfigData::INIT(&v, CONFIG_T_VALUE, value, value_len);
-	if (0 == s) {
-		s = add_value(v);
+	Error err = ConfigData::INIT(&v, CONFIG_T_VALUE, value, value_len);
+	if (err != NULL) {
+		return err;
 	}
-	return s;
+
+	add_value(v);
+
+	return NULL;
 }
 
 /**
@@ -211,19 +216,22 @@ void ConfigData::add_misc(const ConfigData* misc)
  * @desc	: add a non-key and non-header object, i.e: comment, to Config
  *                list.
  */
-int ConfigData::add_misc_raw(const char* misc, const size_t misc_len)
+Error ConfigData::add_misc_raw(const char* misc, const size_t misc_len)
 {
 	if (!misc) {
-		return -1;
+		return NULL;
 	}
 
 	ConfigData* m = NULL;
 
-	int s = ConfigData::INIT(&m, CONFIG_T_MISC, misc, misc_len);
-	if (0 == s) {
-		add_misc(m);
+	Error err = ConfigData::INIT(&m, CONFIG_T_MISC, misc, misc_len);
+	if (err != NULL) {
+		return err;
 	}
-	return s;
+
+	add_misc(m);
+
+	return NULL;
 }
 
 /**
@@ -271,20 +279,21 @@ void ConfigData::dump()
  *	< -1	: fail.
  * @desc	: create and initialize a new ConfigData object.
  */
-int ConfigData::INIT(ConfigData** o, const int type, const char* data
+Error ConfigData::INIT(ConfigData** o, const int type, const char* data
 			, const size_t data_len)
 {
-	int s = -1;
+	Error err;
 
 	(*o) = new ConfigData();
 	if ((*o)) {
-		s = (*o)->init(type, data, data_len);
-		if (s < 0) {
+		err = (*o)->init(type, data, data_len);
+		if (err != NULL) {
 			delete (*o);
 			(*o) = NULL;
 		}
 	}
-	return s;
+
+	return err;
 }
 
 } /* namespace::vos */

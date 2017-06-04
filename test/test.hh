@@ -9,6 +9,7 @@
 #include "../Buffer.hh"
 #include "../Dlogger.hh"
 
+using vos::Error;
 using vos::Buffer;
 using vos::Dlogger;
 

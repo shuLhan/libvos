@@ -23,7 +23,7 @@ int ListSockAddr::NEW(ListSockAddr **lsa, const char *str, const char sep
 	}
 
 	size_t str_len = strlen(str);
-	if (str_len <= 0) {
+	if (str_len == 0) {
 		return -1;
 	}
 
@@ -34,7 +34,7 @@ int ListSockAddr::NEW(ListSockAddr **lsa, const char *str, const char sep
 		return -1;
 	}
 
-	int s;
+	Error err;
 	long int port;
 	SockAddr* saddr = NULL;
 	ListSockAddr* list_sa = new ListSockAddr();
@@ -52,8 +52,8 @@ int ListSockAddr::NEW(ListSockAddr **lsa, const char *str, const char sep
 			if (b_port->len() == 0) {
 				port = def_port;
 			} else {
-				s = b_port->to_lint(&port);
-				if (s != 0 || port < 0 || port > 65535) {
+				err = b_port->to_lint(&port);
+				if (err != NULL || port < 0 || port > 65535) {
 					port = def_port;
 				}
 			}
@@ -61,7 +61,7 @@ int ListSockAddr::NEW(ListSockAddr **lsa, const char *str, const char sep
 			port = def_port;
 		}
 
-		s = SockAddr::INIT(&saddr, AF_INET, addr->v(), (uint16_t) port);
+		int s = SockAddr::INIT(&saddr, AF_INET, addr->v(), (uint16_t) port);
 		if (s == 0) {
 			list_sa->push_tail(saddr);
 		}

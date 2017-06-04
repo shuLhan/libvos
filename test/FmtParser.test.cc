@@ -21,6 +21,11 @@ void test_parse()
 		const char *exp_v;
 	} const tests[] = {
 		{
+			"With '%' at the end of string",
+			"test %",
+			"test %",
+		},
+		{
 			"With escaped format (%%)",
 			"%% test",
 			"% test",

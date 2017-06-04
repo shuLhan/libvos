@@ -91,7 +91,11 @@ int SockServer::bind(const char* address, const uint16_t port)
 	}
 
 	_status = O_RDWR | O_SYNC;
-	s	= _name.copy_raw(address);
+
+	Error err = _name.copy_raw(address);
+	if (err != NULL) {
+		return -1;
+	}
 
 	return s;
 }

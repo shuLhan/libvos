@@ -50,9 +50,9 @@ int Dir::open(const char *path, int depth)
 
 	realpath(path, rpath);
 
-	s = _name.copy_raw(rpath);
-	if (s < 0) {
-		return 0;
+	Error err = _name.copy_raw(rpath);
+	if (err != NULL) {
+		return -1;
 	}
 
 	s = DirNode::INIT(&_ls, rpath, rpath);
@@ -434,8 +434,8 @@ int Dir::refresh_by_path(Buffer* path)
 		path = &_name;
 	}
 
-	s = rpath.resize(PATH_MAX + 1);
-	if (s < 0) {
+	Error err = rpath.resize(PATH_MAX + 1);
+	if (err != NULL) {
 		return -2;
 	}
 

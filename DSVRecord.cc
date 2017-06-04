@@ -99,13 +99,14 @@ int DSVRecord::set_column(int n, Buffer* bfr)
 		return -1;
 	}
 
-	int s = 0;
-
 	if (! bfr->is_empty()) {
-		s = p->copy_raw(bfr->v(), bfr->len());
+		Error err = p->copy_raw(bfr->v(), bfr->len());
+		if (err != NULL) {
+			return -1;
+		}
 	}
 
-	return s;
+	return 0;
 }
 
 /**
@@ -130,7 +131,12 @@ int DSVRecord::set_column_number(int n, const int number)
 	}
 	p->reset();
 
-	return p->appendi(number);
+	Error err = p->appendi(number);
+	if (err != NULL) {
+		return -1;
+	}
+
+	return 0;
 }
 
 /**
@@ -155,7 +161,12 @@ int DSVRecord::set_column_ulong(int n, const unsigned long number)
 	}
 	p->reset();
 
-	return p->appendui(number);
+	Error err = p->appendui(number);
+	if (err != NULL) {
+		return -1;
+	}
+
+	return 0;
 }
 
 /**

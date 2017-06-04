@@ -284,13 +284,13 @@ int FTPD::set_path(const char* path)
 		return -1;
 	}
 
-	s = _path.copy(&_dir._name);
-	if (s < 0) {
+	Error err = _path.copy(&_dir._name);
+	if (err != NULL) {
 		return -1;
 	}
 
-	s = _dir._ls->_name.copy_raw("/");
-	if (s < 0) {
+	err = _dir._ls->_name.copy_raw("/");
+	if (err != NULL) {
 		return -1;
 	}
 

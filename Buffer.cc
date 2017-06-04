@@ -9,6 +9,8 @@
 
 namespace vos {
 
+const Error ErrBufferInvalidIndex = Error("Buffer: index out of range");
+
 const char* Buffer::__CNAME = "Buffer";
 
 /**
@@ -76,13 +78,12 @@ int Buffer::CMP(Object* x, Object* y)
  * Method PARSE_INT() will parse an integer value from string `pp` and save it
  * to `v`.
  *
- * It will return 0 if integer value successfully parsed and set `pp` to the
- * next invalid character or NULL if entire char is valid integer value.
+ * On success, it will return NULL and set `pp` to the next invalid character or
+ * NULL if entire char is valid integer value.
  *
- * It will return `-1` if underflow/overflow or other error occured, value of
- * `v` and `pp` will not change.
+ * On fail it will return ErrNumRange and value of `v` and `pp` will not change.
  */
-int Buffer::PARSE_INT(char** pp, int* v)
+Error Buffer::PARSE_INT(char** pp, int* v)
 {
 	long int lv = 0;
 	char* p = (*pp);
@@ -93,13 +94,15 @@ int Buffer::PARSE_INT(char** pp, int* v)
 	lv = strtol(p, &end, 10);
 
 	if (errno) {
-		return -1;
+		if (errno == ERANGE) {
+			return ErrNumRange;
+		}
+		return Error(strerror(errno));
 	}
 
 	// value out of integer range.
 	if (lv > INT_MAX || lv < INT_MIN) {
-		errno = ERANGE;
-		return -1;
+		return ErrNumRange;
 	}
 
 	(*pp) = end;
@@ -302,14 +305,15 @@ size_t Buffer::len() const
  * Method `set_len(len)` will set buffer length to `len`. If buffer size is
  * smaller than `len` then it will resized to `len + 1`.
  *
- * It will return `0` on success, or `-1` when fail to resize the buffer.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory when fail
+ * to resize the buffer.
  */
-int Buffer::set_len(size_t len)
+Error Buffer::set_len(size_t len)
 {
 	if (len > _l) {
-		int s = resize(len + 1);
-		if (s != 0) {
-			return -1;
+		Error err = resize(len + 1);
+		if (err != NULL) {
+			return err;
 		}
 	}
 
@@ -332,9 +336,10 @@ size_t Buffer::size() const
  * If 'size' is less than current buffer size, no reallocation will be
  * happenend.
  *
- * It will return `0` on success or `-1` when fail to reallocate more memory.
+ * On success it will NULL, otherwise it will return ErrOutOfMemory if its fail to
+ * reallocate more memory.
  */
-int Buffer::resize(size_t size)
+Error Buffer::resize(size_t size)
 {
 	char* newv = NULL;
 
@@ -344,7 +349,7 @@ int Buffer::resize(size_t size)
 
 	newv = (char*) realloc(_v, size + CHAR_SIZE);
 	if (!newv) {
-		return -1;
+		return ErrOutOfMemory;
 	}
 
 	_v	= newv;
@@ -387,12 +392,13 @@ char Buffer::char_at(size_t idx)
  * Method `set_char_at(idx, v)` will set a single byte of buffer at position
  * `idx` to `v`.
  *
- * It will return 0 on success, or `-1` if `idx` is out of range.
+ * On success it will return NULL, otherwise it will return
+ * ErrBufferInvalidIndex if `idx` is out of range.
  */
-int Buffer::set_char_at(size_t idx, char v)
+Error Buffer::set_char_at(size_t idx, char v)
 {
 	if (idx >= _i) {
-		return -1;
+		return ErrBufferInvalidIndex;
 	}
 
 	_v[idx] = v;
@@ -405,9 +411,9 @@ int Buffer::set_char_at(size_t idx, char v)
  *
  * If `bfr` is nil, no buffer changes happened.
  *
- * On success, it will return `0`, otherwise `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::copy(const Buffer* bfr)
+Error Buffer::copy(const Buffer* bfr)
 {
 	if (!bfr) {
 		return 0;
@@ -420,9 +426,9 @@ int Buffer::copy(const Buffer* bfr)
  * buffer.  If `len` is zero, and its the default value, then this function
  * will compute the buffer length.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::copy_raw(const char* bfr, size_t len)
+Error Buffer::copy_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
 		return 0;
@@ -433,8 +439,10 @@ int Buffer::copy_raw(const char* bfr, size_t len)
 			return 0;
 		}
 	}
-	if (resize(len) < 0) {
-		return -1;
+
+	Error err = resize(len);
+	if (err != NULL) {
+		return err;
 	}
 
 	memcpy(_v, bfr, len);
@@ -453,9 +461,9 @@ int Buffer::copy_raw(const char* bfr, size_t len)
  * Unlike `copy_raw()` it will not move the buffer index if `vlen` is less
  * than current index.
  *
- * It will return `0` on success, or `-1` when no memory left.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::copy_raw_at(size_t idx, const char* v, size_t vlen)
+Error Buffer::copy_raw_at(size_t idx, const char* v, size_t vlen)
 {
 	if (!v) {
 		return 0;
@@ -472,9 +480,9 @@ int Buffer::copy_raw_at(size_t idx, const char* v, size_t vlen)
 		growth += vlen;
 	}
 
-	int s = resize(growth);
-	if (s) {
-		return -1;
+	Error err = resize(growth);
+	if (err != NULL) {
+		return err;
 	}
 
 	if (vlen == 1) {
@@ -498,9 +506,9 @@ int Buffer::copy_raw_at(size_t idx, const char* v, size_t vlen)
  *
  * If both are nil or empties then buffer content will not changes.
  *
- * On success, it will return `0`, or `-1` otherwise.
+ * On success, it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::set(const Buffer* bfr, const Buffer* dflt)
+Error Buffer::set(const Buffer* bfr, const Buffer* dflt)
 {
 	if (bfr && !bfr->is_empty()) {
 		return copy_raw(bfr->_v, bfr->_i);
@@ -517,9 +525,9 @@ int Buffer::set(const Buffer* bfr, const Buffer* dflt)
  * If `bfr` is nil or empty, then `dflt` will be used.
  * If both are nil or empties then buffer content will not changes.
  *
- * On success, it will return `0`, or `-1` otherwise.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::set_raw(const char* bfr, const char* dflt)
+Error Buffer::set_raw(const char* bfr, const char* dflt)
 {
 	size_t len;
 	if (bfr) {
@@ -546,17 +554,16 @@ int Buffer::set_raw(const char* bfr, const char* dflt)
  * If buffer is empty, its will behave like resize if `nbyte` is greater than
  * current buffer size, but move the buffer index to `nbyte`.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::shiftr(const size_t nbyte, int c)
+Error Buffer::shiftr(const size_t nbyte, int c)
 {
 	size_t growth = _i + nbyte;
 
 	if (growth > _l) {
-		int s = resize(growth);
-
-		if (s) {
-			return -1;
+		Error err = resize(growth);
+		if (err != NULL) {
+			return err;
 		}
 	}
 
@@ -572,9 +579,9 @@ int Buffer::shiftr(const size_t nbyte, int c)
 /**
  * Method `appendc(c)` will append a character `c` to buffer.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::appendc(const char c)
+Error Buffer::appendc(const char c)
 {
 	if (c < 0) {
 		return 0;
@@ -583,9 +590,9 @@ int Buffer::appendc(const char c)
 	size_t growth = _i + CHAR_SIZE;
 
 	if (growth > _l) {
-		int s = resize(growth);
-		if (s) {
-			return -1;
+		Error err = resize(growth);
+		if (err != NULL) {
+			return err;
 		}
 	}
 
@@ -600,18 +607,18 @@ int Buffer::appendc(const char c)
  * Method `appendi(i, base)` will append a long integer `i` as a string to
  * buffer. The value of `i` will be assumed in base 10.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::appendi(long int i, size_t base)
+Error Buffer::appendi(long int i, size_t base)
 {
-	int s = 0;
 	int x = -1;
+	Error err;
 	char angka[23];
 
 	if (i < 0) {
-		s = appendc('-');
-		if (s < 0) {
-			return -1;
+		err = appendc('-');
+		if (err != NULL) {
+			return err;
 		}
 		i = -(i);
 	}
@@ -624,9 +631,9 @@ int Buffer::appendi(long int i, size_t base)
 		}
 	}
 	while (x >= 0) {
-		s = appendc(angka[x]);
-		if (s < 0) {
-			return -1;
+		err = appendc(angka[x]);
+		if (err != NULL) {
+			return err;
 		}
 		--x;
 	}
@@ -637,9 +644,9 @@ int Buffer::appendi(long int i, size_t base)
  * Method `appendui(i, base)` will append an unsigned long integer `i` as a
  * string to buffer. The value of `i` will be assumed in base 10.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::appendui(long unsigned int i, size_t base)
+Error Buffer::appendui(long unsigned int i, size_t base)
 {
 	int x = 0;
 	char angka[23];
@@ -656,9 +663,9 @@ int Buffer::appendui(long unsigned int i, size_t base)
 	}
 
 	while (x >= 0) {
-		int s = appendc(angka[x]);
-		if (s < 0) {
-			return -1;
+		Error err = appendc(angka[x]);
+		if (err != NULL) {
+			return err;
 		}
 		--x;
 	}
@@ -669,11 +676,10 @@ int Buffer::appendui(long unsigned int i, size_t base)
  * Method `appendd(d, prec)` will append a double number as a string to
  * buffer.  Maximum digit in precision is six digits.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::appendd(double d, size_t prec)
+Error Buffer::appendd(double d, size_t prec)
 {
-	int s;
 	long int i = (long int) d;
 
 	if (d < 0) {
@@ -689,14 +695,14 @@ int Buffer::appendd(double d, size_t prec)
 
 	long int frac = (long int) d;
 
-	s = appendi(i);
-	if (s) {
-		return -1;
+	Error err = appendi(i);
+	if (err != NULL) {
+		return err;
 	}
 
-	s = appendc('.');
-	if (s) {
-		return -1;
+	err = appendc('.');
+	if (err != NULL) {
+		return err;
 	}
 
 	return appendi(frac);
@@ -706,9 +712,9 @@ int Buffer::appendd(double d, size_t prec)
  * Method `append(bfr)` will append a content of Buffer object `bfr` to this
  * buffer.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::append(const Buffer* bfr)
+Error Buffer::append(const Buffer* bfr)
 {
 	if (!bfr) {
 		return 0;
@@ -720,9 +726,9 @@ int Buffer::append(const Buffer* bfr)
  * Method `append_raw(bfr, len)` will append a raw buffer `bfr` to buffer with
  * maximum length is `len`.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::append_raw(const char* bfr, size_t len)
+Error Buffer::append_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
 		return 0;
@@ -733,8 +739,10 @@ int Buffer::append_raw(const char* bfr, size_t len)
 			return 0;
 		}
 	}
-	if (resize(_i + len) < 0) {
-		return -1;
+
+	Error err = resize(_i + len);
+	if (err != NULL) {
+		return err;
 	}
 
 	if (len == 1) {
@@ -754,15 +762,17 @@ int Buffer::append_raw(const char* bfr, size_t len)
  * Method `append_bin(bin,len)` will append binary data with length `len` to
  * buffer.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::append_bin(const void* bin, size_t len)
+Error Buffer::append_bin(const void* bin, size_t len)
 {
 	if (!bin || len == 0) {
 		return 0;
 	}
-	if (resize(_i + len) < 0) {
-		return -1;
+
+	Error err = resize(_i + len);
+	if (err != NULL) {
+		return err;
 	}
 
 	memcpy(&_v[_i], bin, len);
@@ -776,37 +786,37 @@ int Buffer::append_bin(const void* bin, size_t len)
  * Method `append_fmt` will parse the formatted string `fmt` and apply any
  * value from arguments `...` and append the result to current buffer.
  *
- * On success it will return 0, otherwise it will return -1.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::append_fmt(const char* fmt, ...)
+Error Buffer::append_fmt(const char* fmt, ...)
 {
 	if (!fmt) {
 		return 0;
 	}
 
-	int s;
+	Error err;
 	va_list args;
 
 	va_start(args, fmt);
-	s = vappend_fmt(fmt, args);
+	err = vappend_fmt(fmt, args);
 	va_end(args);
 
-	return s;
+	return err;
 }
 
 /**
  * Method `vappend_fmt(fmt, args)` will parse formatted string `fmt` and apply
  * any value from `args` and append their result to current buffer.
  *
- * On success it will return 0, otherwise it will return -1.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::vappend_fmt(const char* fmt, va_list args)
+Error Buffer::vappend_fmt(const char* fmt, va_list args)
 {
 	FmtParser fmtp;
 
-	int s = fmtp.parse(fmt, args);
-	if (s) {
-		return -1;
+	Error err = fmtp.parse(fmt, args);
+	if (err != NULL) {
+		return err;
 	}
 
 	append(&fmtp);
@@ -819,39 +829,39 @@ int Buffer::vappend_fmt(const char* fmt, va_list args)
  *
  * NOTE: The last parameter must be NULL.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::concat(const char* bfr, ...)
+Error Buffer::concat(const char* bfr, ...)
 {
 	if (!bfr) {
 		return 0;
 	}
 
 	const char* p;
+	Error err;
 	va_list al;
-	int s = 0;
 
 	va_start(al, bfr);
 	p = bfr;
 	while (p) {
-		int s = append_raw(p, strlen(p));
-		if (s < 0) {
+		err = append_raw(p, strlen(p));
+		if (err != NULL) {
 			break;
 		}
 		p = va_arg(al, const char*);
 	}
 	va_end(al);
 
-	return s;
+	return err;
 }
 
 /**
  * Method `prepend(bfr)` will add buffer content of `bfr` object to the
  * beginning of this object.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::prepend(Buffer* bfr)
+Error Buffer::prepend(Buffer* bfr)
 {
 	if (!bfr) {
 		return 0;
@@ -863,9 +873,9 @@ int Buffer::prepend(Buffer* bfr)
  * Method `prepend_raw(bfr, len)` will add raw buffer `bfr` to the beginning
  * of buffer.
  *
- * On success it will return `0`, otherwise it will return `-1`.
+ * On success it will return NULL, otherwise it will return ErrOutOfMemory.
  */
-int Buffer::prepend_raw(const char* bfr, size_t len)
+Error Buffer::prepend_raw(const char* bfr, size_t len)
 {
 	if (!bfr) {
 		return 0;
@@ -876,8 +886,10 @@ int Buffer::prepend_raw(const char* bfr, size_t len)
 			return 0;
 		}
 	}
-	if (shiftr(len) < 0) {
-		return -1;
+
+	Error err = shiftr(len);
+	if (err != NULL) {
+		return err;
 	}
 
 	memcpy(_v, bfr, len);
@@ -1035,10 +1047,10 @@ int Buffer::like_raw(const char* bfr, size_t len)
  * Method `to_lint(v)` will convert content of buffer into long integer and
  * save their value to `res`.
  *
- * On success, it will return 0.
- * On fail, the value of `res` will not changed and it will return `-1`.
+ * On success, it will return NULL.
+ * On fail, the value of `res` will not changed and it will return ErrNumRange.
  */
-int Buffer::to_lint(long int* res)
+Error Buffer::to_lint(long int* res)
 {
 	if (!_v) {
 		return 0;
@@ -1051,7 +1063,7 @@ int Buffer::to_lint(long int* res)
 	li = strtol(_v, NULL, 0);
 
 	if (errno == ERANGE) {
-		return -1;
+		return ErrNumRange;
 	}
 
 	*res = li;
@@ -1065,18 +1077,31 @@ const char* Buffer::chars()
 }
 
 /**
- * Method `dump` will print buffer contents to standard output.
+ * Method `dump` will return buffer contents to standard output.
  */
-void Buffer::dump()
+const char* Buffer::dump()
 {
-	printf("[%s] dump: [%zu|%zu|%s]\n", __CNAME, _i, _l, _v);
+	Buffer b;
+	Error err = b.append_fmt("[%s] dump: [%u|%u|%s]\n", __CNAME, _i, _l, _v);
+	if (err != NULL) {
+		return NULL;
+	}
+
+	if (__str) {
+		free(__str);
+		__str = NULL;
+	}
+
+	__str = b.detach();
+
+	return __str;
 }
 
 /**
- * Method `dump_hex` will print buffer in two column, hexadecimal in the left
+ * Method `dump_hex` will return buffer in two column, hexadecimal in the left
  * column and printable characters in the right column.
  */
-void Buffer::dump_hex()
+const char* Buffer::dump_hex()
 {
 	size_t i = 0;
 	size_t j = 0;
@@ -1121,7 +1146,14 @@ void Buffer::dump_hex()
 	}
 	o.append_raw("\n\n", 2);
 
-	printf("%s", o._v);
+	if (__str) {
+		free(__str);
+		__str = NULL;
+	}
+
+	__str = o.detach();
+
+	return __str;
 }
 
 }// namespace::vos
