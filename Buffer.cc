@@ -1,8 +1,8 @@
-/**
- * Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be
- * found in the LICENSE file.
- */
+//
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
 
 #include "Buffer.hh"
 #include "FmtParser.hh"
@@ -612,6 +612,7 @@ Error Buffer::appendc(const char c)
 Error Buffer::appendi(long int i, size_t base)
 {
 	int x = -1;
+	long int ibase = int(base);
 	Error err;
 	char angka[23];
 
@@ -624,8 +625,8 @@ Error Buffer::appendi(long int i, size_t base)
 	}
 	while (i >= 0) {
 		++x;
-		angka[x] = __digits[i % base];
-		i = i / base;
+		angka[x] = __digits[i % ibase];
+		i = i / ibase;
 		if (0 == i) {
 			break;
 		}
