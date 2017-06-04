@@ -41,4 +41,4 @@ private:
 
 } // namespace vos
 #endif // _LIBVOS_OBJECT_HH
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:
