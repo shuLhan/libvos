@@ -22,8 +22,8 @@ void test_constructor()
 	T.expect_string(a.__CNAME, "Buffer");
 	T.expect_string(a.Object::__CNAME, "Object");
 
-	assert(a.size() == Buffer::DFLT_SIZE);
-	assert(a.len() == 0);
+	T.expect_unsigned(a.size(), Buffer::DFLT_SIZE, 0);
+	T.expect_unsigned(a.len(), 0, 0);
 	T.expect_string(a.v(), "");
 
 	T.ok();
@@ -564,7 +564,7 @@ void test_char_at()
 
 		char got = b.char_at(tests[x].idx);
 
-		assert(tests[x].exp == got);
+		T.expect_signed(1, tests[x].exp == got, 0);
 
 		T.ok();
 	}
@@ -624,7 +624,7 @@ void test_set_char_at()
 
 		Error err = b.set_char_at(tests[x].idx, tests[x].v);
 
-		assert(tests[x].exp_err == err);
+		T.expect_signed(1, tests[x].exp_err == err, 0);
 
 		T.expect_string(tests[x].exp_res, b.v(), 0);
 
@@ -1131,7 +1131,7 @@ void test_appendi()
 		const char*    desc;
 		const char*    in_v;
 		const long int in_i;
-		const long int in_base;
+		const size_t   in_base;
 		const char*    exp_v;
 		const size_t   exp_len;
 		const size_t   exp_size;
@@ -1232,18 +1232,18 @@ void test_appendi()
 void test_appendui()
 {
 	struct {
-		const char*    desc;
-		const char*    in_v;
-		const long int in_i;
-		const long int in_base;
-		const char*    exp_v;
-		const size_t   exp_len;
-		const size_t   exp_size;
+		const char*         desc;
+		const char*         in_v;
+		const unsigned long in_i;
+		const size_t        in_base;
+		const char*         exp_v;
+		const size_t        exp_len;
+		const size_t        exp_size;
 	} const tests[] = {
 		{
 			"With negative number",
 			"",
-			-1,
+			(unsigned long) -1,
 			10,
 			"18446744073709551615",
 			20,
@@ -1252,7 +1252,7 @@ void test_appendui()
 		{
 			"With big negative number",
 			"",
-			-1234567890,
+			(unsigned long) -1234567890,
 			10,
 			"18446744072474983726",
 			20,
@@ -1898,7 +1898,7 @@ void test_subc()
 		const char   from;
 		const char   to;
 		const char*  exp_v;
-		const int    exp_res;
+		const size_t exp_res;
 		const size_t exp_len;
 		const size_t exp_size;
 	} const tests[] = {
@@ -2430,7 +2430,7 @@ void test_to_lint()
 
 		Error err = b.to_lint(&got);
 
-		T.expect_unsigned(tests[x].exp_v, got, 0);
+		T.expect_signed(tests[x].exp_v, got, 0);
 		T.expect_signed(1, tests[x].exp_err == err, 0);
 
 		T.ok();
