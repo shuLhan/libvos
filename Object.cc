@@ -1,42 +1,14 @@
-/**
- * Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be
- * found in the LICENSE file.
- */
+//
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
 
 #include "Object.hh"
 
 namespace vos {
 
 const char* Object::__CNAME = "Object";
-
-Object::Object() :
-	__str(NULL)
-{}
-
-Object::~Object()
-{
-	if (__str != NULL) {
-		free(__str);
-		__str = NULL;
-	}
-}
-
-int Object::cmp(Object* that)
-{
-	if (!that) {
-		return 1;
-	}
-	if (this == that) {
-		return 0;
-	}
-	return strcmp(__str, that->chars());
-}
-
-const char* Object::chars()
-{
-	return __str;
-}
 
 /**
  * Method CMP is a static function to compare two object `x` and `y` using
@@ -60,5 +32,41 @@ int Object::CMP(Object* x, Object* y)
 	return strcmp(x->chars(), y->chars());
 }
 
+/**
+ * Method `Object()` will create empty object.
+ */
+Object::Object()
+: __str(NULL)
+{}
+
+/**
+ * Method `~Object()` will release object from memory.
+ */
+Object::~Object()
+{
+	if (__str != NULL) {
+		free(__str);
+		__str = NULL;
+	}
+}
+
+/**
+ * Method `cmp(that)` will compare current object with `that` object using
+ * object's string representation with case sensitive comparison.
+ */
+int Object::cmp(Object* that)
+{
+	return this->CMP(this, that);
+}
+
+/**
+ * Method `chars()` will return string representation of current object.
+ */
+const char* Object::chars()
+{
+	return __str;
+}
+
 } // namespace vos
-// vi: ts=8 sw=8 tw=78:
+
+// vi: ts=8 sw=8 tw=80:
