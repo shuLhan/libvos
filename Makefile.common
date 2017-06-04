@@ -27,7 +27,8 @@ endif
 
 CXXFLAGS_GLOBAL = -fno-rtti -fno-exceptions -pipe \
 		-Wall -Wextra \
-		-Weffc++ -Wconversion -Wpedantic
+		-Weffc++ -Wconversion -Wpedantic \
+		-Wimplicit-fallthrough=1
 
 ifndef CXXFLAGS
 CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os
