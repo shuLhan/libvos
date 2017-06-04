@@ -20,8 +20,8 @@ public:
 	FmtParser();
 	~FmtParser();
 
-	Error parse(const char *fmt, va_list args);
-	Error parse(const char *fmt, ...);
+	Error parse(const char* fmt, va_list args);
+	Error parse(const char* fmt, ...);
 
 protected:
 	Buffer  _flags;
@@ -29,7 +29,7 @@ protected:
 	int     _flag;
 	int     _fwidth;
 	size_t  _fprec;
-	char    *_p;
+	char*   _p;
 	va_list _args;
 
 private:

@@ -126,7 +126,7 @@ Error FmtParser::parse_flag_chars()
 		_p++;
 	}
 
-	if (! *_p) {
+	if (!*_p) {
 		return ErrInvalidFormat;
 	}
 
@@ -354,7 +354,7 @@ Error FmtParser::parse_conversion()
 		break;
 	case 'p':
 		_flag |= FL_ALT_OUT;
-		// -fallthrough
+		// fallthrough
 	case 'x':
 	case 'X':
 		_flag |= FL_HEX | FL_NUMBER;
@@ -446,12 +446,12 @@ void FmtParser::on_invalid()
 // (1.1) If its not `%` append it to temporary buffer `b`.
 // (1.2) If its `%` start parsing for flags
 //
-Error FmtParser::parse(const char *fmt, va_list args)
+Error FmtParser::parse(const char* fmt, va_list args)
 {
 	Error err;
 
 	reset();
-	_p = (char *) fmt;
+	_p = (char*) fmt;
 	va_copy(_args, args);
 
 	while (*_p) {
@@ -465,13 +465,13 @@ Error FmtParser::parse(const char *fmt, va_list args)
 			_p++;
 		}
 
-		if (! *_p) {
+		if (!*_p) {
 			break;
 		}
 
 		_p++;
 
-		if (! *_p) {
+		if (!*_p) {
 			err = appendc('%');
 			if (err != NULL) {
 				return err;
@@ -515,7 +515,7 @@ Error FmtParser::parse(const char *fmt, va_list args)
 	return 0;
 }
 
-Error FmtParser::parse(const char *fmt, ...)
+Error FmtParser::parse(const char* fmt, ...)
 {
 	if (!fmt) {
 		return 0;
