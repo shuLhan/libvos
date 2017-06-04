@@ -28,7 +28,7 @@ protected:
 	Buffer  _conv;
 	int     _flag;
 	int     _fwidth;
-	int     _fprec;
+	size_t  _fprec;
 	char    *_p;
 	va_list _args;
 
@@ -50,4 +50,5 @@ private:
 } // namespace::vos
 
 #endif
-// vi: ts=8 sw=8 tw=78:
+
+// vi: ts=8 sw=8 tw=80:

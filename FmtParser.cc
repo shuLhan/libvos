@@ -27,7 +27,7 @@ enum __print_flag {
 ,	FL_LONG_DBL	= (1 << 11)
 };
 
-const int DEF_PREC = 6;
+const size_t DEF_PREC = 6;
 
 FmtParser::FmtParser()
 : Buffer()
@@ -164,12 +164,20 @@ Error FmtParser::parse_flag_width_prec()
 		_flag |= FL_PREC;
 
 		if (isdigit(*_p)) {
-			err = Buffer::PARSE_INT(&_p, &_fprec);
+			int prec;
+
+			err = Buffer::PARSE_INT(&_p, &prec);
 			if (err != NULL) {
 				_fwidth = 0;
 				_fprec = 0;
 				return err;
 			}
+
+			if (prec < 0) {
+				prec = 0;
+			}
+
+			_fprec = (size_t) prec;
 		}
 	}
 
@@ -325,8 +333,8 @@ Error FmtParser::parse_conversion()
 		break;
 	case 'f':
 		_flag |= FL_NUMBER;
-		err = _conv.appendd(va_arg(_args, double),
-			_fprec ? _fprec : DEF_PREC);
+		err = _conv.appendd(va_arg(_args, double)
+			, _fprec ? _fprec : DEF_PREC);
 		if (err != NULL) {
 			return err;
 		}
@@ -346,7 +354,7 @@ Error FmtParser::parse_conversion()
 		break;
 	case 'p':
 		_flag |= FL_ALT_OUT;
-		__attribute__ ((fallthrough));
+		// -fallthrough
 	case 'x':
 	case 'X':
 		_flag |= FL_HEX | FL_NUMBER;
@@ -429,7 +437,7 @@ void FmtParser::on_invalid()
 		appendc('.');
 	}
 	if (_fprec > 0) {
-		appendi(_fprec);
+		appendi((int) _fprec);
 	}
 }
 
@@ -524,3 +532,5 @@ Error FmtParser::parse(const char *fmt, ...)
 }
 
 } // namespace::vos
+
+// vi: ts=8 sw=8 tw=80:
