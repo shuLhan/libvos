@@ -67,14 +67,13 @@ void test_set_ipv4()
 		},
 	};
 
-	int got;
 	SockAddr sa;
 	const size_t tests_len = ARRAY_SIZE(tests);
 
 	for (size_t x = 0; x < tests_len; x++) {
 		T.start("set()", tests[x].desc);
 
-		got = sa.set(AF_INET, tests[x].in_addr, tests[x].in_port);
+		int got = sa.set(AF_INET, tests[x].in_addr, tests[x].in_port);
 
 		if (tests[x].exp_res != 0) {
 			T.expect_signed(tests[x].exp_res, got, 0);
@@ -145,14 +144,13 @@ void test_set_ipv6()
 		},
 	};
 
-	int got;
 	SockAddr sa;
 	const size_t tests_len = ARRAY_SIZE(tests);
 
 	for (size_t x = 0; x < tests_len; x++) {
 		T.start("set(AF_INET6)", tests[x].desc);
 
-		got = sa.set(AF_INET6, tests[x].in_addr, tests[x].in_port);
+		int got = sa.set(AF_INET6, tests[x].in_addr, tests[x].in_port);
 
 		if (tests[x].exp_res != 0) {
 			T.expect_signed(tests[x].exp_res, got, 0);
