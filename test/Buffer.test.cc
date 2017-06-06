@@ -22,8 +22,8 @@ void test_constructor()
 	T.expect_string(a.__CNAME, "Buffer");
 	T.expect_string(a.Object::__CNAME, "Object");
 
-	T.expect_unsigned(a.size(), Buffer::DFLT_SIZE, 0);
-	T.expect_unsigned(a.len(), 0, 0);
+	T.expect_unsigned(a.size(), Buffer::DFLT_SIZE, vos::IS_EQUAL);
+	T.expect_unsigned(a.len(), 0, vos::IS_EQUAL);
 	T.expect_string(a.v(), "");
 
 	T.ok();
@@ -58,8 +58,8 @@ void test_constructor_size()
 
 		Buffer b(tests[x].in_size);
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -108,9 +108,9 @@ void test_constructor_raw()
 
 		Buffer b(tests[x].in_v, tests[x].in_len);
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -148,9 +148,9 @@ void test_constructor_buffer()
 
 		Buffer b(tests[x].in_buffer);
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
 
 		if (tests[x].in_buffer) {
 			delete tests[x].in_buffer;
@@ -199,10 +199,10 @@ void test_detach()
 
 		char* got = b.detach();
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_ptr((void*) tests[x].exp_v, (void*) b.v(), 0);
-		T.expect_string(tests[x].exp_ret, got, 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
+		T.expect_ptr((void*) tests[x].exp_v, (void*) b.v(), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_ret, got, vos::IS_EQUAL);
 
 		if (got) {
 			free(got);
@@ -248,9 +248,9 @@ void test_release()
 
 		b.release();
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_ptr((void*) tests[x].exp_v, (void*) b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
+		T.expect_ptr((void*) tests[x].exp_v, (void*) b.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -292,9 +292,9 @@ void test_reset()
 
 		b.reset();
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -342,9 +342,9 @@ void test_trim()
 		b.copy_raw(tests[x].in_v);
 		b.trim();
 
-		T.expect_string(tests[x].exp, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -389,9 +389,9 @@ void test_truncate()
 
 		b.truncate(tests[x].in_len);
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -424,7 +424,7 @@ void test_is_empty()
 
 		b.copy_raw(tests[x].in_v);
 
-		T.expect_signed(tests[x].exp_res, b.is_empty(), 0);
+		T.expect_signed(tests[x].exp_res, b.is_empty(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -461,8 +461,8 @@ void test_set_len()
 
 		b.set_len(tests[x].in_len);
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -506,9 +506,9 @@ void test_resize()
 		b.copy_raw(tests[x].in_v);
 		b.resize(tests[x].in_resize_to);
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -564,7 +564,7 @@ void test_char_at()
 
 		char got = b.char_at(tests[x].idx);
 
-		T.expect_signed(1, tests[x].exp == got, 0);
+		T.expect_signed(1, tests[x].exp == got, vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -624,9 +624,9 @@ void test_set_char_at()
 
 		Error err = b.set_char_at(tests[x].idx, tests[x].v);
 
-		T.expect_signed(1, tests[x].exp_err == err, 0);
+		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
 
-		T.expect_string(tests[x].exp_res, b.v(), 0);
+		T.expect_string(tests[x].exp_res, b.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -665,9 +665,9 @@ void test_copy()
 
 		b.copy(tests[x].in);
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
 
 		if (tests[x].in) {
 			delete tests[x].in;
@@ -730,9 +730,9 @@ void test_copy_raw()
 
 		b.copy_raw(tests[x].in, tests[x].in_len);
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -832,9 +832,9 @@ void test_copy_raw_at()
 
 		b.copy_raw_at(tests[x].in_idx, tests[x].in_v, tests[x].in_len);
 
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
-		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -910,7 +910,7 @@ void test_set()
 
 		b.set(tests[x].in_bfr, tests[x].in_dflt);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
 
 		T.ok();
 
@@ -993,7 +993,7 @@ void test_set_raw()
 
 		b.set_raw(tests[x].in_bfr, tests[x].in_dflt);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -1054,9 +1054,9 @@ void test_shiftr()
 
 		b.shiftr(tests[x].in_nbyte);
 
-		T.expect_mem(tests[x].exp_v, b.v(), tests[x].exp_len, 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_mem(tests[x].exp_v, b.v(), tests[x].exp_len, vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -1117,9 +1117,9 @@ void test_appendc()
 
 		b.appendc(tests[x].in_c);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -1221,9 +1221,9 @@ void test_appendi()
 
 		b.appendi(tests[x].in_i, tests[x].in_base);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -1325,9 +1325,9 @@ void test_appendui()
 
 		b.appendui(tests[x].in_i, tests[x].in_base);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -1429,9 +1429,9 @@ void test_appendd()
 
 		b.appendd(tests[x].in_d, tests[x].in_prec);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -1492,9 +1492,9 @@ void test_append()
 
 		b.append(tests[x].in);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 
@@ -1575,9 +1575,9 @@ void test_append_raw()
 
 		b.append_raw(tests[x].in);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -1659,9 +1659,9 @@ void test_append_bin()
 
 		b.append_bin(tests[x].bin, tests[x].len);
 
-		T.expect_mem(tests[x].exp_v, b.v(), tests[x].len, 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_mem(tests[x].exp_v, b.v(), tests[x].len, vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -1736,9 +1736,9 @@ void test_concat()
 
 		b.concat(tests[x].in_v0, tests[x].in_v1, tests[x].in_v2);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -1799,9 +1799,9 @@ void test_prepend()
 
 		b.prepend(tests[x].in);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 
@@ -1882,9 +1882,9 @@ void test_prepend_raw()
 
 		b.prepend_raw(tests[x].in);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -1945,10 +1945,10 @@ void test_subc()
 
 		size_t res = b.subc(tests[x].from, tests[x].to);
 
-		T.expect_string(tests[x].exp_v, b.v(), 0);
-		T.expect_unsigned(tests[x].exp_res, res, 0);
-		T.expect_unsigned(tests[x].exp_len, b.len(), 0);
-		T.expect_unsigned(tests[x].exp_size, b.size(), 0);
+		T.expect_string(tests[x].exp_v, b.v(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_res, res, vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_len, b.len(), vos::IS_EQUAL);
+		T.expect_unsigned(tests[x].exp_size, b.size(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -2053,7 +2053,7 @@ void test_cmp()
 
 		int got = b.cmp(tests[x].in);
 
-		T.expect_signed(tests[x].exp_res, got, 0);
+		T.expect_signed(tests[x].exp_res, got, vos::IS_EQUAL);
 
 		T.ok();
 
@@ -2162,7 +2162,7 @@ void test_cmp_raw()
 
 		int got = b.cmp_raw(tests[x].in_bfr);
 
-		T.expect_signed(tests[x].exp_res, got, 0);
+		T.expect_signed(tests[x].exp_res, got, vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -2267,7 +2267,7 @@ void test_like()
 
 		int got = b.like(tests[x].in);
 
-		T.expect_signed(tests[x].exp_res, got, 0);
+		T.expect_signed(tests[x].exp_res, got, vos::IS_EQUAL);
 
 		T.ok();
 
@@ -2370,7 +2370,7 @@ void test_like_raw()
 
 		int got = b.like_raw(tests[x].in_bfr);
 
-		T.expect_signed(tests[x].exp_res, got, 0);
+		T.expect_signed(tests[x].exp_res, got, vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -2430,8 +2430,8 @@ void test_to_lint()
 
 		Error err = b.to_lint(&got);
 
-		T.expect_signed(tests[x].exp_v, got, 0);
-		T.expect_signed(1, tests[x].exp_err == err, 0);
+		T.expect_signed(tests[x].exp_v, got, vos::IS_EQUAL);
+		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -2549,9 +2549,9 @@ void test_PARSE_INT()
 
 		Error err = Buffer::PARSE_INT(&p, &v);
 
-		T.expect_signed(1, tests[x].exp_err == err, 0);
-		T.expect_signed(tests[x].exp_v, v, 0);
-		T.expect_string(tests[x].exp_p, p, 0);
+		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
+		T.expect_signed(tests[x].exp_v, v, vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_p, p, vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -2576,40 +2576,40 @@ void test_append_fmt()
 
 	b.reset();
 	b.append_fmt("%11209876543210", d);
-	expectString(exps[exp_idx++], b.chars(), 0);
+	expectString(exps[exp_idx++], b.chars(), vos::IS_EQUAL);
 
 	b.reset();
 	b.append_fmt("%---##++", d);
-	expectString(exps[exp_idx++], b.chars(), 0);
+	expectString(exps[exp_idx++], b.chars(), vos::IS_EQUAL);
 
 
 	b.reset();
 	b.append_fmt("%---#1", d);
-	expectString(exps[exp_idx++], b.chars(), 0);
+	expectString(exps[exp_idx++], b.chars(), vos::IS_EQUAL);
 
 	b.reset();
 	b.append_fmt("%-.11209876543210", d);
-	expectString(exps[exp_idx++], b.chars(), 0);
+	expectString(exps[exp_idx++], b.chars(), vos::IS_EQUAL);
 
 	b.reset();
 	b.append_fmt("%f", d);
 
-	expectString(exps[exp_idx++], b.chars(), 0);
+	expectString(exps[exp_idx++], b.chars(), vos::IS_EQUAL);
 
 	b.reset();
 	b.append_fmt("%3d", 3);
 
-	expectString(exps[exp_idx++], b.chars(), 0);
+	expectString(exps[exp_idx++], b.chars(), vos::IS_EQUAL);
 
 	b.reset();
 	b.append_fmt("%.1f", d);
 
-	expectString(exps[exp_idx++], b.chars(), 0);
+	expectString(exps[exp_idx++], b.chars(), vos::IS_EQUAL);
 
 	b.reset();
 	b.append_fmt("%.3f", d);
 
-	expectString(exps[exp_idx++], b.chars(), 0);
+	expectString(exps[exp_idx++], b.chars(), vos::IS_EQUAL);
 }
 
 int main()

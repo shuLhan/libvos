@@ -13,22 +13,33 @@
 
 namespace vos {
 
+enum EQUALITY {
+	IS_LESS_THAN     = -1
+,	IS_EQUAL         = 0
+,	IS_GREATER_THAN  = 1
+,	IS_NOT_EQUAL     = 1
+};
+
 class Test : public Dlogger {
 public:
 	explicit Test(const char* header);
 	~Test();
 
-	void start(const char* suffix, const char* msg = 0);
+	void start(const char* suffix, const char* msg = NULL);
 	void ok();
 
-	int expect_mem(const void *exp, const void *got, size_t len,
-		int equality = 0);
-	int expect_ptr(const void *exp, const void *got, int equality = 0);
-	int expect_string(const char* exp, const char* got, int equality = 0);
-	int expect_signed(const ssize_t exp, const ssize_t got,
-		int equality = 0);
-	int expect_unsigned(const size_t exp, const size_t got,
-		int equality = 0);
+	int expect_mem(const void *exp, const void *got, size_t len
+		, enum EQUALITY e = IS_EQUAL);
+	int expect_ptr(const void *exp, const void *got
+		, enum EQUALITY e = IS_EQUAL);
+	int expect_string(const char* exp, const char* got
+		, enum EQUALITY e = IS_EQUAL);
+	int expect_signed(const ssize_t exp, const ssize_t got
+		, enum EQUALITY e = IS_EQUAL);
+	int expect_unsigned(const size_t exp, const size_t got
+		, enum EQUALITY e = IS_EQUAL);
+	int expect_double(const double exp, const double got
+		, enum EQUALITY e = IS_EQUAL);
 
 protected:
 	Buffer _header;
@@ -42,3 +53,5 @@ private:
 }
 
 #endif
+
+// vi: ts=8 sw=8 tw=80:

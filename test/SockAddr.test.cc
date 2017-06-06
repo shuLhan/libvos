@@ -76,15 +76,15 @@ void test_set_ipv4()
 		int got = sa.set(AF_INET, tests[x].in_addr, tests[x].in_port);
 
 		if (tests[x].exp_res != 0) {
-			T.expect_signed(tests[x].exp_res, got, 0);
+			T.expect_signed(tests[x].exp_res, got, vos::IS_EQUAL);
 			T.ok();
 			continue;
 		}
 
-		T.expect_signed(tests[x].exp_t, sa._t, 0);
-		T.expect_string(tests[x].exp_addr, sa.get_address(AF_INET), 0);
-		T.expect_signed(tests[x].exp_port, sa.get_port(AF_INET), 0);
-		T.expect_string(tests[x].exp_chars, sa.chars(), 0);
+		T.expect_signed(tests[x].exp_t, sa._t, vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_addr, sa.get_address(AF_INET), vos::IS_EQUAL);
+		T.expect_signed(tests[x].exp_port, sa.get_port(AF_INET), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_chars, sa.chars(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -153,15 +153,15 @@ void test_set_ipv6()
 		int got = sa.set(AF_INET6, tests[x].in_addr, tests[x].in_port);
 
 		if (tests[x].exp_res != 0) {
-			T.expect_signed(tests[x].exp_res, got, 0);
+			T.expect_signed(tests[x].exp_res, got, vos::IS_EQUAL);
 			T.ok();
 			continue;
 		}
 
-		T.expect_signed(tests[x].exp_t, sa._t, 0);
-		T.expect_string(tests[x].exp_addr, sa.get_address(AF_INET6), 0);
-		T.expect_signed(tests[x].exp_port, sa.get_port(AF_INET6), 0);
-		T.expect_string(tests[x].exp_chars, sa.chars(), 0);
+		T.expect_signed(tests[x].exp_t, sa._t, vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_addr, sa.get_address(AF_INET6), vos::IS_EQUAL);
+		T.expect_signed(tests[x].exp_port, sa.get_port(AF_INET6), vos::IS_EQUAL);
+		T.expect_string(tests[x].exp_chars, sa.chars(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -169,19 +169,19 @@ void test_set_ipv6()
 
 void test_IS_IPV4()
 {
-	T.expect_signed(1, SockAddr::IS_IPV4("0.0.0.0"), 0);
-	T.expect_signed(1, SockAddr::IS_IPV4("127.0.0.1"), 0);
-	T.expect_signed(1, SockAddr::IS_IPV4("192.168.1.0"), 0);
-	T.expect_signed(1, SockAddr::IS_IPV4("192.168.1.1"), 0);
-	T.expect_signed(1, SockAddr::IS_IPV4("192.168.1.255"), 0);
-	T.expect_signed(0, SockAddr::IS_IPV4("192.168.1.265"), 0);
-	T.expect_signed(0, SockAddr::IS_IPV4("192.168.1a.254"), 0);
-	T.expect_signed(0, SockAddr::IS_IPV4("192.1680.1.254"), 0);
-	T.expect_signed(0, SockAddr::IS_IPV4("1.168.1.256"), 0);
-	T.expect_signed(0, SockAddr::IS_IPV4("1.168.1.2520"), 0);
-	T.expect_signed(0, SockAddr::IS_IPV4("1.168.1."), 0);
-	T.expect_signed(0, SockAddr::IS_IPV4("192.168.1"), 0);
-	T.expect_signed(0, SockAddr::IS_IPV4("192..168.1"), 0);
+	T.expect_signed(1, SockAddr::IS_IPV4("0.0.0.0"), vos::IS_EQUAL);
+	T.expect_signed(1, SockAddr::IS_IPV4("127.0.0.1"), vos::IS_EQUAL);
+	T.expect_signed(1, SockAddr::IS_IPV4("192.168.1.0"), vos::IS_EQUAL);
+	T.expect_signed(1, SockAddr::IS_IPV4("192.168.1.1"), vos::IS_EQUAL);
+	T.expect_signed(1, SockAddr::IS_IPV4("192.168.1.255"), vos::IS_EQUAL);
+	T.expect_signed(0, SockAddr::IS_IPV4("192.168.1.265"), vos::IS_EQUAL);
+	T.expect_signed(0, SockAddr::IS_IPV4("192.168.1a.254"), vos::IS_EQUAL);
+	T.expect_signed(0, SockAddr::IS_IPV4("192.1680.1.254"), vos::IS_EQUAL);
+	T.expect_signed(0, SockAddr::IS_IPV4("1.168.1.256"), vos::IS_EQUAL);
+	T.expect_signed(0, SockAddr::IS_IPV4("1.168.1.2520"), vos::IS_EQUAL);
+	T.expect_signed(0, SockAddr::IS_IPV4("1.168.1."), vos::IS_EQUAL);
+	T.expect_signed(0, SockAddr::IS_IPV4("192.168.1"), vos::IS_EQUAL);
+	T.expect_signed(0, SockAddr::IS_IPV4("192..168.1"), vos::IS_EQUAL);
 }
 
 int main()

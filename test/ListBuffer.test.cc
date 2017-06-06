@@ -91,10 +91,10 @@ void test_SPLIT_BY_CHAR()
 			tests[x].trim);
 
 		if (tests[x].exp == NULL) {
-			T.expect_ptr(tests[x].exp, got, 0);
+			T.expect_ptr(tests[x].exp, got, vos::IS_EQUAL);
 		} else {
-			T.expect_string(tests[x].exp, got->chars(), 0);
-			T.expect_signed(tests[x].exp_size, got->size(), 0);
+			T.expect_string(tests[x].exp, got->chars(), vos::IS_EQUAL);
+			T.expect_signed(tests[x].exp_size, got->size(), vos::IS_EQUAL);
 		}
 
 		T.ok();
@@ -162,10 +162,10 @@ void test_SPLIT_BY_WHITESPACE()
 		List *got = SPLIT_BY_WHITESPACE(tests[x].in);
 
 		if (tests[x].exp == NULL) {
-			T.expect_ptr(tests[x].exp, got, 0);
+			T.expect_ptr(tests[x].exp, got, vos::IS_EQUAL);
 		} else {
-			T.expect_string(tests[x].exp, got->chars(), 0);
-			T.expect_signed(tests[x].exp_size, got->size(), 0);
+			T.expect_string(tests[x].exp, got->chars(), vos::IS_EQUAL);
+			T.expect_signed(tests[x].exp_size, got->size(), vos::IS_EQUAL);
 		}
 
 		T.ok();

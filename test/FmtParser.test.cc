@@ -85,7 +85,7 @@ void test_parse()
 
 		fmtp.parse(tests[x].fmt, '0', 1, 2, 3.0, 4, "5", 6, 10, 10);
 
-		T.expect_string(tests[x].exp_v, fmtp.v(), 0);
+		T.expect_string(tests[x].exp_v, fmtp.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -178,7 +178,7 @@ void test_parse_integer()
 
 		fmtp.parse(tests[x].fmt, tests[x].in);
 
-		T.expect_string(tests[x].exp_v, fmtp.v(), 0);
+		T.expect_string(tests[x].exp_v, fmtp.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -256,7 +256,7 @@ void test_parse_float()
 
 		fmtp.parse(tests[x].fmt, tests[x].in);
 
-		T.expect_string(tests[x].exp_v, fmtp.v(), 0);
+		T.expect_string(tests[x].exp_v, fmtp.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}
@@ -294,7 +294,7 @@ void test_parse_string()
 
 		fmtp.parse(tests[x].fmt, tests[x].in);
 
-		T.expect_string(tests[x].exp_v, fmtp.v(), 0);
+		T.expect_string(tests[x].exp_v, fmtp.v(), vos::IS_EQUAL);
 
 		T.ok();
 	}

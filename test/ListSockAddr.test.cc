@@ -134,9 +134,9 @@ void test_NEW()
 			tests[x].sep, tests[x].def_port);
 
 		if (s) {
-			T.expect_ptr(tests[x].exp_v, lsa, 0);
+			T.expect_ptr(tests[x].exp_v, lsa, vos::IS_EQUAL);
 		} else {
-			T.expect_string(tests[x].exp_v, lsa->chars(), 0);
+			T.expect_string(tests[x].exp_v, lsa->chars(), vos::IS_EQUAL);
 			delete lsa;
 		}
 

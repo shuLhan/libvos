@@ -19,8 +19,8 @@ int main()
 {
 	Object o;
 
-	T.expect_string(o.__CNAME, "Object", 0);
-	T.expect_ptr(o.chars(), NULL, 0);
+	T.expect_string(o.__CNAME, "Object", vos::IS_EQUAL);
+	T.expect_ptr(o.chars(), NULL, vos::IS_EQUAL);
 }
 
 // vi: ts=8 sw=8 tw=80:
