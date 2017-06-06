@@ -12,6 +12,8 @@
 
 namespace vos {
 
+extern Error ErrConfigFormat;
+
 enum _cfg_ch {
 	CFG_CH_COMMENT		= '#'
 ,	CFG_CH_COMMENT2		= ';'
@@ -29,17 +31,18 @@ enum _cfg_save_mode {
 #define	CONFIG_ROOT	"__CONFIG__"
 
 /**
- * @class		: Config
- * @attr		:
- *	- _data		: list of config headers, keys, and values.
- * @desc		: module for reading config file in INI format.
+ * Class Config represents module for reading config file in INI format.
+ *
+ * Field _data contains list of config headers, keys, and values.
  */
 class Config : public File {
 public:
+	static const char* __CNAME;
+
 	Config();
 	~Config();
 
-	int load(const char* ini);
+	Error load(const char* ini);
 	int save();
 	int save_as(const char* ini, const int mode = CONFIG_SAVE_WOUT_COMMENT);
 	void dump();
@@ -59,16 +62,17 @@ public:
 
 	void add_comment(const char* comment);
 
+protected:
 	ConfigData _data;
 
-	static const char* __cname;
 private:
 	Config(const Config&);
 	void operator=(const Config&);
 
-	int parsing();
+	Error parsing();
 };
 
 } /* namespace::vos */
 #endif
-// vi: ts=8 sw=8 tw=78:
+
+// vi: ts=8 sw=8 tw=80:

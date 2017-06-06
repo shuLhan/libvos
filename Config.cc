@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -8,6 +8,10 @@
 
 namespace vos {
 
+Error ErrConfigFormat("Config: invalid format");
+
+const char* Config::__CNAME = "Config";
+
 enum _cfg_parsing_stt {
 	P_CFG_DONE	= 0
 ,	P_CFG_START
@@ -15,59 +19,44 @@ enum _cfg_parsing_stt {
 ,	P_CFG_VALUE
 };
 
-const char* Config::__cname = "Config";
-
 /**
- * @method	: Config::Config
- * @desc	: Config object constructor.
+ * Method Config() will create and initialize Config object by creating the
+ * "root" header.
  */
-Config::Config() : File()
-,	_data()
-{
-	_data.init(CONFIG_T_HEAD, CONFIG_ROOT);
-}
+Config::Config()
+: File()
+, _data(CONFIG_T_HEAD, CONFIG_ROOT)
+{}
 
 /**
- * @method	: Config::~Config
- * @desc	: Config object destructor.
+ * Method ~Config() will destroy and release object to memory.
  */
 Config::~Config()
-{
-	if (_data._next_head) {
-		delete _data._next_head;
-		_data._next_head = NULL;
-	}
-	if (_data._next_key) {
-		delete _data._next_key;
-		_data._next_key = NULL;
-	}
-}
+{}
 
 /**
- * @method	: Config::load
- * @param	:
- *	> ini	: a name of configuration file, with or without leading path.
- * @return	:
- *	< 0	: success, or 'ini' is nil.
- *	< -1	: fail.
- * @desc	: open config file and load all key and values.
+ * Method load(ini) will open config file `ini` and load all key and values.
+ *
+ * On success it will return NULL, otherwise it will return,
+ *
+ * - ErrFileNotFound if `ini` path is not point to valid file.
+ * - ErrConfigFormat if content of `ini` file is not valid.
+ * - ErrOutOfMemory if no memory left.
  */
-int Config::load(const char* ini)
+Error Config::load(const char* ini)
 {
 	if (!ini) {
-		return 0;
+		return ErrFileNotFound.with(ini, strlen(ini));
 	}
 
 	close();
 
 	int s = open_ro(ini);
 	if (s < 0) {
-		return -1;
+		return ErrFileNotFound;
 	}
 
-	s = parsing();
-
-	return s;
+	return parsing();
 }
 
 /**
@@ -80,7 +69,7 @@ int Config::load(const char* ini)
 int Config::save()
 {
 	if (_name.is_empty()) {
-		printf("[%s] save: filename is empty!\n", __cname);
+		printf("[%s] save: filename is empty!\n", __CNAME);
 		return -1;
 	}
 
@@ -110,11 +99,11 @@ int Config::save_as(const char* ini, const int mode)
 {
 	ssize_t s = 0;
 	File		fini;
-	ConfigData*	phead	= &_data;
-	ConfigData*	pkey	= NULL;
+	ConfigData* phead = &_data;
+	ConfigData* pkey = NULL;
 
 	if (!ini) {
-		printf("[%s] save_as: filename is empty!\n", __cname);
+		printf("[%s] save_as: filename is empty!\n", __CNAME);
 		return -1;
 	}
 
@@ -131,13 +120,13 @@ int Config::save_as(const char* ini, const int mode)
 			}
 		}
 
-		pkey = phead->_next_key;
+		pkey = phead->next_key;
 		while (pkey) {
-			if (CONFIG_T_KEY == pkey->_t) {
+			if (CONFIG_T_KEY == pkey->type) {
 				s = fini.writes("\t%s = %s\n",
 						pkey->chars(),
-						pkey->_value ?
-						pkey->_value->v() : "");
+						pkey->value ?
+						pkey->value->v() : "");
 				if (s < 0) {
 					return -1;
 				}
@@ -149,9 +138,9 @@ int Config::save_as(const char* ini, const int mode)
 					}
 				}
 			}
-			pkey = pkey->_next_key;
+			pkey = pkey->next_key;
 		}
-		phead = phead->_next_head;
+		phead = phead->next_head;
 	}
 	return 0;
 }
@@ -173,20 +162,20 @@ void Config::close()
 {
 	File::close();
 
-	if (_data._value) {
-		delete _data._value;
-		_data._value = NULL;
+	if (_data.value) {
+		delete _data.value;
+		_data.value = NULL;
 	}
-	if (_data._next_head) {
-		delete _data._next_head;
-		_data._next_head = NULL;
+	if (_data.next_head) {
+		delete _data.next_head;
+		_data.next_head = NULL;
 	}
-	if (_data._next_key) {
-		delete _data._next_key;
-		_data._next_key = NULL;
+	if (_data.next_key) {
+		delete _data.next_key;
+		_data.next_key = NULL;
 	}
-	_data._last_head = &_data;
-	_data._last_key = &_data;
+	_data.last_head = &_data;
+	_data.last_key = &_data;
 }
 
 /**
@@ -217,16 +206,16 @@ const char* Config::get(const char* head, const char* key, const char* dflt)
 		if (h->like_raw(head) == 0) {
 			k = h;
 			while (k) {
-				if (CONFIG_T_KEY == k->_t) {
+				if (CONFIG_T_KEY == k->type) {
 					if (k->like_raw(key) == 0)
-						return k->_value->v();
+						return k->value->v();
 				}
 
-				k = k->_next_key;
+				k = k->next_key;
 			}
 		}
 
-		h = h->_next_head;
+		h = h->next_head;
 	}
 
 	return dflt;
@@ -285,51 +274,30 @@ int Config::set(const char* head, const char* key, const char* value)
 			k = h;
 			while (k) {
 				if (k->like_raw(key) == 0) {
-					k->_value->copy_raw(value);
+					k->value->copy_raw(value);
 					return -1;
 				}
-				k = k->_next_key;
+				k = k->next_key;
 			}
 
 			/* add key:value to config list, if not found */
-			err = ConfigData::INIT(&k, CONFIG_T_KEY, key);
+			k = new ConfigData(CONFIG_T_KEY, key);
+
+			k->value = new ConfigData(CONFIG_T_VALUE, value);
 			if (err != NULL) {
 				return -1;
 			}
 
-			err = ConfigData::INIT(&k->_value, CONFIG_T_VALUE, value);
-			if (err != NULL) {
-				return -1;
-			}
-
-			h->_last_key->_next_key	= k;
-			h->_last_key		= k;
+			h->last_key->next_key	= k;
+			h->last_key		= k;
 			return 0;
 		}
-		h = h->_next_head;
+		h = h->next_head;
 	}
 
-	err = ConfigData::INIT(&h, CONFIG_T_HEAD, head);
-	if (err != NULL) {
-		return -1;
-	}
-
-	_data.add_head(h);
-
-	err = ConfigData::INIT(&k, CONFIG_T_KEY, key);
-	if (err != NULL) {
-		return -1;
-	}
-
-	_data.add_key(k);
-
-	k = NULL;
-	err = ConfigData::INIT(&k, CONFIG_T_VALUE, value);
-	if (err != NULL) {
-		return -1;
-	}
-
-	_data.add_value(k);
+	_data.add_head_raw(head);
+	_data.add_key_raw(key);
+	_data.add_value_raw(value);
 
 	return 0;
 }
@@ -367,7 +335,7 @@ void Config::add_comment(const char* comment)
  *	< -1	: fail.
  * @desc	: inline, parsing content of config file.
  */
-inline int Config::parsing()
+Error Config::parsing()
 {
 	ssize_t s = 0;
 	int	todo	= P_CFG_START;
@@ -379,12 +347,12 @@ inline int Config::parsing()
 
 	Error err = resize(size_t(get_size()));
 	if (err != NULL) {
-		return -1;
+		return err;
 	}
 
 	s = read();
 	if (s <= 0) {
-		return -1;
+		return ErrFileEmpty;
 	}
 
 	_p = 0;
@@ -414,15 +382,12 @@ inline int Config::parsing()
 
 			err = b.append_raw(&_v[start], _p - start);
 			if (err != NULL) {
-				return -1;
+				return err;
 			}
 
 			b.trim();
 
-			err = _data.add_misc_raw(b.v());
-			if (err != NULL) {
-				return -1;
-			}
+			_data.add_misc_raw(b.v());
 
 			b.reset();
 
@@ -451,7 +416,7 @@ inline int Config::parsing()
 
 			err = b.append_raw(&_v[start], _p - start);
 			if (err != NULL) {
-				return -1;
+				return err;
 			}
 
 			b.trim();
@@ -461,10 +426,7 @@ inline int Config::parsing()
 				goto bad_cfg;
 			}
 
-			err = _data.add_head_raw(b.v(), b.len());
-			if (err != NULL) {
-				return -1;
-			}
+			_data.add_head_raw(b.v(), b.len());
 
 			b.reset();
 
@@ -491,7 +453,7 @@ inline int Config::parsing()
 
 			err = b.append_raw(&_v[start], _p - start);
 			if (err != NULL) {
-				return -1;
+				return err;
 			}
 
 			b.trim();
@@ -501,10 +463,7 @@ inline int Config::parsing()
 				goto bad_cfg;
 			}
 
-			err = _data.add_key_raw(b.v(), b.len());
-			if (err != NULL) {
-				return -1;
-			}
+			_data.add_key_raw(b.v(), b.len());
 
 			b.reset();
 
@@ -525,7 +484,7 @@ inline int Config::parsing()
 			if (_p > start) {
 				err = b.append_raw(&_v[start], _p - start);
 				if (err != NULL) {
-					return -1;
+					return err;
 				}
 
 				b.trim();
@@ -535,10 +494,7 @@ inline int Config::parsing()
 				}
 			}
 
-			err = _data.add_value_raw(b.v(), b.len());
-			if (err != NULL) {
-				return -1;
-			}
+			_data.add_value_raw(b.v(), b.len());
 
 			b.reset();
 
@@ -551,13 +507,16 @@ inline int Config::parsing()
 	}
 
 	return 0;
-bad_cfg:
-	fprintf(stderr
-	, "[%s] parsing: line '%zu' column '%zu', invalid config format.\n"
-	, __cname, _e_row, _e_col);
 
-	return -1;
+bad_cfg:
+	Buffer errData;
+
+	errData.append_fmt("parsing: at line '%u' column '%u'", _e_row
+		, _e_col);
+
+	return ErrConfigFormat.with(errData.v(), errData.len());
 }
 
-} /* namespace::vos */
-// vi: ts=8 sw=8 tw=78:
+} // namespace::vos
+
+// vi: ts=8 sw=8 tw=80:
