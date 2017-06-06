@@ -91,8 +91,10 @@ Error::~Error()
 Error& Error::operator=(const Error& err)
 {
 	__str = err.__str;
-	_data = err._data;
-	_p_data = err._p_data;
+	if (err._data) {
+		_data = NULL;
+		_p_data = err._data;
+	}
 	_len = err._len;
 	return *this;
 }
