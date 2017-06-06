@@ -1,5 +1,7 @@
 *.oo
-test/valgrind.*
+FILE_NOPERM
+clang.out
 test/*.test
-test/tmp
 test/log
+test/tmp
+test/valgrind.*

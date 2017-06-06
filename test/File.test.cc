@@ -63,6 +63,8 @@ void test_GET_SIZE()
 
 void test_IS_EXIST()
 {
+	File::TOUCH("FILE_NOPERM", vos::FILE_OPEN_RW, 0);
+
 	struct {
 		const char*  desc;
 		const char*  file;
@@ -127,6 +129,8 @@ void test_IS_EXIST()
 
 		T.ok();
 	}
+
+	unlink("FILE_NOPERM");
 }
 
 int main()
