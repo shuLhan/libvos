@@ -16,6 +16,9 @@ using vos::Buffer;
 
 namespace vos {
 
+extern Error ErrFileEmpty;
+extern Error ErrFileNotFound;
+
 enum _file_eol_mode {
 	EOL_NIX	= 0,
 	EOL_DOS	= 1,
@@ -40,29 +43,46 @@ enum _file_truncate_mode {
 };
 
 /**
- * @class		: File
- * @attr		:
- *	- _d		: file descriptor.
- *	- _p		: file iterator.
- *	- _status	: status of open file.
- *	- _eol		: end of line as a character.
- *	- _eols		: end of line as a string.
- *	- _name		:
- *		file name, with or without path, depends on how user
- *		called at opening it.
- * @desc		:
- *	Just like Buffer, '_l' in File represent the length of buffer '_v',
- *	and '_i' represent the length of data in that buffer, so '_i' <= '_l'.
+ * Class File represent file in system as object.
  *
- *	To walk through buffer use '_p' or for marking the position that you
- *	have already checked/processed in buffer. So, '_p' <= '_i' <= '_l'.
+ * To walk through buffer use '_p' or for marking the position that you
+ * have already checked/processed in buffer. So, '_p' <= '_i' <= '_l'.
  *
- *	'_p' is also used to mark the end of line when used to read one line,
- *	using get_line() method, from buffer; or, used as pointer, iterating
- *	through buffer '_v' from 0 until '_i'.
+ * '_p' is also used to mark the end of line when used to read one line,
+ * using get_line() method, from buffer; or, used as pointer, iterating
+ * through buffer '_v' from 0 until '_i'.
+ *
+ * Field DFLT_SIZE define default buffer size for file.
+ *
+ * Field _d contains file descriptor.
+ * Field _p contains file iterator.
+ * Field _status contains status of open file.
+ * Field _eol contains end of line as a character.
+ * Field _eols contains end of line as a string.
+ * Field _name contains file name, with or without path, depends on how user
+ * called at opening it.
  */
 class File : public Buffer {
 public:
+	static const char* __CNAME;
+	static uint16_t DFLT_SIZE;
+
+	static Error GET_SIZE(const char* path, off_t* size);
+	static int IS_EXIST(const char* path, int acc_mode = O_RDWR);
+	static int BASENAME(Buffer* name, const char* path);
+	static int COPY(const char* src, const char* dst);
+	static int TOUCH(const char* file);
+	static int WRITE_PID(const char* file);
+
+	int		_d;
+	size_t		_p;
+	int		_status;
+	int		_perm;
+	off_t		_size;
+	int		_eol;
+	const char*	_eols;
+	Buffer		_name;
+
 	explicit File(const size_t bfr_size = File::DFLT_SIZE);
 	~File();
 
@@ -95,29 +115,11 @@ public:
 	void close();
 	void dump();
 
-	static off_t GET_SIZE(const char* path);
-	static int IS_EXIST(const char* path, int acc_mode = O_RDWR);
-	static int BASENAME(Buffer* name, const char* path);
-	static int COPY(const char* src, const char* dst);
-	static int TOUCH(const char* file);
-	static int WRITE_PID(const char* file);
-
-	static uint16_t DFLT_SIZE;
-	static const char* __cname;
-
-	int		_d;
-	size_t		_p;
-	int		_status;
-	int		_perm;
-	off_t		_size;
-	int		_eol;
-	const char*	_eols;
-	Buffer		_name;
 private:
 	File(const File&);
 	void operator=(const File&);
 };
 
-} /* namespace::vos */
+} // namespace::vos
 #endif
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:
