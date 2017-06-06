@@ -113,7 +113,7 @@ Error Error::with(const void* data, size_t len)
 {
 	Error err(__str);
 
-	if (data) {
+	if (data && len) {
 		err._data = calloc(len, 1);
 		memcpy(err._data, data, len);
 		err._len = len;
