@@ -7,6 +7,13 @@
 #ifndef	_LIBVOS_MACRO_HH
 #define	_LIBVOS_MACRO_HH	1
 
+#ifdef _GNU_SOURCE
+#undef _GNU_SOURCE
+#endif
+
+#define _DEFAULT_SOURCE 1
+#define _XOPEN_SOURCE 700
+
 #include <errno.h>
 #include <ctype.h>
 #include <limits.h>
