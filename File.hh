@@ -68,7 +68,7 @@ public:
 	static uint16_t DFLT_SIZE;
 
 	static Error GET_SIZE(const char* path, off_t* size);
-	static int IS_EXIST(const char* path, int acc_mode = O_RDWR);
+	static int IS_EXIST(const char* path, int access_mode = O_RDWR);
 	static int BASENAME(Buffer* name, const char* path);
 	static int COPY(const char* src, const char* dst);
 	static int TOUCH(const char* file);

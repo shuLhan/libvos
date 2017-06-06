@@ -128,6 +128,7 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/Error.test		\
 	$(BLD_D)/Buffer.test		\
 	$(BLD_D)/FmtParser.test		\
+	$(BLD_D)/File.test		\
 	$(BLD_D)/BNode.test		\
 	$(BLD_D)/List.test		\
 	$(BLD_D)/ListBuffer.test	\

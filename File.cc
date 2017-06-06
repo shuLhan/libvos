@@ -30,7 +30,7 @@ const char* __eol[N_EOL_MODE] = {
 Error File::GET_SIZE(const char* path, off_t* size)
 {
 	if (!path) {
-		return ErrFileNotFound.with(path, strlen(path));
+		return ErrFileNotFound;
 	}
 
 	int fd = 0;
@@ -45,7 +45,7 @@ Error File::GET_SIZE(const char* path, off_t* size)
 
 	*size = ::lseek(fd, 0, SEEK_END);
 	if (*size < 0) {
-		size = 0;
+		*size = 0;
 	}
 
 	::close(fd);
@@ -54,21 +54,20 @@ Error File::GET_SIZE(const char* path, off_t* size)
 }
 
 /**
- * @method		: File::IS_EXIST
- * @param		:
- *	> path		: a path to directory or file.
- *	> acc_mode	: access mode; read only (O_RDONLY), write only
- *                        (O_WRONLY), or read-write (O_RDWR).
- *                        Default to read-write.
- * @return		:
- *	< 1		: if 'path' is exist and accesible by user.
- *	< 0		: if 'path' does not exist or user does not have
- *                        permission to access it.
- * @desc		:
- *	check if 'path' is exist in file system and user had a permission to
- *	access it.
+ * Method IS_EXIST(path,access_mode) will check if file referenced by `path`
+ * exist in system and user have permission to access the file with
+ * `access_mode` (default to read-write).
+ *
+ * It will return 1 if only if,
+ * - file exist and access mode is read-only (O_RDONLY) and user can be read it,
+ * - file exist and access mode is write-only (O_WRONLY) and user can write into
+ *   it,
+ * - file exist and access mode is read-write (O_RDWR) and user can read-write
+ *   into it.
+ *
+ * On fail it will return 0.
  */
-int File::IS_EXIST(const char* path, int acc_mode)
+int File::IS_EXIST(const char* path, int access_mode)
 {
 	if (!path) {
 		return 0;
@@ -76,7 +75,7 @@ int File::IS_EXIST(const char* path, int acc_mode)
 
 	int fd = 0;
 
-	fd = ::open(path, acc_mode);
+	fd = ::open(path, access_mode);
 	if (fd < 0) {
 		return 0;
 	}
