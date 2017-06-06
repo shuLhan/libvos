@@ -468,8 +468,7 @@ Error Config::parsing()
 			b.reset();
 
 			++_p;
-			/* no break, keep it flow */
-			__attribute__ ((fallthrough));
+			// fallthrough
 
 		case P_CFG_VALUE:
 			start = _p;
