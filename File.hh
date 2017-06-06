@@ -71,7 +71,8 @@ public:
 	static int IS_EXIST(const char* path, int access_mode = O_RDWR);
 	static int BASENAME(Buffer* name, const char* path);
 	static int COPY(const char* src, const char* dst);
-	static int TOUCH(const char* file);
+	static int TOUCH(const char* file, int mode = FILE_OPEN_WA
+		, int perm = S_IRUSR | S_IWUSR);
 	static int WRITE_PID(const char* file);
 
 	int		_d;

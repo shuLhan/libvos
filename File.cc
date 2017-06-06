@@ -198,7 +198,7 @@ int File::COPY(const char* src, const char* dst)
  * touch a 'filename', create 'filename' if it not exist or update
  * access and modification time if it already exist.
  */
-int File::TOUCH(const char* filename)
+int File::TOUCH(const char* filename, int mode, int perm)
 {
 	if (!filename) {
 		return -1;
@@ -209,7 +209,7 @@ int File::TOUCH(const char* filename)
 	s = utime(filename, NULL);
 	if (s < 0) {
 		if (errno == ENOENT) {
-			s = ::open(filename, FILE_OPEN_WA, S_IRUSR | S_IWUSR);
+			s = ::open(filename, mode, perm);
 			if (s < 0) {
 				perror(__CNAME);
 				return -1;
