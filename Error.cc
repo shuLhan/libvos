@@ -1,12 +1,15 @@
-/**
- * Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be
- * found in the LICENSE file.
- */
+//
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
 
 #include "Error.hh"
 
 namespace vos {
+
+const Error ErrOutOfMemory("libvos: Out of memory");
+const Error ErrNumRange("libvos: Numerical result out of range");
 
 const char* Error::__CNAME = "Error";
 
@@ -58,14 +61,16 @@ int Error::operator!=(const Error& err) const
 	return (__str != err.__str);
 }
 
-void Error::With(const void* data, size_t len)
+Error& Error::With(const void* data, size_t len)
 {
 	if (_data) {
 		free(_data);
 	}
-
-	_data = calloc(len, 1);
-	memcpy(_data, data, len);
+	if (data) {
+		_data = calloc(len, 1);
+		memcpy(_data, data, len);
+	}
+	return *this;
 }
 
 void* Error::Data()
@@ -73,8 +78,5 @@ void* Error::Data()
 	return _data;
 }
 
-const Error ErrOutOfMemory("libvos: Out of memory");
-const Error ErrNumRange("libvos: Numerical result out of range");
-
 } // namespace vos
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:
