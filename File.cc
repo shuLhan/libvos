@@ -86,20 +86,17 @@ int File::IS_EXIST(const char* path, int access_mode)
 }
 
 /**
- * @method		: File::BASENAME
- * @param		:
- *	> name		: return value, the last node of 'path'.
- *	> path		: a path to directory or file.
- * @return		:
- *	< 0		: success.
- *	< -1		: fail.
- * @desc		:
- * get the basename, last node, of path, it could be a file or directory.
+ * Method BASENAME will get the basename of `path`, it could be a file or
+ * directory.
+ *
+ * On success it will return NULL and save the base name into `name` parameter.
+ *
+ * On fail it will return error ErrOutOfMemory.
  */
-int File::BASENAME(Buffer* name, const char* path)
+Error File::BASENAME(Buffer* name, const char* path)
 {
 	if (!name) {
-		return -1;
+		return NULL;
 	}
 
 	Error err;
@@ -109,34 +106,39 @@ int File::BASENAME(Buffer* name, const char* path)
 	if (!path) {
 		err = name->appendc('.');
 		if (err != NULL) {
-			return -1;
+			return err;
 		}
-	} else {
-		size_t len = strlen(path);
-		if (path[0] == '/' && len == 1) {
-			err = name->appendc('/');
-			if (err != NULL) {
-				return -1;
-			}
-		} else {
-			size_t p = len - 1;
-			while (p > 0 && path[p] == '/') {
-				--len;
-				--p;
-			}
-			while (p > 0 && path[p] != '/') {
-				--p;
-			}
-			if (path[p] == '/' && path[p + 1] != '/') {
-				++p;
-			}
-			err = name->copy_raw(&path[p], size_t(len - p));
-			if (err != NULL) {
-				return -1;
-			}
-		}
+
+		return NULL;
 	}
-	return 0;
+
+	size_t len = strlen(path);
+	if (len == 1) {
+		err = name->appendc(path[0]);
+		if (err != NULL) {
+			return err;
+		}
+
+		return NULL;
+	}
+
+	size_t p = len - 1;
+	while (p > 0 && path[p] == '/') {
+		--len;
+		--p;
+	}
+	while (p > 0 && path[p] != '/') {
+		--p;
+	}
+	if (path[p] == '/' && path[p + 1] != '/') {
+		++p;
+	}
+	err = name->copy_raw(&path[p], size_t(len - p));
+	if (err != NULL) {
+		return err;
+	}
+
+	return NULL;
 }
 
 /**
@@ -255,7 +257,6 @@ int File::WRITE_PID(const char* file)
 
 	return s;
 }
-
 
 
 File::File(const size_t bfr_size) : Buffer(bfr_size)

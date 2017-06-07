@@ -620,6 +620,7 @@ int FTPD::client_get_path(FTPD_client* c, int check_parm)
 {
 	int	x;
 	Buffer* cmd_parm = &c->_cmd._parm;
+	Error err;
 
 	c->_s = 0;
 	c->_path.reset();
@@ -656,8 +657,8 @@ int FTPD::client_get_path(FTPD_client* c, int check_parm)
 	c->_path_real.append(&_path);
 	c->_path_real.append(&c->_path);
 
-	x = File::BASENAME(&c->_path_base, c->_path.v());
-	if (x < 0) {
+	err = File::BASENAME(&c->_path_base, c->_path.v());
+	if (err != NULL) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= strerror(errno);
 	}
@@ -1461,6 +1462,7 @@ void FTPD::on_cmd_RNTO(FTPD* s, FTPD_client* c)
 	Buffer		from_base;
 	DirNode*	from_node	= NULL;
 	Buffer*		last_parm	= &c->_cmd_last._parm;
+	Error err;
 
 	if (c->_cmd._parm.is_empty()) {
 		c->_s = CODE_501;
@@ -1496,8 +1498,8 @@ void FTPD::on_cmd_RNTO(FTPD* s, FTPD_client* c)
 		goto out;
 	}
 
-	x = File::BASENAME(&from_base, from.v());
-	if (x < 0) {
+	err = File::BASENAME(&from_base, from.v());
+	if (err != NULL) {
 		c->_s		= CODE_550;
 		c->_rmsg_plus	= _FTP_add_reply_msg[NODE_NOT_FOUND];
 		goto out;

@@ -69,7 +69,7 @@ public:
 
 	static Error GET_SIZE(const char* path, off_t* size);
 	static int IS_EXIST(const char* path, int access_mode = O_RDWR);
-	static int BASENAME(Buffer* name, const char* path);
+	static Error BASENAME(Buffer* name, const char* path);
 	static int COPY(const char* src, const char* dst);
 	static int TOUCH(const char* file, int mode = FILE_OPEN_WA
 		, int perm = S_IRUSR | S_IWUSR);

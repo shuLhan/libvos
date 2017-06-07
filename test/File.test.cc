@@ -49,7 +49,7 @@ void test_GET_SIZE()
 	Error err;
 
 	for (int x = 0; x < tests_len; x++) {
-		T.start(tests[x].desc);
+		T.start("GET_SIZE()", tests[x].desc);
 
 		off_t got = 0;
 		err = File::GET_SIZE(tests[x].file, &got);
@@ -121,7 +121,7 @@ void test_IS_EXIST()
 	Error err;
 
 	for (int x = 0; x < tests_len; x++) {
-		T.start(tests[x].desc);
+		T.start("IS_EXIST()", tests[x].desc);
 
 		int got = File::IS_EXIST(tests[x].file, tests[x].access_mode);
 
@@ -133,10 +133,76 @@ void test_IS_EXIST()
 	unlink("FILE_NOPERM");
 }
 
+void test_BASENAME()
+{
+	struct {
+		const char* desc;
+		const char* path;
+		Error       exp_err;
+		const char* exp;
+	} tests[] = {{
+		"With NULL path"
+	,	NULL
+	,	NULL
+	,	"."
+	},{
+		"With single char: /"
+	,	"/"
+	,	NULL
+	,	"/"
+	},{
+		"With single char: a"
+	,	"a"
+	,	NULL
+	,	"a"
+	},{
+		"With relative path: ./"
+	,	"./"
+	,	NULL
+	,	"."
+	},{
+		"With relative path: ../"
+	,	"../"
+	,	NULL
+	,	".."
+	},{
+		"With relative path: ../../.."
+	,	"../../.."
+	,	NULL
+	,	".."
+	},{
+		"With relative path: ../a///"
+	,	"../a///"
+	,	NULL
+	,	"a"
+	},{
+		"With relative path: ../a///b/"
+	,	"../a///b/"
+	,	NULL
+	,	"b"
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	Error err;
+	Buffer name;
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("BASENAME()", tests[x].desc);
+
+		err = File::BASENAME(&name, tests[x].path);
+
+		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
+		T.expect_string(tests[x].exp, name.v(), vos::IS_EQUAL);
+
+		T.ok();
+	}
+}
+
 int main()
 {
 	test_GET_SIZE();
 	test_IS_EXIST();
+	test_BASENAME();
 
 	return 0;
 }
