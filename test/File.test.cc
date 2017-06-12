@@ -68,7 +68,7 @@ void test_IS_EXIST()
 	struct {
 		const char*  desc;
 		const char*  file;
-		const size_t access_mode;
+		const int    access_mode;
 		const int    exp_res;
 	} const tests[] = {{
 		"With NULL path"
@@ -198,11 +198,75 @@ void test_BASENAME()
 	}
 }
 
+void test_COPY()
+{
+	struct {
+		const char* desc;
+		const char* src;
+		const char* dst;
+		Error       exp_err;
+		size_t      exp_size;
+	} tests[] = {{
+		"With NULL src and dest"
+	,	NULL
+	,	NULL
+	,	vos::ErrFileNameEmpty
+	,	0
+	},{
+		"With NULL src"
+	,	NULL
+	,	"copy"
+	,	vos::ErrFileNameEmpty
+	,	0
+	},{
+		"With NULL dest"
+	,	"asdf"
+	,	NULL
+	,	vos::ErrFileNameEmpty
+	,	0
+	},{
+		"With not existen source"
+	,	"asdf"
+	,	"copy"
+	,	vos::ErrFileNotFound
+	,	0
+	},{
+		"With success"
+	,	"../LICENSE"
+	,	"LICENSE.copy"
+	,	NULL
+	,	1949
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	Error err;
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("COPY()", tests[x].desc);
+
+		err = File::COPY(tests[x].src, tests[x].dst);
+
+		if (err != NULL) {
+			T.expect_signed(1, tests[x].exp_err == err
+				, vos::IS_EQUAL);
+		} else {
+			off_t size;
+
+			File::GET_SIZE(tests[x].dst, &size);
+
+			T.expect_signed(tests[x].exp_size, size, vos::IS_EQUAL);
+		}
+
+		T.ok();
+	}
+}
+
 int main()
 {
 	test_GET_SIZE();
 	test_IS_EXIST();
 	test_BASENAME();
+	test_COPY();
 
 	return 0;
 }
