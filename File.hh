@@ -56,8 +56,11 @@ enum flush_mode {
  * Field DFLT_SIZE define default buffer size for file.
  *
  * Field _d contains file descriptor.
- * Field _p contains file iterator.
- * Field _status contains status of open file.
+ * Field _p contains file buffer iterator.
+ * Field _status contains status of open file (read only, write only, or
+ * read-write).
+ * Field _perm contains current file permission mode.
+ * Field _size contains current file size.
  * Field _eol contains end of line as a character.
  * Field _eols contains end of line as a string.
  * Field _name contains file name, with or without path, depends on how user
@@ -75,14 +78,6 @@ public:
 	static int TOUCH(const char* file, int mode = FILE_OPEN_WA
 		, int perm = S_IRUSR | S_IWUSR);
 	static Error WRITE_PID(const char* file);
-
-	int _d;
-	size_t		_p;
-	int		_status;
-	int		_perm;
-	off_t		_size;
-	int		_eol;
-	const char*	_eols;
 
 	explicit File(const size_t bfr_size = File::DFLT_SIZE);
 	~File();
@@ -113,14 +108,26 @@ public:
 	Error writes(const char* fmt, ...);
 	Error writec(const char c);
 
+	int is_readable(fd_set* read_fds, fd_set* all_fds);
+	void set_add(fd_set* fds, int* maxfd);
+	void set_clear(fd_set* fds);
+
 	Error flush();
 	void close();
 	void dump();
 
+	int fd();
 	const char* name();
 
 protected:
-	Buffer _name;
+	int         _d;
+	size_t      _p;
+	int         _status;
+	int         _perm;
+	off_t       _size;
+	int         _eol;
+	const char* _eols;
+	Buffer      _name;
 
 private:
 	File(const File&);

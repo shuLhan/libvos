@@ -888,6 +888,46 @@ Error File::writec(const char c)
 }
 
 /**
+ * Method is_readable(read_set,all_set) will check and return 1 if file
+ * descriptor is ready to read from set `read_fds`.
+ *
+ * If file is ready to read and `all_fds` is not NULL, then it will clear the
+ * descriptor from `all_fds`.
+ */
+int File::is_readable(fd_set* read_fds, fd_set* all_fds)
+{
+	int s = FD_ISSET(_d, read_fds);
+
+	if (s && all_fds) {
+		set_clear(all_fds);
+	}
+
+	return s;
+}
+
+/**
+ * Method set_add(fds,maxfd) will add current file descriptor to the set of file
+ * descriptor `fds` and change the `maxfds` value to d + 1 if current descriptor
+ * is greater than `maxfd`.
+ */
+void File::set_add(fd_set* fds, int* maxfd)
+{
+	FD_SET(_d, fds);
+
+	if ((*maxfd) && _d >= (*maxfd)) {
+		(*maxfd) = _d + 1;
+	}
+}
+
+/**
+ * Method set_clear(fds) will remove current file descriptor from the set `fds`.
+ */
+void File::set_clear(fd_set* fds)
+{
+	FD_CLR(_d, fds);
+}
+
+/**
  * Method flush() will write all file's buffer to disk only if file open status
  * is write or read-write.
  *
@@ -948,6 +988,14 @@ void File::dump()
 	printf("  name        : %s\n", _name.chars());
 	printf("  size        : %ld\n", _size);
 	printf("  contents    :\n[%s]\n", chars());
+}
+
+/**
+ * Method fd() will return current file descriptor.
+ */
+int File::fd()
+{
+	return _d;
 }
 
 /**

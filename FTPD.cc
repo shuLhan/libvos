@@ -127,7 +127,7 @@ int FTPD::init(const char* address, const uint16_t port, const char* path
 
 	FD_ZERO(&_fd_all);
 	FD_ZERO(&_fd_read);
-	FD_SET(_d, &_fd_all);
+	set_add(&_fd_all, &_maxfd);
 
 	return 0;
 }
@@ -455,16 +455,15 @@ void FTPD::client_process()
 		cpsvr	= c->_psrv;
 
 		if (cpsvr) {
-			if (FD_ISSET(cpsvr->_d, &_fd_read)) {
-				FD_CLR(cpsvr->_d, &_fd_all);
-
+			if (cpsvr->is_readable(&_fd_read, &_fd_all)) {
 				err = cpsvr->accept_conn(&c->_pclt);
 				if (err != NULL) {
 					continue;
 				}
 			}
 		}
-		if (csock && FD_ISSET(csock->_d, &_fd_read) == 0) {
+
+		if (csock && ! csock->is_readable(&_fd_read, NULL)) {
 			continue;
 		}
 
@@ -572,10 +571,7 @@ void FTPD::client_add(FTPD_client* c)
 {
 	_clients.push_tail(c);
 
-	FD_SET(c->_sock->_d, &_fd_all);
-	if (c->_sock->_d >= _maxfd) {
-		_maxfd = c->_sock->_d + 1;
-	}
+	c->_sock->set_add(&_fd_all, &_maxfd);
 
 	c->_conn_stat = FTP_STT_CONNECTED;
 	c->_wd.copy_raw("/");
@@ -591,15 +587,15 @@ void FTPD::client_add(FTPD_client* c)
 void FTPD::client_del(FTPD_client* c)
 {
 	if (LIBVOS_DEBUG) {
-		printf("[%s] client_del: client '%d' quit.\n", __cname
-			, c->_sock->_d);
+		printf("[%s] client_del: client '%s' quit.\n", __cname
+			, c->_sock->name());
 	}
 
-	if (_maxfd - 1 == c->_sock->_d) {
+	if (_maxfd - 1 == c->_sock->fd()) {
 		_maxfd = _maxfd - 1;
 	}
 
-	FD_CLR(c->_sock->_d, &_fd_all);
+	c->_sock->set_clear(&_fd_all);
 
 	if (c->_sock) {
 		remove_client(c->_sock);
@@ -1011,10 +1007,7 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPD_client* c)
 
 	c->_psrv = pasv_sock;
 
-	FD_SET(pasv_sock->_d, &s->_fd_all);
-	if (pasv_sock->_d >= s->_maxfd) {
-		s->_maxfd = pasv_sock->_d + 1;
-	}
+	pasv_sock->set_add(&s->_fd_all, &s->_maxfd);
 
 	if (LIBVOS_DEBUG) {
 		printf("[%s] PASV: %s\n", __cname, pasv_addr.v());
