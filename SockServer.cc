@@ -137,103 +137,29 @@ int SockServer::bind_listen(const char* address, const uint16_t port)
 }
 
 /**
- * @method		: SockServer::accept
- * @return		:
- *	< Socket	: success, new client accepted.
- *	< NULL		: fail.
- * @desc		:
- *	This method is used by server socket for accepting a new client
- *	connection.
+ * Method accept_conn(client) will accept a new client connection and save the
+ * `client` as Socket object.
+ *
+ * On success it will return NULL, otherwise it will return Error.
  */
-Socket* SockServer::accept()
+Error SockServer::accept_conn(Socket** client)
 {
-	socklen_t		client_addrlen;
-	struct sockaddr_in	client_addr;
-
-	Socket* client = new Socket();
-	if (!client) {
-		return NULL;
+	*client = new Socket();
+	if (!*client) {
+		return ErrOutOfMemory;
 	}
 
-	client_addrlen	= SockAddr::IN_SIZE;
-	client->_d	= ::accept(_d, (struct sockaddr *) &client_addr
-					, &client_addrlen);
-	if (client->_d < 0) {
-		delete client;
-		return NULL;
+	Error err = (*client)->accept(_d);
+	if (err != NULL) {
+		return err;
 	}
 
-	inet_ntop(AF_INET, &client_addr.sin_addr, (char*) client->_name.v()
-		, socklen_t(client->_name.size()));
-
-	client->_status	= O_RDWR | O_SYNC;
-
-	add_client(client);
-
-	return client;
-}
-
-/**
-:* @method		: SockServer::accept6
- * @return		:
- *	< Socket	: success, new client accepted.
- *	< NULL		: fail.
- * @desc		:
- *	This method is used by server socket for accepting a new client
- *	connection. This is a for IPv6 server socket.
- */
-Socket* SockServer::accept6()
-{
-	socklen_t		client_addrlen;
-	struct sockaddr_in6	client_addr;
-
-	Socket* client = new Socket();
-	if (!client) {
-		return NULL;
-	}
-
-	client_addrlen	= SockAddr::IN_SIZE;
-	client->_d	= ::accept(_d, (struct sockaddr *) &client_addr
-					, &client_addrlen);
-	if (client->_d < 0) {
-		delete client;
-		return NULL;
-	}
-
-	inet_ntop(_family, &client_addr.sin6_addr, (char*) client->_name.v()
-		, socklen_t(client->_name.size()));
-
-	client->_status	= O_RDWR | O_SYNC;
-
-	add_client(client);
-
-	return client;
-}
-
-/**
- * @method		: SockServer::accept_conn
- * @return		:
- *	< Socket	: success, new client accepted.
- *	< NULL		: fail.
- * @desc		:
- *	This method is used by server socket for accepting a new client
- *	connection. This is a generic version.
- */
-Socket* SockServer::accept_conn()
-{
-	Socket* client = NULL;
-
-	if (_family == AF_INET6) {
-		client = accept6();
-	} else {
-		client = accept();
-	}
 	if (client && LIBVOS_DEBUG) {
 		printf("[%s] accept_conn: from '%s'\n", __cname
-			, client->_name.chars());
+			, (*client)->name());
 	}
 
-	return client;
+	return NULL;
 }
 
 /**

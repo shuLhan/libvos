@@ -9,6 +9,7 @@
 namespace vos {
 
 const char* Socket::__cname = "Socket";
+
 size_t Socket::DFLT_BUFFER_SIZE = 65536;
 
 /**
@@ -35,6 +36,47 @@ Socket::~Socket()
 	if (_type == SOCK_DGRAM) {
 		reset();
 	}
+}
+
+/**
+ * Method `accept(server_fd,family,type) will accept connection from
+ * `server_fd`.
+ *
+ * On success it will return NULL, otherwise it will return Error object.
+ */
+Error Socket::accept(int server_fd)
+{
+	socklen_t client_addrlen;
+	struct sockaddr_in client_addr;
+	struct sockaddr_in6 client_addr6;
+
+	client_addrlen	= SockAddr::IN_SIZE;
+
+	if (_family == AF_INET) {
+		_d = ::accept(server_fd
+			, (struct sockaddr *) &client_addr
+			, &client_addrlen);
+	} else {
+		_d = ::accept(server_fd
+			, (struct sockaddr *) &client_addr6
+			, &client_addrlen);
+
+	}
+	if (_d < 0) {
+		return Error::SYS();
+	}
+
+	if (_family == AF_INET) {
+		inet_ntop(_family, &client_addr.sin_addr, (char*) _name.v()
+		, socklen_t(_name.size()));
+	} else {
+		inet_ntop(_family, &client_addr6.sin6_addr, (char*) _name.v()
+		, socklen_t(_name.size()));
+	}
+
+	_status	= O_RDWR | O_SYNC;
+
+	return NULL;
 }
 
 /**

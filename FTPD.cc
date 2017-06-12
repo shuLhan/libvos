@@ -410,7 +410,7 @@ int FTPD::run()
 			break;
 		}
 		if (FD_ISSET(_d, &_fd_read)) {
-			sock = accept_conn();
+			Error err = accept_conn(&sock);
 			if (sock) {
 				c = new FTPD_client(sock);
 				if (c) {
@@ -446,6 +446,7 @@ void FTPD::client_process()
 	Socket*		csock	= NULL;
 	SockServer*	cpsvr	= NULL;
 	FTPD_client* c = NULL;
+	Error err;
 
 	for (; x < _clients.size(); x++) {
 		c = (FTPD_client*) _clients.at(x);
@@ -455,8 +456,12 @@ void FTPD::client_process()
 
 		if (cpsvr) {
 			if (FD_ISSET(cpsvr->_d, &_fd_read)) {
-				c->_pclt = cpsvr->accept_conn();
 				FD_CLR(cpsvr->_d, &_fd_all);
+
+				err = cpsvr->accept_conn(&c->_pclt);
+				if (err != NULL) {
+					continue;
+				}
 			}
 		}
 		if (csock && FD_ISSET(csock->_d, &_fd_read) == 0) {

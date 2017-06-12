@@ -35,6 +35,7 @@ public:
 	explicit Socket(const size_t bfr_size = DFLT_BUFFER_SIZE);
 	~Socket();
 
+	Error accept(int server_fd);
 	int create(const int family = PF_INET, const int type = SOCK_STREAM);
 
 	int set_socket_opt (int optname, int optval);

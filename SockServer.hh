@@ -34,9 +34,7 @@ public:
 	int listen(const unsigned int queue_len = 0);
 	int bind_listen(const char* address, const uint16_t port);
 
-	Socket* accept();
-	Socket* accept6();
-	Socket* accept_conn();
+	Error accept_conn(Socket** client);
 
 	void add_client(Socket* client);
 	void remove_client(Socket* client);
