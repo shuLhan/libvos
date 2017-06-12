@@ -755,7 +755,6 @@ Error File::write_raw(const char* bfr, size_t len)
 	}
 
 	Error err;
-	ssize_t s = 0;
 
 	// direct write
 	if (len >= _l) {
@@ -767,7 +766,7 @@ Error File::write_raw(const char* bfr, size_t len)
 		size_t x = 0;
 
 		while (len > 0) {
-			s = ::write(_d, &bfr[x], len);
+			ssize_t s = ::write(_d, &bfr[x], len);
 			if (s < 0) {
 				return Error::SYS();
 			}
