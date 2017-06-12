@@ -315,7 +315,7 @@ int SockAddr::CREATE_ADDR(struct sockaddr_in* sin, const char* addr
 		}
 
 		struct sockaddr_in *res_sin = (struct sockaddr_in *) res->ai_addr;
-		int res_sin_len = sizeof(res_sin->sin_addr);
+		size_t res_sin_len = sizeof(res_sin->sin_addr);
 
 		memcpy(&sin->sin_addr, &res_sin->sin_addr, res_sin_len);
 
@@ -370,7 +370,7 @@ int SockAddr::CREATE_ADDR6(struct sockaddr_in6* sin6
 		}
 
 		struct sockaddr_in6 *res_sin = (struct sockaddr_in6*) res->ai_addr;
-		int res_sin_len = sizeof(res_sin->sin6_addr);
+		size_t res_sin_len = sizeof(res_sin->sin6_addr);
 
 		memcpy(&sin6->sin6_addr, &res_sin->sin6_addr, res_sin_len);
 
