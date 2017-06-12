@@ -480,12 +480,12 @@ List* DSVRecordMD::INIT_FROM_FILE(const char* fmeta)
 	ssize_t s = 0;
 	File		f;
 
-	s = f.open_ro(fmeta);
-	if (s < 0) {
+	Error err = f.open_ro(fmeta);
+	if (err != NULL) {
 		return NULL;
 	}
 
-	Error err = f.resize(size_t(f.get_size()));
+	err = f.resize(size_t(f.get_size()));
 	if (err != NULL) {
 		return NULL;
 	}
