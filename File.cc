@@ -9,6 +9,7 @@
 namespace vos {
 
 Error ErrFileEmpty("File: empty");
+Error ErrFileNameEmpty("File: name is empty");
 Error ErrFileNotFound("File: path is empty or invalid");
 
 const char* File::__CNAME = "File";
@@ -142,51 +143,47 @@ Error File::BASENAME(Buffer* name, const char* path)
 }
 
 /**
- * @method	: File::COPY
- * @param	:
- *	> src	: a path to source file to copy.
- *	> dst	: a path to destination file.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	:
- *
- * copy file 'src' to 'dst', create a new file if 'dst' is not exist, or
- * overwrite 'dst' if already exist.
+ * Method COPY(src,dst) will copy file 'src' to 'dst', create a new file if
+ * 'dst' is not exist, or overwrite 'dst' if already exist.
  *
  * NOTE: use 'rename()' system call for easy and fast move.
+ *
+ * On success it will return NULL, otherwise it will return error:
+ *
+ * - ErrFileNameEmpty if both or either src or dst is NULL
+ * - ErrFileNotFound if src file can not be opened
  */
-int File::COPY(const char* src, const char* dst)
+Error File::COPY(const char* src, const char* dst)
 {
 	if (!src || !dst) {
-		return -1;
+		return ErrFileNameEmpty;
 	}
 
-	ssize_t s = 0;
+	Error err;
 	File from;
 	File to;
 
-	s = from.open_ro(src);
-	if (s < 0) {
-		return -1;
+	err = from.open_ro(src);
+	if (err != NULL) {
+		return err;
 	}
 
-	s = to.open_wo(dst);
-	if (s < 0) {
-		return -1;
+	err = to.open_wo(dst);
+	if (err != NULL) {
+		return err;
 	}
 
-	s = from.read();
+	ssize_t s = from.read();
 	while (s > 0) {
-		s = to.write(&from);
-		if (s < 0) {
-			return -1;
+		err = to.write(&from);
+		if (err != NULL) {
+			return err;
 		}
 
 		s = from.read();
 	}
 
-	return 0;
+	return NULL;
 }
 
 /**
@@ -225,37 +222,33 @@ int File::TOUCH(const char* filename, int mode, int perm)
 }
 
 /**
- * @method	: write_pid
- * @param	:
- *	> file	: path to a file, where PID will be written.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: function to write PID to 'file'.
+ * Method WRITE_PID(file) will write current process ID to `file`.
  *
- *	This function usually used by process daemon.
+ * This function usually used by process daemon.
  *
- *	When daemon started, daemon will write its process id to file, to :
- *	- make user know that daemon is already running, so
- *	- no other daemon running, just one, or
- *	- if daemon is not running but PID file exist, that mean is
- *	  last daemon is exit in abnormal state; so see log file for
- *	  further information.
+ * When daemon started, it will write its process id to file, to :
+ * - make user know that daemon is already running, so
+ * - no other daemon running, just one, or
+ * - if daemon is not running but PID file exist, that mean is last daemon is
+ *   exit in abnormal state; so see log file for further information.
+ *
+ * On success it will return NULL, otherwise it will return Error object.
  */
-int File::WRITE_PID(const char* file)
+Error File::WRITE_PID(const char* file)
 {
-	int s = 0;
 	File f;
 
-	s = f.open_wx(file);
-	if (0 == s) {
-		Error err = f.appendi(getpid());
-		if (err != NULL) {
-			return -1;
-		}
+	Error err = f.open_wx(file);
+	if (err != NULL) {
+		return err;
 	}
 
-	return s;
+	err = f.appendi(getpid());
+	if (err != NULL) {
+		return err;
+	}
+
+	return NULL;
 }
 
 
@@ -276,161 +269,142 @@ File::~File()
 }
 
 /**
- * @method	: File::open
- * @param	:
- *	> path	: path to a file name.
- *	> mode	: mode for opened file.
- *	> perm	: permission for a new file.
- *                default to 0600 (read-write for user only).
- * @return	:
- *	< 0	: success, or 'path' is nil.
- *	< -1	: fail, error at opening file.
- * @desc	:
- *	the generic method to open file with specific mode and permission.
+ * Method open(path,mode,perm) will open file `path` with specific `mode` and
+ * permission `perm`.
+ *
+ * On success it will return NULL.
+ * On fail it will return error.
  */
-int File::_open(const char* path, const int mode, const int perm)
+Error File::open(const char* path, const int mode, const int perm)
 {
+	if (!path) {
+		return ErrFileNotFound;
+	}
+
 	Error err;
 
-	if (!path) {
-		return -1;
-	}
 	if (!_v) {
 		err = resize(DFLT_SIZE);
 		if (err != NULL) {
-			return -1;
+			return err;
 		}
 	}
 
 	_d = ::open(path, mode, perm);
 	if (_d < 0) {
-		perror(__CNAME);
 		_d = 0;
-		return -1;
+		switch (errno) {
+		case ENOENT:
+			return ErrFileNotFound;
+		default:
+			return Error::SYS();
+		}
 	}
 
 	err = _name.copy_raw(path);
 	if (err != NULL) {
-		return -1;
+		return err;
 	}
 
-	_size = get_size ();
+	_size = get_size();
 	_status = (mode & (O_RDONLY | O_WRONLY | O_RDWR));
 	_perm = perm;
 
-	return 0;
-
+	return NULL;
 }
 
 /**
- * @method	: File::open
- * @param	:
- *	> path	: path to a file name.
- * @return	:
- *	< 0	: success, or 'path' is nil.
- *	< -1	: fail, error at opening file.
- * @desc	:
- *	open file for read and write, create a file if it is not exist.
+ * Method open(path) will open file referenced by `path` for reading and
+ * writing. File will be created if its not exist.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
-int File::open(const char* path)
+Error File::open(const char* path)
 {
-	return _open(path, FILE_OPEN_RW);
+	return open(path, FILE_OPEN_RW);
 }
 
 /**
- * @method	: File::open_ro
- * @param	:
- *	> path	: path to a file.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail, error at opening file.
- * @desc	: open file for read only.
+ * Method open_ro(path) will open file referenced by `path` with read only mode.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
-int File::open_ro(const char* path)
+Error File::open_ro(const char* path)
 {
-	return _open(path, FILE_OPEN_R);
+	return open(path, FILE_OPEN_R);
 }
 
 /**
- * @method	: File::open_wo
- * @param	:
- *	> path	: path to a file.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail, error at opening file.
- * @desc	: open file for write only.
+ * Method open_wo(path) will open file referenced by `path` with write only
+ * mode. It will create file if its not exist.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
-int File::open_wo(const char* path)
+Error File::open_wo(const char* path)
 {
-	return _open(path, FILE_OPEN_W);
+	return open(path, FILE_OPEN_W);
 }
 
 /**
- * @method	: File::open_wx
- * @param	:
- *	> path	: path to a file.
- * @return	:
- *	< 0	: success.
- *	< <0	: fail, if file exist make only one instances running
- * @desc	: open file for write only.
+ * Method open_wx(path) will open file referenced by `path` with write only
+ * mode. If file exist it will return an error.
+ *
+ * On success it will return NULL, otherwise it will return errpr.
  */
-int File::open_wx(const char* path)
+Error File::open_wx(const char* path)
 {
-	return _open(path, FILE_OPEN_WX);
+	return open(path, FILE_OPEN_WX);
 }
 
 /**
- * @method	: File::open_wa
- * @param	:
- *	> path	: path to a file.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: open file for write and append.
+ * Method open_wa(path) will open file referenced by `path` for writing and with
+ * append mode. If file exist the content will not be truncated.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
-int File::open_wa(const char* path)
+Error File::open_wa(const char* path)
 {
-	return _open(path, FILE_OPEN_WA);
+	return open(path, FILE_OPEN_WA);
 }
 
 /**
- * @method	: File::truncate
- * @desc	: reset file size to 0.
- * @param flush_mode : if FILE_TRUNC_FLUSH_NO, buffer will not be flushed to file. If it FILE_TRUNC_FLUSH_FIRST, buffer will be reset first and then file will be truncated. If it FILE_TRUNC_FLUSH_LAST  then buffer will be flushed after file was truncated.
- * @return 0	: success.
- * @return -1	: fail to close.
- * @return -2	: fail to open.
- * @return -3	: fail at flushing the buffer;
+ * Method truncate(flush_mode) will reset file content and size to zero.
+ *
+ * if flush_mode is FLUSH_NO, buffer will not be flushed to file
+ * before or after truncated.
+ *
+ * If flush_mode is FLUSH_FIRST, buffer will be reset first and then
+ * file will be truncated.
+ *
+ * If flush_mode is FLUSH_LAST (default) then buffer will be flushed
+ * after file was truncated.
  */
-int File::truncate (uint8_t flush_mode)
+Error File::truncate(enum flush_mode flush_mode)
 {
-	ssize_t s = 0;
+	Error err;
 
-	if (flush_mode & FILE_TRUNC_FLUSH_FIRST) {
-		reset ();
+	if (flush_mode & FLUSH_FIRST) {
+		reset();
 	}
 
 	// Try to close file.
 	if (_d && (_d != STDOUT_FILENO && _d != STDERR_FILENO)) {
-		s = ::close(_d);
+		ssize_t s = ::close(_d);
 		if (s != 0) {
-			perror(__CNAME);
-			return -1;
+			return Error::SYS();
 		}
 	}
 
 	// Reopen file by truncate.
-	s = _open (_name.v(), _status | O_CREAT | O_TRUNC, _perm);
-	if (s != 0) {
-		return -2;
+	err = open(_name.v(), _status | O_CREAT | O_TRUNC, _perm);
+	if (err != NULL) {
+		return err;
 	}
 
-	_size = 0;
-
-	if (flush_mode & FILE_TRUNC_FLUSH_LAST) {
-		s = flush ();
-		if (s != 0) {
-			return -3;
+	if (flush_mode & FLUSH_LAST) {
+		err = flush ();
+		if (err != NULL) {
+			return err;
 		}
 	}
 
@@ -741,11 +715,8 @@ int File::get_line(Buffer* line)
  *	< -1	: fail, error at writing to descriptor.
  * @desc	: append buffer 'bfr' to File buffer for writing.
  */
-ssize_t File::write(const Buffer* bfr)
+Error File::write(const Buffer* bfr)
 {
-	if (_status == O_RDONLY || !bfr) {
-		return 0;
-	}
 	return write_raw(bfr->v(), bfr->len());
 }
 
@@ -759,25 +730,26 @@ ssize_t File::write(const Buffer* bfr)
  *	< -1	: fail, error at writing to descriptor.
  * @desc	: append buffer 'bfr' to File buffer for writing.
  */
-ssize_t File::write_raw(const char* bfr, size_t len)
+Error File::write_raw(const char* bfr, size_t len)
 {
 	if (_status == O_RDONLY || !bfr) {
-		return 0;
+		return NULL;
 	}
 	if (!len) {
 		len = strlen(bfr);
 		if (!len) {
-			return 0;
+			return NULL;
 		}
 	}
 
+	Error err;
 	ssize_t s = 0;
 
 	// direct write
 	if (len >= _l) {
-		s = flush();
-		if (s < 0) {
-			return -1;
+		err = flush();
+		if (err != NULL) {
+			return err;
 		}
 
 		size_t x = 0;
@@ -785,8 +757,7 @@ ssize_t File::write_raw(const char* bfr, size_t len)
 		while (len > 0) {
 			s = ::write(_d, &bfr[x], len);
 			if (s < 0) {
-				perror(__CNAME);
-				return -1;
+				return Error::SYS();
 			}
 			x	+= size_t(s);
 			len	-= size_t(s);
@@ -795,21 +766,22 @@ ssize_t File::write_raw(const char* bfr, size_t len)
 		_size += len;
 	} else {
 		if (_l < (_i + len)) {
-			s = flush();
-			if (s < 0) {
-				return -1;
+			err = flush();
+			if (err != NULL) {
+				return err;
 			}
 		}
-		Error err = append_raw(bfr, len);
+
+		err = append_raw(bfr, len);
 		if (err != NULL) {
-			return -1;
+			return err;
 		}
 		if (_status & O_SYNC) {
 			flush();
 		}
 	}
 
-	return ssize_t(len);
+	return NULL;
 }
 
 /**
@@ -823,7 +795,7 @@ ssize_t File::write_raw(const char* bfr, size_t len)
  *	< -1	: fail.
  * @desc	: write buffer of formatted string to file.
  */
-ssize_t File::writef(const char* fmt, va_list args)
+Error File::writef(const char* fmt, va_list args)
 {
 	if (_status == O_RDONLY || !fmt) {
 		return 0;
@@ -833,7 +805,7 @@ ssize_t File::writef(const char* fmt, va_list args)
 
 	Error err = b.vappend_fmt(fmt, args);
 	if (err != NULL) {
-		return -1;
+		return err;
 	}
 
 	return write_raw(b.v(), b.len());
@@ -849,7 +821,7 @@ ssize_t File::writef(const char* fmt, va_list args)
  *	< -1	: fail.
  * @desc	: write buffer of formatted string to file.
  */
-ssize_t File::writes(const char* fmt, ...)
+Error File::writes(const char* fmt, ...)
 {
 	if (_status == O_RDONLY || !fmt) {
 		return 0;
@@ -863,55 +835,55 @@ ssize_t File::writes(const char* fmt, ...)
 	va_end(al);
 
 	if (err != NULL) {
-		return -1;
+		return err;
 	}
 
 	return write_raw(b.v(), b.len());
 }
 
 /**
- * @method	: File::writec
- * @param	:
- *	> c	: a character to be appended to file.
- * @return	:
- *	< 1	: success.
- *	< -1	: fail.
- * @desc	: write one character to file.
+ * Method writec(c) will write one character to file buffer.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
-int File::writec(const char c)
+Error File::writec(const char c)
 {
 	if (_status == O_RDONLY) {
-		return 0;
+		return NULL;
 	}
 
+	Error err;
+
 	if (_i + 1 >= _l) {
-		ssize_t s = flush();
-		if (s < 0) {
-			return -1;
+		err = flush();
+		if (err != NULL) {
+			return err;
 		}
 	}
 
 	_v[_i++] = c;
 
 	if (_status & O_SYNC) {
-		flush();
+		err = flush();
+		if (err != NULL) {
+			return err;
+		}
 	}
 
-	return 1;
+	return NULL;
 }
 
 /**
- * @method	: File::flush
- * @return	:
- *	< >=0	: success, size of buffer flushed to the system, in bytes.
- *	< -1	: fail, error at writing to descriptor.
- * @desc	: flush buffer cache; write all File buffer to disk.
+ * Method flush() will write all file's buffer to disk only if file open status
+ * is write or read-write.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
-ssize_t File::flush()
+Error File::flush()
 {
 	if (_status == O_RDONLY) {
 		reset();
-		return 0;
+		return NULL;
 	}
 
 	size_t x = 0;
@@ -919,8 +891,7 @@ ssize_t File::flush()
 	while (_i > 0) {
 		ssize_t s = ::write(_d, &_v[x], _i);
 		if (s < 0) {
-			perror(__CNAME);
-			return -1;
+			return Error::SYS();
 		}
 		x	+= size_t(s);
 		_i	-= size_t(s);
@@ -930,7 +901,7 @@ ssize_t File::flush()
 
 	reset();
 
-	return ssize_t(x);
+	return NULL;
 }
 
 /**

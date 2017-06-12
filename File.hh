@@ -17,6 +17,7 @@ using vos::Buffer;
 namespace vos {
 
 extern Error ErrFileEmpty;
+extern Error ErrFileNameEmpty;
 extern Error ErrFileNotFound;
 
 enum _file_eol_mode {
@@ -36,10 +37,10 @@ enum _file_open_type {
 ,	FILE_OPEN_SYNC	= O_SYNC
 };
 
-enum _file_truncate_mode {
-	FILE_TRUNC_FLUSH_NO	= 0
-,	FILE_TRUNC_FLUSH_FIRST	= 1
-,	FILE_TRUNC_FLUSH_LAST	= 2
+enum flush_mode {
+	FLUSH_NO	= 0
+,	FLUSH_FIRST	= 1
+,	FLUSH_LAST	= 2
 };
 
 /**
@@ -70,10 +71,10 @@ public:
 	static Error GET_SIZE(const char* path, off_t* size);
 	static int IS_EXIST(const char* path, int access_mode = O_RDWR);
 	static Error BASENAME(Buffer* name, const char* path);
-	static int COPY(const char* src, const char* dst);
+	static Error COPY(const char* src, const char* dst);
 	static int TOUCH(const char* file, int mode = FILE_OPEN_WA
 		, int perm = S_IRUSR | S_IWUSR);
-	static int WRITE_PID(const char* file);
+	static Error WRITE_PID(const char* file);
 
 	int		_d;
 	size_t		_p;
@@ -87,14 +88,13 @@ public:
 	explicit File(const size_t bfr_size = File::DFLT_SIZE);
 	~File();
 
-	int _open(const char* path, const int mode,
-			const int perm = S_IRUSR | S_IWUSR);
-	int open(const char* path);
-	int open_ro(const char* path);
-	int open_wo(const char* path);
-	int open_wx(const char* path);
-	int open_wa(const char* path);
-	int truncate (uint8_t flush_mode = FILE_TRUNC_FLUSH_LAST);
+	Error open(const char* path);
+	Error open_ro(const char* path);
+	Error open_wo(const char* path);
+	Error open_wx(const char* path);
+	Error open_wa(const char* path);
+
+	Error truncate(enum flush_mode mode = FLUSH_LAST);
 
 	int is_open();
 
@@ -106,19 +106,23 @@ public:
 	ssize_t refill(size_t read_min = 0);
 	int get_line(Buffer* line);
 
-	ssize_t write(const Buffer* bfr);
-	ssize_t write_raw(const char* bfr, size_t len = 0);
-	ssize_t writef(const char* fmt, va_list args);
-	ssize_t writes(const char* fmt, ...);
-	int writec(const char c);
+	Error write(const Buffer* bfr);
+	Error write_raw(const char* bfr, size_t len = 0);
+	Error writef(const char* fmt, va_list args);
+	Error writes(const char* fmt, ...);
+	Error writec(const char c);
 
-	ssize_t flush();
+	Error flush();
 	void close();
 	void dump();
 
 private:
 	File(const File&);
 	void operator=(const File&);
+
+	Error open(const char* path, const int mode,
+			const int perm = S_IRUSR | S_IWUSR);
+
 };
 
 } // namespace::vos
