@@ -16,16 +16,20 @@ const char* Error::__CNAME = "Error";
 
 Error Error::SYS()
 {
-	int s;
 	int errnum = errno;
 	size_t len = 512;
 	char* msg = (char*) calloc(len, 1);
+	char* remsg = NULL;
 
 	do {
-		s = strerror_r(errnum, msg, len);
+		int s = strerror_r(errnum, msg, len);
 		if (s && errno == ERANGE) {
 			len = len * 2;
-			msg = (char*) realloc(msg, len);
+			remsg = (char*) realloc(msg, len);
+			if (remsg != NULL) {
+				free(msg);
+				msg = remsg;
+			}
 		}
 	} while (errno == ERANGE);
 
