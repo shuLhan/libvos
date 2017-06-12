@@ -1229,7 +1229,7 @@ int DNSQuery::INIT(DNSQuery **o, const Buffer *bfr, const int type)
 		return -1;
 	}
 
-	int s;
+	int s = 0;
 	Error err;
 
 	if (type == BUFFER_IS_TCP) {
