@@ -144,8 +144,8 @@ int SockServer::bind_listen(const char* address, const uint16_t port)
  */
 Error SockServer::accept_conn(Socket** client)
 {
-	*client = new Socket();
-	if (!*client) {
+	(*client) = new Socket();
+	if (!(*client)) {
 		return ErrOutOfMemory;
 	}
 
@@ -154,7 +154,7 @@ Error SockServer::accept_conn(Socket** client)
 		return err;
 	}
 
-	if (client && LIBVOS_DEBUG) {
+	if ((*client) && LIBVOS_DEBUG) {
 		printf("[%s] accept_conn: from '%s'\n", __cname
 			, (*client)->name());
 	}
