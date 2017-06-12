@@ -51,9 +51,9 @@ Error Config::load(const char* ini)
 
 	close();
 
-	int s = open_ro(ini);
-	if (s < 0) {
-		return ErrFileNotFound;
+	Error err = open_ro(ini);
+	if (err != NULL) {
+		return err;
 	}
 
 	return parsing();
@@ -66,18 +66,17 @@ Error Config::load(const char* ini)
  *	> -1	: fail.
  * @desc	: save all heads, keys, and values to file.
  */
-int Config::save()
+Error Config::save()
 {
 	if (_name.is_empty()) {
-		printf("[%s] save: filename is empty!\n", __CNAME);
-		return -1;
+		return ErrFileNameEmpty;
 	}
 
 	Buffer ini;
 
 	Error err = ini.copy(&_name);
 	if (err != NULL) {
-		return -1;
+		return err;
 	}
 
 	close();
@@ -95,46 +94,44 @@ int Config::save()
  *	< -1	: fail.
  * @desc	: save all heads, keys, and values to a new 'ini' file.
  */
-int Config::save_as(const char* ini, const int mode)
+Error Config::save_as(const char* ini, const int mode)
 {
-	ssize_t s = 0;
-	File		fini;
+	if (!ini) {
+		return ErrFileNameEmpty;
+	}
+
+	File fini;
 	ConfigData* phead = &_data;
 	ConfigData* pkey = NULL;
 
-	if (!ini) {
-		printf("[%s] save_as: filename is empty!\n", __CNAME);
-		return -1;
-	}
-
-	s = fini.open_wo(ini);
-	if (s < 0) {
-		return -1;
+	Error err = fini.open_wo(ini);
+	if (err != NULL) {
+		return err;
 	}
 
 	while (phead) {
 		if (phead->like_raw(CONFIG_ROOT) != 0) {
-			s = fini.writes("[%s]\n", phead->chars());
-			if (s < 0) {
-				return -1;
+			err = fini.writes("[%s]\n", phead->chars());
+			if (err != NULL) {
+				return err;
 			}
 		}
 
 		pkey = phead->next_key;
 		while (pkey) {
 			if (CONFIG_T_KEY == pkey->type) {
-				s = fini.writes("\t%s = %s\n",
+				err = fini.writes("\t%s = %s\n",
 						pkey->chars(),
 						pkey->value ?
 						pkey->value->v() : "");
-				if (s < 0) {
-					return -1;
+				if (err != NULL) {
+					return err;
 				}
 			} else {
 				if (CONFIG_SAVE_WITH_COMMENT == mode) {
-					s = fini.writes("%s\n", pkey->v());
-					if (s < 0) {
-						return -1;
+					err = fini.writes("%s\n", pkey->v());
+					if (err != NULL) {
+						return err;
 					}
 				}
 			}
@@ -142,7 +139,7 @@ int Config::save_as(const char* ini, const int mode)
 		}
 		phead = phead->next_head;
 	}
-	return 0;
+	return NULL;
 }
 
 /**

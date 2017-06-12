@@ -43,8 +43,8 @@ public:
 	~Config();
 
 	Error load(const char* ini);
-	int save();
-	int save_as(const char* ini, const int mode = CONFIG_SAVE_WOUT_COMMENT);
+	Error save();
+	Error save_as(const char* ini, const int mode = CONFIG_SAVE_WOUT_COMMENT);
 	void dump();
 	void close();
 
