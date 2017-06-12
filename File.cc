@@ -187,38 +187,36 @@ Error File::COPY(const char* src, const char* dst)
 }
 
 /**
- * @method		: File::TOUCH
- * @param		:
- *	> filename	: path to a file name to create or update.
- * @return		:
- *	< 0		: success.
- *	< -1		: fail.
- * @desc		:
- * touch a 'filename', create 'filename' if it not exist or update
- * access and modification time if it already exist.
+ * Method TOUCH(filename,mode,perm) will create `filename` if its not exist or
+ * update access and modification time if its exist.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
-int File::TOUCH(const char* filename, int mode, int perm)
+Error File::TOUCH(const char* filename, int mode, int perm)
 {
 	if (!filename) {
-		return -1;
+		return ErrFileNameEmpty;
 	}
 
 	int s;
 
 	s = utime(filename, NULL);
-	if (s < 0) {
-		if (errno == ENOENT) {
-			s = ::open(filename, mode, perm);
-			if (s < 0) {
-				perror(__CNAME);
-				return -1;
-			}
-			::close(s);
-			s = 0;
-		}
+	if (s == 0) {
+		return NULL;
 	}
 
-	return s;
+	if (errno != ENOENT) {
+		return Error::SYS();
+	}
+
+	s = ::open(filename, mode, perm);
+	if (s < 0) {
+		return Error::SYS();
+	}
+
+	::close(s);
+
+	return NULL;
 }
 
 /**
