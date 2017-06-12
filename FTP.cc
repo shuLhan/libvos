@@ -446,8 +446,7 @@ int FTP::do_pasv(const char* cmd, const char* parm, const char* out)
 	} else if (strncasecmp(cmd, _FTP_cmd[FTP_CMD_RETR], 4) == 0) {
 		err = fout.open_wo(parm);
 	} else {
-		fout._d		= STDOUT_FILENO;
-		fout._status	= O_WRONLY;
+		fout.as_stdout();
 	}
 	if (err != NULL) {
 		return -1;

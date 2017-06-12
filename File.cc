@@ -251,7 +251,10 @@ Error File::WRITE_PID(const char* file)
 	return NULL;
 }
 
-
+/**
+ * Method File(bfr_size) will create new File object with initial buffer size
+ * set to `bfr_size`.
+ */
 File::File(const size_t bfr_size) : Buffer(bfr_size)
 ,	_d(0)
 ,	_p(0)
@@ -266,6 +269,17 @@ File::File(const size_t bfr_size) : Buffer(bfr_size)
 File::~File()
 {
 	close();
+}
+
+/**
+ * Method `as_stdout()` will close previous file and set default write to
+ * standard output.
+ */
+void File::as_stdout()
+{
+	close();
+	_d = STDERR_FILENO;
+	_status = O_WRONLY;
 }
 
 /**
@@ -934,6 +948,15 @@ void File::dump()
 	printf("  name        : %s\n", _name.chars());
 	printf("  size        : %ld\n", _size);
 	printf("  contents    :\n[%s]\n", chars());
+}
+
+/**
+ * Method name() will return the string representation of the File object,
+ * which is the name of file.
+ */
+const char* File::name()
+{
+	return _name.v();
 }
 
 } // namespace::vos

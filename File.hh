@@ -76,17 +76,18 @@ public:
 		, int perm = S_IRUSR | S_IWUSR);
 	static Error WRITE_PID(const char* file);
 
-	int		_d;
+	int _d;
 	size_t		_p;
 	int		_status;
 	int		_perm;
 	off_t		_size;
 	int		_eol;
 	const char*	_eols;
-	Buffer		_name;
 
 	explicit File(const size_t bfr_size = File::DFLT_SIZE);
 	~File();
+
+	void as_stdout();
 
 	Error open(const char* path);
 	Error open_ro(const char* path);
@@ -116,13 +117,17 @@ public:
 	void close();
 	void dump();
 
+	const char* name();
+
+protected:
+	Buffer _name;
+
 private:
 	File(const File&);
 	void operator=(const File&);
 
 	Error open(const char* path, const int mode,
 			const int perm = S_IRUSR | S_IWUSR);
-
 };
 
 } // namespace::vos

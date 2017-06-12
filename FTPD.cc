@@ -982,7 +982,7 @@ void FTPD::on_cmd_PASV(FTPD* s, FTPD_client* c)
 		goto err;
 	}
 
-	pasv_addr.copy(&c->_sock->_name);
+	pasv_addr.copy_raw(c->_sock->name());
 
 	do {
 		c->_s = pasv_sock->bind_listen(pasv_addr.v(), pasv_port);
