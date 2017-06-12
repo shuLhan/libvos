@@ -336,8 +336,8 @@ size_t Buffer::size() const
  * If 'size' is less than current buffer size, no reallocation will be
  * happenend.
  *
- * On success it will NULL, otherwise it will return ErrOutOfMemory if its fail to
- * reallocate more memory.
+ * On success it will NULL, otherwise it will return ErrOutOfMemory if its fail
+ * to reallocate more memory.
  */
 Error Buffer::resize(size_t size)
 {
