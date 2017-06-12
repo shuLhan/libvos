@@ -27,14 +27,14 @@ public:
 	explicit SSVReader (const char comment = 0);
 	~SSVReader ();
 
-	int load (const char* file);
+	Error load (const char* file);
 	void reset ();
 
 	Rowset* _rows;
 	char	_comment_c;
 private:
 	List* parse(Buffer* line);
-	int open(const char* file);
+	Error open(const char* file);
 
 	SSVReader (const SSVReader&);
 	void operator= (const SSVReader&);

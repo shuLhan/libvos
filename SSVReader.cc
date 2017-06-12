@@ -55,10 +55,10 @@ List* SSVReader::parse(Buffer* line)
  < -1		: fail.
  @desc		: open file for reading.
  */
-int SSVReader::open (const char* file)
+Error SSVReader::open (const char* file)
 {
 	if (! file) {
-		return -1;
+		return ErrFileNotFound;
 	}
 
 	return File::open_ro (file);
@@ -73,17 +73,18 @@ int SSVReader::open (const char* file)
  < -1		: fail.
  @desc		: Load content of file. All line returned as table of string in _rows.
  */
-int SSVReader::load (const char* file)
+Error SSVReader::load (const char* file)
 {
-	int s = open(file);
-	if (s != 0) {
-		return -1;
+	Error err = open(file);
+	if (err != NULL) {
+		return err;
 	}
 
 	if (! _rows) {
 		_rows = new Rowset();
 	}
 
+	ssize_t s;
 	Buffer line;
 	List* row = NULL;
 
@@ -100,7 +101,7 @@ int SSVReader::load (const char* file)
 		}
 	} while (s > 0);
 
-	return 0;
+	return NULL;
 }
 
 void SSVReader::reset ()

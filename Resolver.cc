@@ -332,8 +332,8 @@ int Resolver::send_tcp(DNSQuery* question)
 		}
 	}
 
-	s = (int) write(question);
-	if (s < 0) {
+	Error err = write(question);
+	if (err != NULL) {
 		return -1;
 	}
 

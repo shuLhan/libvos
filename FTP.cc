@@ -214,7 +214,6 @@ int FTP::send_cmd(const char* cmd, const char *parm)
 
 	reset();
 
-	ssize_t s = 0;
 	Error err;
 
 	if (parm) {
@@ -226,8 +225,8 @@ int FTP::send_cmd(const char* cmd, const char *parm)
 		return -1;
 	}
 
-	s = flush();
-	if (s < 0) {
+	err = flush();
+	if (err != NULL) {
 		return -1;
 	}
 
@@ -440,15 +439,17 @@ int FTP::do_pasv(const char* cmd, const char* parm, const char* out)
 		return -1;
 	}
 
+	Error err;
+
 	if (out) {
-		s = fout.open_wo(out);
+		err = fout.open_wo(out);
 	} else if (strncasecmp(cmd, _FTP_cmd[FTP_CMD_RETR], 4) == 0) {
-		s = fout.open_wo(parm);
+		err = fout.open_wo(parm);
 	} else {
 		fout._d		= STDOUT_FILENO;
 		fout._status	= O_WRONLY;
 	}
-	if (s < 0) {
+	if (err != NULL) {
 		return -1;
 	}
 
@@ -484,8 +485,8 @@ int FTP::do_put(const char* path)
 	File	fput;
 	FTP	pasv;
 
-	s = fput.open_ro(path);
-	if (s < 0) {
+	Error err = fput.open_ro(path);
+	if (err != NULL) {
 		return -1;
 	}
 

@@ -40,8 +40,8 @@ public:
 	~FTPD_client();
 
 	void reset();
-	ssize_t reply();
-	ssize_t reply_raw(int code, const char* msg, const char* msg_add);
+	Error reply();
+	Error reply_raw(int code, const char* msg, const char* msg_add);
 
 	int		_s;
 	int		_conn_stat;

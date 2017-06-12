@@ -1299,6 +1299,7 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPD_client* c)
 	ssize_t x = 0;
 	File		file;
 	Socket*		pasv_c		= NULL;
+	Error err;
 
 	if (!c->_psrv || !c->_pclt) {
 		c->_s = CODE_425;
@@ -1316,8 +1317,8 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPD_client* c)
 		goto out;
 	}
 
-	x = file.open_ro(c->_path_real.v());
-	if (x < 0) {
+	err = file.open_ro(c->_path_real.v());
+	if (err != NULL) {
 		c->_s = CODE_451;
 		goto out;
 	}
@@ -1354,6 +1355,7 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPD_client* c)
 	ssize_t x = 0;
 	File		file;
 	Socket*		pasv_c		= NULL;
+	Error err;
 
 	if (!c->_psrv || !c->_pclt) {
 		c->_s = CODE_425;
@@ -1365,7 +1367,7 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPD_client* c)
 		goto out;
 	}
 
-	x = file.open_wo(c->_path_real.v());
+	err = file.open_wo(c->_path_real.v());
 	if (x < 0) {
 		c->_s = CODE_451;
 		goto out;

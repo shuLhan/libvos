@@ -40,8 +40,8 @@ int main()
 
 	reader._comment_c = '#';
 
-	int s = reader.load ("./hosts");
-	if (s) {
+	Error err = reader.load ("./hosts");
+	if (err != NULL) {
 		return 1;
 	}
 
@@ -56,7 +56,7 @@ int main()
 
 			expectString(exp_addr[exp_addr_idx++], c->chars(), 0);
 
-			s = inet_pton (AF_INET, ip->chars(), &d);
+			int s = inet_pton (AF_INET, ip->chars(), &d);
 
 			if (s == 1) {
 				qanswer.create_answer (c->chars()
