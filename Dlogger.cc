@@ -47,7 +47,7 @@ Dlogger::~Dlogger()
  * @return < -1		: fail.
  * @desc		: start the log daemon on the file 'logfile'.
  */
-int Dlogger::open (const char* logfile, size_t max_size, const char* prefix
+Error Dlogger::open (const char* logfile, size_t max_size, const char* prefix
 	, int show_timestamp)
 {
 	_prefix.copy_raw(prefix);
@@ -56,16 +56,15 @@ int Dlogger::open (const char* logfile, size_t max_size, const char* prefix
 	if (logfile) {
 		close();
 
-		int s = open_wa(logfile);
-		if (s < 0) {
+		Error err = open_wa(logfile);
+		if (err != NULL) {
 			_d = STDERR_FILENO;
-		} else {
-			_max_size = max_size;
+			return err;
 		}
 
-		return s;
+		_max_size = max_size;
 	}
-	return 0;
+	return NULL;
 }
 
 /**
@@ -115,27 +114,28 @@ void Dlogger::add_prefix()
  *	> fmt		: format of messages.
  * @desc		: The generic method of writing a log messages.
  */
-ssize_t Dlogger::_w(int fd, const char* fmt)
+Error Dlogger::_w(int fd, const char* fmt)
 {
-	ssize_t s = 0;
-
 	add_timestamp();
 	add_prefix();
 
 	Error err = _tmp.vappend_fmt(fmt, _args);
 	if (err != NULL) {
 		_tmp.reset();
-		return -1;
+		return err;
 	}
 
 	if (_d != STDERR_FILENO || !fd) {
 		// Check size of file
 		if (_max_size > 0
 		&& ((size_t(_size) + _i) > _max_size)) {
-			truncate (FILE_TRUNC_FLUSH_NO);
+			truncate(FLUSH_NO);
 		}
 
-		s = write_raw(_tmp.v(), _tmp.len());
+		err = write_raw(_tmp.v(), _tmp.len());
+		if (err != NULL) {
+			return err;
+		}
 	}
 	if (fd) {
 		ssize_t ws = 0;
@@ -143,14 +143,13 @@ ssize_t Dlogger::_w(int fd, const char* fmt)
 			ws = ::write(fd, _tmp.v(size_t(ws))
 				, _tmp.len() - size_t(ws));
 			if (ws < 0) {
-				s = -1;
-				break;
+				return Error::SYS();
 			}
 		} while(size_t(ws) < _tmp.len());
 	}
 	_tmp.reset();
 
-	return s;
+	return NULL;
 }
 
 /**
@@ -163,24 +162,22 @@ ssize_t Dlogger::_w(int fd, const char* fmt)
  *	< -1	: fail.
  * @desc	: write message to standard error and log file.
  */
-ssize_t Dlogger::er(const char* fmt, ...)
+Error Dlogger::er(const char* fmt, ...)
 {
-	ssize_t s;
-
 	_locker.lock();
 
 	va_list args;
 	va_start(args, fmt);
 	va_copy(_args, args);
 
-	s = _w(STDERR_FILENO, fmt);
+	Error err = _w(STDERR_FILENO, fmt);
 
 	va_end(_args);
 	va_end(args);
 
 	_locker.unlock();
 
-	return s;
+	return err;
 }
 
 /**
@@ -193,24 +190,22 @@ ssize_t Dlogger::er(const char* fmt, ...)
  *	< -1	: fail.
  * @desc	: write message to standard output and log file.
  */
-ssize_t Dlogger::out(const char* fmt, ...)
+Error Dlogger::out(const char* fmt, ...)
 {
-	ssize_t s = 0;
-
 	_locker.lock();
 
 	va_list args;
 	va_start(args, fmt);
 	va_copy(_args, args);
 
-	s = _w(STDOUT_FILENO, fmt);
+	Error err = _w(STDOUT_FILENO, fmt);
 
 	va_end(_args);
 	va_end(args);
 
 	_locker.unlock();
 
-	return s;
+	return err;
 }
 
 /**
@@ -223,25 +218,23 @@ ssize_t Dlogger::out(const char* fmt, ...)
  *	< -1	: fail.
  * @desc	: write message to log file only.
  */
-ssize_t Dlogger::it(const char* fmt, ...)
+Error Dlogger::it(const char* fmt, ...)
 {
-	ssize_t s = 0;
-
 	_locker.lock();
 
 	va_list args;
 	va_start(args, fmt);
 	va_copy(_args, args);
 
-	s = _w(0, fmt);
+	Error err = _w(0, fmt);
 
 	va_end(_args);
 	va_end(args);
 
 	_locker.unlock();
 
-	return s;
+	return err;
 }
 
 } /* namespace::vos */
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:

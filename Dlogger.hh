@@ -25,14 +25,14 @@ public:
 	Dlogger();
 	~Dlogger();
 
-	int open(const char* logfile, size_t max_size = 0
+	Error open(const char* logfile, size_t max_size = 0
 		, const char* prefix = 0
 		, int show_timestamp = 1);
 	void close();
 
-	ssize_t er(const char* fmt, ...);
-	ssize_t out(const char* fmt, ...);
-	ssize_t it(const char* fmt, ...);
+	Error er(const char* fmt, ...);
+	Error out(const char* fmt, ...);
+	Error it(const char* fmt, ...);
 
 	static const char* __cname;
 private:
@@ -41,7 +41,7 @@ private:
 
 	void add_timestamp();
 	void add_prefix();
-	ssize_t _w(int fd, const char* fmt);
+	Error _w(int fd, const char* fmt);
 
 	Locker		_locker;
 	Buffer		_tmp;
@@ -55,4 +55,4 @@ private:
 
 } /* namespace::vos */
 #endif
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:
