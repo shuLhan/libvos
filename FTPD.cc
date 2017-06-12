@@ -1366,7 +1366,7 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPD_client* c)
 	}
 
 	err = file.open_wo(c->_path_real.v());
-	if (x < 0) {
+	if (err != NULL) {
 		c->_s = CODE_451;
 		goto out;
 	}
