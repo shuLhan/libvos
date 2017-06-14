@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -8,7 +8,7 @@
 
 namespace vos {
 
-const char* Locker::__cname = "Locker";
+const char* Locker::__CNAME = "Locker";
 
 //
 // `Locker()` constructor will initialize locker mutex.
@@ -23,17 +23,17 @@ Locker::Locker(int type)
 
 	s = pthread_mutexattr_init(&_attr);
 	if (s) {
-		perror(__cname);
+		perror(__CNAME);
 	}
 
 	s = pthread_mutexattr_settype(&_attr, type);
 	if (s) {
-		perror(__cname);
+		perror(__CNAME);
 	}
 
 	s = pthread_mutex_init(&_lock, &_attr);
 	if (s) {
-		perror(__cname);
+		perror(__CNAME);
 	}
 }
 
@@ -75,7 +75,7 @@ void Locker::lock()
 			break;
 		case EDEADLK:
 		case EOWNERDEAD:
-			perror(__cname);
+			perror(__CNAME);
 			unlock();
 			break;
 		}
@@ -91,4 +91,4 @@ void Locker::unlock()
 }
 
 } // namespace vos
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:
