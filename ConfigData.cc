@@ -145,9 +145,8 @@ void ConfigData::add_misc_raw(const char* misc, const size_t misc_len)
 }
 
 /**
- * @method	: ConfigData::dump
- * @desc	: dump content of ConfigData object to standard output,
- *                including the next header, key, and value.
+ * Method dump() will dump content of ConfigData object to standard output,
+ * including the next header, key, and value.
  */
 const char* ConfigData::dump()
 {
