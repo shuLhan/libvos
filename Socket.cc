@@ -8,7 +8,7 @@
 
 namespace vos {
 
-const char* Socket::__cname = "Socket";
+const char* Socket::__CNAME = "Socket";
 
 size_t Socket::DFLT_BUFFER_SIZE = 65536;
 
@@ -54,11 +54,11 @@ Error Socket::accept(int server_fd)
 
 	if (_family == AF_INET) {
 		_d = ::accept(server_fd
-			, (struct sockaddr *) &client_addr
+			, (struct sockaddr*) &client_addr
 			, &client_addrlen);
 	} else {
 		_d = ::accept(server_fd
-			, (struct sockaddr *) &client_addr6
+			, (struct sockaddr*) &client_addr6
 			, &client_addrlen);
 
 	}
@@ -212,7 +212,7 @@ int Socket::connect_to_raw(const char* address, const uint16_t port)
 			return -1;
 		}
 
-		s = ::connect(_d, (struct sockaddr *) &sin6
+		s = ::connect(_d, (struct sockaddr*) &sin6
 				, SockAddr::IN6_SIZE);
 	} else {
 		struct sockaddr_in sin;
@@ -222,7 +222,7 @@ int Socket::connect_to_raw(const char* address, const uint16_t port)
 			return -1;
 		}
 
-		s = ::connect(_d, (struct sockaddr *) &sin, SockAddr::IN_SIZE);
+		s = ::connect(_d, (struct sockaddr*) &sin, SockAddr::IN_SIZE);
 	}
 	if (s < 0) {
 		return -1;
@@ -261,11 +261,11 @@ long int Socket::send_udp(struct sockaddr_in* addr, Buffer* bfr)
 	if (!bfr) {
 		if (_i > 0) {
 			s = ::sendto(_d, _v, _i, 0
-				, (struct sockaddr *) addr, SockAddr::IN_SIZE);
+				, (struct sockaddr*) addr, SockAddr::IN_SIZE);
 		}
 	} else if (bfr->len() > 0) {
 			s = ::sendto(_d, bfr->v(), bfr->len(), 0
-				, (struct sockaddr *) addr, SockAddr::IN_SIZE);
+				, (struct sockaddr*) addr, SockAddr::IN_SIZE);
 	}
 
 	_locker.unlock();
@@ -342,5 +342,5 @@ long int Socket::recv_udp(struct sockaddr_in* addr)
 	return s;
 }
 
-} /* namespace::vos */
-// vi: ts=8 sw=8 tw=78:
+} // namespace::vos
+// vi: ts=8 sw=8 tw=80:

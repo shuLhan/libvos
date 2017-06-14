@@ -32,6 +32,9 @@ enum SocketConnType {
  */
 class Socket : public File {
 public:
+	static const char* __CNAME;
+	static size_t DFLT_BUFFER_SIZE;
+
 	explicit Socket(const size_t bfr_size = DFLT_BUFFER_SIZE);
 	~Socket();
 
@@ -56,12 +59,11 @@ public:
 				, const char* bfr = NULL, size_t len = 0);
 	long int recv_udp(struct sockaddr_in* addr);
 
+protected:
 	int		_family;
 	int		_type;
 	socklen_t	_recv_addr_l;
 
-	static size_t DFLT_BUFFER_SIZE;
-	static const char* __cname;
 private:
 	Socket(const Socket&);
 	void operator=(const Socket&);
@@ -72,4 +74,4 @@ private:
 }
 
 #endif
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:
