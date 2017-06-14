@@ -200,6 +200,8 @@ void test_BASENAME()
 
 void test_COPY()
 {
+	unlink("LICENSE.copy");
+
 	struct {
 		const char* desc;
 		const char* src;
@@ -259,6 +261,109 @@ void test_COPY()
 
 		T.ok();
 	}
+
+	unlink("LICENSE.copy");
+}
+
+void test_TOUCH()
+{
+	unlink("test.FILE_TOUCH");
+
+	struct {
+		const char* desc;
+		const char* filename;
+		Error       exp_err;
+		off_t       exp_size;
+	} tests[] = {{
+		"With NULL parameter"
+	,	NULL
+	,	vos::ErrFileNameEmpty
+	,	0
+	},{
+		"With file exist"
+	,	"../LICENSE"
+	,	NULL
+	,	1949
+	},{
+		"With non-existent file"
+	,	"test.FILE_TOUCH"
+	,	NULL
+	,	0
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	Error err;
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("TOUCH()", tests[x].desc);
+
+		err = File::TOUCH(tests[x].filename);
+
+		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
+
+		if (err == NULL) {
+			off_t size;
+
+			File::GET_SIZE(tests[x].filename, &size);
+
+			T.expect_signed(tests[x].exp_size, size, vos::IS_EQUAL);
+		}
+
+		T.ok();
+	}
+
+	unlink("test.FILE_TOUCH");
+}
+
+void test_WRITE_PID()
+{
+	unlink("test.WRITE_PID");
+
+	struct {
+		const char* desc;
+		const char* filename;
+		Error       exp_err;
+		off_t       exp_size;
+	} tests[] = {{
+		"With NULL parameter"
+	,	NULL
+	,	vos::ErrFileNameEmpty
+	,	0
+	},{
+		"With success"
+	,	"test.WRITE_PID"
+	,	NULL
+	,	1
+	},{
+		"With file exist"
+	,	"test.WRITE_PID"
+	,	vos::ErrFileExist
+	,	0
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	Error err;
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("WRITE_PID()", tests[x].desc);
+
+		err = File::WRITE_PID(tests[x].filename);
+
+		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
+
+		if (err == NULL) {
+			off_t size;
+
+			File::GET_SIZE(tests[x].filename, &size);
+
+			T.expect_signed(size, tests[x].exp_size
+				, vos::IS_GREATER_THAN);
+		}
+
+		T.ok();
+	}
+
+	unlink("test.WRITE_PID");
 }
 
 int main()
@@ -267,6 +372,8 @@ int main()
 	test_IS_EXIST();
 	test_BASENAME();
 	test_COPY();
+	test_TOUCH();
+	test_WRITE_PID();
 
 	return 0;
 }

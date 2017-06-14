@@ -17,6 +17,7 @@ using vos::Buffer;
 namespace vos {
 
 extern Error ErrFileEmpty;
+extern Error ErrFileExist;
 extern Error ErrFileNameEmpty;
 extern Error ErrFileNotFound;
 

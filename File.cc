@@ -9,6 +9,7 @@
 namespace vos {
 
 Error ErrFileEmpty("File: empty");
+Error ErrFileExist("File: exist");
 Error ErrFileNameEmpty("File: name is empty");
 Error ErrFileNotFound("File: path is empty or invalid");
 
@@ -198,9 +199,7 @@ Error File::TOUCH(const char* filename, int mode, int perm)
 		return ErrFileNameEmpty;
 	}
 
-	int s;
-
-	s = utime(filename, NULL);
+	int s = utime(filename, NULL);
 	if (s == 0) {
 		return NULL;
 	}
@@ -290,7 +289,7 @@ void File::as_stdout()
 Error File::open(const char* path, const int mode, const int perm)
 {
 	if (!path) {
-		return ErrFileNotFound;
+		return ErrFileNameEmpty;
 	}
 
 	Error err;
@@ -308,6 +307,8 @@ Error File::open(const char* path, const int mode, const int perm)
 		switch (errno) {
 		case ENOENT:
 			return ErrFileNotFound;
+		case EEXIST:
+			return ErrFileExist.with(path, strlen(path));
 		default:
 			return Error::SYS();
 		}
