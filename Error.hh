@@ -41,7 +41,7 @@ public:
 	unsigned long data_as_unsigned() const;
 	double data_as_double() const;
 
-private:
+protected:
 	void* _data;
 	void* _p_data;
 	size_t _len;
