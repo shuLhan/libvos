@@ -16,11 +16,12 @@ class Locker : public Object {
 public:
 	static const char* __CNAME;
 
-	explicit Locker(int type = PTHREAD_MUTEX_NORMAL);
+	explicit Locker(int type = PTHREAD_MUTEX_ERRORCHECK);
 	virtual ~Locker();
 	const char* chars();
 
 	void lock();
+	int is_locked();
 	void unlock();
 
 protected:
