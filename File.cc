@@ -912,7 +912,7 @@ void File::set_add(fd_set* fds, int* maxfd)
 {
 	FD_SET(_d, fds);
 
-	if ((*maxfd) && _d >= (*maxfd)) {
+	if (maxfd != NULL && _d >= (*maxfd)) {
 		(*maxfd) = _d + 1;
 	}
 }
