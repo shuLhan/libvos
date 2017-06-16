@@ -74,7 +74,7 @@ Error Socket::accept(int server_fd)
 		, socklen_t(_name.size()));
 	}
 
-	_status	= O_RDWR | O_SYNC;
+	_status = FILE_OPEN_SOCK;
 
 	return NULL;
 }
@@ -103,7 +103,7 @@ int Socket::create(const int family, const int type)
 	if (type == SOCK_STREAM) {
 		_status = FILE_OPEN_NO;
 	} else {
-		_status = FILE_OPEN_RW | O_SYNC;
+		_status = FILE_OPEN_SOCK;
 	}
 
 	return 0;
@@ -153,7 +153,7 @@ int Socket::connect_to(struct sockaddr_in* sin)
 
 	inet_ntop(AF_INET, &sin->sin_addr, (char*) _name.v()
 		, socklen_t(_name.size()));
-	_status	= O_RDWR | O_SYNC;
+	_status = FILE_OPEN_SOCK;
 
 	return 0;
 }
@@ -181,7 +181,7 @@ int Socket::connect_to6(struct sockaddr_in6* sin6)
 
 	inet_ntop(AF_INET6, &sin6->sin6_addr, (char*) _name.v()
 		, socklen_t(_name.size()));
-	_status	= O_RDWR | O_SYNC;
+	_status = FILE_OPEN_SOCK;
 
 	return 0;
 }
@@ -228,7 +228,7 @@ int Socket::connect_to_raw(const char* address, const uint16_t port)
 		return -1;
 	}
 
-	_status	= O_RDWR | O_SYNC;
+	_status = FILE_OPEN_SOCK;
 
 	Error err = _name.copy_raw(address);
 	if (err != NULL) {

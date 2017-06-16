@@ -12,6 +12,7 @@ Error ErrFileEmpty("File: empty");
 Error ErrFileExist("File: exist");
 Error ErrFileNameEmpty("File: name is empty");
 Error ErrFileNotFound("File: path is empty or invalid");
+Error ErrFileReadOnly("File: read only");
 
 const char* File::__CNAME = "File";
 
@@ -276,7 +277,7 @@ void File::as_stdout()
 {
 	close();
 	_d = STDERR_FILENO;
-	_status = O_WRONLY;
+	_status = FILE_OPEN_WO;
 }
 
 /**
@@ -284,9 +285,12 @@ void File::as_stdout()
  * permission `perm`.
  *
  * On success it will return NULL.
- * On fail it will return error.
+ * On fail it will return error,
+ * - ErrFileNotFound, if path is invalid
+ * - ErrFileExist, if mode is FILE_OPEN_WOCX
  */
-Error File::open(const char* path, const int mode, const int perm)
+Error File::open(const char* path, const enum file_open_mode mode
+	, const int perm)
 {
 	if (!path) {
 		return ErrFileNameEmpty;
@@ -334,7 +338,7 @@ Error File::open(const char* path, const int mode, const int perm)
  */
 Error File::open(const char* path)
 {
-	return open(path, FILE_OPEN_RW);
+	return open(path, FILE_OPEN_RWCA);
 }
 
 /**
@@ -344,7 +348,7 @@ Error File::open(const char* path)
  */
 Error File::open_ro(const char* path)
 {
-	return open(path, FILE_OPEN_R);
+	return open(path, FILE_OPEN_RO);
 }
 
 /**
@@ -355,7 +359,7 @@ Error File::open_ro(const char* path)
  */
 Error File::open_wo(const char* path)
 {
-	return open(path, FILE_OPEN_W);
+	return open(path, FILE_OPEN_WOCA);
 }
 
 /**
@@ -366,7 +370,7 @@ Error File::open_wo(const char* path)
  */
 Error File::open_wx(const char* path)
 {
-	return open(path, FILE_OPEN_WX);
+	return open(path, FILE_OPEN_WOCX);
 }
 
 /**
@@ -377,11 +381,12 @@ Error File::open_wx(const char* path)
  */
 Error File::open_wa(const char* path)
 {
-	return open(path, FILE_OPEN_WA);
+	return open(path, FILE_OPEN_WOCA);
 }
 
 /**
- * Method truncate(flush_mode) will reset file content and size to zero.
+ * Method truncate(flush_mode) will reset file content and size to zero only if
+ * file opened with write mode.
  *
  * if flush_mode is FLUSH_NO, buffer will not be flushed to file
  * before or after truncated.
@@ -391,11 +396,20 @@ Error File::open_wa(const char* path)
  *
  * If flush_mode is FLUSH_LAST (default) then buffer will be flushed
  * after file was truncated.
+ *
+ * On success it will return NULL.
+ *
+ * On fail it will return error,
+ * - ErrFileReadOnly, if file opened with read only mode.
+ * - Cannot close file.
+ * - Cannot truncate file.
+ * - Cannot write file.
  */
 Error File::truncate(enum flush_mode flush_mode)
 {
-	Error err;
-
+	if (_status == O_RDONLY) {
+		return ErrFileReadOnly;
+	}
 	if (flush_mode & FLUSH_FIRST) {
 		reset();
 	}
@@ -408,8 +422,14 @@ Error File::truncate(enum flush_mode flush_mode)
 		}
 	}
 
+	enum file_open_mode mode = FILE_OPEN_WOCT;
+
+	if (_status == O_RDWR) {
+		mode = FILE_OPEN_RWCT;
+	}
+
 	// Reopen file by truncate.
-	err = open(_name.v(), _status | O_CREAT | O_TRUNC, _perm);
+	Error err = open(_name.v(), mode, _perm);
 	if (err != NULL) {
 		return err;
 	}

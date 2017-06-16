@@ -26,7 +26,7 @@ Dlogger::Dlogger () : File()
 ,	_max_size (0)
 {
 	_d	= STDERR_FILENO;
-	_status	= O_WRONLY;
+	_status	= FILE_OPEN_WO;
 }
 
 /**
@@ -77,7 +77,7 @@ void Dlogger::close()
 	if (_d && _d != STDERR_FILENO) {
 		File::close();
 		_d	= STDERR_FILENO;
-		_status	= O_WRONLY;
+		_status	= FILE_OPEN_WO;
 		_prefix.reset();
 	}
 }

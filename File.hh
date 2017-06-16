@@ -20,6 +20,7 @@ extern Error ErrFileEmpty;
 extern Error ErrFileExist;
 extern Error ErrFileNameEmpty;
 extern Error ErrFileNotFound;
+extern Error ErrFileReadOnly;
 
 enum _file_eol_mode {
 	EOL_NIX	= 0,
@@ -28,14 +29,17 @@ enum _file_eol_mode {
 };
 extern const char* __eol[N_EOL_MODE];
 
-enum _file_open_type {
+enum file_open_mode {
 	FILE_OPEN_NO	= -1
-,	FILE_OPEN_R	= O_RDONLY
-,	FILE_OPEN_W	= O_WRONLY | O_CREAT | O_TRUNC
-,	FILE_OPEN_WA	= O_WRONLY | O_CREAT | O_APPEND
-,	FILE_OPEN_RW	= O_RDWR | O_CREAT | O_APPEND
-,	FILE_OPEN_WX	= O_WRONLY | O_CREAT | O_EXCL
-,	FILE_OPEN_SYNC	= O_SYNC
+,	FILE_OPEN_RO	= O_RDONLY			// 0
+,	FILE_OPEN_WO	= O_WRONLY			// 1
+,	FILE_OPEN_WOCA	= O_WRONLY | O_CREAT | O_APPEND	// 1089
+,	FILE_OPEN_WOCT	= O_WRONLY | O_CREAT | O_TRUNC	// 577
+,	FILE_OPEN_WOCX	= O_WRONLY | O_CREAT | O_EXCL	// 193
+,	FILE_OPEN_RWCA	= O_RDWR | O_CREAT | O_APPEND	// 1090
+,	FILE_OPEN_RWCT	= O_RDWR | O_CREAT | O_TRUNC	// 578
+,	FILE_OPEN_RWCX	= O_RDWR | O_CREAT | O_EXCL	// 194
+,	FILE_OPEN_SOCK	= O_RDWR | O_SYNC		// 1052674
 };
 
 enum flush_mode {
@@ -76,7 +80,7 @@ public:
 	static int IS_EXIST(const char* path, int access_mode = O_RDWR);
 	static Error BASENAME(Buffer* name, const char* path);
 	static Error COPY(const char* src, const char* dst);
-	static Error TOUCH(const char* file, int mode = FILE_OPEN_WA
+	static Error TOUCH(const char* file, int mode = FILE_OPEN_WOCA
 		, int perm = S_IRUSR | S_IWUSR);
 	static Error WRITE_PID(const char* file);
 
@@ -121,21 +125,21 @@ public:
 	const char* name();
 
 protected:
-	int         _d;
-	size_t      _p;
-	int         _status;
-	int         _perm;
-	off_t       _size;
-	int         _eol;
-	const char* _eols;
-	Buffer      _name;
+	int		_d;
+	size_t		_p;
+	int		_status;
+	int		_perm;
+	off_t		_size;
+	int		_eol;
+	const char*	_eols;
+	Buffer		_name;
 
 private:
 	File(const File&);
 	void operator=(const File&);
 
-	Error open(const char* path, const int mode,
-			const int perm = S_IRUSR | S_IWUSR);
+	Error open(const char* path, const enum file_open_mode
+		, const int perm = S_IRUSR | S_IWUSR);
 };
 
 } // namespace::vos

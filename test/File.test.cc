@@ -11,6 +11,20 @@ using vos::File;
 
 Test T("File");
 
+void test_file_open_mode()
+{
+	T.out("FILE_OPEN_NO: %d\n", vos::FILE_OPEN_NO);
+	T.out("FILE_OPEN_RO: %d\n", vos::FILE_OPEN_RO);
+	T.out("FILE_OPEN_WO: %d\n", vos::FILE_OPEN_WO);
+	T.out("FILE_OPEN_WOCA: %d\n", vos::FILE_OPEN_WOCA);
+	T.out("FILE_OPEN_WOCT: %d\n", vos::FILE_OPEN_WOCT);
+	T.out("FILE_OPEN_WOCX: %d\n", vos::FILE_OPEN_WOCX);
+	T.out("FILE_OPEN_RWCA: %d\n", vos::FILE_OPEN_RWCA);
+	T.out("FILE_OPEN_RWCT: %d\n", vos::FILE_OPEN_RWCT);
+	T.out("FILE_OPEN_RWCX: %d\n", vos::FILE_OPEN_RWCX);
+	T.out("FILE_OPEN_SOCK: %d\n", vos::FILE_OPEN_SOCK);
+}
+
 void test_GET_SIZE()
 {
 	struct {
@@ -63,7 +77,7 @@ void test_GET_SIZE()
 
 void test_IS_EXIST()
 {
-	File::TOUCH("FILE_NOPERM", vos::FILE_OPEN_RW, 0);
+	File::TOUCH("FILE_NOPERM", vos::FILE_OPEN_RWCT, 0);
 
 	struct {
 		const char*  desc;
@@ -368,6 +382,8 @@ void test_WRITE_PID()
 
 int main()
 {
+	test_file_open_mode();
+
 	test_GET_SIZE();
 	test_IS_EXIST();
 	test_BASENAME();
