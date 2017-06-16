@@ -344,6 +344,7 @@ void test_WRITE_PID()
 	,	vos::ErrFileNameEmpty
 	,	0
 	},{
+
 		"With success"
 	,	"test.WRITE_PID"
 	,	NULL
@@ -380,6 +381,62 @@ void test_WRITE_PID()
 	unlink("test.WRITE_PID");
 }
 
+void test_open()
+{
+	struct {
+		const char* desc;
+		const char* path;
+		Error       exp_err;
+		const off_t exp_size;
+		const int   exp_status;
+	} tests[] = {{
+		"With open(NULL)"
+	,	NULL
+	,	vos::ErrFileNameEmpty
+	,	0
+	,	vos::FILE_OPEN_NO
+	},{
+		"With open(newfile)"
+	,	"newfile"
+	,	NULL
+	,	0
+	,	O_RDWR
+	},{
+		"With open(../LICENSE)"
+	,	"../LICENSE"
+	,	NULL
+	,	1949
+	,	O_RDWR
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	Error err;
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("open()", tests[x].desc);
+
+		File f;
+
+		err = f.open(tests[x].path);
+
+		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
+		T.expect_signed(tests[x].exp_status, f.status(), vos::IS_EQUAL);
+
+		if (err == NULL) {
+			T.expect_string(tests[x].path, f.name(), vos::IS_EQUAL);
+
+			T.expect_unsigned(tests[x].exp_size, f.size()
+				, vos::IS_EQUAL);
+
+			T.expect_signed(f.fd(), 0, vos::IS_GREATER_THAN);
+		}
+
+		T.ok();
+	}
+
+	unlink("newfile");
+}
+
 int main()
 {
 	test_file_open_mode();
@@ -390,6 +447,8 @@ int main()
 	test_COPY();
 	test_TOUCH();
 	test_WRITE_PID();
+
+	test_open();
 
 	return 0;
 }
