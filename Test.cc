@@ -298,7 +298,8 @@ int Test::expect_error(Error exp, Error got, enum EQUALITY e)
 	}
 
 	append_fmt("\n");
-	append_fmt("    Expecting '%f' %s '%f'\n", exp, str_e, got);
+	append_fmt("    Expecting '%s' %s '%s'\n", exp.chars(), str_e
+		, got.chars());
 
 	exit(1);
 
