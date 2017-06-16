@@ -40,6 +40,7 @@ public:
 		, enum EQUALITY e = IS_EQUAL);
 	int expect_double(const double exp, const double got
 		, enum EQUALITY e = IS_EQUAL);
+	int expect_error(Error exp, Error got, enum EQUALITY e = IS_EQUAL);
 
 protected:
 	Buffer _header;

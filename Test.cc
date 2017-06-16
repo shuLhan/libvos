@@ -268,6 +268,42 @@ int Test::expect_double(const double exp, const double got
 	exit(1);
 }
 
+/**
+ * Method expect_error(exp,got,e) will return 0 if,
+ *
+ * - e is IS_EQUAL and exp is same error with got
+ * - e is NOT_EQUAL and exp is not the same error with got
+ *
+ * Otherwise it will exit with status `1`.
+ */
+int Test::expect_error(Error exp, Error got, enum EQUALITY e)
+{
+	const char *str_e;
+
+	switch (e) {
+	case IS_EQUAL:
+		if (exp == got) {
+			return 0;
+		}
+		str_e = "equal";
+		break;
+	case IS_LESS_THAN:
+	case IS_NOT_EQUAL:
+	default:
+		if (exp != got) {
+			return 0;
+		}
+		str_e = "not equal";
+		break;
+	}
+
+	append_fmt("\n");
+	append_fmt("    Expecting '%f' %s '%f'\n", exp, str_e, got);
+
+	exit(1);
+
+}
+
 } // namespace::vos
 
 // vi: ts=8 sw=8 tw=80:
