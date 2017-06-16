@@ -411,6 +411,8 @@ int Resolver::recv_tcp(DNSQuery* answer)
 	// (5)
 	s = read();
 	if (s < 0) {
+		reset();
+		close();
 		return -1;
 	}
 
