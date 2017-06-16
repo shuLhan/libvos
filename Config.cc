@@ -342,7 +342,7 @@ Error Config::parsing()
 	size_t _e_col = 0;
 	Buffer	b;
 
-	Error err = resize(size_t(get_size()));
+	Error err = resize(size_t(size()));
 	if (err != NULL) {
 		return err;
 	}

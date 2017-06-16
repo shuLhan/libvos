@@ -1025,6 +1025,32 @@ const char* File::name()
 	return _name.v();
 }
 
+/**
+ * Method size() will return the size of current opened file.
+ * If file is not open, it will return 0.
+ */
+off_t File::size()
+{
+	if (_size > 0) {
+		return _size;
+	}
+	if (is_open()) {
+		return get_size();
+	}
+	return 0;
+}
+
+/**
+ * Method status() will return the status of opened file, its either O_RDONLY,
+ * O_WRONLY, or O_RDWR.
+ *
+ * If file is not open, it will return FILE_OPEN_NO.
+ */
+int File::status()
+{
+	return _status;
+}
+
 } // namespace::vos
 
 // vi: ts=8 sw=8 tw=80:

@@ -99,7 +99,6 @@ public:
 
 	int is_open();
 
-	off_t get_size();
 	void set_eol(const int mode);
 
 	ssize_t read();
@@ -123,6 +122,8 @@ public:
 
 	int fd();
 	const char* name();
+	off_t size();
+	int status();
 
 protected:
 	int		_d;
@@ -140,6 +141,8 @@ private:
 
 	Error open(const char* path, const enum file_open_mode
 		, const int perm = S_IRUSR | S_IWUSR);
+
+	off_t get_size();
 };
 
 } // namespace::vos
