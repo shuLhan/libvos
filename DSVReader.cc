@@ -112,11 +112,15 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 	size_t blob_size = 0;
 	ssize_t s = 0;
 	DSVRecordMD* rmd = NULL;
+	Error err;
 
 	if (_i == 0) {
-		s = File::read();
-		if (s == 0) {
-			return 0;
+		err = File::read();
+		if (err != NULL) {
+			if (err == ErrFileEnd) {
+				return 0;
+			}
+			return -1;
 		}
 	} else if (startp >= _i) {
 		startp	= startp - _p;

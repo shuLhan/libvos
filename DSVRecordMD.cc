@@ -477,8 +477,7 @@ err:
  */
 List* DSVRecordMD::INIT_FROM_FILE(const char* fmeta)
 {
-	ssize_t s = 0;
-	File		f;
+	File f;
 
 	Error err = f.open_ro(fmeta);
 	if (err != NULL) {
@@ -490,8 +489,8 @@ List* DSVRecordMD::INIT_FROM_FILE(const char* fmeta)
 		return NULL;
 	}
 
-	s = f.read();
-	if (s < 0) {
+	err = f.read();
+	if (err != NULL) {
 		return NULL;
 	}
 

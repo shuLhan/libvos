@@ -9,6 +9,7 @@
 namespace vos {
 
 Error ErrFileEmpty("File: empty");
+Error ErrFileEnd("File: end of file");
 Error ErrFileExist("File: exist");
 Error ErrFileNameEmpty("File: name is empty");
 Error ErrFileNotFound("File: path is empty or invalid");
@@ -175,17 +176,20 @@ Error File::COPY(const char* src, const char* dst)
 		return err;
 	}
 
-	ssize_t s = from.read();
-	while (s > 0) {
-		err = to.write(&from);
+	do {
+		err = from.read();
 		if (err != NULL) {
+			if (err == ErrFileEnd) {
+				err = NULL;
+				break;
+			}
 			return err;
 		}
 
-		s = from.read();
-	}
+		err = to.write(&from);
+	} while(err == NULL);
 
-	return NULL;
+	return err;
 }
 
 /**
@@ -512,25 +516,9 @@ void File::set_eol(const int mode)
  *	< -1	: fail, error at reading descriptor.
  * @desc	: read contents of file and saved it to buffer.
  */
-ssize_t File::read()
+Error File::read()
 {
-	if (_status == O_WRONLY) {
-		return 0;
-	}
-
-	ssize_t s = 0;
-
-	s = ::read(_d, &_v[0], _l);
-	if (s < 0) {
-		perror(__CNAME);
-		return -1;
-	}
-
-	_i	= size_t(s);
-	_p	= 0;
-	_v[_i]	= '\0';
-
-	return s;
+	return readn(_l);
 }
 
 /**
@@ -545,39 +533,47 @@ ssize_t File::read()
  *	read n bytes of characters from file, automatically increase buffer if n
  *	is greater than File buffer size.
  */
-ssize_t File::readn(size_t n)
+Error File::readn(size_t n)
 {
 	if (_status == O_WRONLY) {
-		return 0;
+		return NULL;
 	}
 
+	Error err;
+
 	if (n > _l) {
-		Error err = resize(n);
+		err = resize(n);
 		if (err != NULL) {
-			return -1;
+			return err;
 		}
 	}
+
 	_i = 0;
+	_p = 0;
+	_v[_i] = '\0';
+
 	while (n > 0) {
 		ssize_t s = ::read(_d, &_v[_i], n);
 		if (s < 0) {
 			if (s == EAGAIN || s == EWOULDBLOCK) {
 				break;
 			}
-			perror(__CNAME);
-			return -1;
+			return Error::SYS();
 		}
 		if (s == 0) {
-			break;
+			if (_i > 0) {
+				_v[_i] = '\0';
+				return NULL;
+			}
+			return ErrFileEnd;
 		}
+
 		_i += size_t(s);
-		n -= size_t(s);
+		n = n - size_t(s);
 	}
+	_v[_i] = '\0';
 
-	_p	= 0;
-	_v[_i]	= '\0';
-
-	return ssize_t(_i);
+	return err;
 }
 
 /**
@@ -593,10 +589,10 @@ ssize_t File::readn(size_t n)
  * buffer and will not be replaced, new data will be filled in position after
  * (_i - _p).
  */
-ssize_t File::refill(size_t read_min)
+Error File::refill(size_t read_min)
 {
 	if (_status == O_WRONLY) {
-		return 0;
+		return NULL;
 	}
 
 	ssize_t s = 0;
@@ -609,7 +605,7 @@ ssize_t File::refill(size_t read_min)
 	} else {
 		// move_len == 0 || _p == 0
 		_p = 0;
-		return 0;
+		return NULL;
 	}
 
 	len = move_len + read_min;
@@ -635,8 +631,7 @@ ssize_t File::refill(size_t read_min)
 
 	s = ::read(_d, &_v[move_len], len);
 	if (s < 0) {
-		perror(__CNAME);
-		return -1;
+		return Error::SYS();
 	}
 
 	_i = size_t(s);
@@ -645,7 +640,7 @@ ssize_t File::refill(size_t read_min)
 	_p	= 0;
 	_v[_i]	= '\0';
 
-	return s;
+	return NULL;
 }
 
 /**
@@ -661,7 +656,7 @@ ssize_t File::refill(size_t read_min)
  *	- this operation will change contents of file buffer.
  *	- this operation return a string without a new line character.
  */
-int File::get_line(Buffer* line)
+Error File::get_line(Buffer* line)
 {
 	if (_status == O_WRONLY || !line) {
 		return 0;
@@ -670,12 +665,12 @@ int File::get_line(Buffer* line)
 	ssize_t s = 0;
 	size_t start = 0;
 	ssize_t len = 0;
+	Error err;
 
 	if (_i == 0) {
-		s = File::read();
-		if (s <= 0) {
-			perror(__CNAME);
-			return -1;
+		err = File::read();
+		if (err != NULL) {
+			return err;
 		}
 	}
 
@@ -695,8 +690,7 @@ int File::get_line(Buffer* line)
 			while (len > 0) {
 				s = ::read(_d, &_v[_i], size_t(len));
 				if (s < 0) {
-					perror(__CNAME);
-					return -1;
+					return Error::SYS();
 				}
 				if (s == 0) {
 					break;
@@ -724,19 +718,20 @@ int File::get_line(Buffer* line)
 		if (_p != 0 && _p < _i) {
 			line->reset();
 			_p++;
-			return 1;
+			return NULL;
 		}
-		return 0;
+
+		return ErrFileEnd;
 	}
 
-	Error err = line->copy_raw(&_v[start], size_t(len));
+	err = line->copy_raw(&_v[start], size_t(len));
 	if (err != NULL) {
-		return -1;
+		return err;
 	}
 
 	_p++;
 
-	return 1;
+	return NULL;
 }
 
 /**
@@ -765,7 +760,10 @@ Error File::write(const Buffer* bfr)
  */
 Error File::write_raw(const char* bfr, size_t len)
 {
-	if (_status == O_RDONLY || !bfr) {
+	if (_status == O_RDONLY) {
+		return ErrFileReadOnly;
+	}
+	if (!bfr) {
 		return NULL;
 	}
 	if (!len) {
@@ -820,43 +818,19 @@ Error File::write_raw(const char* bfr, size_t len)
  * @method	: File::writef
  * @param	:
  *	> fmt	: formatted string.
- *	> args	: list of arguments for formatted string.
- * @return	:
- *	< >=0	: success, return number of bytes written to file.
- *	< 0	: success, file is not open.
- *	< -1	: fail.
- * @desc	: write buffer of formatted string to file.
- */
-Error File::writef(const char* fmt, va_list args)
-{
-	if (_status == O_RDONLY || !fmt) {
-		return 0;
-	}
-
-	Buffer b;
-
-	Error err = b.vappend_fmt(fmt, args);
-	if (err != NULL) {
-		return err;
-	}
-
-	return write_raw(b.v(), b.len());
-}
-
-/**
- * @method	: File::writes
- * @param	:
- *	> fmt	: formatted string.
  *	> ...	: any arguments for value in formatted string.
  * @return	:
  *	< >=0	: success, return number of bytes written to file.
  *	< -1	: fail.
  * @desc	: write buffer of formatted string to file.
  */
-Error File::writes(const char* fmt, ...)
+Error File::writef(const char* fmt, ...)
 {
-	if (_status == O_RDONLY || !fmt) {
-		return 0;
+	if (_status == O_RDONLY) {
+		return ErrFileReadOnly;
+	}
+	if (!fmt) {
+		return NULL;
 	}
 
 	Buffer		b;
@@ -881,7 +855,7 @@ Error File::writes(const char* fmt, ...)
 Error File::writec(const char c)
 {
 	if (_status == O_RDONLY) {
-		return NULL;
+		return ErrFileReadOnly;
 	}
 
 	Error err;

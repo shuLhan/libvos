@@ -17,6 +17,7 @@ using vos::Buffer;
 namespace vos {
 
 extern Error ErrFileEmpty;
+extern Error ErrFileEnd;
 extern Error ErrFileExist;
 extern Error ErrFileNameEmpty;
 extern Error ErrFileNotFound;
@@ -101,15 +102,14 @@ public:
 
 	void set_eol(const int mode);
 
-	ssize_t read();
-	ssize_t readn(size_t n);
-	ssize_t refill(size_t read_min = 0);
-	int get_line(Buffer* line);
+	Error read();
+	Error readn(size_t n);
+	Error refill(size_t read_min = 0);
+	Error get_line(Buffer* line);
 
 	Error write(const Buffer* bfr);
 	Error write_raw(const char* bfr, size_t len = 0);
-	Error writef(const char* fmt, va_list args);
-	Error writes(const char* fmt, ...);
+	Error writef(const char* fmt, ...);
 	Error writec(const char c);
 
 	int is_readable(fd_set* read_fds, fd_set* all_fds);

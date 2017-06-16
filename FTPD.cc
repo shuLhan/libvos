@@ -470,9 +470,9 @@ void FTPD::client_process()
 		c->reset();
 
 		if (csock) {
-			s = csock->read();
-			if (s <= 0) {
-				if (s == 0) {
+			err = csock->read();
+			if (err != NULL) {
+				if (err == ErrFileEnd) {
 					client_del(c);
 				}
 				continue;
@@ -1294,9 +1294,8 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPD_client* c)
 		return;
 	}
 
-	ssize_t x = 0;
-	File		file;
-	Socket*		pasv_c		= NULL;
+	File file;
+	Socket* pasv_c = NULL;
 	Error err;
 
 	if (!c->_psrv || !c->_pclt) {
@@ -1326,10 +1325,10 @@ void FTPD::on_cmd_RETR(FTPD* s, FTPD_client* c)
 
 	c->reply_raw(CODE_150, _FTP_reply_msg[CODE_150], NULL);
 
-	x = file.read();
-	while (x > 0) {
+	err = file.read();
+	while (err == NULL) {
 		pasv_c->write(&file);
-		x = file.read();
+		err = file.read();
 	}
 
 	c->_s = CODE_226;
@@ -1375,10 +1374,10 @@ void FTPD::on_cmd_STOR(FTPD* s, FTPD_client* c)
 
 	c->reply_raw(CODE_150, _FTP_reply_msg[CODE_150], NULL);
 
-	x = pasv_c->read();
-	while (x > 0) {
+	err = pasv_c->read();
+	while (err == NULL) {
 		file.write(pasv_c);
-		x = pasv_c->read();
+		err = pasv_c->read();
 	}
 
 	x = DirNode::INSERT_CHILD(c->_path_node, c->_path_real.v()

@@ -409,23 +409,21 @@ int Resolver::recv_tcp(DNSQuery* answer)
 	}
 
 	// (5)
-	s = read();
-	if (s < 0) {
+	Error err = read();
+	if (err != NULL) {
 		reset();
 		close();
-		return -1;
-	}
+		FD_CLR(_d, &_fd_all);
 
-	// (6)
-	if (s == 0) {
-		if (LIBVOS_DEBUG) {
-			printf ("[%s] recv_tcp: connection closed.\n"
-				, __cname);
+		// (6)
+		if (err == ErrFileEnd) {
+			if (LIBVOS_DEBUG) {
+				printf ("[%s] recv_tcp: connection closed.\n"
+					, __cname);
+			}
+			return 0;
 		}
-		reset();
-		close();
-		FD_CLR (_d, &_fd_all);
-		return 0;
+		return -1;
 	}
 
 	// (7)

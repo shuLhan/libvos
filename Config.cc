@@ -111,7 +111,7 @@ Error Config::save_as(const char* ini, const int mode)
 
 	while (phead) {
 		if (phead->like_raw(CONFIG_ROOT) != 0) {
-			err = fini.writes("[%s]\n", phead->chars());
+			err = fini.writef("[%s]\n", phead->chars());
 			if (err != NULL) {
 				return err;
 			}
@@ -120,7 +120,7 @@ Error Config::save_as(const char* ini, const int mode)
 		pkey = phead->next_key;
 		while (pkey) {
 			if (CONFIG_T_KEY == pkey->type) {
-				err = fini.writes("\t%s = %s\n",
+				err = fini.writef("\t%s = %s\n",
 						pkey->chars(),
 						pkey->value ?
 						pkey->value->v() : "");
@@ -129,7 +129,7 @@ Error Config::save_as(const char* ini, const int mode)
 				}
 			} else {
 				if (CONFIG_SAVE_WITH_COMMENT == mode) {
-					err = fini.writes("%s\n", pkey->v());
+					err = fini.writef("%s\n", pkey->v());
 					if (err != NULL) {
 						return err;
 					}
@@ -334,22 +334,24 @@ void Config::add_comment(const char* comment)
  */
 Error Config::parsing()
 {
-	ssize_t s = 0;
-	int	todo	= P_CFG_START;
+	int todo = P_CFG_START;
 	size_t start = 0;
 	size_t end = 0;
 	size_t _e_row = 1;
 	size_t _e_col = 0;
-	Buffer	b;
+	Buffer b;
 
 	Error err = resize(size_t(size()));
 	if (err != NULL) {
 		return err;
 	}
 
-	s = read();
-	if (s <= 0) {
-		return ErrFileEmpty;
+	err = read();
+	if (err != NULL) {
+		if (_i == 0) {
+			return ErrFileEmpty;
+		}
+		return err;
 	}
 
 	_p = 0;

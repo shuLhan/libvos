@@ -84,14 +84,16 @@ Error SSVReader::load (const char* file)
 		_rows = new Rowset();
 	}
 
-	ssize_t s;
 	Buffer line;
 	List* row = NULL;
 
 	do {
-		s = File::get_line (&line);
-		if (s <= 0) {
-			break;
+		err = File::get_line(&line);
+		if (err == ErrFileEnd) {
+			return NULL;
+		}
+		if (err != NULL) {
+			return err;
 		}
 
 		row = parse (&line);
@@ -99,7 +101,7 @@ Error SSVReader::load (const char* file)
 		if (row) {
 			_rows->push_tail(row);
 		}
-	} while (s > 0);
+	} while (err == NULL);
 
 	return NULL;
 }

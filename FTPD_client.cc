@@ -75,7 +75,7 @@ Error FTPD_client::reply()
 	}
 
 	_sock->reset();
-	return _sock->writes(_rmsg, _rmsg_plus);
+	return _sock->writef(_rmsg, _rmsg_plus);
 }
 
 /**

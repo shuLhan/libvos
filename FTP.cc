@@ -177,8 +177,8 @@ int FTP::recv(const unsigned int to_sec, const unsigned int to_usec)
 	}
 
 	if (FD_ISSET(_d, &_fd_read)) {
-		s = read();
-		if (s >= 0) {
+		Error err = read();
+		if (err == NULL) {
 			if (LIBVOS_DEBUG && _mode == FTP_MODE_NORMAL) {
 				dump();
 			}
