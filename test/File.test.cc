@@ -68,8 +68,8 @@ void test_GET_SIZE()
 		off_t got = 0;
 		err = File::GET_SIZE(tests[x].file, &got);
 
-		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
-		T.expect_signed(tests[x].exp_size, got, vos::IS_EQUAL);
+		T.expect_error(tests[x].exp_err, err);
+		T.expect_signed(tests[x].exp_size, got);
 
 		T.ok();
 	}
@@ -139,7 +139,7 @@ void test_IS_EXIST()
 
 		int got = File::IS_EXIST(tests[x].file, tests[x].access_mode);
 
-		T.expect_signed(tests[x].exp_res, got, vos::IS_EQUAL);
+		T.expect_signed(tests[x].exp_res, got);
 
 		T.ok();
 	}
@@ -205,8 +205,8 @@ void test_BASENAME()
 
 		err = File::BASENAME(&name, tests[x].path);
 
-		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
-		T.expect_string(tests[x].exp, name.v(), vos::IS_EQUAL);
+		T.expect_error(tests[x].exp_err, err);
+		T.expect_string(tests[x].exp, name.v());
 
 		T.ok();
 	}
@@ -263,14 +263,13 @@ void test_COPY()
 		err = File::COPY(tests[x].src, tests[x].dst);
 
 		if (err != NULL) {
-			T.expect_signed(1, tests[x].exp_err == err
-				, vos::IS_EQUAL);
+			T.expect_error(tests[x].exp_err, err);
 		} else {
 			off_t size;
 
 			File::GET_SIZE(tests[x].dst, &size);
 
-			T.expect_signed(tests[x].exp_size, size, vos::IS_EQUAL);
+			T.expect_signed(tests[x].exp_size, size);
 		}
 
 		T.ok();
@@ -313,14 +312,14 @@ void test_TOUCH()
 
 		err = File::TOUCH(tests[x].filename);
 
-		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
+		T.expect_error(tests[x].exp_err, err);
 
 		if (err == NULL) {
 			off_t size;
 
 			File::GET_SIZE(tests[x].filename, &size);
 
-			T.expect_signed(tests[x].exp_size, size, vos::IS_EQUAL);
+			T.expect_signed(tests[x].exp_size, size);
 		}
 
 		T.ok();
@@ -364,7 +363,7 @@ void test_WRITE_PID()
 
 		err = File::WRITE_PID(tests[x].filename);
 
-		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
+		T.expect_error(tests[x].exp_err, err);
 
 		if (err == NULL) {
 			off_t size;
@@ -419,16 +418,147 @@ void test_open()
 
 		err = f.open(tests[x].path);
 
-		T.expect_signed(1, tests[x].exp_err == err, vos::IS_EQUAL);
-		T.expect_signed(tests[x].exp_status, f.status(), vos::IS_EQUAL);
+		T.expect_error(tests[x].exp_err, err);
+
+		T.expect_signed(tests[x].exp_status, f.status());
 
 		if (err == NULL) {
-			T.expect_string(tests[x].path, f.name(), vos::IS_EQUAL);
+			T.expect_string(tests[x].path, f.name());
 
-			T.expect_unsigned(tests[x].exp_size, f.size()
-				, vos::IS_EQUAL);
+			T.expect_unsigned(tests[x].exp_size, f.size());
 
 			T.expect_signed(f.fd(), 0, vos::IS_GREATER_THAN);
+		}
+
+		T.ok();
+	}
+
+	unlink("newfile");
+}
+
+void test_open_ro()
+{
+	struct {
+		const char* desc;
+		const char* path;
+		Error       exp_err;
+		const off_t exp_size;
+		const int   exp_status;
+	} tests[] = {{
+		"With open(NULL)"
+	,	NULL
+	,	vos::ErrFileNameEmpty
+	,	0
+	,	vos::FILE_OPEN_NO
+	},{
+		"With open(newfile)"
+	,	"newfile"
+	,	vos::ErrFileNotFound
+	,	0
+	,	vos::FILE_OPEN_NO
+	},{
+		"With open(../LICENSE)"
+	,	"../LICENSE"
+	,	NULL
+	,	1949
+	,	O_RDONLY
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	Error err;
+	Buffer b("test write buffer");
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("open_ro()", tests[x].desc);
+
+		File f;
+
+		err = f.open_ro(tests[x].path);
+
+		T.expect_error(tests[x].exp_err, err);
+
+		T.expect_signed(tests[x].exp_status, f.status());
+
+		if (err == NULL) {
+			T.expect_string(tests[x].path, f.name());
+
+			T.expect_unsigned(tests[x].exp_size, f.size());
+
+			T.expect_signed(f.fd(), 0, vos::IS_GREATER_THAN);
+
+			// Test write
+			err = f.write(&b);
+			T.expect_error(vos::ErrFileReadOnly, err);
+
+			err = f.write_raw("test write raw");
+			T.expect_error(vos::ErrFileReadOnly, err);
+
+			err = f.writef("test write raw");
+			T.expect_error(vos::ErrFileReadOnly, err);
+
+			err = f.writec('x');
+			T.expect_error(vos::ErrFileReadOnly, err);
+		}
+
+		T.ok();
+	}
+}
+
+void test_open_wo()
+{
+	struct {
+		const char* desc;
+		const char* path;
+		Error       exp_err;
+		const off_t exp_size;
+		const int   exp_status;
+	} tests[] = {{
+		"With open(NULL)"
+	,	NULL
+	,	vos::ErrFileNameEmpty
+	,	0
+	,	vos::FILE_OPEN_NO
+	},{
+		"With open(newfile)"
+	,	"newfile"
+	,	NULL
+	,	0
+	,	O_WRONLY
+	},{
+		"With open(../LICENSE)"
+	,	"../LICENSE"
+	,	NULL
+	,	1949
+	,	O_WRONLY
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	Error err;
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("open_wo()", tests[x].desc);
+
+		File f;
+
+		err = f.open_wo(tests[x].path);
+
+		T.expect_error(tests[x].exp_err, err);
+
+		T.expect_signed(tests[x].exp_status, f.status());
+
+		if (err == NULL) {
+			T.expect_string(tests[x].path, f.name());
+
+			T.expect_unsigned(tests[x].exp_size, f.size());
+
+			T.expect_signed(f.fd(), 0, vos::IS_GREATER_THAN);
+
+			// Test read.
+			err = f.read();
+			T.expect_error(NULL, err);
+
+			err = f.readn(1);
+			T.expect_error(NULL, err);
 		}
 
 		T.ok();
@@ -449,6 +579,8 @@ int main()
 	test_WRITE_PID();
 
 	test_open();
+	test_open_ro();
+	test_open_wo();
 
 	return 0;
 }
