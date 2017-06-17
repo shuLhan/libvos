@@ -794,6 +794,91 @@ void test_read()
 	T.ok();
 }
 
+void test_get_line_open_wo()
+{
+	File f;
+	Buffer b;
+
+	f.open_wo("GET_LINE");
+
+	Error err = f.get_line(&b);
+
+	T.expect_error(vos::ErrFileWriteOnly, err);
+}
+
+void test_get_lines()
+{
+	struct {
+		const char* desc;
+		const char* exp_line;
+		Error       exp_err;
+	} tests[] = {{
+		"1st line"
+	,	"Copyright 2009-2017, M. Shulhan (ms@kilabit.info)."
+	,	NULL
+	},{
+		"2nd line"
+	,	"All rights reserved."
+	,	NULL
+	},{
+		"3rd line"
+	,	""
+	,	NULL
+	},{
+		"4th line"
+	,	"Redistribution and use in source and binary forms, with or without"
+	,	NULL
+	},{
+		"5th line"
+	,	"modification, are permitted provided that the following conditions are met:"
+	,	NULL
+	},{
+		"6rd line"
+	,	""
+	,	NULL
+	},{
+		"7rd line"
+	,	""
+	,	NULL
+	},{
+		"8rd line"
+	,	""
+	,	vos::ErrFileEnd
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	File f;
+	File f20(20);
+	Buffer b;
+
+	Error err = f.open_ro("GET_LINE");
+	T.expect_error(NULL, err);
+
+	err = f20.open_ro("GET_LINE");
+	T.expect_error(NULL, err);
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("get_line()", tests[x].desc);
+
+		err = f.get_line(&b);
+
+		T.expect_string(tests[x].exp_line, b.v());
+		T.expect_error(tests[x].exp_err, err);
+
+		err = f20.get_line(&b);
+		T.expect_string(tests[x].exp_line, b.v());
+		T.expect_error(tests[x].exp_err, err);
+
+		T.ok();
+	}
+}
+
+void test_get_line()
+{
+	test_get_line_open_wo();
+	test_get_lines();
+}
+
 int main()
 {
 	test_file_open_mode();
@@ -816,6 +901,7 @@ int main()
 	test_set_eol();
 
 	test_read();
+	test_get_line();
 
 	return 0;
 }

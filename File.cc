@@ -553,53 +553,39 @@ Error File::read(size_t n)
 }
 
 /**
- * @method		: File::refill
- * @param		:
- *	> read_min	: minimum length of buffer to fill, default to '0'.
- * @return		:
- *	< >=0		: success.
- *	< -1		: fail.
- * @desc		: Refill buffer with new data.
+ * Method refill(read_min) will refill buffer with new data.
+ * read_min contains minimum length of buffer to fill, default to '0'.
  *
  * All data from position of '_p' until '_i' will be moved to the beginning of
  * buffer and will not be replaced, new data will be filled in position after
  * (_i - _p).
+ *
+ * On success it will return NULL.
+ *
+ * On failure it will return,
+ * - ErrFileWriteOnly, if trying to read on write-only file.
+ * - Other system error
  */
 Error File::refill(size_t read_min)
 {
-	if (_status == O_WRONLY) {
-		return NULL;
-	}
-
 	ssize_t s = 0;
 	size_t move_len = 0;
 	size_t len = 0;
 
 	move_len = _i - _p;
+
 	if (move_len > 0 && _p > 0) {
-		memmove(&_v[0], &_v[_p], size_t(move_len));
-	} else {
-		// move_len == 0 || _p == 0
-		_p = 0;
-		return NULL;
+		memmove(&_v[0], &_v[_p], move_len);
 	}
 
 	len = move_len + read_min;
 	if (len > _l) {
-		if (LIBVOS_DEBUG) {
-			printf("[%s] refill: read resize from '%zu' to '%zu'\n"
-				, __CNAME, _l, len);
-		}
 		resize(len);
 		len -= move_len;
 	} else {
 		len = _l - move_len;
 		if (len == 0) {
 			len = _l * 2;
-			if (LIBVOS_DEBUG) {
-				printf("[%s] refill: read resize from '%zu' to '%zu'\n"
-					, __CNAME, _l, len);
-			}
 			resize(len);
 			len -= move_len;
 		}
@@ -609,40 +595,43 @@ Error File::refill(size_t read_min)
 	if (s < 0) {
 		return Error::SYS();
 	}
+	if (s == 0) {
+		return ErrFileEnd;
+	}
 
-	_i = size_t(s);
-
-	_i	+= move_len;
-	_p	= 0;
-	_v[_i]	= '\0';
+	_i = move_len + size_t(s);
+	_p = 0;
+	_v[_i] = '\0';
 
 	return NULL;
 }
 
 /**
- * @method	: File::get_line
- * @param	:
- *	> line	: out, pointer to Buffer object.
- * @return	:
- *	< 1	: success, one line read.
- *	< 0	: success, EOF.
- *	< -1	: fail.
- * @desc	: get one line at a time from buffer.
+ * Method get_line(line) will read one line from file at save it into `line`
+ * buffer without end-of-line character(s).
  *
- *	- this operation will change contents of file buffer.
- *	- this operation return a string without a new line character.
+ * This operation will change contents of file buffer.
+ *
+ * On success it will return NULL.
+ * On fail it will return,
+ * - ErrFileWriteOnly if file open mode is write only.
+ * - ErrFileEnd if no more line in file.
  */
 Error File::get_line(Buffer* line)
 {
-	if (_status == O_WRONLY || !line) {
-		return 0;
+	if (_status == O_WRONLY) {
+		return ErrFileWriteOnly;
+	}
+	if (!line) {
+		return NULL;
 	}
 
-	ssize_t s = 0;
-	size_t start = 0;
-	ssize_t len = 0;
+	line->reset();
+
+	size_t x = 0;
 	Error err;
 
+	// If file buffer empty, fill it.
 	if (_i == 0) {
 		err = File::read();
 		if (err != NULL) {
@@ -650,62 +639,61 @@ Error File::get_line(Buffer* line)
 		}
 	}
 
-	start = _p;
-	while (_v[_p] != _eol[0]) {
-		if (_p >= _i) {
-			_p = _p - start;
-			memmove(&_v[0], &_v[start], _p);
+	x = _p;
+	while (_v[x] != LF) {
+		if (x < _i) {
+			x++;
+			continue;
+		}
 
-			len = ssize_t(_l - _p);
-			if (len == 0) {
-				len = ssize_t(_l);
-				resize(_l * 2);
-			}
+		// End-of-line is not found since the beginning of buffer.
 
-			_i = _p;
-			while (len > 0) {
-				s = ::read(_d, &_v[_i], size_t(len));
-				if (s < 0) {
-					return Error::SYS();
-				}
-				if (s == 0) {
-					break;
-				}
+		x = x - _p;
 
-				_i	+= size_t(s);
-				len	-= s;
-			}
-			if (s == 0) {
-				break;
-			}
-
-			start	= 0;
-			_v[_i]	= '\0';
-			if (_i == 0) {
-				break;
-			}
+		if (_p == 0) {
+			err = refill(_l);
 		} else {
-			++_p;
+			err = refill();
+		}
+		if (err != NULL) {
+			if (err != ErrFileEnd) {
+				return err;
+			}
+			break;
 		}
 	}
 
-	len = ssize_t(_p - start);
-	if (len <= 0) {
-		if (_p != 0 && _p < _i) {
-			line->reset();
-			_p++;
-			return NULL;
-		}
-
+	if (x == 0) {
 		return ErrFileEnd;
 	}
 
-	err = line->copy_raw(&_v[start], size_t(len));
-	if (err != NULL) {
-		return err;
+	size_t len = x - _p;
+
+	// Is it end-of-line or empty line?
+	if (len == 0) {
+		// Empty line.
+		if (_v[x]) {
+			goto empty;
+		}
+		return ErrFileEnd;
 	}
 
-	_p++;
+	// Do not copy '\r' from end of line.
+	if (x > 0 && _v[x - 1] == CR) {
+		--len;
+	}
+
+	if (len > 0) {
+		err = line->copy_raw(&_v[_p], len);
+		if (err != NULL) {
+			return err;
+		}
+
+	}
+
+empty:
+	// Set _p to the next character after EOL.
+	_p = x + 1;
 
 	return NULL;
 }

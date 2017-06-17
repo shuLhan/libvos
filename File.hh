@@ -24,11 +24,15 @@ extern Error ErrFileNotFound;
 extern Error ErrFileReadOnly;
 extern Error ErrFileWriteOnly;
 
+#define LF '\n'
+#define CR '\r'
+
 enum file_eol_mode {
 	FILE_EOL_NIX	= 0,
 	FILE_EOL_DOS	= 1,
 	N_FILE_EOL_MODE
 };
+
 extern const char* __eol[N_FILE_EOL_MODE];
 
 enum file_open_mode {
@@ -104,7 +108,6 @@ public:
 	void set_eol(enum file_eol_mode mode);
 
 	Error read(size_t n = 0);
-	Error refill(size_t read_min = 0);
 	Error get_line(Buffer* line);
 
 	Error write(const Buffer* bfr);
@@ -134,6 +137,8 @@ protected:
 	off_t		_size;
 	const char*	_eol;
 	Buffer		_name;
+
+	Error refill(size_t read_min = 0);
 
 private:
 	File(const File&);
