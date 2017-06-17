@@ -50,6 +50,7 @@ Error File::GET_SIZE(const char* path, off_t* size)
 	*size = ::lseek(fd, 0, SEEK_END);
 	if (*size < 0) {
 		*size = 0;
+		return Error::SYS();
 	}
 
 	::close(fd);
