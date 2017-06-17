@@ -567,6 +567,130 @@ void test_open_wo()
 	unlink("newfile");
 }
 
+void test_open_wx()
+{
+	struct {
+		const char* desc;
+		const char* path;
+		Error       exp_err;
+		const off_t exp_size;
+		const int   exp_status;
+	} tests[] = {{
+		"With open(NULL)"
+	,	NULL
+	,	vos::ErrFileNameEmpty
+	,	0
+	,	vos::FILE_OPEN_NO
+	},{
+		"With open(../LICENSE)"
+	,	"../LICENSE"
+	,	vos::ErrFileExist
+	,	0
+	,	-1
+	},{
+		"With open(newfile)"
+	,	"newfile"
+	,	NULL
+	,	0
+	,	O_WRONLY
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	Error err;
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("open_wx()", tests[x].desc);
+
+		File f;
+
+		err = f.open_wx(tests[x].path);
+
+		T.expect_error(tests[x].exp_err, err);
+
+		T.expect_signed(tests[x].exp_status, f.status());
+
+		if (err == NULL) {
+			T.expect_string(tests[x].path, f.name());
+
+			T.expect_unsigned(tests[x].exp_size, f.size());
+
+			T.expect_signed(f.fd(), 0, vos::IS_GREATER_THAN);
+
+			// Test read.
+			err = f.read();
+			T.expect_error(NULL, err);
+
+			err = f.readn(1);
+			T.expect_error(NULL, err);
+		}
+
+		T.ok();
+	}
+}
+
+void test_open_wa()
+{
+	struct {
+		const char* desc;
+		const char* path;
+		Error       exp_err;
+		const off_t exp_size;
+		const int   exp_status;
+	} tests[] = {{
+		"With open(NULL)"
+	,	NULL
+	,	vos::ErrFileNameEmpty
+	,	0
+	,	vos::FILE_OPEN_NO
+	},{
+		"With open(newfile)"
+	,	"newfile"
+	,	NULL
+	,	0
+	,	O_WRONLY
+	},{
+		"With open(../LICENSE)"
+	,	"../LICENSE"
+	,	NULL
+	,	1949
+	,	O_WRONLY
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	Error err;
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("open_wa()", tests[x].desc);
+
+		File f;
+
+		err = f.open_wa(tests[x].path);
+
+		T.expect_error(tests[x].exp_err, err);
+
+		T.expect_signed(tests[x].exp_status, f.status());
+
+		if (err == NULL) {
+			T.expect_string(tests[x].path, f.name());
+
+			T.expect_unsigned(tests[x].exp_size, f.size());
+
+			T.expect_signed(f.fd(), 0, vos::IS_GREATER_THAN);
+
+			// Test read.
+			err = f.read();
+			T.expect_error(NULL, err);
+
+			err = f.readn(1);
+			T.expect_error(NULL, err);
+		}
+
+		T.ok();
+	}
+
+	unlink("newfile");
+}
+
 int main()
 {
 	test_file_open_mode();
@@ -581,6 +705,8 @@ int main()
 	test_open();
 	test_open_ro();
 	test_open_wo();
+	test_open_wx();
+	test_open_wa();
 
 	return 0;
 }
