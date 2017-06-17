@@ -913,8 +913,8 @@ Error File::flush()
 }
 
 /**
- * @method	: File::close
- * @desc	: close file descriptor.
+ * Method close() will write the remaining file buffer to disk, close the file
+ * descriptor, and reset all attributes.
  */
 void File::close()
 {
@@ -929,19 +929,6 @@ void File::close()
 	_status = FILE_OPEN_NO;
 	_perm	= 0;
 	_d	= 0;
-}
-
-/**
- * @method	: File::dump
- * @desc	: dump content of buffer to standard output.
- */
-void File::dump()
-{
-	printf("[%s] dump:\n", __CNAME);
-	printf("  descriptor  : %d\n", _d);
-	printf("  name        : %s\n", _name.chars());
-	printf("  size        : %ld\n", _size);
-	printf("  contents    :\n[%s]\n", chars());
 }
 
 /**

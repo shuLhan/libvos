@@ -121,7 +121,6 @@ public:
 
 	Error flush();
 	void close();
-	void dump();
 
 	int fd();
 	const char* name();
