@@ -22,6 +22,7 @@ extern Error ErrFileExist;
 extern Error ErrFileNameEmpty;
 extern Error ErrFileNotFound;
 extern Error ErrFileReadOnly;
+extern Error ErrFileWriteOnly;
 
 enum file_eol_mode {
 	FILE_EOL_NIX	= 0,
@@ -102,8 +103,7 @@ public:
 
 	void set_eol(enum file_eol_mode mode);
 
-	Error read();
-	Error readn(size_t n);
+	Error read(size_t n = 0);
 	Error refill(size_t read_min = 0);
 	Error get_line(Buffer* line);
 

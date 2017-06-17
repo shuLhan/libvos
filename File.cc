@@ -14,6 +14,7 @@ Error ErrFileExist("File: exist");
 Error ErrFileNameEmpty("File: name is empty");
 Error ErrFileNotFound("File: path is empty or invalid");
 Error ErrFileReadOnly("File: read only");
+Error ErrFileWriteOnly("File: write only");
 
 const char* File::__CNAME = "File";
 
@@ -496,38 +497,26 @@ void File::set_eol(enum file_eol_mode mode)
 }
 
 /**
- * @method	: File::read
- * @return	:
- *	< >0	: success, return number of bytes read.
- *	< 0	: EOF
- *	< -1	: fail, error at reading descriptor.
- * @desc	: read contents of file and saved it to buffer.
+ * Method read(n) will read `n` bytes of characters from file, automatically
+ * increase the buffer if `n` is greater than current File buffer size.
+ *
+ * If `n` is less or equal than zero, then it will set to current buffer size.
+ *
+ * On success it will return NULL, otherwise it will return error:
+ * - ErrFileWriteOnly: if file is cannot be read because its opened as
+ *   read-only.
  */
-Error File::read()
-{
-	return readn(_l);
-}
-
-/**
- * @method	: File::readn
- * @param	:
- *	> n	: number of bytes to be read from descriptor.
- * @return	:
- *	< >0	: success, return number of bytes read.
- *	< 0	: EOF, or file is not open.
- *	< -1	: fail.
- * @desc	:
- *	read n bytes of characters from file, automatically increase buffer if n
- *	is greater than File buffer size.
- */
-Error File::readn(size_t n)
+Error File::read(size_t n)
 {
 	if (_status == O_WRONLY) {
-		return NULL;
+		return ErrFileWriteOnly;
 	}
 
 	Error err;
 
+	if (n == 0) {
+		n = _l;
+	}
 	if (n > _l) {
 		err = resize(n);
 		if (err != NULL) {
@@ -560,7 +549,7 @@ Error File::readn(size_t n)
 	}
 	_v[_i] = '\0';
 
-	return err;
+	return NULL;
 }
 
 /**

@@ -555,10 +555,7 @@ void test_open_wo()
 
 			// Test read.
 			err = f.read();
-			T.expect_error(NULL, err);
-
-			err = f.readn(1);
-			T.expect_error(NULL, err);
+			T.expect_error(vos::ErrFileWriteOnly, err);
 		}
 
 		T.ok();
@@ -618,10 +615,7 @@ void test_open_wx()
 
 			// Test read.
 			err = f.read();
-			T.expect_error(NULL, err);
-
-			err = f.readn(1);
-			T.expect_error(NULL, err);
+			T.expect_error(vos::ErrFileWriteOnly, err);
 
 			unlink(tests[x].path);
 		}
@@ -770,6 +764,36 @@ void test_set_eol()
 	}
 }
 
+void test_read()
+{
+	File f;
+	size_t n = 19;
+
+	Error err = f.open_ro("../LICENSE");
+
+	T.expect_error(NULL, err);
+
+	T.start("read()", "With n bytes");
+
+	err = f.read(n);
+
+	T.expect_error(NULL, err);
+	T.expect_string("Copyright 2009-2017", f.v());
+
+	T.ok();
+
+	T.start("read()", "With n > _l");
+
+	n = File::DFLT_SIZE + 10;
+
+	err = f.read(n);
+
+	T.expect_error(NULL, err);
+	T.expect_unsigned(n, f.Buffer::size());
+
+	T.ok();
+}
+
 int main()
 {
 	test_file_open_mode();
@@ -790,6 +814,8 @@ int main()
 
 	test_is_open();
 	test_set_eol();
+
+	test_read();
 
 	return 0;
 }
