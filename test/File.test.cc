@@ -1043,6 +1043,8 @@ void test_write()
 	test_write_combine(20);
 	test_write_combine(40);
 	test_write_combine(80);
+
+	unlink("FILE_WRITE");
 }
 
 int main()
