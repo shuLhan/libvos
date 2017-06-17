@@ -879,6 +879,172 @@ void test_get_line()
 	test_get_lines();
 }
 
+void test_write_raw_truncate(size_t buffer_size)
+{
+	T.start("write_raw()", "With open_wt()");
+
+	const char* line = "Copyright 2009-2017, M. Shulhan (ms@kilabit.info).\n";
+	const size_t line_len = strlen(line);
+	const size_t n = 10;
+	const size_t exp_size = line_len * n;
+
+	File f(buffer_size);
+	Error err = f.open_wt("FILE_WRITE");
+
+	T.expect_error(NULL, err);
+
+	for (size_t x = 0; x < n; x++) {
+		err = f.write_raw(line, line_len);
+		T.expect_error(NULL, err);
+	}
+
+	err = f.flush();
+	T.expect_error(NULL, err);
+
+	T.expect_unsigned(exp_size, f.size());
+
+	f.close();
+
+	//
+	// Compare the file size using GET_SIZE().
+	//
+	off_t got_size = 0;
+
+	File::GET_SIZE("FILE_WRITE", &got_size);
+	T.expect_unsigned(exp_size, got_size);
+
+	T.ok();
+}
+
+void test_writef_append(size_t buffer_size)
+{
+	T.start("writef()", "With open_wt()");
+
+	const char* line = "All rights reserved.\n";
+	const size_t line_len = strlen(line);
+
+	File f(buffer_size);
+
+	Error err = f.open_wo("FILE_WRITE");
+	T.expect_error(NULL, err);
+
+	off_t size = f.size();
+	const size_t exp_size = size + line_len;
+
+	err = f.writef("%s", line);
+	T.expect_error(NULL, err);
+
+	err = f.flush();
+	T.expect_error(NULL, err);
+
+	T.expect_unsigned(exp_size, f.size());
+
+	f.close();
+
+	//
+	// Compare the file size using GET_SIZE().
+	//
+	off_t got_size = 0;
+
+	File::GET_SIZE("FILE_WRITE", &got_size);
+	T.expect_unsigned(exp_size, got_size);
+
+	T.ok();
+}
+
+void test_writec_truncate()
+{
+	T.start("writec()", "With truncate");
+
+	File f;
+	size_t exp_size = 10;
+
+	Error err = f.open_wt("FILE_WRITE");
+	T.expect_error(NULL, err);
+
+	for (int x = 0; x < 10; x++) {
+		err = f.writec('c');
+		T.expect_error(NULL, err);
+	}
+
+	err = f.flush();
+	T.expect_error(NULL, err);
+
+	T.expect_unsigned(exp_size, f.size());
+
+	f.close();
+
+	//
+	// Compare the file size using GET_SIZE().
+	//
+	off_t got_size = 0;
+
+	File::GET_SIZE("FILE_WRITE", &got_size);
+	T.expect_unsigned(exp_size, got_size);
+
+	T.ok();
+}
+
+void test_write_combine(size_t buffer_size)
+{
+	T.start("write*()", "With combination");
+
+	const char* line = "Copyright 2009-2017, M. Shulhan (ms@kilabit.info).\n";
+	const size_t line_len = strlen(line);
+	const size_t exp_size = (line_len * 2) + 1;
+
+	File f(buffer_size);
+
+	Error err = f.open_wt("FILE_WRITE");
+	T.expect_error(NULL, err);
+
+	err = f.write_raw(line, line_len);
+	T.expect_error(NULL, err);
+
+	err = f.writec('\n');
+	T.expect_error(NULL, err);
+
+	err = f.writef("%s", line);
+	T.expect_error(NULL, err);
+
+	err = f.flush();
+	T.expect_error(NULL, err);
+
+	T.expect_unsigned(exp_size, f.size());
+
+	f.close();
+
+	//
+	// Compare the file size using GET_SIZE().
+	//
+	off_t got_size = 0;
+
+	File::GET_SIZE("FILE_WRITE", &got_size);
+	T.expect_unsigned(exp_size, got_size);
+
+	T.ok();
+}
+
+void test_write()
+{
+	test_write_raw_truncate(File::DFLT_SIZE);
+	test_writef_append(File::DFLT_SIZE);
+
+	test_write_raw_truncate(10);
+	test_writef_append(10);
+
+	test_write_raw_truncate(20);
+	test_writef_append(20);
+
+	test_writec_truncate();
+
+	test_write_combine(File::DFLT_SIZE);
+	test_write_combine(10);
+	test_write_combine(20);
+	test_write_combine(40);
+	test_write_combine(80);
+}
+
 int main()
 {
 	test_file_open_mode();
@@ -902,6 +1068,8 @@ int main()
 
 	test_read();
 	test_get_line();
+
+	test_write();
 
 	return 0;
 }

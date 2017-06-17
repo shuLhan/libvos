@@ -699,28 +699,28 @@ empty:
 }
 
 /**
- * @method	: File::write
- * @param	:
- *	> bfr	: Buffer object to be write to file.
- * @return	:
- *	< >=0	: success, number of bytes appended to File buffer.
- *	< -1	: fail, error at writing to descriptor.
- * @desc	: append buffer 'bfr' to File buffer for writing.
+ * Method write(bfr) will append content of buffer `bfr` to file.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
 Error File::write(const Buffer* bfr)
 {
+	if (!bfr) {
+		return NULL;
+	}
 	return write_raw(bfr->v(), bfr->len());
 }
 
 /**
- * @method	: File::write_raw
- * @param	:
- *	> bfr	: pointer to raw buffer.
- *	> len	: length of 'bfr' to write, default to zero.
- * @return	:
- *	< >=0	: success, number of bytes appended to File buffer.
- *	< -1	: fail, error at writing to descriptor.
- * @desc	: append buffer 'bfr' to File buffer for writing.
+ * Method write_raw(bfr,len) will append string `bfr` with length `len` to file.
+ *
+ * (1) If length is not defined (zero by default), it will be computed
+ * automatically.
+ *
+ * (2) If length is greater than file buffer, then it will be written directly
+ * to file descriptor instead of to buffer.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
 Error File::write_raw(const char* bfr, size_t len)
 {
@@ -739,7 +739,7 @@ Error File::write_raw(const char* bfr, size_t len)
 
 	Error err;
 
-	// direct write
+	// (2) direct write
 	if (len >= _l) {
 		err = flush();
 		if (err != NULL) {
@@ -756,8 +756,7 @@ Error File::write_raw(const char* bfr, size_t len)
 			x	+= size_t(s);
 			len	-= size_t(s);
 		}
-		len = x;
-		_size += len;
+		_size += x;
 	} else {
 		if (_l < (_i + len)) {
 			err = flush();
@@ -770,6 +769,7 @@ Error File::write_raw(const char* bfr, size_t len)
 		if (err != NULL) {
 			return err;
 		}
+
 		if (_status & O_SYNC) {
 			flush();
 		}
@@ -779,14 +779,9 @@ Error File::write_raw(const char* bfr, size_t len)
 }
 
 /**
- * @method	: File::writef
- * @param	:
- *	> fmt	: formatted string.
- *	> ...	: any arguments for value in formatted string.
- * @return	:
- *	< >=0	: success, return number of bytes written to file.
- *	< -1	: fail.
- * @desc	: write buffer of formatted string to file.
+ * Method writef(fmt,...) will append formatted string to file.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
 Error File::writef(const char* fmt, ...)
 {
@@ -797,8 +792,8 @@ Error File::writef(const char* fmt, ...)
 		return NULL;
 	}
 
-	Buffer		b;
-	va_list		al;
+	Buffer b;
+	va_list al;
 
 	va_start(al, fmt);
 	Error err = b.vappend_fmt(fmt, al);
@@ -831,7 +826,10 @@ Error File::writec(const char c)
 		}
 	}
 
-	_v[_i++] = c;
+	_v[_i] = c;
+	_i++;
+	_v[_i] = '\0';
+
 
 	if (_status & O_SYNC) {
 		err = flush();
