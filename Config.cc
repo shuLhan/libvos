@@ -45,8 +45,8 @@ Config::~Config()
  */
 Error Config::load(const char* ini)
 {
-	if (!ini) {
-		return ErrFileNotFound.with(ini, strlen(ini));
+	if (ini == NULL) {
+		return ErrFileNameEmpty;
 	}
 
 	close();
