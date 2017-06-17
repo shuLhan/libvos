@@ -172,7 +172,7 @@ Error File::COPY(const char* src, const char* dst)
 		return err;
 	}
 
-	err = to.open_wo(dst);
+	err = to.open_wt(dst);
 	if (err != NULL) {
 		return err;
 	}
