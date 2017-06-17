@@ -406,47 +406,37 @@ Error File::open_wx(const char* path)
  *
  * On fail it will return error,
  * - ErrFileReadOnly, if file opened with read only mode.
- * - Cannot close file.
- * - Cannot truncate file.
- * - Cannot write file.
  */
 Error File::truncate(enum flush_mode flush_mode)
 {
 	if (_status == O_RDONLY) {
 		return ErrFileReadOnly;
 	}
+	if (_d == STDOUT_FILENO || _d == STDERR_FILENO) {
+		return flush();
+	}
+
+	Error err;
+
 	if (flush_mode & FLUSH_FIRST) {
-		reset();
-	}
-
-	// Try to close file.
-	if (_d && (_d != STDOUT_FILENO && _d != STDERR_FILENO)) {
-		ssize_t s = ::close(_d);
-		if (s != 0) {
-			return Error::SYS();
-		}
-	}
-
-	enum file_open_mode mode = FILE_OPEN_WOCT;
-
-	if (_status == O_RDWR) {
-		mode = FILE_OPEN_RWCT;
-	}
-
-	// Reopen file by truncate.
-	Error err = open(_name.v(), mode, _perm);
-	if (err != NULL) {
-		return err;
-	}
-
-	if (flush_mode & FLUSH_LAST) {
-		err = flush ();
+		err = flush();
 		if (err != NULL) {
 			return err;
 		}
 	}
 
-	return 0;
+	int s = ftruncate(_d, 0);
+	if (s < 0) {
+		return Error::SYS();
+	}
+
+	_size = 0;
+
+	if (flush_mode & FLUSH_LAST) {
+		err = flush();
+	}
+
+	return err;
 }
 
 /**
@@ -1010,9 +1000,9 @@ off_t File::size()
 		return _size;
 	}
 	if (is_open()) {
-		return get_size();
+		_size = get_size();
 	}
-	return 0;
+	return _size;
 }
 
 /**

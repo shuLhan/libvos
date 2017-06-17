@@ -622,13 +622,15 @@ void test_open_wx()
 
 			err = f.readn(1);
 			T.expect_error(NULL, err);
+
+			unlink(tests[x].path);
 		}
 
 		T.ok();
 	}
 }
 
-void test_open_wa()
+void test_truncate_ro()
 {
 	struct {
 		const char* desc;
@@ -637,22 +639,50 @@ void test_open_wa()
 		const off_t exp_size;
 		const int   exp_status;
 	} tests[] = {{
-		"With open(NULL)"
-	,	NULL
-	,	vos::ErrFileNameEmpty
+		"With open_ro(LICENSE.copy)"
+	,	"LICENSE.copy"
+	,	vos::ErrFileReadOnly
 	,	0
 	,	vos::FILE_OPEN_NO
-	},{
-		"With open(newfile)"
-	,	"newfile"
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	Error err;
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("truncate()", tests[x].desc);
+
+		File::COPY("../LICENSE", tests[x].path);
+
+		File f;
+
+		err = f.open_ro(tests[x].path);
+
+		T.expect_error(NULL, err);
+
+		err = f.truncate();
+
+		T.expect_error(tests[x].exp_err, err);
+
+		unlink(tests[x].path);
+
+		T.ok();
+	}
+}
+
+void test_truncate_wo()
+{
+	struct {
+		const char* desc;
+		const char* path;
+		Error       exp_err;
+		const off_t exp_size;
+		const int   exp_status;
+	} tests[] = {{
+		"With open_wo(LICENSE.copy)"
+	,	"LICENSE.copy"
 	,	NULL
 	,	0
-	,	O_WRONLY
-	},{
-		"With open(../LICENSE)"
-	,	"../LICENSE"
-	,	NULL
-	,	1949
 	,	O_WRONLY
 	}};
 
@@ -660,35 +690,35 @@ void test_open_wa()
 	Error err;
 
 	for (int x = 0; x < tests_len; x++) {
-		T.start("open_wa()", tests[x].desc);
+		T.start("truncate()", tests[x].desc);
+
+		err = File::COPY("../LICENSE", tests[x].path);
+		T.expect_error(NULL, err);
 
 		File f;
 
-		err = f.open_wa(tests[x].path);
+		err = f.open_wo(tests[x].path);
+
+		T.expect_error(NULL, err);
+
+		err = f.truncate();
 
 		T.expect_error(tests[x].exp_err, err);
-
+		T.expect_signed(tests[x].exp_size, f.size());
 		T.expect_signed(tests[x].exp_status, f.status());
 
 		if (err == NULL) {
-			T.expect_string(tests[x].path, f.name());
-
-			T.expect_unsigned(tests[x].exp_size, f.size());
-
-			T.expect_signed(f.fd(), 0, vos::IS_GREATER_THAN);
-
-			// Test read.
-			err = f.read();
-			T.expect_error(NULL, err);
-
-			err = f.readn(1);
-			T.expect_error(NULL, err);
+			unlink(tests[x].path);
 		}
 
 		T.ok();
 	}
+}
 
-	unlink("newfile");
+void test_truncate()
+{
+	test_truncate_ro();
+	test_truncate_wo();
 }
 
 int main()
@@ -706,7 +736,8 @@ int main()
 	test_open_ro();
 	test_open_wo();
 	test_open_wx();
-	test_open_wa();
+
+	test_truncate();
 
 	return 0;
 }
