@@ -368,6 +368,17 @@ Error File::open_wo(const char* path)
 }
 
 /**
+ * Method open_wt(path) will open file referenced by `path` with write only
+ * and truncated mode. It will create file if its not exist.
+ *
+ * On success it will return NULL, otherwise it will return error.
+ */
+Error File::open_wt(const char* path)
+{
+	return open(path, FILE_OPEN_WOCT);
+}
+
+/**
  * Method open_wx(path) will open file referenced by `path` with write only
  * mode. If file exist it will return an error.
  *
@@ -376,17 +387,6 @@ Error File::open_wo(const char* path)
 Error File::open_wx(const char* path)
 {
 	return open(path, FILE_OPEN_WOCX);
-}
-
-/**
- * Method open_wa(path) will open file referenced by `path` for writing and with
- * append mode. If file exist the content will not be truncated.
- *
- * On success it will return NULL, otherwise it will return error.
- */
-Error File::open_wa(const char* path)
-{
-	return open(path, FILE_OPEN_WOCA);
 }
 
 /**

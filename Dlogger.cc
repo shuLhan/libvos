@@ -56,7 +56,7 @@ Error Dlogger::open (const char* logfile, size_t max_size, const char* prefix
 	if (logfile) {
 		close();
 
-		Error err = open_wa(logfile);
+		Error err = open_wo(logfile);
 		if (err != NULL) {
 			_d = STDERR_FILENO;
 			return err;

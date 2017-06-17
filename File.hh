@@ -93,8 +93,8 @@ public:
 	Error open(const char* path);
 	Error open_ro(const char* path);
 	Error open_wo(const char* path);
+	Error open_wt(const char* path);
 	Error open_wx(const char* path);
-	Error open_wa(const char* path);
 
 	Error truncate(enum flush_mode mode = FLUSH_LAST);
 
