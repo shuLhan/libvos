@@ -358,7 +358,7 @@ Error Config::parsing()
 	while (_p < _i) {
 		/* skip white-space at the beginning of line */
 		while (_p < _i && isspace(_v[_p])) {
-			if (_v[_p] == _eol) {
+			if (_v[_p] == _eol[0]) {
 				++_e_row;
 				end = _p;
 			}
@@ -371,7 +371,7 @@ Error Config::parsing()
 		/* read comment, save as MISC type */
 		if (_v[_p] == CFG_CH_COMMENT || _v[_p] == CFG_CH_COMMENT2) {
 			start = _p;
-			while (_p < _i &&_v[_p] != _eol) {
+			while (_p < _i &&_v[_p] != _eol[0]) {
 				++_p;
 			}
 
@@ -403,7 +403,7 @@ Error Config::parsing()
 			++_p;
 			start = _p;
 			while (_p < _i && _v[_p] != CFG_CH_HEAD_CLOSE
-			&& _v[_p] != _eol) {
+			&& _v[_p] != _eol[0]) {
 				++_p;
 			}
 
@@ -442,10 +442,10 @@ Error Config::parsing()
 			start = _p;
 			while (_p < _i
 			&& _v[_p] != CFG_CH_KEY_SEP
-			&& _v[_p] != _eol) {
+			&& _v[_p] != _eol[0]) {
 				++_p;
 			}
-			if (_p >= _i || _v[_p] == _eol) {
+			if (_p >= _i || _v[_p] == _eol[0]) {
 				_e_col = _p - end;
 				goto bad_cfg;
 			}
@@ -472,7 +472,7 @@ Error Config::parsing()
 		case P_CFG_VALUE:
 			start = _p;
 			while (_p < _i) {
-				if (_v[_p] == _eol) {
+				if (_v[_p] == _eol[0]) {
 					++_e_row;
 					break;
 				}

@@ -23,12 +23,12 @@ extern Error ErrFileNameEmpty;
 extern Error ErrFileNotFound;
 extern Error ErrFileReadOnly;
 
-enum _file_eol_mode {
-	EOL_NIX	= 0,
-	EOL_DOS	= 1,
-	N_EOL_MODE
+enum file_eol_mode {
+	FILE_EOL_NIX	= 0,
+	FILE_EOL_DOS	= 1,
+	N_FILE_EOL_MODE
 };
-extern const char* __eol[N_EOL_MODE];
+extern const char* __eol[N_FILE_EOL_MODE];
 
 enum file_open_mode {
 	FILE_OPEN_NO	= -1
@@ -100,7 +100,7 @@ public:
 
 	int is_open();
 
-	void set_eol(const int mode);
+	void set_eol(enum file_eol_mode mode);
 
 	Error read();
 	Error readn(size_t n);
@@ -124,6 +124,7 @@ public:
 	const char* name();
 	off_t size();
 	int status();
+	const char* eol();
 
 protected:
 	int		_d;
@@ -131,8 +132,7 @@ protected:
 	int		_status;
 	int		_perm;
 	off_t		_size;
-	int		_eol;
-	const char*	_eols;
+	const char*	_eol;
 	Buffer		_name;
 
 private:

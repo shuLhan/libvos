@@ -19,7 +19,7 @@ const char* File::__CNAME = "File";
 
 uint16_t File::DFLT_SIZE = 4096;
 
-const char* __eol[N_EOL_MODE] = {
+const char* __eol[N_FILE_EOL_MODE] = {
 	"\n",
 	"\r\n"
 };
@@ -264,8 +264,7 @@ File::File(const size_t bfr_size) : Buffer(bfr_size)
 ,	_status(FILE_OPEN_NO)
 ,	_perm (0)
 ,	_size (0)
-,	_eol(__eol[EOL_NIX][0])
-,	_eols(__eol[EOL_NIX])
+,	_eol(__eol[FILE_EOL_NIX])
 ,	_name()
 {}
 
@@ -440,8 +439,8 @@ Error File::truncate(enum flush_mode flush_mode)
 }
 
 /**
- * `is_open()` will return positive integer if file descriptor is open, or `0`
- * if closed.
+ * Method `is_open()` will return 1 if file descriptor is open,
+ * or `0` if its closed.
  */
 int File::is_open()
 {
@@ -449,12 +448,9 @@ int File::is_open()
 }
 
 /**
- * @method	: File::get_size
- * @return	:
- *	< >0	: size of file.
- *	< 0	: if file is empty.
- *	< -1	: fail, error at seek.
- * @desc	: get current size of file.
+ * Method get_size() will get the current file size.
+ * On success it will return value equal or greater than 0.
+ * On fail it will return -1.
  */
 off_t File::get_size()
 {
@@ -486,17 +482,17 @@ off_t File::get_size()
 }
 
 /**
- * @method	: File::set_eol
- * @param	:
- *	> mode	: mode of end of line: Unix or DOS.
- * @desc	: set end of line mode for this current File object.
+ * Method set_eol(mode) will set the end of line mode for this current File
+ * object. There are two modes: EOL_NIX ("\n") or EOL_DOS ("\r\n").
+ * If mode is unknown, it will set default to EOL_NIX.
  */
-void File::set_eol(const int mode)
+void File::set_eol(enum file_eol_mode mode)
 {
-	if (mode == EOL_NIX || mode == EOL_DOS) {
-		_eol	= __eol[mode][0];
-		_eols	= __eol[mode];
+	if (mode != FILE_EOL_NIX && mode != FILE_EOL_DOS) {
+		mode = FILE_EOL_NIX;
 	}
+
+	_eol = __eol[mode];
 }
 
 /**
@@ -666,7 +662,7 @@ Error File::get_line(Buffer* line)
 	}
 
 	start = _p;
-	while (_v[_p] != _eol) {
+	while (_v[_p] != _eol[0]) {
 		if (_p >= _i) {
 			_p = _p - start;
 			memmove(&_v[0], &_v[start], _p);
@@ -1014,6 +1010,14 @@ off_t File::size()
 int File::status()
 {
 	return _status;
+}
+
+/**
+ * Method `eol()` will return current file end of line as string.
+ */
+const char* File::eol()
+{
+	return _eol;
 }
 
 } // namespace::vos

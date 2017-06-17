@@ -352,7 +352,7 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 				}
 			} else {
 				chop_bgn = startp;
-				while (_v[startp] != _eol) {
+				while (_v[startp] != _eol[0]) {
 					++startp;
 					if (startp >= _i) {
 						startp = startp - _p;
@@ -387,7 +387,7 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 	if (x < list_md->size()) {
 		goto reject;
 	}
-	while (_v[startp] != _eol) {
+	while (_v[startp] != _eol[0]) {
 		++startp;
 		if (startp >= _i) {
 			startp	= startp - _p;
@@ -406,7 +406,7 @@ int DSVReader::read(DSVRecord* r, List* list_md)
 	return 1;
 
 reject:
-	while (_v[startp] != _eol) {
+	while (_v[startp] != _eol[0]) {
 		++startp;
 		if (startp >= _i) {
 			startp	= startp - _p;

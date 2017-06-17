@@ -114,7 +114,7 @@ int DSVWriter::write(DSVRecord *row, List *list_md)
 		row = row->_next_col;
 	}
 
-	_line.appendc((char) _eol);
+	_line.append_raw(_eol);
 
 	len = ssize_t(_i + _line.len());
 	if (size_t(len) > _l) {

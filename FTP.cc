@@ -76,12 +76,12 @@ int FTP::connect(const char* host, const uint16_t port, const int mode)
 		}
 
 		/* get & set server EOL */
-		if (_i > 2 && _v[_i - 2] == __eol[EOL_DOS][0]) {
+		if (_i > 2 && _v[_i - 2] == __eol[FILE_EOL_DOS][0]) {
 			if (LIBVOS_DEBUG) {
 				printf("[%s] connect: set EOL to DOS\n"
 					, __cname);
 			}
-			set_eol(EOL_DOS);
+			set_eol(FILE_EOL_DOS);
 		}
 	}
 
@@ -217,9 +217,9 @@ int FTP::send_cmd(const char* cmd, const char *parm)
 	Error err;
 
 	if (parm) {
-		err = concat(cmd, " ", parm, _eols, NULL);
+		err = concat(cmd, " ", parm, _eol, NULL);
 	} else {
-		err = concat(cmd, _eols, NULL);
+		err = concat(cmd, _eol, NULL);
 	}
 	if (err != NULL) {
 		return -1;
