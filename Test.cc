@@ -89,7 +89,7 @@ int Test::expect_mem(const void *exp, const void *got, size_t len
 int Test::expect_ptr(const void *exp, const void *got
 	, enum EQUALITY e)
 {
-	const char *str_e;
+	const char *str_e = NULL;
 
 	switch (e) {
 	case IS_EQUAL:
@@ -156,7 +156,7 @@ int Test::expect_string(const char* exp, const char* got
 int Test::expect_signed(const ssize_t exp, const ssize_t got
 	, enum EQUALITY e)
 {
-	const char *str_e;
+	const char *str_e = NULL;
 
 	switch (e) {
 	case IS_LESS_THAN:
@@ -197,7 +197,7 @@ int Test::expect_signed(const ssize_t exp, const ssize_t got
 int Test::expect_unsigned(const size_t exp, const size_t got
 	, enum EQUALITY e)
 {
-	const char *str_e;
+	const char *str_e = NULL;
 
 	switch (e) {
 	case IS_LESS_THAN:
@@ -239,7 +239,7 @@ int Test::expect_unsigned(const size_t exp, const size_t got
 int Test::expect_double(const double exp, const double got
 	, enum EQUALITY e)
 {
-	const char *str_e;
+	const char *str_e = NULL;
 
 	switch (e) {
 	case IS_LESS_THAN:
