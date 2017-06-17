@@ -721,6 +721,55 @@ void test_truncate()
 	test_truncate_wo();
 }
 
+void test_is_open()
+{
+	T.start("is_open()");
+
+	File f;
+
+	T.expect_signed(0, f.is_open());
+
+	f.open_ro("../LICENSE");
+
+	T.expect_signed(1, f.is_open());
+
+	T.ok();
+}
+
+void test_set_eol()
+{
+	struct {
+		const char* desc;
+		enum vos::file_eol_mode mode;
+		const char* exp_eol;
+	} tests[] = {{
+		"With EOL_NIX"
+	,	vos::FILE_EOL_NIX
+	,	"\n"
+	},{
+		"With EOL_DOS"
+	,	vos::FILE_EOL_DOS
+	,	"\r\n"
+	},{
+		"With unknown mode"
+	,	vos::N_FILE_EOL_MODE
+	,	"\n"
+	}};
+
+	int tests_len = ARRAY_SIZE(tests);
+	File f;
+
+	for (int x = 0; x < tests_len; x++) {
+		T.start("set_eol()", tests[x].desc);
+
+		f.set_eol(tests[x].mode);
+
+		T.expect_string(tests[x].exp_eol, f.eol());
+
+		T.ok();
+	}
+}
+
 int main()
 {
 	test_file_open_mode();
@@ -738,6 +787,9 @@ int main()
 	test_open_wx();
 
 	test_truncate();
+
+	test_is_open();
+	test_set_eol();
 
 	return 0;
 }
