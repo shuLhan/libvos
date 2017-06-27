@@ -145,35 +145,47 @@ void ConfigData::add_misc_raw(const char* misc, const size_t misc_len)
 }
 
 /**
- * Method dump() will dump content of ConfigData object to standard output,
+ * Method chars() will dump content of ConfigData object to standard output,
  * including the next header, key, and value.
  */
-const char* ConfigData::dump()
+const char* ConfigData::chars()
 {
 	Buffer o;
 	ConfigData* h = this;
 	ConfigData* k = NULL;
 
-	o.append_fmt("[%s] begin dump\n", __CNAME);
+	o.append_raw("{\n");
 
 	while (h) {
-		o.append_fmt("[%s]\n", h->_v);
+		if (h != this) {
+			o.appendc(',');
+		}
+
+		o.append_fmt("\t\"%s\":{\n", h->_v);
 
 		k = h->next_key;
 		while (k) {
-			if (CONFIG_T_KEY == k->type) {
-				o.append_fmt("\t%s = %s\n", k->chars()
-					, k->value ? k->value->chars()
-						: "\0");
+			if (k != h->next_key) {
+				o.append_raw("\t,");
 			} else {
-				o.append_fmt("%s\n", k->chars());
+				o.appendc('\t');
+			}
+
+			if (CONFIG_T_KEY == k->type) {
+				o.append_fmt("\t\"%s\": \"%s\"\n"
+					, k->v()
+					, k->value ? k->value->v() : "");
+			} else {
+				o.append_fmt("\t\"%s\"\n", k->v());
 			}
 			k = k->next_key;
 		}
 		h = h->next_head;
+
+		o.append_raw("\t}\n");
 	}
 
-	o.append_fmt("[%s] end dump\n", __CNAME);
+	o.appendc('}');
 
 	__str = o.detach();
 

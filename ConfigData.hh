@@ -57,7 +57,7 @@ public:
 	void add_misc(const ConfigData* misc);
 	void add_misc_raw(const char* misc, const size_t misc_len = 0);
 
-	const char* dump();
+	const char* chars();
 
 private:
 	ConfigData(const ConfigData&);
