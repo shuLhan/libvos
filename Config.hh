@@ -54,12 +54,6 @@ public:
 				, const int dflt = 0);
 
 	int set(const char* head, const char* key, const char* value);
-
-	int add(const char* head, const char* key, const char* value)
-	{
-		return set(head, key, value);
-	}
-
 	void add_comment(const char* comment);
 
 	const char* chars();
@@ -74,7 +68,6 @@ private:
 	Error parsing();
 };
 
-} /* namespace::vos */
+} // namespace::vos
 #endif
-
 // vi: ts=8 sw=8 tw=80:

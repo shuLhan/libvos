@@ -195,7 +195,7 @@ const char* Config::get(const char* head, const char* key, const char* dflt)
  */
 long int Config::get_number(const char* head, const char* key, const int dflt)
 {
-	const char *v = get(head, key, NULL);
+	const char* v = get(head, key, NULL);
 
 	if (!v) {
 		return dflt;
