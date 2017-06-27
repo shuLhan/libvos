@@ -45,10 +45,6 @@ Config::~Config()
  */
 Error Config::load(const char* ini)
 {
-	if (ini == NULL) {
-		return ErrFileNameEmpty;
-	}
-
 	close();
 
 	Error err = open_ro(ini);
@@ -60,51 +56,30 @@ Error Config::load(const char* ini)
 }
 
 /**
- * @method	: Config::save
- * @return	:
- *	> 0	: success.
- *	> -1	: fail.
- * @desc	: save all heads, keys, and values to file.
+ * Method save(ini,mode) will save all config values to `ini` file.
+ * If mode is CONFIG_SAVE_WOUT_COMMENT, all comment will not be saved.
+ * If mode is CONFIG_SAVE_WITH_COMMENT, all comment will be saved.
+ *
+ * On success it will return NULL.
+ *
+ * On failure it will return,
+ * - ErrFileNameEmpty: if config filename is empty and `ini` file is empty.
  */
-Error Config::save()
+Error Config::save(const char* ini, const int mode)
 {
-	if (_name.is_empty()) {
-		return ErrFileNameEmpty;
-	}
-
-	Buffer ini;
-
-	Error err = ini.copy(&_name);
-	if (err != NULL) {
-		return err;
-	}
-
-	close();
-
-	return save_as(ini.v(), CONFIG_SAVE_WITH_COMMENT);
-}
-
-/**
- * @method	: Config::save_as
- * @param	:
- *	> ini	: an output filename, with or without leading path.
- *	> mode	: save with (1) or without comment (0).
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: save all heads, keys, and values to a new 'ini' file.
- */
-Error Config::save_as(const char* ini, const int mode)
-{
-	if (!ini) {
-		return ErrFileNameEmpty;
-	}
-
 	File fini;
 	ConfigData* phead = &_data;
 	ConfigData* pkey = NULL;
+	Error err;
 
-	Error err = fini.open_wo(ini);
+	if (ini) {
+		err = fini.open_wo(ini);
+	} else {
+		if (_name.is_empty()) {
+			return ErrFileNameEmpty;
+		}
+		err = fini.open_wo(_name.v());
+	}
 	if (err != NULL) {
 		return err;
 	}
@@ -140,15 +115,6 @@ Error Config::save_as(const char* ini, const int mode)
 		phead = phead->next_head;
 	}
 	return NULL;
-}
-
-/**
- * @method	: Config::dump
- * @desc	: dump content of Config object to standard output.
- */
-void Config::dump()
-{
-	_data.dump();
 }
 
 /**
@@ -326,195 +292,72 @@ void Config::add_comment(const char* comment)
 }
 
 /**
- * @method	: Config::parsing
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: inline, parsing content of config file.
+ * Method parsing() will parsing the content of config file.
+ *
+ * On success it will return NULL, otherwise it will return error.
  */
 Error Config::parsing()
 {
-	int todo = P_CFG_START;
-	size_t start = 0;
-	size_t end = 0;
-	size_t _e_row = 1;
-	size_t _e_col = 0;
-	Buffer b;
+	Buffer line;
+	char c;
 
-	Error err = resize(size_t(size()));
-	if (err != NULL) {
-		return err;
-	}
+	Error err = get_line(&line);
 
-	err = read();
-	if (err != NULL) {
-		if (_i == 0) {
-			return ErrFileEmpty;
-		}
-		return err;
-	}
+	while (err == NULL) {
+		line.trim();
 
-	_p = 0;
-	while (_p < _i) {
-		/* skip white-space at the beginning of line */
-		while (_p < _i && isspace(_v[_p])) {
-			if (_v[_p] == _eol[0]) {
-				++_e_row;
-				end = _p;
-			}
-			++_p;
-		}
-		if (_p >= _i) {
-			break;
-		}
-
-		/* read comment, save as MISC type */
-		if (_v[_p] == CFG_CH_COMMENT || _v[_p] == CFG_CH_COMMENT2) {
-			start = _p;
-			while (_p < _i &&_v[_p] != _eol[0]) {
-				++_p;
-			}
-
-			end = _p;
-			++_p;
-			++_e_row;
-
-			err = b.append_raw(&_v[start], _p - start);
-			if (err != NULL) {
-				return err;
-			}
-
-			b.trim();
-
-			_data.add_misc_raw(b.v());
-
-			b.reset();
-
+		if (line.is_empty()) {
+			err = get_line(&line);
 			continue;
 		}
 
-		switch (todo) {
-		case P_CFG_START:
-			if (_v[_p] != CFG_CH_HEAD_OPEN) {
-				todo = P_CFG_KEY;
-				continue;
-			}
-
-			++_p;
-			start = _p;
-			while (_p < _i && _v[_p] != CFG_CH_HEAD_CLOSE
-			&& _v[_p] != _eol[0]) {
-				++_p;
-			}
-
-			if (_p >= _i || start == _p
-			|| _v[_p] != CFG_CH_HEAD_CLOSE) {
-				_e_col = _p - end;
-				goto bad_cfg;
-			}
-
-			err = b.append_raw(&_v[start], _p - start);
-			if (err != NULL) {
-				return err;
-			}
-
-			b.trim();
-			/* empty ? */
-			if (b.len() == 0) {
-				_e_col = _p - end;
-				goto bad_cfg;
-			}
-
-			_data.add_head_raw(b.v(), b.len());
-
-			b.reset();
-
-			++_p;
-			todo = P_CFG_KEY;
+		switch (line.char_at(0)) {
+		case CONFIG_CH_COMMENT:
+		case CONFIG_CH_COMMENT2:
+			_data.add_misc_raw(line.v(), line.len());
 			break;
 
-		case P_CFG_KEY:
-			if (_v[_p] == CFG_CH_HEAD_OPEN) {
-				todo = P_CFG_START;
-				continue;
+		case CONFIG_CH_HEAD_OPEN:
+			c = line.char_at(line.len() - 1);
+			if (c != CONFIG_CH_HEAD_CLOSE) {
+				return ErrConfigFormat.with(line.v(), line.len());
+			}
+			_data.add_head_raw(line.v(1), line.len() - 2);
+
+			break;
+
+		default:
+			List* kv = SPLIT_BY_CHAR(&line, CONFIG_CH_KEY_SEP, 1);
+
+			if (kv == NULL) {
+				return ErrConfigFormat.with(line.v(), line.len());
 			}
 
-			start = _p;
-			while (_p < _i
-			&& _v[_p] != CFG_CH_KEY_SEP
-			&& _v[_p] != _eol[0]) {
-				++_p;
-			}
-			if (_p >= _i || _v[_p] == _eol[0]) {
-				_e_col = _p - end;
-				goto bad_cfg;
+			Buffer* key = (Buffer*) kv->at(0);
+			_data.add_key_raw(key->v(), key->len());
+
+			if (kv->size() == 2) {
+				Buffer* value = (Buffer*) kv->at(1);
+				_data.add_value_raw(value->v(), value->len());
 			}
 
-			err = b.append_raw(&_v[start], _p - start);
-			if (err != NULL) {
-				return err;
-			}
-
-			b.trim();
-			/* empty ? */
-			if (b.len() == 0) {
-				_e_col = _p - end;
-				goto bad_cfg;
-			}
-
-			_data.add_key_raw(b.v(), b.len());
-
-			b.reset();
-
-			++_p;
-			// fallthrough
-
-		case P_CFG_VALUE:
-			start = _p;
-			while (_p < _i) {
-				if (_v[_p] == _eol[0]) {
-					++_e_row;
-					break;
-				}
-				++_p;
-			}
-
-			if (_p > start) {
-				err = b.append_raw(&_v[start], _p - start);
-				if (err != NULL) {
-					return err;
-				}
-
-				b.trim();
-				if (b.len() == 0) {
-					_e_col = _p - end;
-					goto bad_cfg;
-				}
-			}
-
-			_data.add_value_raw(b.v(), b.len());
-
-			b.reset();
-
-			end = _p;
-			++_p;
-
-			todo = P_CFG_KEY;
+			delete kv;
 			break;
 		}
+
+		err = get_line(&line);
+	}
+	if (err != ErrFileEnd) {
+		return err;
 	}
 
-	return 0;
+	return NULL;
+}
 
-bad_cfg:
-	Buffer errData;
-
-	errData.append_fmt("parsing: at line '%u' column '%u'", _e_row
-		, _e_col);
-
-	return ErrConfigFormat.with(errData.v(), errData.len());
+const char* Config::chars()
+{
+	return _data.chars();
 }
 
 } // namespace::vos
-
 // vi: ts=8 sw=8 tw=80:

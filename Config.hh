@@ -7,6 +7,7 @@
 #ifndef _LIBVOS_CONFIG_HH
 #define _LIBVOS_CONFIG_HH 1
 
+#include "ListBuffer.hh"
 #include "File.hh"
 #include "ConfigData.hh"
 
@@ -15,12 +16,12 @@ namespace vos {
 extern Error ErrConfigFormat;
 
 enum _cfg_ch {
-	CFG_CH_COMMENT		= '#'
-,	CFG_CH_COMMENT2		= ';'
-,	CFG_CH_CONT		= '\\'
-,	CFG_CH_HEAD_OPEN	= '['
-,	CFG_CH_HEAD_CLOSE	= ']'
-,	CFG_CH_KEY_SEP		= '='
+	CONFIG_CH_COMMENT	= '#'
+,	CONFIG_CH_COMMENT2	= ';'
+,	CONFIG_CH_CONT		= '\\'
+,	CONFIG_CH_HEAD_OPEN	= '['
+,	CONFIG_CH_HEAD_CLOSE	= ']'
+,	CONFIG_CH_KEY_SEP	= '='
 };
 
 enum _cfg_save_mode {
@@ -43,9 +44,7 @@ public:
 	~Config();
 
 	Error load(const char* ini);
-	Error save();
-	Error save_as(const char* ini, const int mode = CONFIG_SAVE_WOUT_COMMENT);
-	void dump();
+	Error save(const char* ini, const int mode = CONFIG_SAVE_WOUT_COMMENT);
 	void close();
 
 	const char* get(const char* head, const char* key
@@ -61,6 +60,8 @@ public:
 	}
 
 	void add_comment(const char* comment);
+
+	const char* chars();
 
 protected:
 	ConfigData _data;
