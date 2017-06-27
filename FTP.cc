@@ -76,7 +76,7 @@ int FTP::connect(const char* host, const uint16_t port, const int mode)
 		}
 
 		/* get & set server EOL */
-		if (_i > 2 && _v[_i - 2] == __eol[FILE_EOL_DOS][0]) {
+		if (_i > 2 && _v[_i - 2] == CR) {
 			if (LIBVOS_DEBUG) {
 				printf("[%s] connect: set EOL to DOS\n"
 					, __cname);
