@@ -24,7 +24,7 @@ enum _cfg_ch {
 ,	CONFIG_CH_KEY_SEP	= '='
 };
 
-enum _cfg_save_mode {
+enum config_save_mode {
 	CONFIG_SAVE_WOUT_COMMENT	= 0
 ,	CONFIG_SAVE_WITH_COMMENT	= 1
 };
@@ -44,7 +44,8 @@ public:
 	~Config();
 
 	Error load(const char* ini);
-	Error save(const char* ini, const int mode = CONFIG_SAVE_WOUT_COMMENT);
+	Error save(const char* ini
+		, enum config_save_mode mode = CONFIG_SAVE_WOUT_COMMENT);
 	void close();
 
 	const char* get(const char* head, const char* key

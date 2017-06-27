@@ -65,7 +65,7 @@ Error Config::load(const char* ini)
  * On failure it will return,
  * - ErrFileNameEmpty: if config filename is empty and `ini` file is empty.
  */
-Error Config::save(const char* ini, const int mode)
+Error Config::save(const char* ini, enum config_save_mode mode)
 {
 	File fini;
 	ConfigData* phead = &_data;
@@ -73,12 +73,12 @@ Error Config::save(const char* ini, const int mode)
 	Error err;
 
 	if (ini) {
-		err = fini.open_wo(ini);
+		err = fini.open_wt(ini);
 	} else {
 		if (_name.is_empty()) {
 			return ErrFileNameEmpty;
 		}
-		err = fini.open_wo(_name.v());
+		err = fini.open_wt(_name.v());
 	}
 	if (err != NULL) {
 		return err;
@@ -86,7 +86,7 @@ Error Config::save(const char* ini, const int mode)
 
 	while (phead) {
 		if (phead->like_raw(CONFIG_ROOT) != 0) {
-			err = fini.writef("[%s]\n", phead->chars());
+			err = fini.writef("[%s]\n", phead->v());
 			if (err != NULL) {
 				return err;
 			}
@@ -96,7 +96,7 @@ Error Config::save(const char* ini, const int mode)
 		while (pkey) {
 			if (CONFIG_T_KEY == pkey->type) {
 				err = fini.writef("\t%s = %s\n",
-						pkey->chars(),
+						pkey->v(),
 						pkey->value ?
 						pkey->value->v() : "");
 				if (err != NULL) {
