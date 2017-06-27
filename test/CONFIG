@@ -1,0 +1,13 @@
+[head01]
+key=v1
+key=v2
+key2=1234
+
+## comment for head
+[head02]
+## comment for key
+key=
+
+[head03]
+key1=v3
+key2=# empty

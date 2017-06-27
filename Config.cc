@@ -118,8 +118,7 @@ Error Config::save(const char* ini, enum config_save_mode mode)
 }
 
 /**
- * @method	: Config::close
- * @desc	: close config file and release all data.
+ * Method close() will release all data and close the config file.
  */
 void Config::close()
 {
@@ -142,19 +141,16 @@ void Config::close()
 }
 
 /**
- * @method		: Config::get
- * @param		:
- *	> head		: header of configuration, where key will reside.
- *	> key		: key of value that will be searched.
- *	> dflt		: default return value if head or key is not found in
- *                        config file.
- * @return		:
- *	< value		: success, pointer to config value.
- *	< NULL		: fail, no 'head' or 'key' found in config file, and
- *                        'dflt' parameter is NULL too.
- * @desc		:
- *	get config value, based on 'head' and 'key'. If 'head' or 'key' is not
- *	found then return 'dflt' value.
+ * Method get(head,key,dflt) will return a value that is associated with head
+ * and key in config file.
+ *
+ * head is header of configuration, where key will reside.
+ * key is key that will be searched.
+ * dflt as default value to be returned if head or key is not found in config
+ * file.
+ *
+ * On success it will return non empty string.
+ * On fail, where head or key not found, it will return NULL.
  */
 const char* Config::get(const char* head, const char* key, const char* dflt)
 {
@@ -166,42 +162,39 @@ const char* Config::get(const char* head, const char* key, const char* dflt)
 	ConfigData* k = NULL;
 
 	while (h) {
-		if (h->like_raw(head) == 0) {
-			k = h;
-			while (k) {
-				if (CONFIG_T_KEY == k->type) {
-					if (k->like_raw(key) == 0)
-						return k->value->v();
-				}
-
-				k = k->next_key;
-			}
+		if (h->like_raw(head) != 0) {
+			h = h->next_head;
+			continue;
 		}
 
-		h = h->next_head;
+		k = h;
+		while (k) {
+			if (CONFIG_T_KEY != k->type) {
+				k = k->next_key;
+				continue;
+			}
+
+			if (k->like_raw(key) != 0) {
+				k = k->next_key;
+				continue;
+			}
+
+			if (k->value) {
+				return k->value->v();
+			}
+			return NULL;
+		}
 	}
 
 	return dflt;
 }
 
 /**
- * @method	: Config::get_number
- * @param	:
- *	> head	: header of configuration.
- *	> key	: key of value that will be searched.
- *	> dflt	: default return value if 'head' or 'key' is not found in
- *                config file.
- * @return	:
- *	< int	: a value, converted from string to number.
- * @desc	: get a number representation of config value in section
- * 'head' and had the 'key'.
+ * Method get_number(head,key,dflt) will return a number representation of
+ * config value in with 'head' and 'key'.
  */
 long int Config::get_number(const char* head, const char* key, const int dflt)
 {
-	if (!head || !key) {
-		return dflt;
-	}
-
 	const char *v = get(head, key, NULL);
 
 	if (!v) {
@@ -212,20 +205,17 @@ long int Config::get_number(const char* head, const char* key, const int dflt)
 }
 
 /**
- * @method	: Config::set
- * @param	:
- *	> head	: a name of head, where the key is resided.
- *	> key	: a name of key.
- *	> value	: a new value for key.
- * @return	:
- *	< 0	: success.
- *	< -1	: fail.
- * @desc	: set a 'key' value, where the head is 'head', to 'value'.
+ * Method set(head,key,value) will set a `key` value inside `head` to `value`.
+ *
+ * If head or key is not found, then it will be added to config data.
+ *
+ * If value replacement occurred it will return 0.
+ * If head or key is not found, then it will return 1.
  */
 int Config::set(const char* head, const char* key, const char* value)
 {
-	ConfigData*	h = &_data;
-	ConfigData*	k = NULL;
+	ConfigData* h = &_data;
+	ConfigData* k = NULL;
 	Error err;
 
 	if (!head || !key || !value) {
@@ -233,43 +223,38 @@ int Config::set(const char* head, const char* key, const char* value)
 	}
 
 	while (h) {
-		if (h->like_raw(head) == 0) {
-			k = h;
-			while (k) {
-				if (k->like_raw(key) == 0) {
-					k->value->copy_raw(value);
-					return -1;
-				}
-				k = k->next_key;
-			}
-
-			/* add key:value to config list, if not found */
-			k = new ConfigData(CONFIG_T_KEY, key);
-
-			k->value = new ConfigData(CONFIG_T_VALUE, value);
-			if (err != NULL) {
-				return -1;
-			}
-
-			h->last_key->next_key	= k;
-			h->last_key		= k;
-			return 0;
+		if (h->like_raw(head) != 0) {
+			h = h->next_head;
+			continue;
 		}
-		h = h->next_head;
+
+		k = h;
+		while (k) {
+			if (k->like_raw(key) == 0) {
+				k->value->copy_raw(value);
+				return 0;
+			}
+			k = k->next_key;
+		}
+
+		k = new ConfigData(CONFIG_T_KEY, key);
+
+		k->value = new ConfigData(CONFIG_T_VALUE, value);
+
+		h->last_key->next_key	= k;
+		h->last_key		= k;
+		return 1;
 	}
 
 	_data.add_head_raw(head);
 	_data.add_key_raw(key);
 	_data.add_value_raw(value);
 
-	return 0;
+	return 1;
 }
 
 /**
- * @method		: Config::add_comment
- * @param		:
- *	> comment	: string of comment.
- * @desc		: add comment to Config object.
+ * Method add_comment(comment) will add comment to Config object.
  */
 void Config::add_comment(const char* comment)
 {
@@ -354,6 +339,9 @@ Error Config::parsing()
 	return NULL;
 }
 
+/**
+ * Method chars() will return the JSON representation of config object.
+ */
 const char* Config::chars()
 {
 	return _data.chars();

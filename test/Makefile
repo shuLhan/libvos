@@ -46,7 +46,10 @@ ListBuffer_OBJS=					\
 			$(LIBVOS_BLD_D)/List.oo		\
 			$(LIBVOS_BLD_D)/ListBuffer.oo
 
-
+Config_OBJS=	$(File_OBJS) \
+		$(ListBuffer_OBJS) \
+		$(LIBVOS_BLD_D)/ConfigData.oo \
+		$(LIBVOS_BLD_D)/Config.oo
 
 DSVRecordMD_OBJS=	$(List_OBJS)			\
 			$(File_OBJS)			\
@@ -132,6 +135,7 @@ TARGET=	$(BLD_D)/Object.test		\
 	$(BLD_D)/BNode.test		\
 	$(BLD_D)/List.test		\
 	$(BLD_D)/ListBuffer.test	\
+	$(BLD_D)/Config.test		\
 	$(BLD_D)/Dlogger.test		\
 	$(BLD_D)/SSVReader.test		\
 	$(BLD_D)/SockAddr.test		\
