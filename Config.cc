@@ -184,6 +184,7 @@ const char* Config::get(const char* head, const char* key, const char* dflt)
 			}
 			return NULL;
 		}
+		return dflt;
 	}
 
 	return dflt;
