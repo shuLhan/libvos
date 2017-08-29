@@ -12,9 +12,10 @@
 
 namespace vos {
 
-List* SPLIT_BY_CHAR(Buffer *b, const char sep, int trim = 0);
-List* SPLIT_BY_WHITESPACE(Buffer *b);
+List* SPLIT_BY_CHAR(Buffer* b, const char sep, int trim = 0);
+List* SPLIT_BY_WHITESPACE(Buffer* b);
 
 } // namespace::vos
 
-#endif //
+#endif // _LIBVOS_LISTBUFFER_HH
+// vi: ts=8 sw=8 tw=80:

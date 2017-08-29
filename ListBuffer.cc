@@ -47,7 +47,7 @@ void _list_buffer_add(List* buffers, const char* v, size_t start, size_t end
  * If `trim` is non zero value, splitted buffer will be trimmed, and if result
  * of trimmed buffer is empty then it would not be added to the list.
  */
-List* SPLIT_BY_CHAR(Buffer *b, const char sep, int trim)
+List* SPLIT_BY_CHAR(Buffer* b, const char sep, int trim)
 {
 	if (!b) {
 		return NULL;
@@ -75,10 +75,10 @@ List* SPLIT_BY_CHAR(Buffer *b, const char sep, int trim)
 }
 
 /**
- * Method `split_by_whitespace(Buffer *b)` will split buffer using whitespace
+ * Method `split_by_whitespace(Buffer* b)` will split buffer using whitespace
  * and return list of buffers.
  */
-List* SPLIT_BY_WHITESPACE(Buffer *b)
+List* SPLIT_BY_WHITESPACE(Buffer* b)
 {
 	if (!b) {
 		return NULL;
@@ -110,3 +110,4 @@ List* SPLIT_BY_WHITESPACE(Buffer *b)
 }
 
 } // namespace::vos
+// vi: ts=8 sw=8 tw=80:

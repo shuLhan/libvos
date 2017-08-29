@@ -17,12 +17,12 @@ Test T("ListBuffer");
 void test_SPLIT_BY_CHAR()
 {
 	struct {
-		const char *desc;
-		Buffer *in;
+		const char* desc;
+		Buffer* in;
 		const char sep;
 		const int trim;
-		const char *exp;
-		const size_t exp_size;
+		const char* exp;
+		const ssize_t exp_size;
 	} const tests[] = {
 		{
 			"With empty buffer",
@@ -87,7 +87,7 @@ void test_SPLIT_BY_CHAR()
 	for (size_t x = 0; x < tests_len; x++) {
 		T.start("SPLIT_BY_CHAR()", tests[x].desc);
 
-		List *got = SPLIT_BY_CHAR(tests[x].in, tests[x].sep,
+		List* got = SPLIT_BY_CHAR(tests[x].in, tests[x].sep,
 			tests[x].trim);
 
 		if (tests[x].exp == NULL) {
@@ -111,10 +111,10 @@ void test_SPLIT_BY_CHAR()
 void test_SPLIT_BY_WHITESPACE()
 {
 	struct {
-		const char *desc;
-		Buffer *in;
-		const char *exp;
-		const size_t exp_size;
+		const char* desc;
+		Buffer* in;
+		const char* exp;
+		const ssize_t exp_size;
 	} const tests[] = {
 		{
 			"With empty buffer",
@@ -159,7 +159,7 @@ void test_SPLIT_BY_WHITESPACE()
 	for (size_t x = 0; x < tests_len; x++) {
 		T.start("SPLIT_BY_WHITESPACE()", tests[x].desc);
 
-		List *got = SPLIT_BY_WHITESPACE(tests[x].in);
+		List* got = SPLIT_BY_WHITESPACE(tests[x].in);
 
 		if (tests[x].exp == NULL) {
 			T.expect_ptr(tests[x].exp, got, vos::IS_EQUAL);
