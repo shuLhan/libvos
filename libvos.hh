@@ -14,6 +14,10 @@
 #define _DEFAULT_SOURCE 1
 #define _XOPEN_SOURCE 700
 
+#ifdef __USE_GNU
+#undef __USE_GNU
+#endif
+
 #include <errno.h>
 #include <ctype.h>
 #include <limits.h>
