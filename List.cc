@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -12,10 +12,10 @@ namespace vos {
 const char* List::__cname = "List";
 
 List::List(const char sep) : Locker()
-,	_head(NULL)
-,	_tail(NULL)
 ,	_n(0)
 ,	_sep(',')
+,	_head(NULL)
+,	_tail(NULL)
 {
 	if (sep > 0) {
 		_sep = sep;
@@ -34,6 +34,22 @@ List::~List()
 	}
 
 	unlock();
+}
+
+/**
+ * `head()` will return the head of list.
+ */
+BNode* List::head()
+{
+	return _head;
+}
+
+/**
+ * `tail()` will return the tail of list.
+ */
+BNode* List::tail()
+{
+	return _tail;
 }
 
 //
@@ -637,7 +653,7 @@ BNode* List::node_at(int idx)
 {
 	lock();
 
-	BNode *p = node_at_unsafe(idx);
+	BNode* p = node_at_unsafe(idx);
 
 	unlock();
 
@@ -651,7 +667,7 @@ BNode* List::node_at(int idx)
 BNode* List::node_at_unsafe(int idx)
 {
 	uint8_t rev = 0;
-	BNode *p = NULL;
+	BNode* p = NULL;
 
 	// (0)
 	if (_n == 0) {
@@ -827,7 +843,7 @@ out:
 //
 Object* List::at(int idx)
 {
-	BNode *p = node_at(idx);
+	BNode* p = node_at(idx);
 
 	if (!p) {
 		return NULL;
@@ -838,7 +854,7 @@ Object* List::at(int idx)
 
 Object* List::at_unsafe(int idx)
 {
-	BNode *p = node_at_unsafe(idx);
+	BNode* p = node_at_unsafe(idx);
 
 	if (!p) {
 		return NULL;
@@ -903,4 +919,4 @@ out:
 }
 
 } // namespace vos
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:

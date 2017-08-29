@@ -1,5 +1,5 @@
 //
-// Copyright 2009-2016 M. Shulhan (ms@kilabit.info). All rights reserved.
+// Copyright 2009-2017 M. Shulhan (ms@kilabit.info). All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -12,13 +12,25 @@
 
 namespace vos {
 
-//
-// List is generic implementation of circular double linked list.
-//
+/**
+ * List is generic implementation of circular double linked list.
+ *
+ * Field `_n` will contain number of node in the list.
+ * Field `_sep` is used to separate node when calling `chars`.
+ * Field `_head` is a pointer to the first node in the list.
+ * Field `_tail` is pointer to the last node in the list.
+ *
+ */
 class List : public Locker {
 public:
+	// `__cname` contain canonical name of this object.
+	static const char* __cname;
+
 	explicit List(const char sep = ',');
 	virtual ~List();
+
+	BNode* head();
+	BNode* tail();
 
 	void first_push(BNode* node);
 	void insert_before_unsafe(BNode* x, BNode* y);
@@ -60,20 +72,12 @@ public:
 	int size();
 	const char* chars();
 
-	// _head is pointer to the first node in the list.
+protected:
+	int _n;
+	char _sep;
 	BNode* _head;
-
-	// _tail is pointer to the last node in the list.
 	BNode* _tail;
 
-	// `__cname` contain canonical name of this object.
-	static const char* __cname;
-protected:
-	// _n will contain number of node in the list.
-	int _n;
-
-	// _sep is used to separate node when calling `chars`.
-	char _sep;
 private:
 	void sort_divide(int (*fn_compare)(Object*, Object*), int asc);
 	void sort_conqueror(List* left, List* right
@@ -87,4 +91,4 @@ typedef List Queue;
 
 } // namespace vos
 #endif // _LIBVOS_LIST_HH
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:
