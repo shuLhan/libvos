@@ -7,9 +7,12 @@
 #include "test.hh"
 #include "../BNode.hh"
 
+using vos::Test;
 using vos::BNode;
 
-Buffer *b = NULL;
+Test T("BNode");
+
+Buffer* b = NULL;
 
 //
 // Precondition:
@@ -22,50 +25,51 @@ void test_insert_left(BNode* node)
 	b = new Buffer();
 	b->copy_raw(STR_TEST_1);
 
-	BNode *nodeL = new BNode(b);
+	BNode* nodeL = new BNode(b);
 	node->insert_left(nodeL);
 
 	//
 	// NULL <= nodeL <=> node => NULL
 	//
 
-	assert(nodeL == node->get_left());
-	assert(node->get_right() == NULL);
-	assert(strcmp(STR_TEST_1, node->get_left()->chars()) == 0);
-	assert(strcmp(STR_TEST_0, node->chars()) == 0);
+	T.expect_ptr(nodeL, node->get_left());
+	T.expect_ptr(node->get_right(), NULL);
+	T.expect_string(STR_TEST_1, node->get_left()->chars());
+	T.expect_string(STR_TEST_0, node->chars());
 
-	assert(NULL == nodeL->get_left());
-	assert(nodeL->get_right() == node);
-	assert(strcmp(STR_TEST_1, nodeL->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeL->get_right()->chars()) == 0);
+	T.expect_ptr(NULL, nodeL->get_left());
+	T.expect_ptr(nodeL->get_right(), node);
+	T.expect_string(STR_TEST_1, nodeL->chars());
+	T.expect_string(STR_TEST_0, nodeL->get_right()->chars());
 
 	b = new Buffer();
 	b->copy_raw(STR_TEST_2);
 
-	BNode *nodeL2 = new BNode(b);
+	BNode* nodeL2 = new BNode(b);
 	node->insert_left(nodeL2);
 
 	//
 	// NULL <= nodeL <=> nodeL2 <=> node => NULL
 	//
 
-	assert(NULL == nodeL->get_left());
-	assert(nodeL->get_right() == nodeL2);
-	assert(strcmp(STR_TEST_2, nodeL->get_right()->chars()) == 0);
-	assert(strcmp(STR_TEST_1, nodeL->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeL->get_right()->get_right()->chars()) == 0);
+	T.expect_ptr(NULL, nodeL->get_left());
+	T.expect_ptr(nodeL->get_right(), nodeL2);
+	T.expect_string(STR_TEST_2, nodeL->get_right()->chars());
+	T.expect_string(STR_TEST_1, nodeL->chars());
+	T.expect_string(STR_TEST_0, nodeL->get_right()->get_right()->chars());
 
-	assert(nodeL == nodeL2->get_left());
-	assert(nodeL2->get_right() == node);
-	assert(strcmp(STR_TEST_2, nodeL2->chars()) == 0);
-	assert(strcmp(STR_TEST_1, nodeL2->get_left()->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeL2->get_right()->chars()) == 0);
+	T.expect_ptr(nodeL, nodeL2->get_left());
+	T.expect_ptr(nodeL2->get_right(), node);
+	T.expect_string(STR_TEST_2, nodeL2->chars());
+	T.expect_string(STR_TEST_1, nodeL2->get_left()->chars());
+	T.expect_string(STR_TEST_0, nodeL2->get_right()->chars());
 
-	assert(nodeL2 == node->get_left());
-	assert(node->get_right() == NULL);
-	assert(strcmp(STR_TEST_2, node->get_left()->chars()) == 0);
-	assert(strcmp(STR_TEST_1, node->get_left()->get_left()->chars()) == 0);
-	assert(strcmp(STR_TEST_0, node->chars()) == 0);
+	T.expect_ptr(nodeL2, node->get_left());
+	T.expect_ptr(node->get_right(), NULL);
+
+	T.expect_string(STR_TEST_2, node->get_left()->chars());
+	T.expect_string(STR_TEST_1, node->get_left()->get_left()->chars());
+	T.expect_string(STR_TEST_0, node->chars());
 }
 
 //
@@ -74,51 +78,51 @@ void test_insert_left(BNode* node)
 // Postcondition:
 //	NULL <= node <=> nodeR2 <=> nodeR => NULL
 //
-void test_insert_right(BNode *node)
+void test_insert_right(BNode* node)
 {
 	b = new Buffer();
 	b->copy_raw(STR_TEST_1);
 
-	BNode *nodeR = new BNode(b);
+	BNode* nodeR = new BNode(b);
 	node->insert_right(nodeR);
 
 	//
 	// NULL <= node <=> nodeR => NULL
 	//
 
-	assert(NULL == node->get_left());
-	assert(node->get_right() == nodeR);
-	assert(strcmp(STR_TEST_1, node->get_right()->chars()) == 0);
-	assert(strcmp(STR_TEST_0, node->chars()) == 0);
+	T.expect_ptr(NULL, node->get_left());
+	T.expect_ptr(node->get_right(), nodeR);
+	T.expect_string(STR_TEST_1, node->get_right()->chars());
+	T.expect_string(STR_TEST_0, node->chars());
 
-	assert(node == nodeR->get_left());
-	assert(nodeR->get_right() == NULL);
-	assert(strcmp(STR_TEST_1, nodeR->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeR->get_left()->chars()) == 0);
+	T.expect_ptr(node, nodeR->get_left());
+	T.expect_ptr(nodeR->get_right(), NULL);
+	T.expect_string(STR_TEST_1, nodeR->chars());
+	T.expect_string(STR_TEST_0, nodeR->get_left()->chars());
 
 	// TEST INSERT RIGHT 2
 
 	b = new Buffer();
 	b->copy_raw(STR_TEST_2);
 
-	BNode *nodeR2 = new BNode(b);
+	BNode* nodeR2 = new BNode(b);
 	node->insert_right(nodeR2);
 
 	//
 	// NULL <= node <=> nodeR2 <=> nodeR => NULL
 	//
 
-	assert(NULL == node->get_left());
-	assert(node->get_right() == nodeR2);
-	assert(strcmp(STR_TEST_2, node->get_right()->chars()) == 0);
-	assert(strcmp(STR_TEST_1, node->get_right()->get_right()->chars()) == 0);
-	assert(strcmp(STR_TEST_0, node->chars()) == 0);
+	T.expect_ptr(NULL, node->get_left());
+	T.expect_ptr(node->get_right(), nodeR2);
+	T.expect_string(STR_TEST_2, node->get_right()->chars());
+	T.expect_string(STR_TEST_1, node->get_right()->get_right()->chars());
+	T.expect_string(STR_TEST_0, node->chars());
 
-	assert(node == nodeR2->get_left());
-	assert(nodeR2->get_right() == nodeR);
-	assert(strcmp(STR_TEST_2, nodeR2->chars()) == 0);
-	assert(strcmp(STR_TEST_1, nodeR2->get_right()->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeR2->get_left()->chars()) == 0);
+	T.expect_ptr(node, nodeR2->get_left());
+	T.expect_ptr(nodeR2->get_right(), nodeR);
+	T.expect_string(STR_TEST_2, nodeR2->chars());
+	T.expect_string(STR_TEST_1, nodeR2->get_right()->chars());
+	T.expect_string(STR_TEST_0, nodeR2->get_left()->chars());
 }
 
 //
@@ -126,12 +130,12 @@ void test_insert_right(BNode *node)
 //	NULL <= node <=> nodeR2 <=> nodeR => NULL
 // Postcondition:
 //	NULL <= nodeL <=> nodeL2 <=> node <=> nodeR2 <=> nodeR => NULL
-void test_push_left(BNode *node)
+void test_push_left(BNode* node)
 {
 	b = new Buffer();
 	b->copy_raw(STR_TEST_2);
 
-	BNode *nodeL2 = new BNode(b);
+	BNode* nodeL2 = new BNode(b);
 
 	node->push_left(nodeL2);
 
@@ -139,12 +143,12 @@ void test_push_left(BNode *node)
 	// NULL <= nodeL2 <=> node <=> nodeR2 <=> nodeR => NULL
 	//
 
-	assert(node->get_left() == nodeL2);
-	assert(nodeL2->get_left() == NULL);
-	assert(nodeL2->get_right() == node);
+	T.expect_ptr(node->get_left(), nodeL2);
+	T.expect_ptr(nodeL2->get_left(), NULL);
+	T.expect_ptr(nodeL2->get_right(), node);
 
-	assert(strcmp(STR_TEST_2, nodeL2->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeL2->get_right()->chars()) == 0);
+	T.expect_string(STR_TEST_2, nodeL2->chars());
+	T.expect_string(STR_TEST_0, nodeL2->get_right()->chars());
 
 	b = new Buffer();
 	b->copy_raw(STR_TEST_1);
@@ -157,25 +161,25 @@ void test_push_left(BNode *node)
 	// NULL <= nodeL <=> nodeL2 <=> node <=> nodeR2 <=> nodeR => NULL
 	//
 
-	assert(nodeL2->get_left() == nodeL);
-	assert(nodeL->get_left() == NULL);
-	assert(nodeL->get_right() == nodeL2);
+	T.expect_ptr(nodeL2->get_left(), nodeL);
+	T.expect_ptr(nodeL->get_left(), NULL);
+	T.expect_ptr(nodeL->get_right(), nodeL2);
 
-	assert(strcmp(STR_TEST_2, nodeL->get_right()->chars()) == 0);
-	assert(strcmp(STR_TEST_1, nodeL->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeL->get_right()->get_right()->chars()) == 0);
+	T.expect_string(STR_TEST_2, nodeL->get_right()->chars());
+	T.expect_string(STR_TEST_1, nodeL->chars());
+	T.expect_string(STR_TEST_0, nodeL->get_right()->get_right()->chars());
 }
 
 // Precondition:
 //	NULL <= nodeL <=> nodeL2 <=> node => NULL
 // Postcondition:
 //	NULL <= nodeL <=> nodeL2 <=> node => nodeR2 <=> nodeR => NULL
-void test_push_right(BNode *node)
+void test_push_right(BNode* node)
 {
 	b = new Buffer();
 	b->copy_raw(STR_TEST_2);
 
-	BNode *nodeR2 = new BNode(b);
+	BNode* nodeR2 = new BNode(b);
 
 	node->push_right(nodeR2);
 
@@ -183,17 +187,17 @@ void test_push_right(BNode *node)
 	// NULL <= nodeL <=> nodeL2 <=> node => nodeR2 => NULL
 	//
 
-	assert(node->get_right() == nodeR2);
-	assert(nodeR2->get_left() == node);
-	assert(nodeR2->get_right() == NULL);
+	T.expect_ptr(node->get_right(), nodeR2);
+	T.expect_ptr(nodeR2->get_left(), node);
+	T.expect_ptr(nodeR2->get_right(), NULL);
 
-	assert(strcmp(STR_TEST_2, nodeR2->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeR2->get_left()->chars()) == 0);
+	T.expect_string(STR_TEST_2, nodeR2->chars());
+	T.expect_string(STR_TEST_0, nodeR2->get_left()->chars());
 
 	b = new Buffer();
 	b->copy_raw(STR_TEST_1);
 
-	BNode *nodeR = new BNode(b);
+	BNode* nodeR = new BNode(b);
 
 	node->push_right(nodeR);
 
@@ -201,65 +205,67 @@ void test_push_right(BNode *node)
 	// NULL <= nodeL <=> nodeL2 <=> node => nodeR2 <=> nodeR => NULL
 	//
 
-	assert(nodeR2->get_right() == nodeR);
-	assert(nodeR->get_left() == nodeR2);
-	assert(nodeR->get_right() == NULL);
+	T.expect_ptr(nodeR2->get_right(), nodeR);
+	T.expect_ptr(nodeR->get_left(), nodeR2);
+	T.expect_ptr(nodeR->get_right(), NULL);
 
-	assert(strcmp(STR_TEST_2, nodeR->get_left()->chars()) == 0);
-	assert(strcmp(STR_TEST_1, nodeR->chars()) == 0);
-	assert(strcmp(STR_TEST_0, nodeR->get_left()->get_left()->chars()) == 0);
+	T.expect_string(STR_TEST_2, nodeR->get_left()->chars());
+	T.expect_string(STR_TEST_1, nodeR->chars());
+	T.expect_string(STR_TEST_0, nodeR->get_left()->get_left()->chars());
 }
 
 // Precondition:
 //	NULL <= nodeL <=> nodeL2 <=> node => nodeR <=> nodeR2 => NULL
 // Postcondition:
 //	NULL <= node => nodeR <=> nodeR2 => NULL
-void test_pop_edge(BNode *node)
+void test_pop_edge(BNode* node)
 {
 	BNode* pop = node->pop_left_edge();
 
 	// NULL <= nodeL2 <=> node => nodeR <=> nodeR2 => NULL
 
-	assert(pop->get_left() == NULL);
-	assert(pop->get_right() == NULL);
-	assert(node->get_left()->get_left() == NULL);
-	assert(strcmp(STR_TEST_1, pop->chars()) == 0);
+	T.expect_ptr(pop->get_left(), NULL);
+	T.expect_ptr(pop->get_right(), NULL);
+	T.expect_ptr(node->get_left()->get_left(), NULL);
+	T.expect_string(STR_TEST_1, pop->chars());
 	delete pop;
 
 	pop = node->pop_left_edge();
 
 	// NULL <= node => nodeR <=> nodeR2 => NULL
 
-	assert(pop->get_left() == NULL);
-	assert(pop->get_right() == NULL);
-	assert(node->get_left() == NULL);
-	assert(strcmp(STR_TEST_2, pop->chars()) == 0);
+	T.expect_ptr(pop->get_left(), NULL);
+	T.expect_ptr(pop->get_right(), NULL);
+	T.expect_ptr(node->get_left(), NULL);
+	T.expect_string(STR_TEST_2, pop->chars());
 	delete pop;
 
 	pop = node->pop_left_edge();
-	assert(pop == NULL);
+
+	T.expect_ptr(pop, NULL);
 
 	pop = node->pop_right_edge();
 
 	// NULL <= node => nodeR => NULL
 
-	assert(pop->get_left() == NULL);
-	assert(pop->get_right() == NULL);
-	assert(node->get_right()->get_right() == NULL);
-	assert(strcmp(STR_TEST_1, pop->chars()) == 0);
+	T.expect_ptr(pop->get_left(), NULL);
+	T.expect_ptr(pop->get_right(), NULL);
+	T.expect_ptr(node->get_right()->get_right(), NULL);
+	T.expect_string(STR_TEST_1, pop->chars());
 	delete pop;
 
 	pop = node->pop_right_edge();
 
 	// NULL <= node => NULL;
-	assert(pop->get_left() == NULL);
-	assert(pop->get_right() == NULL);
-	assert(node->get_right() == NULL);
-	assert(strcmp(STR_TEST_2, pop->chars()) == 0);
+	T.expect_ptr(pop->get_left(), NULL);
+	T.expect_ptr(pop->get_right(), NULL);
+	T.expect_ptr(node->get_right(), NULL);
+	T.expect_string(STR_TEST_2, pop->chars());
 	delete pop;
 
 	pop = node->pop_right_edge();
-	assert(pop == NULL);
+
+	T.expect_ptr(pop, NULL);
 }
 
 int main()
@@ -267,22 +273,22 @@ int main()
 	//
 	// TEST INSERT LEFT
 	//
-	BNode *node1 = new BNode(NULL);
+	BNode* node1 = new BNode(NULL);
 
-	assert(strcmp("BNode", node1->__cname) == 0);
+	T.expect_string("BNode", node1->__cname);
 
-	assert(NULL == node1->get_left());
-	assert(NULL == node1->get_right());
-	assert(NULL == node1->chars());
+	T.expect_ptr(NULL, node1->get_left());
+	T.expect_ptr(NULL, node1->get_right());
+	T.expect_ptr(NULL, node1->chars());
 
 	b = new Buffer();
 	b->copy_raw(STR_TEST_0);
 
 	node1->set_content(b);
 
-	assert(NULL == node1->get_left());
-	assert(NULL == node1->get_right());
-	assert(strcmp(STR_TEST_0, node1->chars()) == 0);
+	T.expect_ptr(NULL, node1->get_left());
+	T.expect_ptr(NULL, node1->get_right());
+	T.expect_string(STR_TEST_0, node1->chars());
 
 	test_insert_left(node1);
 
@@ -290,7 +296,7 @@ int main()
 	// TEST INSERT RIGHT
 	//
 
-	BNode *node2 = new BNode(NULL);
+	BNode* node2 = new BNode(NULL);
 
 	b = new Buffer();
 	b->copy_raw(STR_TEST_0);
@@ -309,12 +315,12 @@ int main()
 	test_pop_edge(node1);
 	test_pop_edge(node2);
 
-	assert(node1->get_left() == NULL);
-	assert(node1->get_right() == NULL);
-	assert(node1->get_left() == NULL);
-	assert(node1->get_right() == NULL);
-	assert(strcmp(STR_TEST_0, node1->chars()) == 0);
-	assert(strcmp(STR_TEST_0, node2->chars()) == 0);
+	T.expect_ptr(node1->get_left(), NULL);
+	T.expect_ptr(node1->get_right(), NULL);
+	T.expect_ptr(node1->get_left(), NULL);
+	T.expect_ptr(node1->get_right(), NULL);
+	T.expect_string(STR_TEST_0, node1->chars());
+	T.expect_string(STR_TEST_0, node2->chars());
 
 	delete node1;
 	delete node2;
