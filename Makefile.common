@@ -41,7 +41,7 @@ endif
 
 CXXFLAGS_DEBUG	= $(CXXFLAGS_GLOBAL) -g -O0
 CXXFLAGS_ADD	=
-LDFLAGS		= -Os -lpthread
+LDFLAGS		= -Os -lpthread -fPIC
 LDFLAGS_ADD	=
 
 LIBVOS_OPTS	=
