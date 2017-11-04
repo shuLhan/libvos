@@ -813,35 +813,39 @@ void test_get_lines()
 		const char* exp_line;
 		Error       exp_err;
 	} tests[] = {{
-		"1st line"
+		"line #1"
 	,	"Copyright 2009-2017, M. Shulhan (ms@kilabit.info)."
 	,	NULL
 	},{
-		"2nd line"
+		"line #2"
 	,	"All rights reserved."
 	,	NULL
 	},{
-		"3rd line"
+		"line #3"
 	,	""
 	,	NULL
 	},{
-		"4th line"
+		"line #4"
 	,	"Redistribution and use in source and binary forms, with or without"
 	,	NULL
 	},{
-		"5th line"
+		"line #5"
 	,	"modification, are permitted provided that the following conditions are met:"
 	,	NULL
 	},{
-		"6rd line"
+		"line #6"
 	,	""
 	,	NULL
 	},{
-		"7rd line"
+		"line #7"
 	,	""
 	,	NULL
 	},{
-		"8rd line"
+		"line #8"
+	,	"NOEOL"
+	,	NULL
+	},{
+		"line #7"
 	,	""
 	,	vos::ErrFileEnd
 	}};

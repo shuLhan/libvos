@@ -572,7 +572,9 @@ Error File::refill(size_t read_min)
 	size_t move_len = 0;
 	size_t len = 0;
 
-	move_len = _i - _p;
+	if (_i > _p) {
+		move_len = _i - _p;
+	}
 
 	if (move_len > 0 && _p > 0) {
 		memmove(&_v[0], &_v[_p], move_len);
@@ -595,13 +597,14 @@ Error File::refill(size_t read_min)
 	if (s < 0) {
 		return Error::SYS();
 	}
-	if (s == 0) {
-		return ErrFileEnd;
-	}
 
 	_i = move_len + size_t(s);
 	_p = 0;
 	_v[_i] = '\0';
+
+	if (s == 0) {
+		return ErrFileEnd;
+	}
 
 	return NULL;
 }
@@ -688,7 +691,6 @@ Error File::get_line(Buffer* line)
 		if (err != NULL) {
 			return err;
 		}
-
 	}
 
 empty:
