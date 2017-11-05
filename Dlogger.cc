@@ -8,7 +8,7 @@
 
 namespace vos {
 
-const char* Dlogger::__cname = "Dlogger";
+const char* Dlogger::__CNAME = "Dlogger";
 
 /**
  * @method	: Dlogger::Dlogger()
@@ -236,5 +236,5 @@ Error Dlogger::it(const char* fmt, ...)
 	return err;
 }
 
-} /* namespace::vos */
+} // namespace::vos
 // vi: ts=8 sw=8 tw=80:

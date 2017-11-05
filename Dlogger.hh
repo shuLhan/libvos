@@ -13,15 +13,17 @@
 namespace vos {
 
 /**
- * @class	: Dlogger
- * @desc	:
- *	a module for writing formatted output log to a file or standard error,
- *	or both. If Dlogger object is not initialized, by calling open(), all
- *	log output from calling er() or it() will be printed to standard error.
- * @attr _max_size : Maximum log file size.
+ * Class Dlogger is a module for writing formatted output log to a file or
+ * standard error, or both. If Dlogger object is not initialized, by calling
+ * open(), all log output from calling er() or it() will be printed to standard
+ * error.
+ *
+ * Field _max_size define maximum log file size.
  */
 class Dlogger : public File {
 public:
+	static const char* __CNAME;
+
 	Dlogger();
 	~Dlogger();
 
@@ -33,8 +35,6 @@ public:
 	Error er(const char* fmt, ...);
 	Error out(const char* fmt, ...);
 	Error it(const char* fmt, ...);
-
-	static const char* __cname;
 private:
 	Dlogger(const Dlogger&);
 	void operator=(const Dlogger&);
@@ -53,6 +53,6 @@ private:
 	size_t		_max_size;
 };
 
-} /* namespace::vos */
+} // namespace::vos
 #endif
 // vi: ts=8 sw=8 tw=80:
