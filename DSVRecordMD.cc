@@ -20,114 +20,23 @@ enum _rmd_parser {
 	MD_TYPE
 };
 
-const char* DSVRecordMD::__cname = "DSVRecordMD";
-
-uint8_t DSVRecordMD::BLOB_SIZE = sizeof(int);
-int DSVRecordMD::DEF_SEP	= ',';
-
-/**
- * @method	: DSVRecordMD::DSVRecordMD
- * @desc	: DSVRecordMD object constructor.
- */
-DSVRecordMD::DSVRecordMD() :
-	_idx(0),
-	_flag(0),
-	_type(0),
-	_left_q(0),
-	_right_q(0),
-	_start_p(0),
-	_end_p(0),
-	_sep(0),
-	_fltr_idx(0),
-	_fltr_rule(0),
-	_fop(NULL),
-	_name(),
-	_date_format(NULL),
-	_fltr_v(NULL)
-{}
+const char* DSVRecordMD::__CNAME	= "DSVRecordMD";
+uint8_t DSVRecordMD::BLOB_SIZE		= sizeof(int);
+int DSVRecordMD::DEF_SEP		= ',';
 
 /**
- * @method	: DSVRecordMD::~DSVRecordMD
- * @desc	: DSVRecordMD object destructor.
- */
-DSVRecordMD::~DSVRecordMD()
-{
-	if (_date_format)
-		delete _date_format;
-	if (_fltr_v)
-		delete _fltr_v;
-}
-
-//
-// `chars()` return JSON representation of this object in string.
-//
-const char* DSVRecordMD::chars()
-{
-	Buffer o;
-
-	o.append_fmt("{"			\
-		" \"type\": %d"		\
-		", \"left_q\": \"%c\""	\
-		", \"name\": \"%s\""	\
-		", \"right_q\": \"%c\""	\
-		", \"start_p\": %d"	\
-		", \"end_p\": %ld"
-		, _type, _left_q, _name.chars(), _right_q
-		, _start_p, _end_p);
-
-	o.append_raw(", \"sep\": ");
-	switch (_sep) {
-	case '\t':
-		o.append_raw("\"\\t\"");
-		break;
-	case '\n':
-		o.append_raw("\"\\n\"");
-		break;
-	case '\v':
-		o.append_raw("\"\\v\"");
-		break;
-	case '\r':
-		o.append_raw("\"\\r\"");
-		break;
-	case '\f':
-		o.append_raw("\"\\f\"");
-		break;
-	case '\b':
-		o.append_raw("\"\\b\"");
-		break;
-	default:
-		o.append_fmt("\"%c\"", _sep);
-	}
-
-	o.append_raw(" }");
-
-	if (__str) {
-		free(__str);
-		__str = NULL;
-	}
-
-	__str = o.detach();
-
-	return __str;
-}
-
-/**
- * @method	: DSVRecordMD::INIT
- * @param	:
- *	> meta	: formatted string of field declaration.
- * @return	:
- *	< o	: return value, list of DSVRecordMD object
- *	< NULL	: if fail.
- * @desc	:
- *	create and initialize meta data using field declaration in 'meta'.
+ * Method INIT will create and initialize meta data using field declaration in
+ * 'meta'.
  *
- *	Field format:
+ * Field format:
  *
- *	['<char>']:name[:['<char>']:[start-pos]:[end-pos | '<char>']:[type]]
+ * ```
+ * ['<char>']:name[:['<char>']:[start-pos]:[end-pos | '<char>']:[type]]
+ * ```
  *
- *	name	: name only allow characters: a-z,A-Z,0-9.
- *	[]	: optional field.
- *	<char>	: any single character, except characters: a-z,A-Z,0-9.
+ * - name  : name only allow characters: a-z,A-Z,0-9.
+ * - []	   : optional field.
+ *- <char> : any single character, except characters: a-z,A-Z,0-9.
  */
 List* DSVRecordMD::INIT(const char* meta)
 {
@@ -453,7 +362,7 @@ err:
 	fprintf(stderr
 	, "[%s] INIT: invalid field meta data : %s\n"	\
 	  "                at position '%d', at character '%c'.\n"
-	, __cname, &meta[i], i, meta[i]);
+	, __CNAME, &meta[i], i, meta[i]);
 
 	if (o) {
 		delete o;
@@ -464,16 +373,13 @@ err:
 }
 
 /**
- * @method	: DSVRecordMD::INIT_FROM_FILE
- * @param	:
- *	> fmeta	: a name of file contains meta-data, with or without leading
- *                path.
- * @return	:
- *	< o	: return value, list of DSVRecordMD object.
- *	< NULL	: fail.
- * @desc	:
- *	create and initialize meta-data object 'o' by loading meta-data from
- *	file 'fmeta'.
+ * Method INIT_FROM_FILE will create and initialize meta-data object by
+ * loading meta-data from file `fmeta`.
+ *
+ * `fmeta` a name of file contains meta-data, with or without leading path.
+ *
+ * On success it will return list of DSVRecordMD objects, otherwise it will
+ * return NULL.
  */
 List* DSVRecordMD::INIT_FROM_FILE(const char* fmeta)
 {
@@ -497,5 +403,93 @@ List* DSVRecordMD::INIT_FROM_FILE(const char* fmeta)
 	return DSVRecordMD::INIT(f.chars());
 }
 
-} /* namespace::vos */
-// vi: ts=8 sw=8 tw=78:
+
+
+/**
+ * @method	: DSVRecordMD::DSVRecordMD
+ * @desc	: DSVRecordMD object constructor.
+ */
+DSVRecordMD::DSVRecordMD() :
+	_idx(0),
+	_flag(0),
+	_type(0),
+	_left_q(0),
+	_right_q(0),
+	_start_p(0),
+	_end_p(0),
+	_sep(0),
+	_fltr_idx(0),
+	_fltr_rule(0),
+	_fop(NULL),
+	_name(),
+	_date_format(NULL),
+	_fltr_v(NULL)
+{}
+
+/**
+ * @method	: DSVRecordMD::~DSVRecordMD
+ * @desc	: DSVRecordMD object destructor.
+ */
+DSVRecordMD::~DSVRecordMD()
+{
+	if (_date_format)
+		delete _date_format;
+	if (_fltr_v)
+		delete _fltr_v;
+}
+
+//
+// `chars()` return JSON representation of this object in string.
+//
+const char* DSVRecordMD::chars()
+{
+	Buffer o;
+
+	o.append_fmt("{"			\
+		" \"type\": %d"		\
+		", \"left_q\": \"%c\""	\
+		", \"name\": \"%s\""	\
+		", \"right_q\": \"%c\""	\
+		", \"start_p\": %d"	\
+		", \"end_p\": %ld"
+		, _type, _left_q, _name.chars(), _right_q
+		, _start_p, _end_p);
+
+	o.append_raw(", \"sep\": ");
+	switch (_sep) {
+	case '\t':
+		o.append_raw("\"\\t\"");
+		break;
+	case '\n':
+		o.append_raw("\"\\n\"");
+		break;
+	case '\v':
+		o.append_raw("\"\\v\"");
+		break;
+	case '\r':
+		o.append_raw("\"\\r\"");
+		break;
+	case '\f':
+		o.append_raw("\"\\f\"");
+		break;
+	case '\b':
+		o.append_raw("\"\\b\"");
+		break;
+	default:
+		o.append_fmt("\"%c\"", _sep);
+	}
+
+	o.append_raw(" }");
+
+	if (__str) {
+		free(__str);
+		__str = NULL;
+	}
+
+	__str = o.detach();
+
+	return __str;
+}
+
+} // namespace::vos
+// vi: ts=8 sw=8 tw=80:

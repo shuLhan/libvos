@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef _LIBVOS_RECORD_METADATA_HH
-#define _LIBVOS_RECORD_METADATA_HH 1
+#ifndef _LIBVOS_DSVRECORDMD_HH
+#define _LIBVOS_DSVRECORDMD_HH 1
 
 #include "File.hh"
 #include "List.hh"
@@ -49,6 +49,13 @@ enum _rmd_type {
  */
 class DSVRecordMD : public Object {
 public:
+	static const char* __CNAME;
+	static uint8_t BLOB_SIZE;
+	static int DEF_SEP;
+
+	static List* INIT(const char* meta);
+	static List* INIT_FROM_FILE(const char* fmeta);
+
 	DSVRecordMD();
 	~DSVRecordMD();
 	const char* chars();
@@ -63,23 +70,16 @@ public:
 	int		_sep;
 	int		_fltr_idx;
 	int		_fltr_rule;
-	int		(*_fop)(const int, const void *, const void *);
+	int		(*_fop)(const int, const void*, const void*);
 	Buffer		_name;
 	Buffer*		_date_format;
 	Buffer*		_fltr_v;
 
-	static List* INIT(const char* meta);
-	static List* INIT_FROM_FILE(const char* fmeta);
-
-	static uint8_t	BLOB_SIZE;
-	static int	DEF_SEP;
-	static const char* __cname;
 private:
 	DSVRecordMD(const DSVRecordMD&);
 	void operator=(const DSVRecordMD&);
 };
 
-} /* namespace::vos */
-
+} // namespace::vos
 #endif
-// vi: ts=8 sw=8 tw=78:
+// vi: ts=8 sw=8 tw=80:
