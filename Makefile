@@ -61,20 +61,7 @@ TARGET_OBJS	=						\
 			$(LIBVOS_BLD_D)/RBT.oo
 
 #
-# with OCI library
-#
-ifdef ORACLE_HOME
-TARGET_OBJS	+=	$(LIBVOS_BLD_D)/OCIValue.oo	\
-			$(LIBVOS_BLD_D)/OCI.oo
-
-CXXFLAGS_ADD	+=	-I$(ORACLE_HOME)/include -I$(ORACLE_HOME)/rdbms/public
-LDFLAGS_ADD	+=	-L$(ORACLE_HOME)/lib -lclntsh
-
-$(LIBVOS_BLD_D)/OCI.oo: $(LIBVOS_BLD_D)/Locker.oo
-endif
-
-#
-# library needed for FTP and OCI module on Solaris system.
+# library needed for FTP module on Solaris system.
 #
 ifeq ($(SYS),SunOS)
 LDFLAGS_ADD	+= -lsocket -lnsl

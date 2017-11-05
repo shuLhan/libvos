@@ -33,7 +33,7 @@ ifndef CXXFLAGS
 CXXFLAGS	= $(CXXFLAGS_GLOBAL) -Os
 endif
 
-ifeq ($(CXX),clang)
+ifeq ($(LIBVOS_CXX),clang)
 CXXFLAGS_GLOBAL += -Wno-implicit-fallthrough
 else
 CXXFLAGS_GLOBAL += -Wimplicit-fallthrough=1
