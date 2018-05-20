@@ -170,15 +170,15 @@ long int Error::data_as_signed() const
 		return 0;
 	}
 
-	switch (_len) {
-	case sizeof(int):
+	switch (sizeof(_len)) {
+	case 4:
 		if (_p_data) {
 			data = *(int*) _p_data;
 		} else {
 			data = *(int*) _data;
 		}
 		break;
-	case sizeof(long int):
+	case 8:
 		if (_p_data) {
 			data = *(long int*) _p_data;
 		} else {
@@ -198,15 +198,15 @@ unsigned long Error::data_as_unsigned() const
 		return 0;
 	}
 
-	switch (_len) {
-	case sizeof(unsigned int):
+	switch (sizeof(_len)) {
+	case 4:
 		if (_p_data) {
 			data =  *(unsigned int *) _p_data;
 		} else {
 			data =  *(unsigned int *) _data;
 		}
 		break;
-	case sizeof(unsigned long):
+	case 8:
 		if (_p_data) {
 			data =  *(unsigned long *) _p_data;
 		} else {
