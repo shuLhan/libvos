@@ -91,9 +91,11 @@ libvos-all: LDFLAGS+=$(LDFLAGS_ADD)
 libvos-all: libvos-opts
 
 libvos-all-32: CXXFLAGS_ADD+=-m32
+libvos-all-32: LDFLAGS_ADD+=-m32
 libvos-all-32: libvos-all
 
 libvos-all-64: CXXFLAGS_ADD+=-m64
+libvos-all-64: LDFLAGS_ADD+=-m64
 libvos-all-64: libvos-all
 
 libvos-debug: CXXFLAGS=$(CXXFLAGS_DEBUG) $(CXXFLAGS_ADD)
